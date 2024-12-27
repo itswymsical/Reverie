@@ -1,0 +1,202 @@
+Keybinds: {
+	ToggleSkillMenu.DisplayName: Toggle Skill Menu
+	QuickMagicMirror.DisplayName: Quick Magic Mirror
+}
+
+UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+InfoDisplays.MissionObjectives.DisplayName: Mission Objectives
+
+Biomes: {
+	ArchaeaDesertBiome: {
+		DisplayName: Archaea Desert Biome
+		TownNPCDialogueName: the Archaea Desert Biome
+	}
+
+	EmberiteCavernsBiome: {
+		DisplayName: Emberite Caverns Biome
+		TownNPCDialogueName: the Emberite Caverns Biome
+	}
+
+	LowerCanopyBiome: {
+		DisplayName: Lower Canopy Biome
+		TownNPCDialogueName: the Lower Canopy Biome
+	}
+
+	WoodlandCanopyBiome: {
+		DisplayName: Woodland Canopy Biome
+		TownNPCDialogueName: the Woodland Canopy Biome
+	}
+}
+
+Items: {
+	ArchaeaTranslocator: {
+		DisplayName: Archaea Translocator
+		Tooltip: ""
+	}
+
+	AcornLauncher: {
+		DisplayName: Acorn Launcher
+		Tooltip: ""
+	}
+
+	Apple: {
+		DisplayName: Apple
+		Tooltip: ""
+	}
+
+	BorealHewer: {
+		DisplayName: Boreal Hewer
+		Tooltip: ""
+	}
+
+	Flailstorm: {
+		DisplayName: Flailstorm
+		Tooltip: ""
+	}
+
+	FrostbarkClaymore: {
+		DisplayName: Frostbark Claymore
+		Tooltip: ""
+	}
+
+	FrostbarkGreaves: {
+		DisplayName: Frostbark Greaves
+		Tooltip: ""
+	}
+
+	FrostbarkHauberk: {
+		DisplayName: Frostbark Hauberk
+		Tooltip: ""
+	}
+
+	FrostbarkHelm: {
+		DisplayName: Frostbark Helm
+		Tooltip: ""
+	}
+
+	Lodestone: {
+		DisplayName: Lodestone
+		Tooltip: ""
+	}
+
+	LodestoneMagnet: {
+		DisplayName: Lodestone Magnet
+		Tooltip: ""
+	}
+
+	MagnetizedCoil: {
+		DisplayName: Magnetized Coil
+		Tooltip: ""
+	}
+
+	SeedBag: {
+		DisplayName: Seed Bag
+		Tooltip: ""
+	}
+
+	CopperShovel: {
+		DisplayName: Copper Shovel
+		Tooltip: ""
+	}
+
+	GoldShovel: {
+		DisplayName: Gold Shovel
+		Tooltip: ""
+	}
+
+	IronShovel: {
+		DisplayName: Iron Shovel
+		Tooltip: ""
+	}
+
+	LeadShovel: {
+		DisplayName: Lead Shovel
+		Tooltip: ""
+	}
+
+	PlatinumShovel: {
+		DisplayName: Platinum Shovel
+		Tooltip: ""
+	}
+
+	SilverShovel: {
+		DisplayName: Silver Shovel
+		Tooltip: ""
+	}
+
+	TinShovel: {
+		DisplayName: Tin Shovel
+		Tooltip: ""
+	}
+
+	TungstenShovel: {
+		DisplayName: Tungsten Shovel
+		Tooltip: ""
+	}
+
+	Alluvium: {
+		DisplayName: Alluvium
+		Tooltip: ""
+	}
+
+	WoodgrassSeeds: {
+		DisplayName: Woodgrass Seeds
+		Tooltip: ""
+	}
+}
+
+NPCs: {
+	AirborneScarab.DisplayName: Airborne Scarab
+	Scarab.DisplayName: Scarab
+	WardenArm.DisplayName: Warden Arm
+	WoodenWarden.DisplayName: Wooden Warden
+	Argie.DisplayName: Argie
+	Cheeks.DisplayName: Cheeks
+	Sophie.DisplayName: Sophie
+	Stumpy.DisplayName: Stumpy
+}
+
+Projectiles: {
+	RedSandBall.DisplayName: Red Sand Ball
+	AcornLauncherProj.DisplayName: Acorn Launcher Proj
+	AcornProj.DisplayName: Acorn Proj
+	AcornShrapnel.DisplayName: Acorn Shrapnel
+	BirdProj.DisplayName: Bird Proj
+	BorealHewerProj.DisplayName: Boreal Hewer Proj
+	FlailstormProj.DisplayName: Flailstorm Proj
+	FrostbarkClaymoreProj.DisplayName: Frostbark Claymore Proj
+	LodestoneMagnetProj.DisplayName: Lodestone Magnet Proj
+	SeedProj.DisplayName: Seed Proj
+	StoneProj.DisplayName: Stone Proj
+}
+
+Configs: {
+	ExperienceMeterConfig: {
+		DisplayName: Experience Meter Config
+		Headers.ExperienceMeterColors: Experience Meter Colors Header
+
+		BarColor: {
+			Label: ExperienceColors
+			Tooltip: Customize the RGB color of the Experience Meter
+		}
+	}
+
+	ColorSetting: {
+		Tooltip: ""
+
+		R: {
+			Label: R
+			Tooltip: ""
+		}
+
+		G: {
+			Label: G
+			Tooltip: ""
+		}
+
+		B: {
+			Label: B
+			Tooltip: ""
+		}
+	}
+}

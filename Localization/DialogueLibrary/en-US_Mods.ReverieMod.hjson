@@ -1,0 +1,149 @@
+DialogueLibrary: {
+	Reawakening: {
+		WakingUp: {
+			Line1: What the..?
+			Line2: You're awake?!?
+			Line3: Long nap, 'eh?
+			Line4: I honestly thought you'd never wake up.
+			Line5: Anyways...
+			Line6: While you were in your coma, the assailants left our society in shambles.
+			Line7: "'You give a blank stare'"
+			Line8: ...
+			Line9: Amnesia too? golly.
+			Line10: Well, now isn't the time for explanation.
+			Line11: Come take these copper tools and i'll give it to you straight.
+		}
+
+		Briefing: {
+			Line1: Like I said, I'll be quick about it:
+			Line2: Terraria, once a highly populated world is now desolate. The credit goes to Cthulhu and the assailants.
+			Line3: He was once an ally of Terraria, him and the world of Seaforth.
+			Line4: But now he's our adversary.
+			Line5: A little over two years ago, Terraria was in alliance with some Otherworlds.
+			Line6: Those being Sylvanwalde and Seaforth. But because of some...
+			Line7: ...rather disgraceful events...
+			Line8: We are here today in what you can barely call an Otherworld.
+			Line9: During the war's final battle, you were knocked out by the Eye.
+			Line10: The Archivers and Dryads fought back against the Assailants, but the death toll was high.
+			Line11: Sorry to lay this on you, but you'll need to start training.
+			Line12: Oh, I forgot to tell you you're the HERO by the way. My bad.
+			Line13: Three years have passed since the war, and Cthulhu's seal will break in just 8 months.
+			Line14: Given your memory loss, we don't have much time to spare.
+			Line15: Pick any of these four combat types, make sure you want this to be your signature style.
+		}
+
+		TrainingComplete: {
+			Line1: Decent work.
+			Line2: Although, this is just a target dummy. You'll need some better weapons if you wanna fight for real.
+			Line3: But before you run off, I have some gear for you.
+		}
+
+		GuideGivesYouAMagicMirror: {
+			Line1: Take this Magic Mirror, it'll allow you to magically return to this location.
+			Line2: You can also use it to check the MirrorNet.
+			Line3: Gaze into the mirror and you'll be able to REFLECT on yourself.
+			Line4: (Right-Click or use the UI element to check your stats and progress)
+			Line5: You'll need to explore the outskirts of the forest to find new materials.
+			Line6: I'd recommend going underground into the caverns, where you can find new gear and minerals.
+			Line7: But be careful--the things down there are nothing like that target dummy.
+			Line8: Once you've collected a decent amount of resources, come back here and check in.
+		}
+
+		ReawakeningEndingDialogue: {
+			Line1: I'm impressed by your speed.
+			Line2: Say... do you think you're ready to take on the weakest assailant?
+			Line3: No pressure, no pressure.
+			Line4: If you can't do it you don't have to fake it.
+			Line5: I'm just teasing you, I know you're ready!
+			Line6: You're going to be fighting the very thing that knocked you out the first time:
+			Line7: The Eye of Cthulhu...
+			Line8: I sent the task list to your MirrorNet contact, just do those things and come back to me before dusk.
+		}
+
+		SelectedClass: {
+			Marksman: {
+				Line1: Marksman? My kind of guy.
+				Line2: Alright, let's start off with landing a few shots.
+				Line3: Hit the target dummy 10 times.
+			}
+
+			Warrior: {
+				Line1: Warrior? You wanna get up close and personal. I can dig that.
+				Line2: Alright, let's start off with landing a few hits.
+				Line3: Hit the target dummy 10 times.
+			}
+
+			Mage: {
+				Line1: Mage? You must be one of those 'artistic' types.
+				Line2: Alright, let's start off with casting a projectile.
+				Line3: Hit the target dummy 10 times.
+			}
+
+			Conjurer: {
+				Line1: Conjurer? Not much of a fighter, huh?
+				Line2: Alright, let's start off with commanding an attack.
+				Line3: Tell your minion to hit the target dummy 10 times.
+			}
+		}
+
+		GuideWhenYouFindAnAccessory: {
+			Line1: Hey There!
+			Line2: I'm calling you from the MirrorNet.
+			Line3: I noticed you found an accessory.
+			Line4: Those are quite handy. In fact, they'll be integral to your arsenal.
+			Line5: If you're not a complete noob, you probably know you can equip that one you just picked up with [Right-Click].
+			Line6: Anyways, I'm just doing guide stuff.
+			Line7: I'll leave you to it.
+		}
+
+		EnteredWoodlandCanopyBeforeProgression: {
+			Line1: Hey! I'm looking at your location on the MirrorNet.
+			Line2: Looks like you're in the Woodland Canopy?
+			Line3: I'm all for you exploring, but you should know that place is pretty dangerous in your current state.
+			Line4: Why don't you explore some other biomes?
+			Line5: I'll give you the signal when you're ready to enter the canopy.
+		}
+
+		KilledTheEye: {
+			Line1: You split that eye faster than the witch doctor ravages open their amazon packages!
+			Line2: Remind me not to get on your bad side...
+			Line3: With that out of the way, we can focus on the challenges that lie ahead.
+			Line4: I reached out to a certain friend of mine from Sylvanwalde.
+			Line5: She's cold, yet charming. I think you'll like her...
+			Line6: Not only that, her expertise in cleansing magic will be necessary for cleaning the 'vulgar' biomes.
+			Line7: By that I mean the Crimson and Corruption.
+			Line8: If you didn't know, they're made from dead people.
+		}
+
+		ArgiesHuntIntro: {
+			Line1: Hello stranger!
+			Line2: Can you help me?
+			Line3: I want to spruce up my house!
+			Line4: I require more fungus!!!
+			Line5: Take this task list!
+			Line6: Okay, bye!
+		}
+
+		StumpysIntro: {
+			Line1: OH!
+			Line2: Hey! Who are you?
+			Line3: Hmmmm....
+			Line4: You don't look like a treant...
+			Line5: Are you????
+			Line6: A HUMAN??????
+			Line7: *scrambling*
+			Line8: *scrambling*
+			Line9: Wait a second... You don't entirely give off human vibes...
+			Line10: What exactly are you?
+			Line11: Hero, you say?
+			Line12: OH, well...
+			Line13: That's relieving...
+			Line14: What the heck is a Hero???
+			Line15: Ah, nevermind that.
+			Line16: Say, could you help me out?
+			Line17: My friend [UNK], is out exploring right now and I need some help with blacksmithing.
+			Line18: As you can see, I don't have arms.
+			Line19: Do you think you can gather some ores for me?
+		}
+	}
+}
