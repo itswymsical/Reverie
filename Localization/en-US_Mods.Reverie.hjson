@@ -1,57 +1,48 @@
 Keybinds: {
-	ToggleSkillMenu.DisplayName: Toggle Skill Menu
+	"Quick Magic Mirror.DisplayName": Quick Magic Mirror
+	"Toggle Skill Menu.DisplayName": Toggle Skill Menu
 	QuickMagicMirror.DisplayName: Quick Magic Mirror
+	ToggleSkillMenu.DisplayName: Toggle Skill Menu
 }
 
-UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 InfoDisplays.MissionObjectives.DisplayName: Mission Objectives
 
 Biomes: {
-	ArchaeaDesertBiome: {
-		DisplayName: Archaea Desert Biome
-		TownNPCDialogueName: the Archaea Desert Biome
+	WoodlandCanopyBiome: {
+		DisplayName: Woodland Canopy
+		TownNPCDialogueName: the Woodland Canopy
 	}
 
-	EmberiteCavernsBiome: {
-		DisplayName: Emberite Caverns Biome
-		TownNPCDialogueName: the Emberite Caverns Biome
+	ArchaeaDesertBiome: {
+		DisplayName: Archaea Desert
+		TownNPCDialogueName: the Archaea Desert
 	}
 
 	LowerCanopyBiome: {
-		DisplayName: Lower Canopy Biome
-		TownNPCDialogueName: the Lower Canopy Biome
+		TownNPCDialogueName: the Lower Canopy
+		DisplayName: Lower Canopy
 	}
 
-	WoodlandCanopyBiome: {
-		DisplayName: Woodland Canopy Biome
-		TownNPCDialogueName: the Woodland Canopy Biome
+	ShelledrakeNestBiome: {
+		DisplayName: Shelledrake Nest
+		TownNPCDialogueName: the Shelledrake Nest
+	}
+
+	EmberiteCavernsBiome: {
+		DisplayName: Emberite Caverns
+		TownNPCDialogueName: the Emberite Caverns
 	}
 }
 
 Items: {
-	ArchaeaTranslocator: {
-		DisplayName: Archaea Translocator
-		Tooltip: ""
-	}
-
 	AcornLauncher: {
 		DisplayName: Acorn Launcher
-		Tooltip: ""
+		Tooltip: Charges up and fires acorns at high velocity
 	}
 
-	Apple: {
-		DisplayName: Apple
-		Tooltip: ""
-	}
-
-	BorealHewer: {
-		DisplayName: Boreal Hewer
-		Tooltip: ""
-	}
-
-	Flailstorm: {
-		DisplayName: Flailstorm
-		Tooltip: ""
+	ArchaeaTranslocator: {
+		DisplayName: Archaea Translocator
+		Tooltip: Creates a rift to Archaea
 	}
 
 	FrostbarkClaymore: {
@@ -71,26 +62,6 @@ Items: {
 
 	FrostbarkHelm: {
 		DisplayName: Frostbark Helm
-		Tooltip: ""
-	}
-
-	Lodestone: {
-		DisplayName: Lodestone
-		Tooltip: ""
-	}
-
-	LodestoneMagnet: {
-		DisplayName: Lodestone Magnet
-		Tooltip: ""
-	}
-
-	MagnetizedCoil: {
-		DisplayName: Magnetized Coil
-		Tooltip: ""
-	}
-
-	SeedBag: {
-		DisplayName: Seed Bag
 		Tooltip: ""
 	}
 
@@ -134,49 +105,136 @@ Items: {
 		Tooltip: ""
 	}
 
-	Alluvium: {
-		DisplayName: Alluvium
-		Tooltip: ""
-	}
-
 	WoodgrassSeeds: {
 		DisplayName: Woodgrass Seeds
 		Tooltip: ""
 	}
+
+	Alluvium: {
+		DisplayName: Alluvium
+		Tooltip: "'It's got a murky, metallic texture to it'"
+	}
+
+	SeedBag: {
+		Tooltip:
+			'''
+			Tosses a bunch of seeds that stick to enemies and tiles.
+			A flock of birds will appear and voraciously consume the seeds.
+			'''
+		DisplayName: Seed Bag
+	}
+
+	BorealHewer: {
+		DisplayName: Boreal Hewer
+		Tooltip: Sticks to enemies and tiles, Inflicting frostburn on critical strike.
+	}
+
+	Flailstorm: {
+		DisplayName: Flailstorm
+		Tooltip: Will bounce and richocet serveral times on tile collision.
+	}
+
+	Lodestone: {
+		DisplayName: Lodestone
+		Tooltip: "'It's highly magnetic'"
+	}
+
+	MagnetizedCoil: {
+		DisplayName: Magnetized Coil
+		Tooltip: ""
+	}
+
+	LodestoneMagnet: {
+		DisplayName: Lodestone Magnet
+		Tooltip:
+			'''
+			Point and hold the magnet near a chunk of ore to vacuum it towards you. 
+			You can only magnet ores.
+			'''
+	}
+
+	AmanitaMushroom: {
+		DisplayName: Amanita Mushroom
+		Tooltip: ""
+	}
+
+	ClassUITest: {
+		DisplayName: Class UI Test
+		Tooltip: ""
+	}
+
+	Apple: {
+		DisplayName: Apple
+		Tooltip: ""
+	}
+
+	AlluviumOre: {
+		Tooltip: ""
+		DisplayName: Alluvium Ore
+	}
+
+	SubworldTool: {
+		Tooltip: Teleports you to a subworld
+		DisplayName: Subworld Tool
+	}
+
+	MyconidSpore: {
+		Tooltip: Strangley, it has bulges with bulges...
+		DisplayName: Myconid Spore
+	}
 }
 
 NPCs: {
-	AirborneScarab.DisplayName: Airborne Scarab
-	Scarab.DisplayName: Scarab
-	WardenArm.DisplayName: Warden Arm
 	WoodenWarden.DisplayName: Wooden Warden
-	Argie.DisplayName: Argie
-	Cheeks.DisplayName: Cheeks
+	WardenArm.DisplayName: Warden Arm
 	Sophie.DisplayName: Sophie
 	Stumpy.DisplayName: Stumpy
+	CoconutCluster.DisplayName: Coconut Cluster
+	FoodLegion.DisplayName: Food Legion
+	OrbitingFruit.DisplayName: Legion Fruit
+	OnionCluster.DisplayName: Onion
+	TomatoCluster.DisplayName: Tomato
+	Cheeks.DisplayName: Cheeks
+	Argie.DisplayName: Argie
+	Scarab.DisplayName: Scarab
+	AirborneScarab.DisplayName: Airborne Scarab
+	Fungore.DisplayName: Fungore
 }
 
 Projectiles: {
+	AcornLauncherProj.DisplayName: Acorn Launcher
+	AcornProj.DisplayName: Acorn
 	RedSandBall.DisplayName: Red Sand Ball
-	AcornLauncherProj.DisplayName: Acorn Launcher Proj
-	AcornProj.DisplayName: Acorn Proj
+	AcidicTomato.DisplayName: Acidic Tomato
+	BananaBoomerang.DisplayName: Banana Boomerang
+	CarrotDagger.DisplayName: Carrot Dagger
+	CoconutCannonfire.DisplayName: Coconut Cannonfire
+	ElderberryAirstrike.DisplayName: Elderberry Airstrike
+	OnionProj.DisplayName: Onion
+	PricklyPineapple.DisplayName: Prickly Pineapple
+	WatermelonBomb.DisplayName: Watermelon Bomb
+	SeedProj.DisplayName: Birdseed
+	BirdProj.DisplayName: Bird
 	AcornShrapnel.DisplayName: Acorn Shrapnel
-	BirdProj.DisplayName: Bird Proj
-	BorealHewerProj.DisplayName: Boreal Hewer Proj
-	FlailstormProj.DisplayName: Flailstorm Proj
-	FrostbarkClaymoreProj.DisplayName: Frostbark Claymore Proj
+	BorealHewerProj.DisplayName: Boreal Hewer
+	FlailstormProj.DisplayName: Flailstorm
+	FrostbarkClaymoreProj.DisplayName: Frostbark Claymore
 	LodestoneMagnetProj.DisplayName: Lodestone Magnet Proj
-	SeedProj.DisplayName: Seed Proj
-	StoneProj.DisplayName: Stone Proj
+	LodestoneMagnetTileProj.DisplayName: Lodestone Magnet
+	StoneProj.DisplayName: Stone
+	FungoreSmoke.DisplayName: Fungore Smoke
+	FungoreSlam.DisplayName: Fungore Slam
 }
+
+UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Configs: {
 	ExperienceMeterConfig: {
-		DisplayName: Experience Meter Config
-		Headers.ExperienceMeterColors: Experience Meter Colors Header
+		DisplayName: Experience Meter Settings
+		Headers.ExperienceMeterColors: Experience Meter Settings
 
 		BarColor: {
-			Label: ExperienceColors
+			Label: Change Icon/Bar Colors
 			Tooltip: Customize the RGB color of the Experience Meter
 		}
 	}
@@ -185,17 +243,17 @@ Configs: {
 		Tooltip: ""
 
 		R: {
-			Label: R
+			Label: Red
 			Tooltip: ""
 		}
 
 		G: {
-			Label: G
+			Label: Green
 			Tooltip: ""
 		}
 
 		B: {
-			Label: B
+			Label: Blue
 			Tooltip: ""
 		}
 	}
