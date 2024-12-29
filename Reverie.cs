@@ -10,8 +10,6 @@ using Reverie.Core.Interfaces;
 using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
-using static Reverie.Assets.Terraria;
-using Terraria.Localization;
 
 namespace Reverie
 {

@@ -51,7 +51,7 @@ namespace Reverie.Content.Terraria.NPCs.Warden
             NPCID.Sets.BossBestiaryPriority.Add(Type);
             NPCID.Sets.NPCBestiaryDrawModifiers drawModifiers = new NPCID.Sets.NPCBestiaryDrawModifiers()
             {
-                CustomTexturePath = "ReverieMod/Assets/Bestiary/WardenBestiary",
+                CustomTexturePath = "Reverie/Assets/Bestiary/WardenBestiary",
                 PortraitScale = 0.6f,
                 PortraitPositionYOverride = 0f,
             };

@@ -26,6 +26,8 @@
                 public const string Lodestone = Dir + "Lodestone/";
                 public const string Weapons = Dir + "Weapons/";
                 public const string Shovels = Dir + "Shovels/";
+
+                public const string WoodenWarden = Dir + "WoodenWarden/";
             }
 
             internal class NPCs
@@ -100,6 +102,7 @@
             internal class Tiles
             {
                 public const string Path = Directory + "Tiles/";
+                public const string DruidsGarden = Path + "DruidsGarden/";
             }
         }
 

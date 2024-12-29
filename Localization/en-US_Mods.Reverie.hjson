@@ -182,6 +182,26 @@ Items: {
 		Tooltip: Strangley, it has bulges with bulges...
 		DisplayName: Myconid Spore
 	}
+
+	Cobblestone: {
+		DisplayName: Cobblestone
+		Tooltip: ""
+	}
+
+	Loam: {
+		DisplayName: Loam
+		Tooltip: ""
+	}
+
+	LoamGrassSeeds: {
+		DisplayName: Loam Grass Seeds
+		Tooltip: ""
+	}
+
+	Bramblebow: {
+		DisplayName: Bramblebow
+		Tooltip: Converts Wooden Arrows into Bramble Arrows, that stick and pierce enemies
+	}
 }
 
 NPCs: {
@@ -224,6 +244,7 @@ Projectiles: {
 	StoneProj.DisplayName: Stone
 	FungoreSmoke.DisplayName: Fungore Smoke
 	FungoreSlam.DisplayName: Fungore Slam
+	BrambleArrowProj.DisplayName: Bramble Arrow Proj
 }
 
 UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker

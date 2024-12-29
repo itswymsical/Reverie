@@ -51,7 +51,7 @@ namespace Reverie.Content.Terraria.Items.Frostbark
     }
     public class BorealHewerProj : ModProjectile, IDrawPrimitive
     {
-
+        
         public override string Texture => $"{Assets.Terraria.Items.Frostbark}BorealHewer";
         public int MaxStickies => 1;
         private bool isStuck = false;
@@ -393,12 +393,12 @@ namespace Reverie.Content.Terraria.Items.Frostbark
                     effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.07f); //was originally 0.02, did not pop up as much. see if this change does anything
                     effect.Parameters["repeats"]?.SetValue(8f);
                     effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
-                    effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>("ReverieMod/Assets/VFX/EnergyTrail").Value);
-                    effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("ReverieMod/Assets/VFX/Bloom").Value);
+                    effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/VFX/EnergyTrail").Value);
+                    effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/VFX/Bloom").Value);
 
                     trail?.Render(effect);
 
-                    effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("ReverieMod/Assets/VFX/EnergyTrail").Value);
+                    effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/VFX/EnergyTrail").Value);
 
                     trail2?.Render(effect);
                 }
