@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Terraria;
+using Terraria.DataStructures;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
@@ -146,5 +148,79 @@ namespace Reverie.Common.Players
             pathConjurer = tag.GetBool("pathConjurer");
         }
     }
+    public class IdleAnimationPlayer : ModPlayer
+    {
+        private float breathingSpeed = 2.5f;
+        private float armAmplitude = 0.1f;
+        private float bodyAmplitude = 0.05f;
+        private float startTime;
+        private bool wasMoving = true;
+        private bool wasUsingItem = false;
 
+        private float defaultBodyRotation;
+        private Vector2 defaultBodyPosition;
+        private Vector2 defaultLegPosition;
+        private float defaultLegRotation;
+
+        public override void Initialize()
+        {
+            defaultBodyRotation = Player.bodyRotation;
+            defaultBodyPosition = Player.bodyPosition;
+            defaultLegPosition = Player.legPosition;
+            defaultLegRotation = Player.legRotation;
+        }
+
+        public override void PostUpdate()
+        {
+            bool isMoving = Player.velocity != Vector2.Zero;
+            bool isUsingItem = Player.controlUseItem;
+
+            if (isMoving || isUsingItem != wasUsingItem)
+            {
+                wasMoving = true;
+                wasUsingItem = isUsingItem;
+                startTime = Main.GameUpdateCount / 60f;
+
+                ResetPositions();
+            }
+            else if (!isMoving && !isUsingItem && wasMoving)
+            {
+                wasMoving = false;
+            }
+
+            if (!isMoving && !isUsingItem && Player.itemAnimation <= 0)
+            {
+                ApplyIdleAnimation();
+            }
+        }
+
+        private void ApplyIdleAnimation()
+        {
+            float currentTime = Main.GameUpdateCount / 60f;
+            float animationTime = currentTime - startTime;
+
+            float breathingCycle = (float)Math.Sin(animationTime * breathingSpeed);
+            float frontArmOffset = (float)Math.Sin((animationTime + 0.2f) * breathingSpeed);
+
+            float backArmRotation = (breathingCycle * armAmplitude);
+            float frontArmRotation = (frontArmOffset * armAmplitude);
+
+            Player.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, backArmRotation);
+            Player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, frontArmRotation);
+
+            Player.bodyRotation = breathingCycle * (bodyAmplitude * 1.55f);
+            Player.bodyPosition.Y = breathingCycle * bodyAmplitude;
+
+            Player.legRotation = breathingCycle * (bodyAmplitude * 0.55f);
+            Player.legPosition.Y = breathingCycle * bodyAmplitude;
+        }
+
+        private void ResetPositions()
+        {
+            Player.bodyRotation = defaultBodyRotation;
+            Player.bodyPosition = defaultBodyPosition;
+            Player.legPosition = defaultLegPosition;
+            Player.legRotation = defaultLegRotation;
+        }
+    }
 }

@@ -41,7 +41,6 @@ namespace Reverie.Common.Global
                 entity.ammo = entity.type;
             }
         }
-
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
         {
             base.ModifyTooltips(item, tooltips);
