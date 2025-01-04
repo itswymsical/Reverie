@@ -202,6 +202,11 @@ Items: {
 		DisplayName: Bramblebow
 		Tooltip: Converts Wooden Arrows into Bramble Arrows, that stick and pierce enemies
 	}
+
+	Girthquake: {
+		DisplayName: Girthquake
+		Tooltip: ""
+	}
 }
 
 NPCs: {
@@ -245,6 +250,7 @@ Projectiles: {
 	FungoreSmoke.DisplayName: Fungore Smoke
 	FungoreSlam.DisplayName: Fungore Slam
 	BrambleArrowProj.DisplayName: Bramble Arrow Proj
+	GirthquakeProj.DisplayName: Girthquake Proj
 }
 
 UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker

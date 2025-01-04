@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Reverie.Content.Sylvanwalde.Tiles.Canopy;
 using Reverie.Content.Terraria.NPCs.WorldNPCs;
 using Reverie.Content.Terraria.Tiles.Canopy;
 using Reverie.Helpers;

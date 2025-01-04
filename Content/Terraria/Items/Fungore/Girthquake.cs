@@ -1,45 +1,45 @@
-﻿using Terraria.ModLoader;
+﻿using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
+using Reverie.Core.Mechanics;
+using Reverie.Core.PrimitiveDrawing;
+
+using System;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
-using Microsoft.Xna.Framework;
-using Terraria.Audio;
-using Microsoft.Xna.Framework.Graphics;
+using Terraria.ModLoader;
 using Reverie.Core;
-using System.Collections.Generic;
-using System;
-using Reverie.Core.Mechanics;
-using Reverie.Core.Interfaces;
-using Reverie.Core.PrimitiveDrawing;
-using Reverie.Helpers;
-using Terraria.Graphics.Effects;
 
-namespace Reverie.Content.Terraria.Items.Frostbark
+namespace Reverie.Content.Terraria.Items.Fungore
 {
-    public class FrostbarkClaymore : ModItem
+    public class Girthquake : ModItem
     {
-        public override string Texture => Assets.Terraria.Items.Frostbark + Name;
+        public override string Texture => Assets.Terraria.Items.Fungore + Name;
 
         public override void SetDefaults()
         {
-            Item.damage = 13;
+            Item.damage = 12;
             Item.DamageType = DamageClass.Melee;
-            Item.width = Item.height = 54;
-            Item.useTime = 29;
-            Item.useAnimation = 29;
-            Item.knockBack = 1.7f;
-            Item.value = Item.sellPrice(silver: 18);
-            Item.rare = ItemRarityID.Blue;
-            Item.useTurn = false;
-            Item.noUseGraphic = true;
+            Item.width = 36;
+            Item.height = 44;
+            Item.useTime = 12;
+            Item.useAnimation = 12;
+            Item.reuseDelay = 20;
             Item.channel = true;
             Item.useStyle = ItemUseStyleID.Shoot;
-            Item.UseSound = SoundID.Item1;
-            Item.shoot = ModContent.ProjectileType<FrostbarkClaymoreProj>();
-            Item.shootSpeed = 2.5f;
+            Item.knockBack = 6.5f;
+            Item.crit = 9;
+            Item.shootSpeed = 14f;
+            Item.autoReuse = false;
+            Item.shoot = ModContent.ProjectileType<GirthquakeProj>();
+            Item.noUseGraphic = true;
+            Item.noMelee = true;
+            Item.autoReuse = false;
+            Item.value = Item.sellPrice(0, 1, 50, 0);
+            Item.rare = ItemRarityID.Blue;
         }
     }
-
-    internal class FrostbarkClaymoreProj : ModProjectile, IDrawPrimitive
+    internal class GirthquakeProj : ModProjectile
     {
         enum State : int
         {
@@ -56,16 +56,11 @@ namespace Reverie.Content.Terraria.Items.Frostbark
         private bool facingRight;
         private float rotVel = 0f;
         private int growCounter = 0;
-        private List<float> oldRotation = [];
-        private List<Vector2> oldPosition = [];
-        private List<NPC> struckNPCs = [];
+        private List<float> oldRotation = new();
+        private List<Vector2> oldPosition = new();
+        private List<NPC> struckNPCs = new();
 
-        private List<Vector2> cache;
-        private Trail trail;
-        private Trail trail2;
-        private Color color = new(255, 255, 255);
-        private readonly Vector2 Size = new(46, 50);
-        public override string Texture => Assets.Terraria.Items.Frostbark + "FrostbarkClaymore";
+        public override string Texture => Assets.Terraria.Projectiles.Fungore + Name;
         Player Owner => Main.player[Projectile.owner];
         private bool FirstTickOfSwing => Projectile.ai[0] == 0;
 
@@ -88,7 +83,7 @@ namespace Reverie.Content.Terraria.Items.Frostbark
 
             if (FirstTickOfSwing)
             {
-                struckNPCs = [];
+                struckNPCs = new List<NPC>();
 
                 facingRight = Owner.DirectionTo(Main.MouseWorld).X > 0;
                 float rot = Owner.DirectionTo(Main.MouseWorld).ToRotation();
@@ -97,15 +92,14 @@ namespace Reverie.Content.Terraria.Items.Frostbark
                 {
                     initialized = true;
                     endRotation = rot - 1f * Owner.direction;
-                    oldRotation = [];
-                    oldPosition = [];
+                    oldRotation = new List<float>();
+                    oldPosition = new List<Vector2>();
                 }
                 else
                 {
                     currentAttack = (State)((int)currentAttack + 1);
                     if (currentAttack == State.Reset)
                         currentAttack = State.Down;
-
                 }
 
                 startRotation = endRotation;
@@ -141,11 +135,6 @@ namespace Reverie.Content.Terraria.Items.Frostbark
                     Projectile.ai[0] = 0;
                     return;
                 }
-            }
-            if (Main.netMode != NetmodeID.Server)
-            {
-                ManageCaches();
-                ManageTrail();
             }
 
             UpdateVisuals();
@@ -221,72 +210,6 @@ namespace Reverie.Content.Terraria.Items.Frostbark
             return false;
         }
 
-        private void ManageCaches()
-        {
-            Vector2 off = Projectile.rotation.ToRotationVector2() * 35;
-            off.X *= (float)Math.Cos(startRotation);
-
-            if (cache == null)
-            {
-                cache = new List<Vector2>();
-
-                for (int i = 0; i < 60; i++)
-                {
-                    cache.Add(Projectile.Center + off);
-                }
-            }
-
-            cache.Add(Projectile.Center + off);
-
-            while (cache.Count > 60)
-            {
-                cache.RemoveAt(0);
-            }
-        }
-
-        private void ManageTrail()
-        {
-            Vector2 off = (Projectile.rotation + rotVel).ToRotationVector2() * 35;
-            off.X *= (float)Math.Cos(startRotation);
-
-            if (trail is null)
-            {
-                trail = new Trail(Main.instance.GraphicsDevice, 60, new NoTip(), factor => 12, factor =>
-                {
-                    Color trailColor = Color.DarkGray * MathHelper.Min(rotVel * 18, 0.75f);
-                    return trailColor;
-                });
-            }
-
-            trail.Positions = cache.ToArray();
-            trail.NextPosition = Projectile.Center + off;
-        }
-        public void DrawPrimitives()
-        {
-            var primitiveShader = Filters.Scene["LightningTrail"];
-            if (primitiveShader != null)
-            {
-                Effect effect = primitiveShader.GetShader().Shader;
-                if (effect != null)
-                {
-                    var world = Matrix.CreateTranslation(-Main.screenPosition.ToVector3());
-                    Matrix view = Main.GameViewMatrix.TransformationMatrix;
-                    var projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
-
-                    effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.07f); //was originally 0.02, did not pop up as much. see if this change does anything
-                    effect.Parameters["repeats"]?.SetValue(8f);
-                    effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
-                    effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/VFX/EnergyTrail").Value);
-                    effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/VFX/Bloom").Value);
-
-                    trail?.Render(effect);
-
-                    effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/VFX/EnergyTrail").Value);
-
-                    trail2?.Render(effect);
-                }
-            }
-        }
         private float EaseProgress(float input) => EaseFunction.EaseCircularInOut.Ease(input);
     }
 }

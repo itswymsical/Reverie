@@ -1,5 +1,4 @@
-﻿using Reverie.Content.Terraria.Tiles.Canopy;
-using Reverie.Content.Tiles.Canopy;
+﻿using Reverie.Content.Sylvanwalde.Tiles.Canopy;
 using Reverie.Helpers;
 using System;
 using System.Linq;

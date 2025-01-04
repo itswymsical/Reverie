@@ -9,7 +9,8 @@
 
         public const string Music = "Assets/Music/";
 
-      
+        public const string Backgrounds = "Assets/Backgrounds/";
+
         public const string Icon = $"{nameof(Reverie)}/icon";
 		public const string Dusts = Path + "Dusts/";
 
@@ -27,6 +28,7 @@
                 public const string Weapons = Dir + "Weapons/";
                 public const string Shovels = Dir + "Shovels/";
 
+                public const string Fungore = Dir + "Fungore/";
                 public const string WoodenWarden = Dir + "WoodenWarden/";
             }
 
@@ -59,7 +61,7 @@
             internal class Tiles
             {
                 public const string Dir = Directory + "Tiles/";
-                public const string Canopy = Dir + "Canopy/";
+
             }
         }
 
@@ -103,6 +105,7 @@
             {
                 public const string Path = Directory + "Tiles/";
                 public const string DruidsGarden = Path + "DruidsGarden/";
+                public const string Canopy = Path + "WoodlandCanopy/";
             }
         }
 

@@ -1,5 +1,5 @@
-﻿using Reverie.Content.Terraria.Tiles.Canopy;
-using Reverie.Content.Tiles.Canopy;
+﻿using Reverie.Content.Sylvanwalde.Tiles;
+using Reverie.Content.Sylvanwalde.Tiles.Canopy;
 using System;
 using Terraria;
 using Terraria.ID;

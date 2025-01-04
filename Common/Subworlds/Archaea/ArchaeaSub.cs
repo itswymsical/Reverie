@@ -26,7 +26,6 @@ namespace Reverie.Common.Systems.Subworlds.Archaea
         {
             base.SetStaticDefaults();
 
-            LoadingScreen = TextureAssets.MapBGs[9].Value;
             OtherworldTitle = TextureAssets.Logo2.Value;
         }
         public override void Update()

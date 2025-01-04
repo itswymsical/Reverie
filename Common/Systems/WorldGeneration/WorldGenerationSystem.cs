@@ -32,12 +32,13 @@ namespace Reverie.Common.Systems.WorldGeneration
             int CanopyIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Stalac"));
             if (CanopyIndex != 1)
             {
-                tasks.Insert(CanopyIndex + 1, new CanopyPass("Woodland Canopy", 635f));
-                tasks.Insert(CanopyIndex + 2, new CanopyFoliagePass("Canopy Decor", 280f));
-                tasks.Insert(CanopyIndex + 3, new ReverieTreePass("Reverie Tree", 150f));
-                tasks.Insert(CanopyIndex + 4, new SmoothPass("Smoothing World Again", 100f));
-                //tasks.Insert(CanopyIndex + 5, new ShrinePass("Canopy Shrines", 183f));
-                tasks.Insert(CanopyIndex + 5, new SanctumPass("Archiver Sanctum", 337f));
+                //tasks.Insert(CanopyIndex + 1, new CanopyPass("Woodland Canopy", 635f));
+                //tasks.Insert(CanopyIndex + 2, new CanopyFoliagePass("Canopy Decor", 280f));
+                //tasks.Insert(CanopyIndex + 3, new ReverieTreePass("Reverie Tree", 150f));
+                //tasks.Insert(CanopyIndex + 4, new SmoothPass("Smoothing World Again", 100f));
+                ////tasks.Insert(CanopyIndex + 5, new ShrinePass("Canopy Shrines", 183f));
+                //tasks.Insert(CanopyIndex + 5, new SanctumPass("Archiver Sanctum", 337f));
+                tasks.Insert(CanopyIndex, new StarterHousePass("Guide's Refuge", 292f));
             }
         }
     }
