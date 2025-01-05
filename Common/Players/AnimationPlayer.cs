@@ -1,19 +1,28 @@
 ﻿using Microsoft.Xna.Framework;
+using Reverie.Common.Extensions;
 using System;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
+using static Terraria.Player;
 
 namespace Reverie.Common.Players
 {
+    public enum AnimationState
+    {
+        Idle,
+        Jumping,
+        Walking,
+        Dash,
+        Drink,
+        Swing
+    }
+
     public class AnimationPlayer : ModPlayer
     {
-        private float breathingSpeed = 2.5f;
-        private float armAmplitude = 0.1f;
-        private float bodyAmplitude = 0.05f;
+        private AnimationState currentState = AnimationState.Idle;
         private float startTime;
-        private bool wasMoving = true;
-        private bool wasUsingItem = false;
+        private bool needsReset = false;
 
         private float defaultBodyRotation;
         private Vector2 defaultBodyPosition;
@@ -22,15 +31,6 @@ namespace Reverie.Common.Players
         private Vector2 defaultHeadPosition;
         private float defaultHeadRotation;
 
-        private bool isIdle = false;
-        private static bool active = true;
-        private bool needsReset = false;
-
-        public override void Initialize()
-        {
-            startTime = Main.GameUpdateCount / 60f;
-            SaveDefaultPositions();
-        }
 
         private void SaveDefaultPositions()
         {
@@ -42,38 +42,38 @@ namespace Reverie.Common.Players
             defaultHeadRotation = Player.headRotation;
         }
 
-        public override void PostUpdate()
+        public override void Initialize()
         {
-            UpdateAnimationState();
+            startTime = Main.GameUpdateCount / 60f;
+            SaveDefaultPositions();
         }
 
         private void UpdateAnimationState()
         {
-            bool isMoving = Player.velocity != Vector2.Zero;
-            bool isUsingItem = Player.controlUseItem;
 
-            if (isMoving || isUsingItem != wasUsingItem)
+            if (Player.IsMoving())
             {
-                wasMoving = true;
-                wasUsingItem = isUsingItem;
-                startTime = Main.GameUpdateCount / 60f;
-                isIdle = false;
-                needsReset = true;
+                currentState = AnimationState.Walking;
             }
-            else if (!isMoving && !isUsingItem && wasMoving)
+            else
             {
-                wasMoving = false;
+                currentState = AnimationState.Idle;
             }
-
-            if (!isMoving && !isUsingItem && Player.itemAnimation <= 0)
-            {
-                isIdle = true;
-            }
+            needsReset = true;
         }
+
+        public override void PostUpdate() => UpdateAnimationState();
 
         public override void ModifyDrawInfo(ref PlayerDrawSet drawInfo)
         {
-            if (!Main.gameMenu && active)
+            if (!drawInfo.drawPlayer.IsUsingItem())
+                drawInfo.drawPlayer.DrawItemBehindPlayer(ref drawInfo);
+            if (drawInfo.drawPlayer.IsJumping() && !drawInfo.drawPlayer.IsUsingItem())
+                drawInfo.drawPlayer.bodyFrame.Y = 0 * 56;
+            if (Player.IsGrappling())
+                drawInfo.drawPlayer.GrappleAnimation(ref drawInfo);         
+
+            if (!Main.gameMenu)
             {
                 if (needsReset)
                 {
@@ -81,9 +81,16 @@ namespace Reverie.Common.Players
                     needsReset = false;
                 }
 
-                if (isIdle)
+                switch (currentState)
                 {
-                    ApplyIdleAnimation(ref drawInfo);
+                    case AnimationState.Idle:
+                        ApplyIdleAnimation(ref drawInfo);
+                        break;
+                    case AnimationState.Walking:
+                        ApplyWalkAnimation(ref drawInfo);
+                        break;
+                    default:
+                        break;
                 }
             }
         }
@@ -96,136 +103,55 @@ namespace Reverie.Common.Players
             drawInfo.drawPlayer.legRotation = defaultLegRotation;
             drawInfo.drawPlayer.headPosition = defaultHeadPosition;
             drawInfo.drawPlayer.headRotation = defaultHeadRotation;
+            drawInfo.drawPlayer.fullRotation = 0f;
         }
 
         private void ApplyIdleAnimation(ref PlayerDrawSet drawInfo)
         {
+            float speed = 4.5f;
+            float armAmplitude = 0.1f;
+
             float currentTime = Main.GameUpdateCount / 60f;
             float animationTime = currentTime - startTime;
-            float breathingCycle = (float)Math.Sin(animationTime * breathingSpeed);
-            float frontArmOffset = (float)Math.Sin((animationTime + 0.2f) * breathingSpeed);
+            float cycle = (float)Math.Sin(animationTime * speed);
 
-            drawInfo.drawPlayer.bodyRotation = breathingCycle * (bodyAmplitude);
+            float headPosition = cycle * armAmplitude * 6.2f;
 
-            float headPosition = breathingCycle * armAmplitude * 6.2f;
-            if (Player.direction == -1)
+            drawInfo.drawPlayer.bodyRotation = cycle * 0.05f;
+            drawInfo.drawPlayer.SetCompositeHead(true, new Vector2(0, 0.95f + (headPosition * Player.direction)), rotation: 0.0275f);
+            if (!Player.IsUsingItem())
             {
-                drawInfo.drawPlayer.SetCompositeHead(true, rotation: 0.02f, new Vector2(0, -headPosition));
-            }
-            else
-            {
-                drawInfo.drawPlayer.SetCompositeHead(true, rotation: -0.02f, new Vector2(0, headPosition));
-            }
-
-            /* ROCK AND ROLL
-            drawInfo.drawPlayer.SetCompositeHead(true, CompositeHeadStretchAmount.Half, new Vector2(0, 5));
-            */
-
-            float backArmRotation = breathingCycle * armAmplitude;
-            float frontArmRotation = frontArmOffset * armAmplitude;
-            if (Player.direction == -1)
-            {
-                drawInfo.drawPlayer.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, backArmRotation);
-                drawInfo.drawPlayer.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, -frontArmRotation);
-            }
-            else
-            {
-                drawInfo.drawPlayer.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, -backArmRotation);
-                drawInfo.drawPlayer.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, frontArmRotation);
+                drawInfo.drawPlayer.ArmSway(ref drawInfo, speed, armAmplitude);
             }
         }
 
-        /*
-        private void ApplyNewAnimation(ref PlayerDrawSet drawInfo)
+        private void ApplyWalkAnimation(ref PlayerDrawSet drawInfo)
         {
+            float speed = 4.5f;
+            float headAmplitude = 0.1f;
+
             float currentTime = Main.GameUpdateCount / 60f;
-            float animationTime = currentTime - startTime;
-        }
-        */
-    }
+            float animationTime = currentTime - Main.GameUpdateCount / 60f;
+            float cycle = (float)Math.Sin(animationTime * speed);
+            float headPosition = cycle * headAmplitude * 6.2f;
 
-    public enum CompositeHeadStretchAmount
-    {
-        None,
-        Quarter,
-        Half,
-        ThreeQuarters,
-        Full
-    }
+            drawInfo.drawPlayer.SetCompositeHead(true, new Vector2(0, 0.95f + (headPosition * Player.direction)), rotation: 0.0275f);
 
-    public struct CompositeHeadData
-    {
-        public bool Enabled;
-        public float Rotation;
-        public Vector2 Position;
-        public bool StretchHorizontally;
+            float rotVelX = (float)Math.Sin((animationTime + 0.1f) * Player.velocity.X);
+            float offset = 0.97f;
 
-        public CompositeHeadData(bool enabled, float rotation, Vector2 position, bool stretchHorizontally = false)
-        {
-            Enabled = enabled;
-            Rotation = rotation;
-            Position = position;
-            StretchHorizontally = stretchHorizontally;
-        }
-    }
-
-    public static class PlayerHeadExtensions
-    {
-        private static float GetRotationFromStretch(CompositeHeadStretchAmount stretch)
-        {
-            return stretch switch
+            if (Player.IsJumping())
             {
-                CompositeHeadStretchAmount.None => 0f,
-                CompositeHeadStretchAmount.Quarter => 0.4f,
-                CompositeHeadStretchAmount.Half => 0.8f,
-                CompositeHeadStretchAmount.ThreeQuarters => 1.2f,
-                CompositeHeadStretchAmount.Full => 1.57f,
-                _ => 0f
-            };
-        }
-
-        public static void SetCompositeHead(this Player player, bool enabled, float rotation)
-        {
-            player.headRotation = rotation;
-        }
-
-        public static void SetCompositeHead(this Player player, bool enabled, float rotation, Vector2 positionOffset)
-        {
-            player.headRotation = rotation;
-            player.headPosition += positionOffset;
-        }
-
-        public static void SetCompositeHead(this Player player, bool enabled, CompositeHeadStretchAmount stretch)
-        {
-            float rotation = GetRotationFromStretch(stretch);
-            player.headRotation = rotation * (float)player.direction;
-        }
-
-        // Most complete version with all parameters
-        public static void SetCompositeHead(this Player player, bool enabled, CompositeHeadStretchAmount stretch, Vector2 positionOffset, bool stretchHorizontally = false)
-        {
-            float rotation = GetRotationFromStretch(stretch);
-            player.headRotation = rotation * (float)player.direction;
-            player.headPosition += positionOffset;
-
-            // You could implement horizontal stretching here if needed
-            // This would require modifications to the player's draw code
-            if (stretchHorizontally)
-            {
-                // Implementation for head stretching would go here
-                // This might require additional sprite manipulation
+                offset = 0f;
+                drawInfo.drawPlayer.ArmSway(ref drawInfo, speed, 0.759f);
             }
-        }
 
-        public static void SetCompositeHead(this Player player, CompositeHeadData headData)
-        {
-            player.headRotation = headData.Rotation * (float)player.direction;
-            player.headPosition += headData.Position;
-
-            if (headData.StretchHorizontally)
-            {
-                // Implementation for head stretching would go here
-            }
+            drawInfo.drawPlayer.bodyRotation = rotVelX;
+            drawInfo.drawPlayer.legRotation = rotVelX * 0.75f;
+            drawInfo.hidesBottomSkin = true;
+            if (Player.direction == -1) offset = -0.97f;
+            
+            drawInfo.drawPlayer.legPosition = new Vector2(drawInfo.drawPlayer.legPosition.X - offset, -0.65f);      
         }
     }
 }
