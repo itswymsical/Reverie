@@ -5,6 +5,7 @@ using Reverie.Common.Systems;
 using Reverie.Common.UI;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.Graphics;
 using Terraria.Localization;
 
 namespace Reverie.Core.Dialogue
@@ -24,10 +25,14 @@ namespace Reverie.Core.Dialogue
         private DialogueID? _currentDialogueId = null;
         private int _previousMusicBox = -1;
 
+        private const float DIALOGUE_ZOOM_LEVEL = 1.55f;
+        private const int ZOOM_ANIMATION_TIME = 80;
+
+        private bool _isZoomedIn = false;
         public void RegisterNPC(string npcId, NPCData npcData)
             => _npcDialogueData[npcId] = npcData;
 
-        public NPCDialogueBox GetActiveDialogue() 
+        public NPCDialogueBox GetActiveDialogue()
             => _activeDialogue;
         public NPCData GetNPCData(string npcId)
         => _npcDialogueData.TryGetValue(npcId, out var npcData) ? npcData : null;
@@ -62,6 +67,20 @@ namespace Reverie.Core.Dialogue
             }
         }
 
+        private void UpdateDialogueZoom()
+        {
+            if (_activeDialogue != null && !_isZoomedIn)
+            {
+                ZoomHandler.SetZoomAnimation(DIALOGUE_ZOOM_LEVEL, ZOOM_ANIMATION_TIME);
+                _isZoomedIn = true;
+            }
+            else if (_activeDialogue == null && _isZoomedIn)
+            {
+                ZoomHandler.SetZoomAnimation(1f, ZOOM_ANIMATION_TIME);
+                _isZoomedIn = false;
+            }
+        }
+
         public void UpdateActiveDialogue()
         {
             if (_activeDialogue != null)
@@ -76,21 +95,10 @@ namespace Reverie.Core.Dialogue
                     EnsureDialogueMusicPlaying();
                 }
             }
+
+            UpdateDialogueZoom();
         }
 
-        private void EnsureDialogueMusicPlaying()
-        {
-            if (_currentDialogueMusicID.HasValue)
-            {
-                Main.musicBox2 = _currentDialogueMusicID.Value;
-            }
-        }
-        public void OnEndDialogue(DialogueID dialogueId)
-        {
-            ReveriePlayer player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
-            if (dialogueId == DialogueID.GuideYappingAboutReverieLore)
-                ReverieUISystem.Instance.ClassInterface.SetState(ReverieUISystem.Instance.classUI);
-        }
         private void EndDialogue()
         {
             if (_currentDialogueId.HasValue)
@@ -105,15 +113,36 @@ namespace Reverie.Core.Dialogue
                 _currentDialogueMusicID = null;
             }
 
-            _activeDialogue = null;
-        }    
+            if (_isZoomedIn)
+            {
+                ZoomHandler.SetZoomAnimation(1f, ZOOM_ANIMATION_TIME);
+                _isZoomedIn = false;
+            }
 
-        public void DrawActiveDialogue(SpriteBatch spriteBatch, Vector2 bottomAnchorPosition) 
+            _activeDialogue = null;
+        }
+
+        private void EnsureDialogueMusicPlaying()
+        {
+            if (_currentDialogueMusicID.HasValue)
+            {
+                Main.musicBox2 = _currentDialogueMusicID.Value;
+            }
+        }
+
+        public void OnEndDialogue(DialogueID dialogueId)
+        {
+            ReveriePlayer player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
+            if (dialogueId == DialogueID.GuideYappingAboutReverieLore)
+                ReverieUISystem.Instance.ClassInterface.SetState(ReverieUISystem.Instance.classUI);
+        }
+
+        public void DrawActiveDialogue(SpriteBatch spriteBatch, Vector2 bottomAnchorPosition)
             => _activeDialogue?.DrawInGame(spriteBatch, bottomAnchorPosition);
-        
+
         public bool IsDialogueActive(DialogueID dialogueId)
             => _activeDialogue != null && DialogueList.GetDialogueById(dialogueId) != null;
-        
+
         public bool IsDialogueEntryActive(DialogueID dialogueId, int entryIndex)
         {
             return _activeDialogue != null &&

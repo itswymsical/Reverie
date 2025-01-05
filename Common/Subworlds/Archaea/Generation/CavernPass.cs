@@ -1,5 +1,4 @@
-﻿using Reverie.Content.Tiles.Canopy;
-using Reverie.Utilities;
+﻿using Reverie.Utilities;
 using Terraria;
 using Terraria.IO;
 using Terraria.ModLoader;

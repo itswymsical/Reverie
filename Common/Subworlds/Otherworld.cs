@@ -1,10 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
+using ReLogic.Graphics;
 using SubworldLibrary;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameInput;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace Reverie.Common.Systems.Subworlds
 {
@@ -27,7 +30,10 @@ namespace Reverie.Common.Systems.Subworlds
 
         public override void SetStaticDefaults()
         {
-            LoadingScreen = TextureAssets.MapBGs[0].Value;
+            LoadingScreen = (Texture2D)ModContent.Request<Texture2D>(
+                $"{nameof(Reverie)}" +
+                $"/{Assets.Backgrounds}" +
+                $"TransitionBG");
             OtherworldTitle = TextureAssets.Logo.Value;
             LoadingIcon = TextureAssets.LoadingSunflower.Value;
         }

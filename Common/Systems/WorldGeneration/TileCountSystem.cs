@@ -1,6 +1,5 @@
 ﻿using System;
 using Terraria.ModLoader;
-using Reverie.Content.Tiles.Canopy;
 using Terraria.ID;
 using Reverie.Content.Archaea.Tiles;
 

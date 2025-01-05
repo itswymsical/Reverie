@@ -23,7 +23,7 @@ namespace Reverie.Common.MissionEventTrackers
         private const float AnimationAmplitude = 4f;
         public Texture2D missionAvailableTexture = ModContent.Request<Texture2D>($"{Assets.UI.MissionUI}MissionObjectives").Value;
 
-        private void UpdateMissionProgress(MissionPlayer missionPlayer)
+        private void UpdateMissionProgress(MissionPlayer missionPlayer, NPC npc)
         {
             Mission Reawakening = missionPlayer.GetMission(MissionID.Reawakening);
             if (Reawakening != null && Reawakening.Progress == MissionProgress.Active)
@@ -35,8 +35,11 @@ namespace Reverie.Common.MissionEventTrackers
                     if (Reawakening.CurrentSetIndex == 0 && !currentSet.Objectives[0].IsCompleted)
                         Reawakening.UpdateProgress(0);
 
-                    if (Reawakening.CurrentSetIndex == 2)
-                        Reawakening.UpdateProgress(1);
+                    if (npc.type == NPCID.Guide)
+                    {
+                        if (Reawakening.CurrentSetIndex == 2)
+                            Reawakening.UpdateProgress(1);
+                    }
 
                     if (Reawakening.CurrentSetIndex == 4 &&
                         currentSet.Objectives[0].IsCompleted && currentSet.Objectives[1].IsCompleted)
@@ -81,7 +84,8 @@ namespace Reverie.Common.MissionEventTrackers
         public override void GetChat(NPC npc, ref string chat)
         {
             var player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-            UpdateMissionProgress(player);
+
+            UpdateMissionProgress(player, npc);
         }
 
         public override void EditSpawnPool(IDictionary<int, float> pool, NPCSpawnInfo spawnInfo)

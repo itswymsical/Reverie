@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Terraria;
+using Terraria.DataStructures;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
@@ -146,5 +148,4 @@ namespace Reverie.Common.Players
             pathConjurer = tag.GetBool("pathConjurer");
         }
     }
-
 }

@@ -1,8 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Reverie.Common.Systems;
+using Reverie.Core.Cutscenes;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
-
+using Reverie.Cutscenes;
 using Terraria;
 using Terraria.ID;
 
@@ -20,7 +21,7 @@ namespace Reverie.Common.Players
             {
                 if (Reawakening.Progress != MissionProgress.Active)
                 {
-                    //CutsceneLoader.PlayCutscene(new IntroCutscene());
+                    CutsceneLoader.PlayCutscene(new IntroCutscene());
                     UnlockMission(MissionID.Reawakening);
                     StartMission(MissionID.Reawakening);
 
