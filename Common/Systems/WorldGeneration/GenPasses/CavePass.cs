@@ -99,7 +99,7 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
             // DoOpenCaves  
             FastNoiseLite noise3 = new();
             noise3.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
-            noise3.SetFrequency(0.028f);
+            noise3.SetFrequency(0.048f);
             noise3.SetFractalType(FastNoiseLite.FractalType.FBm);
             noise3.SetFractalOctaves(4);
             noise3.SetFractalLacunarity(3f);

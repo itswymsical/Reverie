@@ -73,7 +73,7 @@ namespace Reverie.Common.Players
             if (Player.IsGrappling())
                 drawInfo.drawPlayer.GrappleAnimation(ref drawInfo);         
 
-            if (!Main.gameMenu)
+            if (!Main.gameMenu && !Player.sleeping.isSleeping)
             {
                 if (needsReset)
                 {

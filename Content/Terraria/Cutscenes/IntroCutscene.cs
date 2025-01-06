@@ -32,6 +32,8 @@ namespace Reverie.Cutscenes
         {
             base.Update(gameTime);
             DisablePlayerMovement();
+            Player player = Main.LocalPlayer;
+            player.sleeping.isSleeping = true;
             if (!IsPlaying) return;
 
             _elapsedTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -45,6 +47,8 @@ namespace Reverie.Cutscenes
         {
             DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.WakingUpToTheGuideYapping);
             EnablePlayerMovement();
+            Player player = Main.LocalPlayer;
+            player.sleeping.isSleeping = false;
             base.End();
         }
     }
