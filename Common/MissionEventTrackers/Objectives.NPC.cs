@@ -12,6 +12,8 @@ using Reverie.Common.Players;
 using SubworldLibrary;
 using Reverie.Common.Systems.Subworlds.Archaea;
 using Reverie.Content.Archaea.NPCs.Surface;
+using Terraria.GameContent.UI;
+using Reverie.Common.Extensions;
 
 
 namespace Reverie.Common.MissionEventTrackers
@@ -19,11 +21,10 @@ namespace Reverie.Common.MissionEventTrackers
     public class GlobalMissionNPC : GlobalNPC
     {
         public override bool InstancePerEntity => true;
-        private const float AnimationSpeed = 1f;
-        private const float AnimationAmplitude = 4f;
+
         public Texture2D missionAvailableTexture = ModContent.Request<Texture2D>($"{Assets.UI.MissionUI}MissionObjectives").Value;
 
-        private void UpdateMissionProgress(MissionPlayer missionPlayer, NPC npc)
+        private static void UpdateMissionProgress(MissionPlayer missionPlayer, NPC npc)
         {
             Mission Reawakening = missionPlayer.GetMission(MissionID.Reawakening);
             if (Reawakening != null && Reawakening.Progress == MissionProgress.Active)
@@ -83,8 +84,8 @@ namespace Reverie.Common.MissionEventTrackers
 
         public override void GetChat(NPC npc, ref string chat)
         {
+            base.GetChat(npc, ref chat);
             var player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-
             UpdateMissionProgress(player, npc);
         }
 
@@ -116,7 +117,7 @@ namespace Reverie.Common.MissionEventTrackers
         public override void AI(NPC npc)
         {
             base.AI(npc);
-            HandleDialogueMovement(npc);
+            npc.TownNPC_TalkState();
         }
 
         public override bool CheckActive(NPC npc)
@@ -135,44 +136,6 @@ namespace Reverie.Common.MissionEventTrackers
             }
             return base.CheckActive(npc);
         }
-
-        private void HandleDialogueMovement(NPC npc)
-        {
-            static bool IsNPCInActiveDialogue(NPC npc) // i know what you're thinking
-            {
-                npc.immortal = true;
-                var activeDialogue = DialogueManager.Instance.GetActiveDialogue();
-                if (activeDialogue != null)
-                {
-                    return activeDialogue.npcData.NpcID == npc.type;
-                }
-                return false;
-            }
-
-            if (!IsNPCInActiveDialogue(npc))
-            {
-                npc.immortal = false;
-                return;
-            }
-            npc.velocity = Vector2.Zero;
-
-            Player player = Main.player[Main.myPlayer];
-            if (player.Center.X < npc.Center.X)
-                npc.direction = -1;
-
-            else
-                npc.direction = 1;
-
-            npc.spriteDirection = npc.direction;
-
-            npc.frameCounter++;
-            if (npc.frameCounter > 20)
-            {
-                npc.frame.Y = (npc.frame.Y + npc.frame.Height) % (npc.frame.Height * 2);
-                npc.frameCounter = 0;
-            }
-        }
-
         public override void OnKill(NPC npc)
         {
             base.OnKill(npc);
@@ -182,9 +145,9 @@ namespace Reverie.Common.MissionEventTrackers
         public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-            if (NPCHasAvailableMission(missionPlayer, npc.type))
+            if (npc.NPCHasAvailableMission(missionPlayer, npc.type))
             {
-                float hoverOffset = (float)Math.Sin(Main.GameUpdateCount * AnimationSpeed * 0.1f) * AnimationAmplitude;
+                float hoverOffset = (float)Math.Sin(Main.GameUpdateCount * 1f * 0.1f) * 4f;
                 Vector2 drawPos = npc.Top + new Vector2(-missionAvailableTexture.Width / 2f, -missionAvailableTexture.Height - 10f - hoverOffset);
                 drawPos = Vector2.Transform(drawPos - Main.screenPosition, Main.GameViewMatrix.ZoomMatrix);
                 spriteBatch.Draw(
@@ -200,22 +163,6 @@ namespace Reverie.Common.MissionEventTrackers
                 );
             }
             base.PostDraw(npc, spriteBatch, screenPos, drawColor);
-        }
-
-        private static bool NPCHasAvailableMission(MissionPlayer missionPlayer, int npcType)
-        {
-            if (missionPlayer.npcMissionsDict.TryGetValue(npcType, out var missionIds))
-            {
-                foreach (var missionId in missionIds)
-                {
-                    var mission = missionPlayer.GetMission(missionId);
-                    if (mission != null && mission.State == MissionState.Unlocked && mission.Progress != MissionProgress.Completed)
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
         }
     }
 }

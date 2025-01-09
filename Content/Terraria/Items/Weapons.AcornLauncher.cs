@@ -202,8 +202,6 @@ namespace Reverie.Content.Terraria.Items
             owner.heldProj = Projectile.whoAmI;
             owner.itemTime = 2;
             owner.itemAnimation = 2;
-
-            // Set the player's arm position to resemble gun holding animation
             owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, (owner.Center - Main.MouseWorld).ToRotation() + MathHelper.PiOver2);
         }
     }

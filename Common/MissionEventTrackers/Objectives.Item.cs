@@ -7,6 +7,8 @@ using Reverie.Core.Missions;
 using Reverie.Common.Players;
 using Reverie.Core.Dialogue;
 using Reverie.Common.Systems;
+using static Terraria.ModLoader.ModContent;
+using Reverie.Content.Terraria.Items.Mission;
 
 namespace Reverie.Common.MissionEventTrackers
 {
@@ -17,13 +19,18 @@ namespace Reverie.Common.MissionEventTrackers
             UpdateMissionProgress(item);
             base.OnCreated(item, context);
         }
-        public override void UpdateInventory(Item item, Player player)
+        public override bool OnPickup(Item item, Player player)
         {
-            if (item.accessory && !DownedBossSystem.pickedUpAnAccessoryForTheFirstTime)
+            base.OnPickup(item, player);
+            if (item.playerIndexTheItemIsReservedFor == player.whoAmI)
             {
-                DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.GuideWhenYouFindAnAccessory);
-                DownedBossSystem.pickedUpAnAccessoryForTheFirstTime = true;
+                // This suggests the item was recently dropped by this player
+                return true;  // Allow pickup but don't update mission
             }
+            else
+                UpdateMissionProgress(item);
+
+            return true;
         }
 
         private static void UpdateMissionProgress(Item item)
@@ -77,6 +84,23 @@ namespace Reverie.Common.MissionEventTrackers
             }
             #endregion
 
+            #region Translocator
+            Mission translocator = player.GetMission(MissionID.Translocator);
+            if (translocator != null && translocator.Progress == MissionProgress.Active)
+            {
+                if (translocator.CurrentSetIndex == 0)
+                {
+                    if (item.type == ItemType<RealmCrystal>())
+                        translocator.UpdateProgress(0);
+                    if (item.type == ItemType<CoilArray>())
+                        translocator.UpdateProgress(0);
+                    if (item.type == ItemType<DimensionalTuningFork>())
+                        translocator.UpdateProgress(0);
+                }
+            }
+
+            #endregion
+
             #region Red Eyed Retribution
             Mission RedEyedRetribution = player.GetMission(MissionID.RedEyedRetribution);
             if (RedEyedRetribution != null && RedEyedRetribution.Progress == MissionProgress.Active)
@@ -93,18 +117,15 @@ namespace Reverie.Common.MissionEventTrackers
                 }
                 if (RedEyedRetribution.CurrentSetIndex == 1)
                 {
-                    if (item.type == ItemID.IronskinPotion)
+                    if (item.potion == true && !(item.type == ItemID.HealingPotion || item.type == ItemID.LesserHealingPotion))
                     {
-                        RedEyedRetribution.UpdateProgress(0, 1);
+                        RedEyedRetribution.UpdateProgress(0, item.stack);
                     }
-                    if (item.type == ItemID.RegenerationPotion)
+                    if (item.type == ItemID.HealingPotion || item.type == ItemID.LesserHealingPotion)
                     {
-                        RedEyedRetribution.UpdateProgress(0, 1);
+                        RedEyedRetribution.UpdateProgress(1, item.stack);
                     }
-                    if (item.type == ItemID.SwiftnessPotion)
-                    {
-                        RedEyedRetribution.UpdateProgress(0, 1);
-                    }
+
                 }
             }
             #endregion

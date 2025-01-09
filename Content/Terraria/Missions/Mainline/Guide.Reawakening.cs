@@ -29,7 +29,7 @@ namespace Reverie.Content.Terraria.Missions.Mainline
             ReveriePlayer player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
             if (CurrentSetIndex == 0 && objectiveIndex == 0) // "Talk to the Guide"
             {
-                DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.GuideYappingAboutReverieLore);
+                DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.GuideYappingAboutReverieLore, true);
                 foreach (var GiveStarterItems in giveStarterItems)
                     Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), GiveStarterItems.type, GiveStarterItems.stack);
             }
@@ -39,23 +39,23 @@ namespace Reverie.Content.Terraria.Missions.Mainline
                 Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.TargetDummy);
                 if (player.pathWarrior)
                 {
-                    DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.SelectedClass_Warrior);
+                    DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.SelectedClass_Warrior, true);
                     Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.CopperBroadsword);
                 }
                 else if (player.pathMarksman)
                 {
-                    DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.SelectedClass_Marksman);
+                    DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.SelectedClass_Marksman, true);
                     Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.CopperBow);
                     Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.WoodenArrow, 80);
                 }
                 else if(player.pathMage)
                 {
-                    DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.SelectedClass_Mage);
+                    DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.SelectedClass_Mage, true);
                     Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.AmethystStaff);
                 }
                 else if(player.pathConjurer)
                 {
-                    DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.SelectedClass_Conjurer);
+                    DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.SelectedClass_Conjurer, true);
                     Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.BabyBirdStaff);
                 }
             }
@@ -65,13 +65,13 @@ namespace Reverie.Content.Terraria.Missions.Mainline
 
             if (CurrentSetIndex == 2 && objectiveIndex == 1) // "Talk to the Guide"
             {
-                DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.GuideGivesYouAMagicMirror);
+                DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.GuideGivesYouAMagicMirror, true);
                 foreach (var GiveItems in giveItems)
                     Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), GiveItems.type, GiveItems.stack);
             }
                 
             if (CurrentSetIndex == 4 && objectiveIndex == 2) // "Check in with the Guide"
-                DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.ReawakeningEndingDialogue);
+                DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.ReawakeningEndingDialogue, true);
         }
     }
 }

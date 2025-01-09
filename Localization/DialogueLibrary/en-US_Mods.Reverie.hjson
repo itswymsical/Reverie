@@ -33,7 +33,7 @@ DialogueLibrary: {
 		}
 
 		TrainingComplete: {
-			Line1: Decent work.
+			Line1: Great work.
 			Line2: Although, this is just a target dummy. You'll need some better weapons if you wanna fight for real.
 			Line3: But before you run off, I have some gear for you.
 		}

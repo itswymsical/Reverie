@@ -113,7 +113,7 @@ namespace Reverie.Common.Players
 
             float currentTime = Main.GameUpdateCount / 60f;
             float animationTime = currentTime - startTime;
-            float cycle = (float)Math.Sin(animationTime * speed);
+            float cycle = (float)Math.Sin(animationTime * speed) * Player.direction;
 
             float headPosition = cycle * armAmplitude * 6.2f;
 
@@ -138,7 +138,7 @@ namespace Reverie.Common.Players
             drawInfo.drawPlayer.SetCompositeHead(true, new Vector2(0, 0.95f + (headPosition * Player.direction)), rotation: 0.0275f);
 
             float rotVelX = (float)Math.Sin((animationTime + 0.1f) * Player.velocity.X);
-            float offset = 0.97f;
+            float offset = .87f * Player.direction;
 
             if (Player.IsJumping())
             {
@@ -149,7 +149,6 @@ namespace Reverie.Common.Players
             drawInfo.drawPlayer.bodyRotation = rotVelX;
             drawInfo.drawPlayer.legRotation = rotVelX * 0.75f;
             drawInfo.hidesBottomSkin = true;
-            if (Player.direction == -1) offset = -0.97f;
             
             drawInfo.drawPlayer.legPosition = new Vector2(drawInfo.drawPlayer.legPosition.X - offset, -0.65f);      
         }

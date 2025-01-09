@@ -14,7 +14,8 @@
         #region Mainline
         //Chapter 1: Reawakening
         public const int Reawakening = 1;
-        public const int RedEyedRetribution = 2;
+        public const int Translocator = 2;
+        public const int RedEyedRetribution = 3;
 
         //Chapter 2: Rejunvenation
         public const int Revegatation = 3;

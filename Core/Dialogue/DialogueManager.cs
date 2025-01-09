@@ -37,7 +37,7 @@ namespace Reverie.Core.Dialogue
         public NPCData GetNPCData(string npcId)
         => _npcDialogueData.TryGetValue(npcId, out var npcData) ? npcData : null;
 
-        public bool PlayDialogueSequence(NPCData npcData, DialogueID dialogueId)
+        public bool PlayDialogueSequence(NPCData npcData, DialogueID dialogueId, bool zoomIn = false)
         {
             Main.CloseNPCChatOrSign();
             if (IsAnyDialogueActive())
@@ -48,7 +48,7 @@ namespace Reverie.Core.Dialogue
             var dialogue = DialogueList.GetDialogueById(dialogueId);
             if (dialogue != null)
             {
-                _activeDialogue = NPCDialogueBox.CreateNewDialogueSequence(npcData, dialogue);
+                _activeDialogue = NPCDialogueBox.CreateNewDialogueSequence(npcData, dialogue, zoomIn);
                 ChangeMusicForDialogue(dialogue.MusicID);
                 _currentDialogueId = dialogueId;
                 return true;
@@ -56,20 +56,10 @@ namespace Reverie.Core.Dialogue
 
             return false;
         }
-
-        private void ChangeMusicForDialogue(int? musicID)
-        {
-            if (musicID.HasValue)
-            {
-                _previousMusicBox = Main.musicBox2;
-                _currentDialogueMusicID = musicID.Value;
-                Main.musicBox2 = musicID.Value;
-            }
-        }
-
+        
         private void UpdateDialogueZoom()
         {
-            if (_activeDialogue != null && !_isZoomedIn)
+            if (_activeDialogue != null && !_isZoomedIn && _activeDialogue.ShouldZoom)
             {
                 ZoomHandler.SetZoomAnimation(DIALOGUE_ZOOM_LEVEL, ZOOM_ANIMATION_TIME);
                 _isZoomedIn = true;
@@ -78,6 +68,15 @@ namespace Reverie.Core.Dialogue
             {
                 ZoomHandler.SetZoomAnimation(1f, ZOOM_ANIMATION_TIME);
                 _isZoomedIn = false;
+            }
+        }
+        private void ChangeMusicForDialogue(int? musicID)
+        {
+            if (musicID.HasValue)
+            {
+                _previousMusicBox = Main.musicBox2;
+                _currentDialogueMusicID = musicID.Value;
+                Main.musicBox2 = musicID.Value;
             }
         }
 

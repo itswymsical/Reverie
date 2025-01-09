@@ -45,6 +45,7 @@ namespace Reverie.Common.UI
         #endregion
 
         #region Properties
+        public bool ShouldZoom { get; set; }
         public bool ShouldBeRemoved => isRemoved && animationProgress >= AnimationDuration;
         public float Opacity => isRemoved ? 1f - (animationProgress / AnimationDuration) : MathHelper.Clamp(animationProgress / AnimationDuration, 0f, 1f);
         public Color DefaultTextColor { get; init; } = Color.White;
@@ -57,7 +58,7 @@ namespace Reverie.Common.UI
         #endregion
 
         #region Public Methods
-        public static NPCDialogueBox CreateNewDialogueSequence(NPCData npcData, DialogueSequence sequence)
+        public static NPCDialogueBox CreateNewDialogueSequence(NPCData npcData, DialogueSequence sequence, bool zoomIn)
         {
             var notification = new NPCDialogueBox
             {
@@ -65,7 +66,8 @@ namespace Reverie.Common.UI
                 npcData = npcData,
                 NpcName = npcData.NpcName,
                 Color = npcData.DialogueColor,
-                CharacterSound = npcData.CharacterSound
+                CharacterSound = npcData.CharacterSound,
+                ShouldZoom = zoomIn
             };
 
             foreach (var entry in sequence.Entries)

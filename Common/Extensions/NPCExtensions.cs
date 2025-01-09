@@ -6,6 +6,14 @@ using Terraria;
 using Terraria.ModLoader;
 
 using Microsoft.Xna.Framework;
+using Terraria.GameContent.UI;
+using Terraria.ID;
+using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
+using Terraria.GameContent;
+using Reverie.Core.Dialogue;
+using Reverie.Common.Players;
+using Reverie.Core.Missions;
 
 #endregion
 
@@ -242,5 +250,64 @@ namespace Reverie.Common.Extensions
 				}
 			}
 		}
-	}
+    }
+
+	internal static class TownNPCExtensions
+	{
+        /// <summary>
+        /// Makes a town NPC perform rock, paper, scissors.
+        /// </summary>
+        /// <param name="npc"></param>
+        /// <returns></returns>
+        public static bool TownNPC_PlayRPS(this NPC npc) => npc.ai[0] == 16f;
+        /// <summary>
+        /// Makes a town do that talking bubble thingy.
+        /// </summary>
+        /// <param name="npc"></param>
+        /// <returns></returns>
+        public static void TownNPC_TalkState(this NPC npc)
+        { 
+            static bool IsNPCInActiveDialogue(NPC npc)
+            {
+                var activeDialogue = DialogueManager.Instance.GetActiveDialogue();
+                if (activeDialogue != null)
+                {
+                    return activeDialogue.npcData.NpcID == npc.type;
+                }
+                return false;
+            }
+
+            if (!IsNPCInActiveDialogue(npc))
+            {
+                npc.immortal = false;
+                return;
+            }
+			else
+			{
+                npc.ai[0] = 3f; 
+				npc.immortal = true;
+                npc.velocity = Vector2.Zero;
+
+                Player player = Main.player[Main.myPlayer];
+                npc.direction = player.Center.X < npc.Center.X ? -1 : 1;
+                npc.spriteDirection = npc.direction;
+            }
+        }
+
+        public static bool NPCHasAvailableMission(this NPC npc, MissionPlayer missionPlayer, int npcType)
+        {
+            if (missionPlayer.npcMissionsDict.TryGetValue(npcType, out var missionIds))
+            {
+                foreach (var missionId in missionIds)
+                {
+                    var mission = missionPlayer.GetMission(missionId);
+                    if (mission != null && mission.State == MissionState.Unlocked && mission.Progress != MissionProgress.Completed)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+    }
 }

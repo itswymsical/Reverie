@@ -45,7 +45,7 @@ namespace Reverie.Cutscenes
         
         public override void End()
         {
-            DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.WakingUpToTheGuideYapping);
+            DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.WakingUpToTheGuideYapping, true);
             EnablePlayerMovement();
             Player player = Main.LocalPlayer;
             player.sleeping.isSleeping = false;

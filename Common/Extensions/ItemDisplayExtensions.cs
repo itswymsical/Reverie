@@ -25,14 +25,18 @@ namespace Reverie.Common.Extensions
             float tilt = player.velocity.X * 0.125f;
             float currentTime = Main.GameUpdateCount / 60f;
             float animationTime = currentTime - Main.GameUpdateCount / 60f;
-            SpriteEffects flip = SpriteEffects.None;
-            float dir = MathHelper.ToRadians(190) * player.direction;
+            
+            float dir = MathHelper.ToRadians(182) * player.direction;
 
+            SpriteEffects flip;
             if (player.direction == -1)
             {
                 flip = SpriteEffects.FlipHorizontally;
             }
-
+            else
+            {
+                flip = SpriteEffects.None;
+            }
             DrawData itemDrawData = new(
                 itemTexture,
                 itemPosition,

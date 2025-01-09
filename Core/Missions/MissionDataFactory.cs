@@ -89,13 +89,34 @@ namespace Reverie.Core.Missions
                         [("Craft a better pickaxe", 1), ("Obtain Iron or Lead ore", 15), ("Check in with the Guide", 1)]
                     ],
 
-                    [new Item(ItemID.SilverBar, Main.rand.Next(5, 8)),
-                     new Item(ItemID.GoldCoin, Main.rand.Next(2, 4)),
-                     new Item(ItemID.SilverCoin, Main.rand.Next(18, 36))],
+                    [new Item(ItemID.SilverCoin, Main.rand.Next(7, 19)),
+                     new Item(ItemID.CopperCoin, Main.rand.Next(18, 44))],
 
                     isMainline: true,
                     NPCID.Guide,
                     xpReward: 50,
+                    nextMissionID: MissionID.Translocator
+                )},
+
+                {MissionID.Translocator, () => new MissionData(
+                    MissionID.Translocator,
+                    "Realm Reposition",
+                    "Create a Translocator with the item's on your task list." +
+                    "\nCreate a Translocator with the item's on your task list.",
+                    [
+                        [("Obtain a Realm Crystal", 1), 
+                        ("Obtain a Copper Tesla Array", 1), 
+                        ("Obtain a Chip Plate", 1), 
+                        ("Obtain a Dimensional Tuning Fork", 1)],
+                        [("Check in with the Guide", 1)]
+                    ],
+
+                    [new Item(ItemID.SilverCoin, Main.rand.Next(11, 63)),
+                        new Item(ItemID.CopperCoin, Main.rand.Next(18, 62))],
+
+                    isMainline: true,
+                    NPCID.Guide,
+                    xpReward: 55,
                     nextMissionID: MissionID.RedEyedRetribution
                 )},
 
@@ -104,11 +125,11 @@ namespace Reverie.Core.Missions
                     "Red Eyed Retribution",
                     "Prepare to kill the Eye of Cthulhu.",
                     [
-                        [("Collect lenses OR Suspicious Eye", 6), ("Collect life crystals", 3)],
-                        [("Obtain 3 buff potions", 3), ("Collect healing potions", 3)],
+                        [("Obtain lens OR Susp. Eye", 6), ("Obtain life crystals", 3)],
+                        [("Obtain buff potions", 3), ("Obtain healing potions", 3)],
                         [("Speak to the Guide at night", 1)],
 
-                        [("Slay the Eye of Cthulhu", 1)],
+                        [("Down the Eye of Cthulhu", 1)],
                     ],
                     [new Item(ItemID.GoldCoin, Main.rand.Next(2, 4))],
                     isMainline: true,
