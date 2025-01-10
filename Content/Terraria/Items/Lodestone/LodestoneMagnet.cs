@@ -199,12 +199,12 @@ namespace Reverie.Content.Terraria.Items.Lodestone
                     effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.2f);
                     effect.Parameters["repeats"]?.SetValue(8f);
                     effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
-                    effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>("ReverieMod/Assets/VFX/WaterTrail").Value);
-                    effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("ReverieMod/Assets/VFX/Bloom").Value);
+                    effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/VFX/WaterTrail").Value);
+                    effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/VFX/Bloom").Value);
 
                     trail?.Render(effect);
 
-                    effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("ReverieMod/Assets/VFX/WaterTrail").Value);
+                    effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/VFX/WaterTrail").Value);
 
                     trail2?.Render(effect);
                 }

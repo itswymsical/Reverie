@@ -16,13 +16,9 @@ namespace Reverie.Common.Systems.Subworlds
         private int currentFrame;
         private double frameTime;
         private const int totalFrames = 19;
-        private const double timePerFrame = 1;
-        private readonly float fadeInDuration = 90f;
+        private const double timePerFrame = 40;
+        private readonly float fadeInDuration = 12f;
         private double elapsedTime;
-
-        private string currentTip;
-        private double tipTimer;
-        private const double tipDuration = 5.0;
 
         public virtual Texture2D LoadingScreen { get; protected set; }
         public virtual Texture2D OtherworldTitle { get; protected set; }
@@ -30,10 +26,7 @@ namespace Reverie.Common.Systems.Subworlds
 
         public override void SetStaticDefaults()
         {
-            LoadingScreen = (Texture2D)ModContent.Request<Texture2D>(
-                $"{nameof(Reverie)}" +
-                $"/{Assets.Backgrounds}" +
-                $"TransitionBG");
+            LoadingScreen = (Texture2D)ModContent.Request<Texture2D>($"{nameof(Reverie)}" + $"/{Assets.Backgrounds}" + "TransitionBG");
             OtherworldTitle = TextureAssets.Logo.Value;
             LoadingIcon = TextureAssets.LoadingSunflower.Value;
         }
@@ -55,7 +48,7 @@ namespace Reverie.Common.Systems.Subworlds
             float opacity = MathHelper.Clamp((float)(elapsedTime / fadeInDuration), 0f, 1f);
 
             elapsedTime += gameTime.ElapsedGameTime.TotalSeconds;
-            frameTime += gameTime.ElapsedGameTime.TotalSeconds;
+            frameTime += gameTime.ElapsedGameTime.TotalMilliseconds;
             if (frameTime >= timePerFrame)
             {
                 frameTime -= timePerFrame;
@@ -81,58 +74,8 @@ namespace Reverie.Common.Systems.Subworlds
                 int frameHeight = LoadingIcon.Height / totalFrames;
                 Rectangle sourceRectangle = new(0, currentFrame * frameHeight, frameWidth, frameHeight);
                 Vector2 iconPosition = new(Main.screenWidth - LoadingIcon.Width - 10, Main.screenHeight - frameHeight - 10);
-                Main.spriteBatch.Draw(LoadingIcon, iconPosition, sourceRectangle, Color.White * opacity);
-            }
-
-            UpdateTip(gameTime);
-            string tipsText = currentTip;
-
-            Vector2 tipsSize = FontAssets.MouseText.Value.MeasureString(tipsText);
-            Vector2 tipsPosition = new(Main.screenWidth / 2, Main.screenHeight - 40);
-
-            Color tipsColor = Color.White * opacity;
-            Color tipsShadowColor = Color.Black * opacity;
-
-            // Draw shadow
-            Utils.DrawBorderStringFourWay(
-                Main.spriteBatch,
-                FontAssets.MouseText.Value,
-                tipsText,
-                tipsPosition.X,
-                tipsPosition.Y,
-                tipsShadowColor,
-                tipsShadowColor,
-                tipsSize / 2f
-            );
-
-            // Draw text
-            Utils.DrawBorderStringFourWay(
-                Main.spriteBatch,
-                FontAssets.MouseText.Value,
-                tipsText,
-                tipsPosition.X - 1,
-                tipsPosition.Y - 1,
-                tipsColor,
-                tipsShadowColor,
-                tipsSize / 2f
-            );
-        }
-        private void UpdateTip(GameTime gameTime)
-        {
-            tipTimer += gameTime.ElapsedGameTime.TotalSeconds;
-            if (tipTimer >= tipDuration)
-            {
-                currentTip = GetRandomTip();
-                tipTimer = 0;
+                Main.spriteBatch.Draw(LoadingIcon, iconPosition, sourceRectangle, Color.White);
             }
         }
-        private string GetRandomTip()
-        {
-            return Tips[Main.rand.Next(Tips.Length)];
-        }
-        private readonly string[] Tips =
-        [
-            "Please be patient, these subworlds may take up to 3 minutes to generate."
-        ];
     }
 }

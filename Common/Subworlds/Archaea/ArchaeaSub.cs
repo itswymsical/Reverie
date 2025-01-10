@@ -25,7 +25,6 @@ namespace Reverie.Common.Systems.Subworlds.Archaea
         public override void SetStaticDefaults()
         {
             base.SetStaticDefaults();
-
             OtherworldTitle = TextureAssets.Logo2.Value;
         }
         public override void Update()

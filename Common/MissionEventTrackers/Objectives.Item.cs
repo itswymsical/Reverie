@@ -19,19 +19,6 @@ namespace Reverie.Common.MissionEventTrackers
             UpdateMissionProgress(item);
             base.OnCreated(item, context);
         }
-        public override bool OnPickup(Item item, Player player)
-        {
-            base.OnPickup(item, player);
-            if (item.playerIndexTheItemIsReservedFor == player.whoAmI)
-            {
-                // This suggests the item was recently dropped by this player
-                return true;  // Allow pickup but don't update mission
-            }
-            else
-                UpdateMissionProgress(item);
-
-            return true;
-        }
 
         private static void UpdateMissionProgress(Item item)
         {     
@@ -93,9 +80,9 @@ namespace Reverie.Common.MissionEventTrackers
                     if (item.type == ItemType<RealmCrystal>())
                         translocator.UpdateProgress(0);
                     if (item.type == ItemType<CoilArray>())
-                        translocator.UpdateProgress(0);
+                        translocator.UpdateProgress(1);
                     if (item.type == ItemType<DimensionalTuningFork>())
-                        translocator.UpdateProgress(0);
+                        translocator.UpdateProgress(2);
                 }
             }
 

@@ -21,7 +21,6 @@ namespace Reverie.Common.MissionEventTrackers
     public class GlobalMissionNPC : GlobalNPC
     {
         public override bool InstancePerEntity => true;
-
         public Texture2D missionAvailableTexture = ModContent.Request<Texture2D>($"{Assets.UI.MissionUI}MissionObjectives").Value;
 
         private static void UpdateMissionProgress(MissionPlayer missionPlayer, NPC npc)
@@ -41,11 +40,26 @@ namespace Reverie.Common.MissionEventTrackers
                         if (Reawakening.CurrentSetIndex == 2)
                             Reawakening.UpdateProgress(1);
                     }
-
+ 
                     if (Reawakening.CurrentSetIndex == 4 &&
                         currentSet.Objectives[0].IsCompleted && currentSet.Objectives[1].IsCompleted)
                         Reawakening.UpdateProgress(2);
 
+                }
+            }
+
+            Mission translocator = missionPlayer.GetMission(MissionID.Translocator);
+            if (translocator != null && translocator.Progress == MissionProgress.Active)
+            {
+                var currentSet = translocator.MissionData.ObjectiveSets[translocator.CurrentSetIndex];
+
+                if (!currentSet.IsCompleted)
+                {
+                    if (npc.type == NPCID.Guide)
+                    {
+                        if (currentSet.Objectives[0].IsCompleted)
+                            translocator.UpdateProgress(0);
+                    }
                 }
             }
         }
@@ -117,11 +131,12 @@ namespace Reverie.Common.MissionEventTrackers
         public override void AI(NPC npc)
         {
             base.AI(npc);
-            npc.TownNPC_TalkState();
+            if (npc.isLikeATownNPC) npc.TownNPC_TalkState();
         }
 
         public override bool CheckActive(NPC npc)
         {
+            if (npc.immortal) return false;
             if (NPC.AnyNPCs(NPCID.Merchant))
             {
                 MissionPlayer missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
@@ -139,6 +154,7 @@ namespace Reverie.Common.MissionEventTrackers
         public override void OnKill(NPC npc)
         {
             base.OnKill(npc);
+            if (npc.immortal) return;
             UpdateMissionProgress(npc);     
         }
 

@@ -2,6 +2,10 @@
 using Terraria.WorldBuilding;
 using Terraria;
 using Reverie.Utilities;
+using Reverie.Content.Sylvanwalde.Tiles.Canopy;
+using Reverie.Helpers;
+using Terraria.ModLoader;
+using Reverie.Content.Terraria.Tiles;
 
 namespace Reverie.Common.Systems.WorldGeneration.GenPasses
 {
@@ -118,6 +122,7 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
                     noiseData3[(int)x, (int)y] = noise3.GetNoise(worldX, worldY);
                 }
             }
+
             for (float x = 0; x < posx3; x++)
             {
                 for (float y = (float)GenVars.rockLayerHigh; y < posy3; y++)
@@ -132,7 +137,19 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
 
                     }
                 }
-            }   
+            }
+
+            for (int x2 = (int)posx1 - (int)posx1; x2 <= posx1 + posx1; x2++)
+            {
+                for (int y2 = ((int)posy1 + 50) - (int)posy1; y2 <= (posy1 + 50) + posy1; y2++)
+                {
+                    if (Helper.GenerateCanopyShape(x2, y2, (int)posx1, (int)posy1, (int)posy1, (int)posy1, 0.04f, (int)posy1 / 3, 100, 15))
+                    {
+                        if (WorldGen.genRand.NextBool(180))
+                            WorldGen.OreRunner(x2, y2, 5, 7, (ushort)ModContent.TileType<LodestoneTile>());
+                    }
+                }
+            }
         }
     }
 }

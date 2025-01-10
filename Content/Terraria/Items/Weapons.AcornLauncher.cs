@@ -70,6 +70,7 @@ namespace Reverie.Content.Terraria.Items
             recipe.Register();
         }
     }
+
     public class AcornLauncherProj : ModProjectile
     {
         public override string Texture => Assets.Terraria.Items.Weapons + "AcornLauncher";

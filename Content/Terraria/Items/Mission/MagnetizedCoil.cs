@@ -15,7 +15,6 @@ namespace Reverie.Content.Terraria.Items.Mission
         public override void SetStaticDefaults()
         {
             base.SetStaticDefaults();
-            Item.favorited = true;
         }
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
@@ -25,12 +24,9 @@ namespace Reverie.Content.Terraria.Items.Mission
             {
                 line.Text = "Mission Item";
                 line.OverrideColor = new(95, 205, 228);
+                tooltips.Add(line);
             }
-        }
-        public override void UpdateInventory(Player player)
-        {
-            base.UpdateInventory(player);
-            Item.favorited = true;
+            
         }
     }
 

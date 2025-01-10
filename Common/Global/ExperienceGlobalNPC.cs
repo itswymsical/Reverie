@@ -19,18 +19,21 @@ namespace Reverie.Common.Global
 
         public override void OnHitByItem(NPC npc, Player player, Item item, NPC.HitInfo hit, int damageDone)
         {
-          
+            base.OnHitByItem(npc, player, item, hit, damageDone);
+            if (npc.immortal) return;
+
             if (!playerDamage.ContainsKey(player.whoAmI))
             {
                 playerDamage[player.whoAmI] = 0;
             }
             playerDamage[player.whoAmI] += hit.Damage;
             totalDamageDealt += hit.Damage;
-            base.OnHitByItem(npc, player, item, hit, damageDone);
         }
 
         public override void OnHitByProjectile(NPC npc, Projectile projectile, NPC.HitInfo hit, int damageDone)
         {
+            base.OnHitByProjectile(npc, projectile, hit, damageDone);
+            if (npc.immortal) return;
             if (projectile.owner >= 0 && projectile.owner < Main.maxPlayers)
             {
                 Player player = Main.player[projectile.owner];
@@ -41,12 +44,13 @@ namespace Reverie.Common.Global
                 playerDamage[player.whoAmI] += hit.Damage;
                 totalDamageDealt += hit.Damage;
             }
-            base.OnHitByProjectile(npc, projectile, hit, damageDone);
         }
 
         public override void OnKill(NPC npc)
         {
-            if (npc.friendly || npc.CountsAsACritter || npc.SpawnedFromStatue || npc.isLikeATownNPC)
+            base.OnKill(npc);
+            if (npc.immortal) return;
+            if (npc.friendly || npc.CountsAsACritter || npc.SpawnedFromStatue || npc.isLikeATownNPC || npc.type == NPCID.TargetDummy)
             {
                 playerDamage.Clear();
                 totalDamageDealt = 0;
@@ -98,7 +102,6 @@ namespace Reverie.Common.Global
             }
             playerDamage.Clear();
             totalDamageDealt = 0;
-            base.OnKill(npc);
         }
     }
 }

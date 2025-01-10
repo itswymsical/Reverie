@@ -105,8 +105,7 @@ namespace Reverie.Core.Missions
                     "\nCreate a Translocator with the item's on your task list.",
                     [
                         [("Obtain a Realm Crystal", 1), 
-                        ("Obtain a Copper Tesla Array", 1), 
-                        ("Obtain a Chip Plate", 1), 
+                        ("Obtain a Coil Array", 1), 
                         ("Obtain a Dimensional Tuning Fork", 1)],
                         [("Check in with the Guide", 1)]
                     ],
