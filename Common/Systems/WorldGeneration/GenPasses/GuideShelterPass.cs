@@ -7,7 +7,7 @@ using StructureHelper;
 using Terraria.IO;
 using Terraria.WorldBuilding;
 
-namespace Reverie.Common.Systems.WorldGeneration
+namespace Reverie.Common.Systems.WorldGeneration.GenPasses
 {
     public class GuideShelterPass(string name, float loadWeight) : GenPass(name, loadWeight)
     {

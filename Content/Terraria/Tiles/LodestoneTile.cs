@@ -7,7 +7,7 @@ namespace Reverie.Content.Terraria.Tiles
 {
     public class LodestoneTile : ModTile
     {
-        public override string Texture => Assets.PlaceholderTexture;
+        public override string Texture => Assets.Terraria.Tiles.Dir + Name;
         public override void SetStaticDefaults()
         {
             Main.tileSolid[Type] = true;
@@ -19,7 +19,7 @@ namespace Reverie.Content.Terraria.Tiles
             MinPick = 35;
             HitSound = SoundID.Tink;
 
-            AddMapEntry(new Color(64, 62, 59));
+            AddMapEntry(Color.Red);//new Color(64, 62, 59)
         }
     }
 }

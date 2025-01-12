@@ -26,26 +26,27 @@ namespace Reverie.Content.Terraria.Items.Lodestone
             Item.value = Item.sellPrice(silver: 10);
             Item.width = Item.height = 28;
             Item.consumable = true;
+            Item.autoReuse = true;
             Item.createTile = ModContent.TileType<LodestoneTile>();
             Item.useTime = Item.useAnimation = 24;
             Item.useTurn = true;
             Item.maxStack = 999;
-            Item.holdStyle = ItemHoldStyleID.HoldRadio;
+            Item.useStyle = ItemUseStyleID.Swing;
+            Item.holdStyle = ItemHoldStyleID.HoldFront;
         }
 
         public override void HoldItem(Player player)
         {
-            base.HoldItem(player);
             MagnetizeItems_Held(player);
         }
 
         public override void Update(ref float gravity, ref float maxFallSpeed)
         {
+            base.Update(ref gravity, ref maxFallSpeed);
             if (!Item.IsAir && Item.active)
             {
                 MagnetizeItems_World();
             }
-            base.Update(ref gravity, ref maxFallSpeed);
         }
 
         private void MagnetizeItems_Held(Player player)

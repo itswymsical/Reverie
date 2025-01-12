@@ -2,154 +2,224 @@
 using Terraria.WorldBuilding;
 using Terraria;
 using Reverie.Utilities;
-using Reverie.Content.Sylvanwalde.Tiles.Canopy;
-using Reverie.Helpers;
-using Terraria.ModLoader;
 using Reverie.Content.Terraria.Tiles;
+using System;
+using Terraria.ModLoader;
+using Terraria.ID;
+using System.Collections.Generic;
 
 namespace Reverie.Common.Systems.WorldGeneration.GenPasses
 {
     public class CavePass(string name, float loadWeight) : GenPass(name, loadWeight)
     {
+        private const int CHUNK_SIZE = 64;
+        private const float CAVE_THRESHOLD = 0.1f;
+        private const float OPEN_CAVE_THRESHOLD = 0.1f;
+        private const float ORE_THRESHOLD = 0.18f;
+        private const int ORE_STEP_SIZE = 58;
+
+        private static readonly HashSet<ushort> ValidOreBlocks = new()
+        {
+            TileID.Stone,
+            TileID.Dirt,
+            TileID.Mud,
+            TileID.Sandstone,
+            TileID.HardenedSand,
+            TileID.IceBlock,
+            TileID.ClayBlock,
+            TileID.Sand
+        };
+
+        private bool IsValidOreLocation(int x, int y)
+        {
+            Tile tile = Main.tile[x, y];
+            return tile.HasTile && ValidOreBlocks.Contains(tile.TileType);
+        }
+
+        private FastNoiseLite SetupCaveNoise()
+        {
+            var noise = new FastNoiseLite();
+            noise.SetNoiseType(FastNoiseLite.NoiseType.ValueCubic);
+            noise.SetFrequency(0.19f);
+            noise.SetFractalType(FastNoiseLite.FractalType.FBm);
+            noise.SetFractalOctaves(4);
+            noise.SetFractalLacunarity(3f);
+            noise.SetFractalGain(0.27f);
+            noise.SetFractalWeightedStrength(0.12f);
+            return noise;
+        }
+
+        private FastNoiseLite SetupOpenCaveNoise()
+        {
+            var noise = new FastNoiseLite();
+            noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
+            noise.SetFrequency(0.056f);
+            noise.SetFractalType(FastNoiseLite.FractalType.FBm);
+            noise.SetFractalOctaves(4);
+            noise.SetFractalLacunarity(3f);
+            noise.SetFractalGain(0.27f);
+            noise.SetFractalWeightedStrength(0.12f);
+            return noise;
+        }
+
+        private FastNoiseLite SetupMineralNoise()
+        {
+            var noise = new FastNoiseLite();
+            noise.SetNoiseType(FastNoiseLite.NoiseType.ValueCubic);
+            noise.SetFrequency(0.15f);
+            noise.SetFractalType(FastNoiseLite.FractalType.FBm);
+            noise.SetFractalOctaves(4);
+            noise.SetFractalLacunarity(3f);
+            noise.SetFractalGain(0.27f);
+            noise.SetFractalWeightedStrength(0.12f);
+            return noise;
+        }
+
+        private void GenerateChunk(
+            int startX,
+            int startY,
+            int width,
+            int height,
+            FastNoiseLite caveNoise,
+            FastNoiseLite openCaveNoise,
+            GenerationProgress progress)
+        {
+            int endX = Math.Min(startX + width, Main.maxTilesX);
+            int endY = Math.Min(startY + height, Main.UnderworldLayer);
+            float totalTiles = (float)(Main.maxTilesX * (Main.UnderworldLayer - (Main.rockLayer - GenVars.worldSurfaceLow)));
+
+            for (int x = startX; x < endX; x++)
+            {
+                for (int y = startY; y < endY; y++)
+                {
+                    if (y < Main.rockLayer - GenVars.worldSurfaceLow)
+                        continue;
+
+                    float caveNoiseValue = caveNoise.GetNoise(x / 3f, y - (y / 4f));
+                    float openCaveNoiseValue = openCaveNoise.GetNoise(x, y);
+
+                    if (caveNoiseValue > CAVE_THRESHOLD ||
+                        (y >= GenVars.rockLayerHigh && openCaveNoiseValue > OPEN_CAVE_THRESHOLD))
+                    {
+                        Tile tile = Main.tile[x, y];
+                        tile.HasTile = false;
+                    }
+
+                    float currentProgress = (float)(((x * (Main.UnderworldLayer - (Main.rockLayer - GenVars.worldSurfaceLow))) +
+                        (y - (Main.rockLayer - GenVars.worldSurfaceLow))) / totalTiles);
+                    progress.Set(currentProgress);
+                }
+            }
+        }
+
+        private void GenerateOres()
+        {
+            var noise = SetupMineralNoise();
+
+            // Surface ores (Copper/Tin)
+            for (int x = 0; x < Main.maxTilesX; x += ORE_STEP_SIZE)
+            {
+                for (int y = (int)GenVars.worldSurfaceLow; y < Main.rockLayer; y += ORE_STEP_SIZE)
+                {
+                    float copperNoise = noise.GetNoise(x, y + 1000);
+                    float tinNoise = noise.GetNoise(x, y + 2000);
+
+                    if (copperNoise < ORE_THRESHOLD && IsValidOreLocation(x, y))
+                        WorldGen.TileRunner(x, y, WorldGen.genRand.Next(4, 8), WorldGen.genRand.Next(4, 8), TileID.Copper);
+
+                    if (tinNoise < ORE_THRESHOLD && IsValidOreLocation(x, y))
+                        WorldGen.TileRunner(x, y, WorldGen.genRand.Next(4, 8), WorldGen.genRand.Next(4, 8), TileID.Tin);
+                }
+            }
+
+            // Mid-level ores (Iron/Lead)
+            for (int x = 0; x < Main.maxTilesX; x += ORE_STEP_SIZE)
+            {
+                for (int y = (int)(Main.rockLayer * 0.32); y < (int)Main.rockLayer; y += ORE_STEP_SIZE)
+                {
+                    float ironNoise = noise.GetNoise(x, y + 3000);
+                    float leadNoise = noise.GetNoise(x, y + 4000);
+
+                    if (ironNoise < ORE_THRESHOLD && IsValidOreLocation(x, y))
+                        WorldGen.TileRunner(x, y, WorldGen.genRand.Next(4, 7), WorldGen.genRand.Next(4, 7), TileID.Iron);
+
+                    if (leadNoise < ORE_THRESHOLD && IsValidOreLocation(x, y))
+                        WorldGen.TileRunner(x, y, WorldGen.genRand.Next(4, 7), WorldGen.genRand.Next(4, 7), TileID.Lead);
+                }
+            }
+
+            // Deep ores (Silver/Tungsten, Gold/Platinum)
+            for (int x = 0; x < Main.maxTilesX; x += ORE_STEP_SIZE)
+            {
+                for (int y = (int)GenVars.rockLayerHigh; y < Main.maxTilesY * 0.8f; y += ORE_STEP_SIZE)
+                {
+                    if (y < Main.maxTilesY * 0.6f)  // Silver/Tungsten layer
+                    {
+                        float silverNoise = noise.GetNoise(x, y + 5000);
+                        float tungstenNoise = noise.GetNoise(x, y + 6000);
+
+                        if (silverNoise < ORE_THRESHOLD && IsValidOreLocation(x, y))
+                            WorldGen.TileRunner(x, y, WorldGen.genRand.Next(3, 7), WorldGen.genRand.Next(3, 7), TileID.Silver);
+
+                        if (tungstenNoise < ORE_THRESHOLD && IsValidOreLocation(x, y))
+                            WorldGen.TileRunner(x, y, WorldGen.genRand.Next(3, 7), WorldGen.genRand.Next(3, 7), TileID.Tungsten);
+                    }
+                    else  // Gold/Platinum layer
+                    {
+                        float goldNoise = noise.GetNoise(x, y + 7000);
+                        float platinumNoise = noise.GetNoise(x, y + 8000);
+
+                        if (goldNoise < ORE_THRESHOLD && IsValidOreLocation(x, y))
+                            WorldGen.TileRunner(x, y, WorldGen.genRand.Next(2, 7), WorldGen.genRand.Next(2, 7), TileID.Gold);
+
+                        if (platinumNoise < ORE_THRESHOLD && IsValidOreLocation(x, y))
+                            WorldGen.TileRunner(x, y, WorldGen.genRand.Next(2, 7), WorldGen.genRand.Next(2, 7), TileID.Platinum);
+                    }
+                }
+            }
+        }
+
+        private void GenerateLodestone()
+        {
+            var noise = SetupMineralNoise();
+            const float LODESTONE_THRESHOLD = 0.1f;
+
+            for (int x = 0; x < Main.maxTilesX; x += ORE_STEP_SIZE)
+            {
+                for (int y = (int)GenVars.rockLayerHigh; y < Main.UnderworldLayer; y += ORE_STEP_SIZE)
+                {
+                    float noiseValue = noise.GetNoise(x, y + 9000);  // Different offset for Lodestone
+
+                    if (noiseValue < LODESTONE_THRESHOLD && IsValidOreLocation(x, y))
+                    {
+                        WorldGen.TileRunner(
+                            x, y,
+                            WorldGen.genRand.Next(3, 6),
+                            WorldGen.genRand.Next(3, 6),
+                            (ushort)ModContent.TileType<LodestoneTile>()
+                        );
+                    }
+                }
+            }
+        }
+
         protected override void ApplyPass(GenerationProgress progress, GameConfiguration configuration)
         {
-            progress.Message = "Generating Caves";
+            progress.Message = "Generating Cave Networks";
 
-            float totalProgress = 0f;
-            float methodProgress = 0f;
+            var caveNoise = SetupCaveNoise();
+            var openCaveNoise = SetupOpenCaveNoise();
 
-            // DoCaveMap
-            FastNoiseLite noise1 = new();
-            noise1.SetNoiseType(FastNoiseLite.NoiseType.ValueCubic);
-            noise1.SetFrequency(0.16f);
-            noise1.SetFractalType(FastNoiseLite.FractalType.FBm);
-            noise1.SetFractalOctaves(4);
-            noise1.SetFractalLacunarity(3f);
-            noise1.SetFractalGain(0.27f);
-            noise1.SetFractalWeightedStrength(0.12f);
-            float killThreshold1 = 0.1f;
-            float posx1 = Main.maxTilesX;
-            float posy1 = Main.UnderworldLayer;
-
-            float[,] noiseData1 = new float[(int)posx1, (int)posy1];
-            for (float x = 0; x < posx1; x++)
+            for (int y = 0; y < Main.UnderworldLayer; y += CHUNK_SIZE)
             {
-                for (float y = 0; y < posy1; y++)
+                for (int x = 0; x < Main.maxTilesX; x += CHUNK_SIZE)
                 {
-                    float worldX = x;
-                    float worldY = y;
-                    noiseData1[(int)x, (int)y] = noise1.GetNoise(worldX / 3, worldY - (worldY / 4));
-                }
-            }
-            for (float x = 0; x < posx1; x++)
-            {
-                for (float y = (int)Main.rockLayer - (int)GenVars.worldSurfaceLow; y < posy1; y++)
-                {
-                    float worldX = x;
-                    float worldY = y;
-                    if (noiseData1[(int)x, (int)y] > killThreshold1)
-                    {
-                        Tile tile = Main.tile[(int)worldX, (int)worldY];
-                        tile.HasTile = false;
-                        progress.Set(((x * (posy1 - (GenVars.worldSurfaceLow + (GenVars.worldSurface / 2)))) + 
-                            (y - (GenVars.worldSurfaceLow + (GenVars.worldSurface / 2)))) / 
-                            (posx1 * (posy1 - (GenVars.worldSurfaceLow + (GenVars.worldSurface / 2)))) * 0.33f);
-                    }
-                }
-            }
-            methodProgress = .33f;
-            totalProgress += methodProgress;
-            progress.Set(totalProgress);
-
-            // DoSmallHoles
-            FastNoiseLite noise2 = new();
-            noise2.SetNoiseType(FastNoiseLite.NoiseType.ValueCubic);
-            noise2.SetFrequency(0.25f);
-            noise2.SetFractalType(FastNoiseLite.FractalType.FBm);
-            noise2.SetFractalOctaves(4);
-            noise2.SetFractalLacunarity(3f);
-            noise2.SetFractalGain(0.27f);
-            noise2.SetFractalWeightedStrength(0.12f);
-            float killThreshold2 = 0.1f;
-            float posx2 = Main.maxTilesX;
-            float posy2 = Main.UnderworldLayer;
-            float[,] noiseData2 = new float[(int)posx2, (int)posy2];
-            for (float x = 0; x < posx2; x += 50)
-            {
-                for (float y = 0; y < posy2; y += 50)
-                {
-                    float worldX = x;
-                    float worldY = y;
-                    noiseData2[(int)x, (int)y] = noise2.GetNoise(worldX, worldY);
-                }
-            }
-            for (float x = 0; x < posx2; x += 50)
-            {
-                for (float y = (float)GenVars.rockLayerHigh; y < posy2; y += 50)
-                {
-                    float worldX = x;
-                    float worldY = y;
-                    if (noiseData2[(int)x, (int)y] > killThreshold2)
-                    {
-                        Tile tile = Main.tile[(int)worldX, (int)worldY];
-                        tile.HasTile = false;
-                        progress.Set(((x / 50 * ((posy2 - GenVars.rockLayerHigh) / 50)) + ((y - GenVars.rockLayerHigh) / 50)) 
-                            / ((posx2 / 50) * ((posy2 - GenVars.rockLayerHigh) / 50)) * 0.33f + 0.33f);
-
-                    }
+                    GenerateChunk(x, y, CHUNK_SIZE, CHUNK_SIZE, caveNoise, openCaveNoise, progress);
                 }
             }
 
-            // DoOpenCaves  
-            FastNoiseLite noise3 = new();
-            noise3.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
-            noise3.SetFrequency(0.048f);
-            noise3.SetFractalType(FastNoiseLite.FractalType.FBm);
-            noise3.SetFractalOctaves(4);
-            noise3.SetFractalLacunarity(3f);
-            noise3.SetFractalGain(0.27f);
-            noise3.SetFractalWeightedStrength(0.12f);
-            float killThreshold3 = 0.1f;
-            float posx3 = Main.maxTilesX;
-            float posy3 = Main.UnderworldLayer;
-            float[,] noiseData3 = new float[(int)posx3, (int)posy3];
-            for (float x = 0; x < posx3; x++)
-            {
-                for (float y = 0; y < posy3; y++)
-                {
-                    float worldX = x;
-                    float worldY = y;
-                    noiseData3[(int)x, (int)y] = noise3.GetNoise(worldX, worldY);
-                }
-            }
-
-            for (float x = 0; x < posx3; x++)
-            {
-                for (float y = (float)GenVars.rockLayerHigh; y < posy3; y++)
-                {
-                    float worldX = x;
-                    float worldY = y;
-                    if (noiseData3[(int)x, (int)y] > killThreshold3)
-                    {
-                        Tile tile = Main.tile[(int)worldX, (int)worldY];
-                        tile.HasTile = false;
-                        progress.Set((x * (posy3 - GenVars.rockLayerHigh) + (y - GenVars.rockLayerHigh)) / (posx3 * (posy3 - GenVars.rockLayerHigh)) * 0.34f + 0.66f);
-
-                    }
-                }
-            }
-
-            for (int x2 = (int)posx1 - (int)posx1; x2 <= posx1 + posx1; x2++)
-            {
-                for (int y2 = ((int)posy1 + 50) - (int)posy1; y2 <= (posy1 + 50) + posy1; y2++)
-                {
-                    if (Helper.GenerateCanopyShape(x2, y2, (int)posx1, (int)posy1, (int)posy1, (int)posy1, 0.04f, (int)posy1 / 3, 100, 15))
-                    {
-                        if (WorldGen.genRand.NextBool(180))
-                            WorldGen.OreRunner(x2, y2, 5, 7, (ushort)ModContent.TileType<LodestoneTile>());
-                    }
-                }
-            }
+            GenerateOres();
+            GenerateLodestone();
         }
     }
 }
