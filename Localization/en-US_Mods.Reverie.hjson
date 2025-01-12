@@ -227,6 +227,11 @@ Items: {
 		DisplayName: Dialogue Instance
 		Tooltip: ""
 	}
+
+	PlayMissionUI: {
+		DisplayName: Play Mission U I
+		Tooltip: ""
+	}
 }
 
 NPCs: {

@@ -66,7 +66,7 @@ namespace Reverie.Core.Missions
             if (rewards)
                 GiveRewards();
 
-            InGameNotificationsTracker.AddNotification(new MissionStatusIndicator(this));
+            InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(this));
         }
         /// <summary>
         /// Use this method to update/complete an objective. You will need to manually check 'ObjectiveSet'.

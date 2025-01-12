@@ -15,7 +15,7 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
         private const int CHUNK_SIZE = 64;
         private const float CAVE_THRESHOLD = 0.1f;
         private const float OPEN_CAVE_THRESHOLD = 0.1f;
-        private const float ORE_THRESHOLD = 0.18f;
+        private const float ORE_THRESHOLD = 0.1f;
         private const int ORE_STEP_SIZE = 58;
 
         private static readonly HashSet<ushort> ValidOreBlocks = new()
@@ -42,7 +42,7 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
             noise.SetNoiseType(FastNoiseLite.NoiseType.ValueCubic);
             noise.SetFrequency(0.19f);
             noise.SetFractalType(FastNoiseLite.FractalType.FBm);
-            noise.SetFractalOctaves(4);
+            noise.SetFractalOctaves(2);
             noise.SetFractalLacunarity(3f);
             noise.SetFractalGain(0.27f);
             noise.SetFractalWeightedStrength(0.12f);
@@ -55,7 +55,7 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
             noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
             noise.SetFrequency(0.056f);
             noise.SetFractalType(FastNoiseLite.FractalType.FBm);
-            noise.SetFractalOctaves(4);
+            noise.SetFractalOctaves(3);
             noise.SetFractalLacunarity(3f);
             noise.SetFractalGain(0.27f);
             noise.SetFractalWeightedStrength(0.12f);
@@ -66,9 +66,9 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
         {
             var noise = new FastNoiseLite();
             noise.SetNoiseType(FastNoiseLite.NoiseType.ValueCubic);
-            noise.SetFrequency(0.15f);
+            noise.SetFrequency(0.12f);
             noise.SetFractalType(FastNoiseLite.FractalType.FBm);
-            noise.SetFractalOctaves(4);
+            noise.SetFractalOctaves(3);
             noise.SetFractalLacunarity(3f);
             noise.SetFractalGain(0.27f);
             noise.SetFractalWeightedStrength(0.12f);
@@ -125,10 +125,10 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
                     float tinNoise = noise.GetNoise(x, y + 2000);
 
                     if (copperNoise < ORE_THRESHOLD && IsValidOreLocation(x, y))
-                        WorldGen.TileRunner(x, y, WorldGen.genRand.Next(4, 8), WorldGen.genRand.Next(4, 8), TileID.Copper);
+                        WorldGen.TileRunner(x, y, WorldGen.genRand.Next(7, 12), WorldGen.genRand.Next(7, 12), TileID.Copper);
 
                     if (tinNoise < ORE_THRESHOLD && IsValidOreLocation(x, y))
-                        WorldGen.TileRunner(x, y, WorldGen.genRand.Next(4, 8), WorldGen.genRand.Next(4, 8), TileID.Tin);
+                        WorldGen.TileRunner(x, y, WorldGen.genRand.Next(7, 12), WorldGen.genRand.Next(7, 12), TileID.Tin);
                 }
             }
 
@@ -141,10 +141,10 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
                     float leadNoise = noise.GetNoise(x, y + 4000);
 
                     if (ironNoise < ORE_THRESHOLD && IsValidOreLocation(x, y))
-                        WorldGen.TileRunner(x, y, WorldGen.genRand.Next(4, 7), WorldGen.genRand.Next(4, 7), TileID.Iron);
+                        WorldGen.TileRunner(x, y, WorldGen.genRand.Next(7, 11), WorldGen.genRand.Next(7, 11), TileID.Iron);
 
                     if (leadNoise < ORE_THRESHOLD && IsValidOreLocation(x, y))
-                        WorldGen.TileRunner(x, y, WorldGen.genRand.Next(4, 7), WorldGen.genRand.Next(4, 7), TileID.Lead);
+                        WorldGen.TileRunner(x, y, WorldGen.genRand.Next(7, 11), WorldGen.genRand.Next(7, 11), TileID.Lead);
                 }
             }
 
@@ -159,10 +159,10 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
                         float tungstenNoise = noise.GetNoise(x, y + 6000);
 
                         if (silverNoise < ORE_THRESHOLD && IsValidOreLocation(x, y))
-                            WorldGen.TileRunner(x, y, WorldGen.genRand.Next(3, 7), WorldGen.genRand.Next(3, 7), TileID.Silver);
+                            WorldGen.TileRunner(x, y, WorldGen.genRand.Next(5, 9), WorldGen.genRand.Next(5, 9), TileID.Silver);
 
                         if (tungstenNoise < ORE_THRESHOLD && IsValidOreLocation(x, y))
-                            WorldGen.TileRunner(x, y, WorldGen.genRand.Next(3, 7), WorldGen.genRand.Next(3, 7), TileID.Tungsten);
+                            WorldGen.TileRunner(x, y, WorldGen.genRand.Next(5, 9), WorldGen.genRand.Next(5, 9), TileID.Tungsten);
                     }
                     else  // Gold/Platinum layer
                     {
@@ -170,10 +170,10 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
                         float platinumNoise = noise.GetNoise(x, y + 8000);
 
                         if (goldNoise < ORE_THRESHOLD && IsValidOreLocation(x, y))
-                            WorldGen.TileRunner(x, y, WorldGen.genRand.Next(2, 7), WorldGen.genRand.Next(2, 7), TileID.Gold);
+                            WorldGen.TileRunner(x, y, WorldGen.genRand.Next(5, 7), WorldGen.genRand.Next(5, 7), TileID.Gold);
 
                         if (platinumNoise < ORE_THRESHOLD && IsValidOreLocation(x, y))
-                            WorldGen.TileRunner(x, y, WorldGen.genRand.Next(2, 7), WorldGen.genRand.Next(2, 7), TileID.Platinum);
+                            WorldGen.TileRunner(x, y, WorldGen.genRand.Next(4, 7), WorldGen.genRand.Next(4, 7), TileID.Platinum);
                     }
                 }
             }
