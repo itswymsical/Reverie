@@ -9,6 +9,7 @@ using Terraria.ID;
 using Terraria.Audio;
 using Reverie.Common.UI.MissionUI;
 using Terraria.UI;
+using Reverie.Common.MissionAttributes;
 
 namespace Reverie.Core.Missions
 {
@@ -23,6 +24,8 @@ namespace Reverie.Core.Missions
         public int Commissioner { get; set; } = npc;
         public int XPReward { get; private set; } = xpReward;
         public int NextMissionID { get; private set; } = nextMissionID;
+        public int Version { get; private set; } = 1; // Increment this when you make structural changes
+
     }
 
     public enum MissionProgress
@@ -66,10 +69,10 @@ namespace Reverie.Core.Missions
             InGameNotificationsTracker.AddNotification(new MissionStatusIndicator(this));
         }
         /// <summary>
-        /// Use this method to update/complete an objective. the index is the 'objectiveIndex' within whichever 'ObjectiveSet' you are checking.
+        /// Use this method to update/complete an objective. You will need to manually check 'ObjectiveSet'.
         /// </summary>
-        /// <param name="objectiveIndex"></param>
-        /// <param name="amount"></param>
+        /// <param name="objectiveIndex">The objective we are currently updating.</param>
+        /// <param name="amount">How many times we update the objective. If an objective only has a value of 1, no need to set this parameter.</param>
         /// <returns></returns>
         public bool UpdateProgress(int objectiveIndex, int amount = 1)
         {
@@ -82,11 +85,11 @@ namespace Reverie.Core.Missions
                 var obj = currentSet.Objectives[objectiveIndex];
                 if (!obj.IsCompleted || amount < 0)
                 {
-                    bool objectiveCompleted = obj.UpdateProgress(amount);
-
-                    if (objectiveCompleted && amount > 0)
+                    bool wasCompleted = obj.UpdateProgress(amount);
+                    if (wasCompleted && amount > 0)
                     {
                         OnObjectiveComplete(objectiveIndex);
+                        MissionHandlerManager.Instance.OnObjectiveComplete(this, objectiveIndex);
                         SoundEngine.PlaySound(SoundID.ResearchComplete with { Volume = 0.65f }, Main.LocalPlayer.position);
                     }
 
@@ -105,7 +108,6 @@ namespace Reverie.Core.Missions
                     }
                 }
             }
-
             return false;
         }
 

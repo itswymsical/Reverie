@@ -59,13 +59,5 @@ namespace Reverie.Content.Terraria.NPCs.WorldNPCs
             button = "Talk";
             button2 = "Pet";
         }
-        public override void OnChatButtonClicked(bool firstButton, ref string shopName)
-        {
-            base.OnChatButtonClicked(firstButton, ref shopName);
-            if (firstButton)
-            {
-                DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.Default, DialogueID.ArgiesHuntIntro);
-            }
-        }
     }
 }

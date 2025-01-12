@@ -1,15 +1,16 @@
 ﻿using Microsoft.Xna.Framework;
-using Reverie.Content.Dusts;
-using Reverie.Core.Cutscenes;
+
 using System;
 using System.Collections.Generic;
 using System.IO;
+
 using Terraria;
-using Terraria.DataStructures;
-using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
+
+using Reverie.Content.Dusts;
+using Reverie.Core.Cutscenes;
 using static Reverie.Reverie;
 
 namespace Reverie.Common.Players

@@ -132,7 +132,7 @@ namespace Reverie.Core.Dialogue
         public void OnEndDialogue(DialogueID dialogueId)
         {
             ReveriePlayer player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
-            if (dialogueId == DialogueID.GuideYappingAboutReverieLore)
+            if (dialogueId == DialogueID.Mission_01_Briefing)
                 ReverieUISystem.Instance.ClassInterface.SetState(ReverieUISystem.Instance.classUI);
         }
 

@@ -35,14 +35,6 @@ namespace Reverie.Content.Terraria.NPCs.WorldNPCs
 
             NPC.GivenName = "Sophie";
         }
-        public override void OnChatButtonClicked(bool firstButton, ref string shopName)
-        {
-            base.OnChatButtonClicked(firstButton, ref shopName);
-            if (firstButton)
-            {
-                DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.SophieData, DialogueID.KilledTheEye, true);
-            }
-        }
         public override bool CanTownNPCSpawn(int numTownNPCs) => false;       
     }
 }

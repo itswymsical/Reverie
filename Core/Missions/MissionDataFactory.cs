@@ -86,7 +86,7 @@ namespace Reverie.Core.Missions
                         [("Choose a combat path", 1)],
                         [("Attack the target dummy", 10), ("Talk to the Guide", 1)],
                         [("Kill slimes", 3), ("Obtain torches", 16)],
-                        [("Craft a better pickaxe", 1), ("Obtain Iron or Lead ore", 15), ("Check in with the Guide", 1)]
+                        [("Obtain a better pickaxe", 1), ("Obtain Iron or Lead ore", 15), ("Check in with the Guide", 1)]
                     ],
 
                     [new Item(ItemID.SilverCoin, Main.rand.Next(7, 19)),
@@ -104,9 +104,9 @@ namespace Reverie.Core.Missions
                     "Create a Translocator with the item's on your task list." +
                     "\nCreate a Translocator with the item's on your task list.",
                     [
-                        [("Obtain a Realm Crystal", 1), 
-                        ("Obtain a Coil Array", 1), 
-                        ("Obtain a Dimensional Tuning Fork", 1)],
+                        [("Craft a Realm Crystal", 1), 
+                        ("Craft a Coil Array", 1), 
+                        ("Craft a Dimensional Tuning Fork", 1)],
                         [("Check in with the Guide", 1)]
                     ],
 
@@ -115,8 +115,8 @@ namespace Reverie.Core.Missions
 
                     isMainline: true,
                     NPCID.Guide,
-                    xpReward: 55,
-                    nextMissionID: MissionID.RedEyedRetribution
+                    xpReward: 55
+                    //nextMissionID: MissionID.RedEyedRetribution
                 )},
 
                 {MissionID.RedEyedRetribution, () => new MissionData(

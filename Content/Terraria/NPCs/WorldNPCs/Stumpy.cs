@@ -40,7 +40,7 @@ namespace Reverie.Content.Terraria.NPCs.WorldNPCs
             base.OnChatButtonClicked(firstButton, ref shopName);
             if (firstButton)
             {
-                DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.StumpyData, DialogueID.StumpysIntro);
+                DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.StumpyData, DialogueID.Mission_04_StumpyIntro);
             }
         }
         public override bool CanTownNPCSpawn(int numTownNPCs) => false;
