@@ -6,7 +6,7 @@ using static ReverieMusic.ReverieMusic;
 
 using Reverie.Core.Dialogue;
 using Reverie.Core.Mechanics;
-using Reverie.Core.Cutscenes;
+using Reverie.Core.Graphics;
 
 namespace Reverie.Cutscenes
 {
@@ -46,7 +46,7 @@ namespace Reverie.Cutscenes
         
         public override void End()
         {
-            DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.Mission_01_WakingUp, true);
+            DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.Mission_01_WakingUp, true);
             EnablePlayerMovement();
             Player player = Main.LocalPlayer;
             player.sleeping.isSleeping = false;

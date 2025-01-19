@@ -16,7 +16,7 @@ using Terraria.UI;
 
 namespace Reverie.Common.UI
 {
-    public class NPCDialogueBox : IInGameNotification
+    public class DialogueBox : IInGameNotification
     {
         #region Constants and Fields
         private const float AnimationDuration = 30f;
@@ -58,9 +58,9 @@ namespace Reverie.Common.UI
         #endregion
 
         #region Public Methods
-        public static NPCDialogueBox CreateNewDialogueSequence(NPCData npcData, DialogueSequence sequence, bool zoomIn)
+        public static DialogueBox CreateNewSequence(NPCData npcData, DialogueSequence sequence, bool zoomIn)
         {
-            var notification = new NPCDialogueBox
+            var notification = new DialogueBox
             {
                 CurrentPortrait = npcData.Portrait,
                 npcData = npcData,
@@ -75,7 +75,7 @@ namespace Reverie.Common.UI
                 notification.currentSequence.Enqueue(entry);
             }
 
-            notification.NextDialogue();
+            notification.NextEntry();
 
             return notification;
         }
@@ -83,7 +83,7 @@ namespace Reverie.Common.UI
         public void Update()
         {
             UpdateAnimation();
-            UpdateDialogueDisplay();
+            UpdateDisplay();
             UpdateAutoRemove();
         }
 
@@ -106,7 +106,7 @@ namespace Reverie.Common.UI
         #endregion
 
         #region Private Methods
-        private void NextDialogue()
+        private void NextEntry()
         {
             if (currentSequence.Count > 0)
             {
@@ -132,7 +132,7 @@ namespace Reverie.Common.UI
             }
         }
 
-        private void UpdateDialogueDisplay()
+        private void UpdateDisplay()
         {
             LocalizedText currentDialogueText = currentDialogue.GetText();
 
@@ -168,7 +168,7 @@ namespace Reverie.Common.UI
                 autoRemoveTimer--;
                 if (autoRemoveTimer == 0)
                 {
-                    NextDialogue();
+                    NextEntry();
                 }
             }
         }
@@ -288,7 +288,7 @@ namespace Reverie.Common.UI
             }
             else if (currentSequence.Count > 0)
             {
-                NextDialogue();
+                NextEntry();
             }
             else
             {

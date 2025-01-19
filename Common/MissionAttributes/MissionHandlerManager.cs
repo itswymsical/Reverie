@@ -1,131 +1,224 @@
-﻿using Reverie.Core.Missions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 using Terraria.DataStructures;
+using Reverie.Core.Missions;
+using Reverie.Common.Players;
 
 namespace Reverie.Common.MissionAttributes
 {
     public class MissionHandlerManager
     {
+        private readonly object handlerLock = new object();
         private readonly Dictionary<int, MissionObjectiveHandler> handlers = [];
         private static MissionHandlerManager instance;
-
         public static MissionHandlerManager Instance => instance ??= new MissionHandlerManager();
-        public void Reset()
-        {
-            handlers.Clear();
-        }
 
         public void RegisterMissionHandler(Mission mission)
         {
-            Main.NewText($"Attempting to register handler for mission ID: {mission.ID}"); // Debug
-
-            if (handlers.ContainsKey(mission.ID))
-            {
-                Main.NewText("Handler already exists for this mission"); // Debug
+            if (mission == null)
                 return;
-            }
 
-            var handlerType = Assembly.GetExecutingAssembly()
-                .GetTypes()
-                .FirstOrDefault(t =>
-                    t.GetCustomAttribute<MissionHandlerAttribute>()?.MissionID == mission.ID);
-
-            Main.NewText($"Found handler type: {handlerType?.Name ?? "none"}"); // Debug
-
-            if (handlerType != null)
+            lock (handlerLock)
             {
-                var handler = (MissionObjectiveHandler)Activator.CreateInstance(handlerType, mission);
-                handlers[mission.ID] = handler;
-                Main.NewText("Handler registered successfully"); // Debug
+                try
+                {
+                    if (handlers.ContainsKey(mission.ID))
+                    {
+                        ModContent.GetInstance<Reverie>().Logger.Debug($"Handler already exists for mission {mission.ID}");
+                        return;
+                    }
+
+                    var handlerType = Assembly.GetExecutingAssembly()
+                        .GetTypes()
+                        .FirstOrDefault(t =>
+                            t.GetCustomAttribute<MissionHandlerAttribute>()?.MissionID == mission.ID);
+
+                    if (handlerType != null)
+                    {
+                        var handler = (MissionObjectiveHandler)Activator.CreateInstance(handlerType, mission);
+                        handlers[mission.ID] = handler;
+                        ModContent.GetInstance<Reverie>().Logger.Info($"Registered handler for mission {mission.MissionData.Name}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Failed to register handler: {ex.Message}");
+                }
             }
-            else
+        }
+
+        public void Reset()
+        {
+            lock (handlerLock)
             {
-                Main.NewText("No handler type found for this mission"); // Debug
+                handlers.Clear();
+                ModContent.GetInstance<Reverie>().Logger.Info("All mission handlers reset");
+            }
+        }
+
+        private IEnumerable<MissionObjectiveHandler> GetActiveHandlers()
+        {
+            lock (handlerLock)
+            {
+                return handlers.Values
+                    .Where(h => h.Mission.Progress == MissionProgress.Active)
+                    .ToList();
             }
         }
 
         public void OnObjectiveComplete(Mission mission, int objectiveIndex)
         {
-            if (handlers.TryGetValue(mission.ID, out var handler))
+            lock (handlerLock)
             {
-                handler.OnObjectiveComplete(objectiveIndex);
+                try
+                {
+                    if (handlers.TryGetValue(mission.ID, out var handler))
+                    {
+                        handler.OnObjectiveComplete(objectiveIndex);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnObjectiveComplete: {ex.Message}");
+                }
             }
         }
 
-        // Item methods
+        #region Event Handlers
         public void OnItemCreated(Item item, ItemCreationContext context)
         {
-            var activeHandlers = GetActiveHandlers().ToList();
-            foreach (var handler in activeHandlers)
+            lock (handlerLock)
             {
-                handler.OnItemCreated(item, context);
+                try
+                {
+                    foreach (var handler in GetActiveHandlers())
+                    {
+                        handler.OnItemCreated(item, context);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnItemCreated: {ex.Message}");
+                }
             }
         }
 
         public void OnItemPickup(Item item)
         {
-            var activeHandlers = GetActiveHandlers().ToList();
-            foreach (var handler in activeHandlers)
+            lock (handlerLock)
             {
-                handler.OnItemPickup(item);
+                try
+                {
+                    foreach (var handler in GetActiveHandlers())
+                    {
+                        handler.OnItemPickup(item);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnItemPickup: {ex.Message}");
+                }
             }
         }
 
-        // NPC methods
         public void OnNPCKill(NPC npc)
         {
-            foreach (var handler in GetActiveHandlers())
+            lock (handlerLock)
             {
-                handler.OnNPCKill(npc);
+                try
+                {
+                    foreach (var handler in GetActiveHandlers())
+                    {
+                        handler.OnNPCKill(npc);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCKill: {ex.Message}");
+                }
             }
         }
 
         public void OnNPCChat(NPC npc)
         {
-            // Create a safe copy of active handlers
-            var activeHandlers = GetActiveHandlers().ToList();
-            foreach (var handler in activeHandlers)
+            lock (handlerLock)
             {
-                handler.OnNPCChat(npc);
+                try
+                {
+                    foreach (var handler in GetActiveHandlers())
+                    {
+                        handler.OnNPCChat(npc);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCChat: {ex.Message}");
+                }
             }
         }
 
         public void OnNPCSpawn(NPC npc)
         {
-            var activeHandlers = GetActiveHandlers().ToList();
-            foreach (var handler in activeHandlers)
+            lock (handlerLock)
             {
-                handler.OnNPCSpawn(npc);
+                try
+                {
+                    foreach (var handler in GetActiveHandlers())
+                    {
+                        handler.OnNPCSpawn(npc);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCSpawn: {ex.Message}");
+                }
             }
         }
 
         public void OnNPCLoot(NPC npc)
         {
-            var activeHandlers = GetActiveHandlers().ToList();
-            foreach (var handler in activeHandlers)
+            lock (handlerLock)
             {
-                handler.OnNPCLoot(npc);
+                try
+                {
+                    foreach (var handler in GetActiveHandlers())
+                    {
+                        handler.OnNPCLoot(npc);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCLoot: {ex.Message}");
+                }
             }
         }
 
         public void OnNPCHit(NPC npc, int damage)
         {
-            var activeHandlers = GetActiveHandlers().ToList();
-            foreach (var handler in activeHandlers)
+            lock (handlerLock)
             {
-                handler.OnNPCHit(npc, damage);
+                try
+                {
+                    var activeHandlers = GetActiveHandlers().ToList();
+                    ModContent.GetInstance<Reverie>().Logger.Debug($"Processing NPC hit with {activeHandlers.Count} active handlers");
+
+                    foreach (var handler in activeHandlers)
+                    {
+                        handler.OnNPCHit(npc, damage);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCHit: {ex.Message}");
+                }
             }
         }
-        private IEnumerable<MissionObjectiveHandler> GetActiveHandlers()
-        {
-            // Create a safe copy of active handlers before enumeration
-            return handlers.Values
-                .Where(h => h.Mission.Progress == MissionProgress.Active)
-                .ToList(); // Materialize the list before returning
-        }
+        #endregion
     }
 }

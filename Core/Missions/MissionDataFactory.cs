@@ -83,7 +83,6 @@ namespace Reverie.Core.Missions
                     "\nYou are the one appointed 'HERO', and you must do HERO things...",
                     [
                         [("Talk to the Guide", 1)],
-                        [("Choose a combat path", 1)],
                         [("Attack the target dummy", 10), ("Talk to the Guide", 1)],
                         [("Kill slimes", 3), ("Obtain torches", 16)],
                         [("Obtain a better pickaxe", 1), ("Obtain Iron or Lead ore", 15), ("Check in with the Guide", 1)]

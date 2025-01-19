@@ -10,8 +10,8 @@ using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
 using Reverie.Content.Dusts;
-using Reverie.Core.Cutscenes;
 using static Reverie.Reverie;
+using Reverie.Core.Graphics;
 
 namespace Reverie.Common.Players
 {

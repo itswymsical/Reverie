@@ -293,21 +293,5 @@ namespace Reverie.Common.Extensions
                 npc.spriteDirection = npc.direction;
             }
         }
-
-        public static bool NPCHasAvailableMission(this NPC npc, MissionPlayer missionPlayer, int npcType)
-        {
-            if (missionPlayer.npcMissionsDict.TryGetValue(npcType, out var missionIds))
-            {
-                foreach (var missionId in missionIds)
-                {
-                    var mission = missionPlayer.GetMission(missionId);
-                    if (mission != null && mission.State == MissionState.Unlocked && mission.Progress != MissionProgress.Completed)
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
     }
 }

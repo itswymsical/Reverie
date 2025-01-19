@@ -17,9 +17,6 @@ using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 
 using SubworldLibrary;
-using Reverie.Common.Systems;
-using Reverie.Core.Cutscenes;
-using Reverie.Cutscenes;
 using static Reverie.Common.Players.MissionPlayer;
 
 namespace Reverie.Common.MissionEventTrackers
@@ -43,10 +40,12 @@ namespace Reverie.Common.MissionEventTrackers
     public class ObjectiveHandlerNPC : GlobalNPC
     {
         public override bool InstancePerEntity => true;
-        public Texture2D missionAvailableTexture = ModContent.Request<Texture2D>($"{Assets.UI.MissionUI}MissionObjectives").Value;
+
+        public Texture2D missionAvailableTexture = 
+            ModContent.Request<Texture2D>($"{Assets.UI.MissionUI}MissionObjectives").Value;
 
         public override bool? CanChat(NPC npc)
-            => (npc.isLikeATownNPC || npc.townNPC) && !DialogueManager.Instance.IsAnyDialogueActive();
+            => (npc.isLikeATownNPC || npc.townNPC) && !DialogueManager.Instance.IsAnyActive();
 
         public override void GetChat(NPC npc, ref string chat)
         {
@@ -56,15 +55,13 @@ namespace Reverie.Common.MissionEventTrackers
 
         public override void EditSpawnPool(IDictionary<int, float> pool, NPCSpawnInfo spawnInfo)
         {
-            // This is more of a game state check than a mission objective, 
-            // so we can keep this logic here or move it to a separate system
             MissionPlayer mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
             Mission Reawakening = mPlayer.GetMission(MissionID.Reawakening);
 
             if (Reawakening?.Progress == MissionProgress.Active)
             {
                 var currentSet = Reawakening.MissionData.ObjectiveSets[Reawakening.CurrentSetIndex];
-                if (!currentSet.IsCompleted && Reawakening.CurrentSetIndex < 3)
+                if (!currentSet.IsCompleted && Reawakening.CurrentSetIndex < 2)
                 {
                     pool.Clear();
                 }
@@ -91,8 +88,6 @@ namespace Reverie.Common.MissionEventTrackers
             if (npc.immortal)
                 return false;
 
-            // This is mission state management rather than objective tracking,
-            // so we can keep it here
             if (NPC.AnyNPCs(NPCID.Merchant))
             {
                 MissionPlayer missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
@@ -111,15 +106,13 @@ namespace Reverie.Common.MissionEventTrackers
         {
             base.OnKill(npc);
             if (!npc.immortal)
-            {
-                MissionHandlerManager.Instance.OnNPCKill(npc);
-            }
+                MissionHandlerManager.Instance.OnNPCKill(npc);   
         }
 
         public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-            if (npc.NPCHasAvailableMission(missionPlayer, npc.type))
+            if (NPCHasAvailableMission(missionPlayer, npc.type))
             {
                 float hoverOffset = (float)Math.Sin(Main.GameUpdateCount * 1f * 0.1f) * 4f;
                 Vector2 drawPos = npc.Top + new Vector2(-missionAvailableTexture.Width / 2f, -missionAvailableTexture.Height - 10f - hoverOffset);

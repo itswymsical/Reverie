@@ -24,7 +24,7 @@ namespace Reverie.Content.Terraria.Items
         }
         public override bool CanUseItem(Player player)
         {
-            if (DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.Mission_01_WakingUp, true))
+            if (DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.Mission_01_WakingUp, true))
                 return false;
 
             return base.CanUseItem(player);
@@ -32,7 +32,7 @@ namespace Reverie.Content.Terraria.Items
         public override bool? UseItem(Player player)
         {
             if (Main.myPlayer == player.whoAmI)
-                DialogueManager.Instance.PlayDialogueSequence(NPCDataManager.GuideData, DialogueID.Mission_01_WakingUp, true);
+                DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.Mission_01_WakingUp, true);
 
             return true;
         }
