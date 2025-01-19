@@ -5,7 +5,7 @@ using System;
 using Terraria.GameContent;
 using Terraria.ModLoader;
 
-namespace Reverie.Core.Cutscenes
+namespace Reverie.Core.Graphics
 {
     public abstract class CutsceneSystem
     {
@@ -28,6 +28,7 @@ namespace Reverie.Core.Cutscenes
                 IsPlaying = true;
                 IsPlayerVisible = true;
                 IsUIHidden = false;
+                Letterbox.Show();
                 SetMusic(_currentMusicID);
             }
             catch (Exception ex)
@@ -41,7 +42,7 @@ namespace Reverie.Core.Cutscenes
             try
             {
                 if (!IsPlaying) return;
-
+                Letterbox.Update();
                 if (_currentMusicID.HasValue)
                 {
                     Main.musicBox2 = _currentMusicID.Value;
@@ -66,7 +67,7 @@ namespace Reverie.Core.Cutscenes
             if (!IsPlaying) return;
 
             DrawFade(spriteBatch);
-
+            Letterbox.Draw(spriteBatch);
             DrawCutsceneContent(spriteBatch);
         }
 
@@ -83,6 +84,7 @@ namespace Reverie.Core.Cutscenes
             {
                 EnablePlayerMovement();
                 IsPlaying = false;
+                Letterbox.Hide();
                 if (_currentMusicID.HasValue)
                 {
                     Main.musicBox2 = _previousMusicBox;

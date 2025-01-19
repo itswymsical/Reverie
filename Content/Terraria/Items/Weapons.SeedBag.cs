@@ -86,6 +86,7 @@ namespace Reverie.Content.Terraria.Items
             return false;
         }
     }
+
     public class SeedProj : StickyProjectile
     {
         public override string Texture => Assets.Terraria.Projectiles.Dir + Name;

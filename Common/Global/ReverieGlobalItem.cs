@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Reverie.Common.Extensions;
 using Reverie.Common.Systems;
 using System.Collections.Generic;
 using Terraria;
@@ -41,6 +42,7 @@ namespace Reverie.Common.Global
                 entity.ammo = entity.type;
             }
         }
+
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
         {
             base.ModifyTooltips(item, tooltips);

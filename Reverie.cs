@@ -74,7 +74,7 @@ namespace Reverie
             }
         }
 
-        public override void AddRecipes()/* tModPorter Note: Removed. Use ModSystem.AddRecipes */
+        public override void AddRecipes()
         {
 
             Recipe iceBlade = Recipe.Create(ItemID.IceBlade);
@@ -84,7 +84,6 @@ namespace Reverie
                 .AddTile(TileID.IceMachine)
                 .Register();
         }
-
 
         public enum MessageType : byte
         {

@@ -1,63 +1,62 @@
 DialogueLibrary: {
-	Reawakening: {
+	Mission_01: {
 		WakingUp: {
-			Line1: What the..?
-			Line2: You're awake?!?
-			Line3: Long nap, 'eh?
-			Line4: I honestly thought you'd never wake up.
-			Line5: Anyways...
-			Line6: While you were in your coma, the assailants left our society in shambles.
-			Line7: "'You give a blank stare'"
-			Line8: ...
-			Line9: Amnesia too? golly.
-			Line10: Well, now isn't the time for explanation.
-			Line11: Come take these copper tools and i'll give it to you straight.
+			Line1: ...?
+			Line2: You're up?!
+			Line3: Long nap, you took.
+			Line4: Honestly, I thought you'd never wake.
+			Line5: OH...!
+			Line6: You've got to get to Sylvanwalde and tell the council!
+			Line7: "[blank stare]"
+			Line8: You look, confused?
+			Line9: Amnesia...
+			Line10: Hey, this is a lot to take in for me too!
+			Line11: Hold on, just take these copper tools.
 		}
 
 		Briefing: {
-			Line1: Like I said, I'll be quick about it:
-			Line2: Terraria, once a highly populated world is now desolate. The credit goes to Cthulhu and the assailants.
-			Line3: He was once an ally of Terraria, him and the world of Seaforth.
-			Line4: But now he's our adversary.
-			Line5: A little over two years ago, Terraria was in alliance with some Otherworlds.
-			Line6: Those being Sylvanwalde and Seaforth. But because of some...
-			Line7: ...rather disgraceful events...
-			Line8: We are here today in what you can barely call an Otherworld.
-			Line9: During the war's final battle, you were knocked out by the Eye.
-			Line10: The Archivers and Dryads fought back against the Assailants, but the death toll was high.
-			Line11: Sorry to lay this on you, but you'll need to start training.
-			Line12: Oh, I forgot to tell you you're the HERO by the way. My bad.
-			Line13: Three years have passed since the war, and Cthulhu's seal will break in just 8 months.
-			Line14: Given your memory loss, we don't have much time to spare.
-			Line15: Pick any of these four combat types, make sure you want this to be your signature style.
+			Line1: It all starts like this:
+			Line2: Roughly 3 years ago, Cthulhu brought an onslaught to Terraria.
+			Line3: The Assailants, the Paladins, they all brought havoc... You should've seen those abominations in action.
+			Line4: One of their Paladins created two literal wastelands. Us remaining call 'em the Crimson and the Corruption.
+			Line5: The names will make sense once you've seen it yourself.
+			Line6: The War was a brutal battle, many of what we called Archivists, suffered mass casuality, however it wasn't entirely over for us.
+			Line7: Allies from Sylvanwalde, the Dryads, were the only reason the Archivists survived.
+			Line8: By the skin of our teeth, our leaders managed to seal Cthulhu into what we call, the Wyrmscape.
+			Line9: Unfortunately, we were told that seal would hold only for 5 years.
+			Line10: But even worse, the Paladins found a way to reduce the lifespan of the seal. There's no telling when Cthulhu will break.
+			Line11: The thing is, there was a contingency plan for that:
+			Line12: Create an artifical deity, the HERO. It would have the highest affinity to Reverie, and would act in pure intention.
+			Line13: If you guessed "who" as yourself, you guessed right.
+			Line14: your the one who's gonna kill Cthulhu and stop the Paladins. They're planning on taking dominion over the Fractal.
+			Line15: Oh, you don't even know what that is...
+			Line16: Imagine serveral "Terrarias", scattered across reality, in one giant connected web of energy. We live in those.
+			Line17: We actually live in the First Fractal region. Pretty cool huh? One of a kind.
+			Line18: Well, now we can start your training. I'm gonna give you a second to decide your fighting style, then we'll go to the training grounds.
 		}
 
 		TrainingComplete: {
-			Line1: Decent work.
-			Line2: Although, this is just a target dummy. You'll need some better weapons if you wanna fight for real.
-			Line3: But before you run off, I have some gear for you.
+			Line1: Great work.
+			Line2: Although, you'll need some better weapons if you intend on taking on the Assailants.
+			Line3: Come here, I have some items for you.
 		}
 
-		GuideGivesYouAMagicMirror: {
-			Line1: Take this Magic Mirror, it'll allow you to magically return to this location.
-			Line2: You can also use it to check the MirrorNet.
-			Line3: Gaze into the mirror and you'll be able to REFLECT on yourself.
-			Line4: (Right-Click or use the UI element to check your stats and progress)
-			Line5: You'll need to explore the outskirts of the forest to find new materials.
-			Line6: I'd recommend going underground into the caverns, where you can find new gear and minerals.
-			Line7: But be careful--the things down there are nothing like that target dummy.
-			Line8: Once you've collected a decent amount of resources, come back here and check in.
+		MagicMirror: {
+			Line1: This Magic Mirror will allow you to return to this location. You can also use it to check the MirrorNet.
+			Line2: Gaze into the mirror and you'll be able to REFLECT on yourself.
+			Line3: (Right-Click or use the UI element to check your stats and progress)
+			Line4: You'll need to explore the outskirts of the forest to find new materials.
+			Line5: I'd recommend going underground into the caverns, where you can find new gear and minerals.
+			Line6: But be careful--the things down there are nothing like that target dummy.
+			Line7: Once you've collected a decent amount of resources, come back here and check in.
 		}
 
-		ReawakeningEndingDialogue: {
-			Line1: I'm impressed by your speed.
-			Line2: Say... do you think you're ready to take on the weakest assailant?
-			Line3: No pressure, no pressure.
-			Line4: If you can't do it you don't have to fake it.
-			Line5: I'm just teasing you, I know you're ready!
-			Line6: You're going to be fighting the very thing that knocked you out the first time:
-			Line7: The Eye of Cthulhu...
-			Line8: I sent the task list to your MirrorNet contact, just do those things and come back to me before dusk.
+		Outro: {
+			Line1: Great work, Hero.
+			Line2: Looking pretty tough, too! Nice gear.
+			Line3: Only thing left to do now is get to Sylvanwalde.
+			Line4: You'll need to make a Translocator. There's a few resources you're gonna need, I sent them to your MirrorNet.
+			Line5: Good luck out there! You'll need it.
 		}
 
 		SelectedClass: {
@@ -85,17 +84,9 @@ DialogueLibrary: {
 				Line3: Tell your minion to hit the target dummy 10 times.
 			}
 		}
+	}
 
-		GuideWhenYouFindAnAccessory: {
-			Line1: Hey There!
-			Line2: I'm calling you from the MirrorNet.
-			Line3: I noticed you found an accessory.
-			Line4: Those are quite handy. In fact, they'll be integral to your arsenal.
-			Line5: If you're not a complete noob, you probably know you can equip that one you just picked up with [Right-Click].
-			Line6: Anyways, I'm just doing guide stuff.
-			Line7: I'll leave you to it.
-		}
-
+	Events: {
 		EnteredWoodlandCanopyBeforeProgression: {
 			Line1: Hey! I'm looking at your location on the MirrorNet.
 			Line2: Looks like you're in the Woodland Canopy?
@@ -103,28 +94,10 @@ DialogueLibrary: {
 			Line4: Why don't you explore some other biomes?
 			Line5: I'll give you the signal when you're ready to enter the canopy.
 		}
+	}
 
-		KilledTheEye: {
-			Line1: You split that eye faster than the witch doctor ravages open their amazon packages!
-			Line2: Remind me not to get on your bad side...
-			Line3: With that out of the way, we can focus on the challenges that lie ahead.
-			Line4: I reached out to a certain friend of mine from Sylvanwalde.
-			Line5: She's cold, yet charming. I think you'll like her...
-			Line6: Not only that, her expertise in cleansing magic will be necessary for cleaning the 'vulgar' biomes.
-			Line7: By that I mean the Crimson and Corruption.
-			Line8: If you didn't know, they're made from dead people.
-		}
-
-		ArgiesHuntIntro: {
-			Line1: Hello stranger!
-			Line2: Can you help me?
-			Line3: I want to spruce up my house!
-			Line4: I require more fungus!!!
-			Line5: Take this task list!
-			Line6: Okay, bye!
-		}
-
-		StumpysIntro: {
+	Mission_04: {
+		StumpyIntro: {
 			Line1: OH!
 			Line2: Hey! Who are you?
 			Line3: Hmmmm....

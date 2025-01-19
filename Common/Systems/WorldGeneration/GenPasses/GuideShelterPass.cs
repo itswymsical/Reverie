@@ -7,7 +7,7 @@ using StructureHelper;
 using Terraria.IO;
 using Terraria.WorldBuilding;
 
-namespace Reverie.Common.Systems.WorldGeneration
+namespace Reverie.Common.Systems.WorldGeneration.GenPasses
 {
     public class GuideShelterPass(string name, float loadWeight) : GenPass(name, loadWeight)
     {
@@ -17,7 +17,7 @@ namespace Reverie.Common.Systems.WorldGeneration
         private const int SPAWN_OFFSET_Y = 22;
         private const int GUIDE_OFFSET_X = 35;
         private const int GUIDE_OFFSET_Y = 40;
-        private const int SURFACE_CHECK_HEIGHT = 20; // How far up from worldSurface to check
+        private const int SURFACE_CHECK_HEIGHT = 30; // How far up from worldSurface to check
 
         protected override void ApplyPass(GenerationProgress progress, GameConfiguration configuration)
         {

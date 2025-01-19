@@ -1,6 +1,7 @@
 using Terraria;
 using Terraria.ID;
 using Reverie.Core.Missions;
+using Reverie.Core.Dialogue;
 
 namespace Reverie.Content.Terraria.NPCs.WorldNPCs
 {
@@ -34,7 +35,14 @@ namespace Reverie.Content.Terraria.NPCs.WorldNPCs
 
             NPC.GivenName = "Stumpy";
         }
-
+        public override void OnChatButtonClicked(bool firstButton, ref string shopName)
+        {
+            base.OnChatButtonClicked(firstButton, ref shopName);
+            if (firstButton)
+            {
+                DialogueManager.Instance.StartDialogue(NPCDataManager.StumpyData, DialogueID.Mission_04_StumpyIntro);
+            }
+        }
         public override bool CanTownNPCSpawn(int numTownNPCs) => false;
     }
 }

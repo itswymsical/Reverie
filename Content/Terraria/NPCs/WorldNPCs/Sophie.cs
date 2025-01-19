@@ -1,6 +1,7 @@
 using Terraria;
 using Terraria.ID;
 using Reverie.Core.Missions;
+using Reverie.Core.Dialogue;
 
 namespace Reverie.Content.Terraria.NPCs.WorldNPCs
 {

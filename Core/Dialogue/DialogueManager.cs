@@ -1,11 +1,12 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
+
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Reverie.Common.Players;
-using Reverie.Common.Systems;
+
 using Reverie.Common.UI;
-using System.Collections.Generic;
+using Reverie.Core.Graphics;
+
 using Terraria;
-using Terraria.Graphics;
 using Terraria.Localization;
 
 namespace Reverie.Core.Dialogue
@@ -13,34 +14,37 @@ namespace Reverie.Core.Dialogue
     public sealed class DialogueManager
     {
         private static readonly DialogueManager _instance = new();
-
+        public static DialogueManager Instance => _instance;
         private DialogueManager() { }
 
-        public static DialogueManager Instance => _instance;
 
         private readonly Dictionary<string, NPCData> _npcDialogueData = [];
 
-        private NPCDialogueBox _activeDialogue = null;
-        private int? _currentDialogueMusicID = null;
-        private DialogueID? _currentDialogueId = null;
-        private int _previousMusicBox = -1;
+        private DialogueBox _activeDialogue = null;
+        private int? _currentMusic = null;
+        private DialogueID? _currentDialogue = null;
+        private int _previousMusic = -1;
 
-        private const float DIALOGUE_ZOOM_LEVEL = 1.55f;
-        private const int ZOOM_ANIMATION_TIME = 80;
+        private const float ZOOM_LEVEL = 1.55f;
+        private const int ZOOM_TIME = 80;
 
         private bool _isZoomedIn = false;
+
+        public bool IsUIHidden { get; private set; }
+
         public void RegisterNPC(string npcId, NPCData npcData)
             => _npcDialogueData[npcId] = npcData;
 
-        public NPCDialogueBox GetActiveDialogue()
-            => _activeDialogue;
-        public NPCData GetNPCData(string npcId)
-        => _npcDialogueData.TryGetValue(npcId, out var npcData) ? npcData : null;
+        public DialogueBox GetActiveDialogue() => _activeDialogue;
 
-        public bool PlayDialogueSequence(NPCData npcData, DialogueID dialogueId)
+        public NPCData GetNPCData(string npcId) => _npcDialogueData.TryGetValue(npcId, out var npcData) ? npcData : null;
+
+        public bool StartDialogue(NPCData npcData, DialogueID dialogueId, bool zoomIn = false)
         {
             Main.CloseNPCChatOrSign();
-            if (IsAnyDialogueActive())
+            Letterbox.Show();
+            IsUIHidden = true;
+            if (IsAnyActive())
             {
                 return false;
             }
@@ -48,40 +52,40 @@ namespace Reverie.Core.Dialogue
             var dialogue = DialogueList.GetDialogueById(dialogueId);
             if (dialogue != null)
             {
-                _activeDialogue = NPCDialogueBox.CreateNewDialogueSequence(npcData, dialogue);
-                ChangeMusicForDialogue(dialogue.MusicID);
-                _currentDialogueId = dialogueId;
+                _activeDialogue = DialogueBox.CreateNewSequence(npcData, dialogue, zoomIn);
+                ChangeMusic(dialogue.MusicID);
+                _currentDialogue = dialogueId;
                 return true;
             }
 
             return false;
         }
 
-        private void ChangeMusicForDialogue(int? musicID)
+        private void EndDialogue()
         {
-            if (musicID.HasValue)
+            Letterbox.Hide();
+            IsUIHidden = false;
+            if (_currentDialogue.HasValue)
             {
-                _previousMusicBox = Main.musicBox2;
-                _currentDialogueMusicID = musicID.Value;
-                Main.musicBox2 = musicID.Value;
+                _currentDialogue = null;
             }
-        }
 
-        private void UpdateDialogueZoom()
-        {
-            if (_activeDialogue != null && !_isZoomedIn)
+            if (_currentMusic.HasValue)
             {
-                ZoomHandler.SetZoomAnimation(DIALOGUE_ZOOM_LEVEL, ZOOM_ANIMATION_TIME);
-                _isZoomedIn = true;
+                Main.musicBox2 = _previousMusic;
+                _currentMusic = null;
             }
-            else if (_activeDialogue == null && _isZoomedIn)
+
+            if (_isZoomedIn)
             {
-                ZoomHandler.SetZoomAnimation(1f, ZOOM_ANIMATION_TIME);
+                ZoomHandler.SetZoomAnimation(1f, ZOOM_TIME);
                 _isZoomedIn = false;
             }
+
+            _activeDialogue = null;
         }
 
-        public void UpdateActiveDialogue()
+        public void UpdateActive()
         {
             if (_activeDialogue != null)
             {
@@ -91,66 +95,64 @@ namespace Reverie.Core.Dialogue
                 }
                 else
                 {
+                    Letterbox.Update();
+
                     _activeDialogue.Update();
-                    EnsureDialogueMusicPlaying();
+                    if (_currentMusic.HasValue)
+                    {
+                        Main.musicBox2 = _currentMusic.Value;
+                    }
                 }
             }
 
-            UpdateDialogueZoom();
+            UpdateZoom();
         }
 
-        private void EndDialogue()
+        private void UpdateZoom()
         {
-            if (_currentDialogueId.HasValue)
+            if (_activeDialogue != null && !_isZoomedIn && _activeDialogue.ShouldZoom)
             {
-                OnEndDialogue(_currentDialogueId.Value);
-                _currentDialogueId = null;
+                ZoomHandler.SetZoomAnimation(ZOOM_LEVEL, ZOOM_TIME);
+                _isZoomedIn = true;
             }
-
-            if (_currentDialogueMusicID.HasValue)
+            else if (_activeDialogue == null && _isZoomedIn)
             {
-                Main.musicBox2 = _previousMusicBox;
-                _currentDialogueMusicID = null;
-            }
-
-            if (_isZoomedIn)
-            {
-                ZoomHandler.SetZoomAnimation(1f, ZOOM_ANIMATION_TIME);
+                ZoomHandler.SetZoomAnimation(1f, ZOOM_TIME);
                 _isZoomedIn = false;
             }
-
-            _activeDialogue = null;
         }
 
-        private void EnsureDialogueMusicPlaying()
+        private void ChangeMusic(int? musicID)
         {
-            if (_currentDialogueMusicID.HasValue)
+            if (musicID.HasValue)
             {
-                Main.musicBox2 = _currentDialogueMusicID.Value;
+                _previousMusic = Main.musicBox2;
+                _currentMusic = musicID.Value;
+                Main.musicBox2 = musicID.Value;
             }
         }
 
-        public void OnEndDialogue(DialogueID dialogueId)
+        public void Draw(SpriteBatch spriteBatch, Vector2 bottomAnchorPosition)
         {
-            ReveriePlayer player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
-            if (dialogueId == DialogueID.GuideYappingAboutReverieLore)
-                ReverieUISystem.Instance.ClassInterface.SetState(ReverieUISystem.Instance.classUI);
+            if (_activeDialogue == null) return;
+
+            Letterbox.Draw(spriteBatch);
+            Vector2 adjustedPosition = bottomAnchorPosition;
+            adjustedPosition.Y -= Letterbox.LetterboxHeight;
+
+            _activeDialogue.DrawInGame(spriteBatch, adjustedPosition);
         }
-
-        public void DrawActiveDialogue(SpriteBatch spriteBatch, Vector2 bottomAnchorPosition)
-            => _activeDialogue?.DrawInGame(spriteBatch, bottomAnchorPosition);
-
         public bool IsDialogueActive(DialogueID dialogueId)
             => _activeDialogue != null && DialogueList.GetDialogueById(dialogueId) != null;
 
-        public bool IsDialogueEntryActive(DialogueID dialogueId, int entryIndex)
+        public bool EntryIsActive(DialogueID dialogueId, int entryIndex)
         {
             return _activeDialogue != null &&
                    DialogueList.GetDialogueById(dialogueId) != null &&
                    _activeDialogue.IsCurrentEntry(entryIndex);
         }
 
-        public bool IsAnyDialogueActive() => _activeDialogue != null;
+        public bool IsAnyActive() => _activeDialogue != null;
     }
 
     public class DialogueEntry(string localizationKey, int delay, int emoteFrame, Color? entryTextColor = null, NPCData speakingNPC = null)
@@ -164,7 +166,7 @@ namespace Reverie.Core.Dialogue
         public LocalizedText GetText() => Reverie.Instance.GetLocalization(LocalizationKey);
     }
 
-    public enum DialogueType
+    public enum DialogueType //useful later
     {
         Mission,
         Banter,

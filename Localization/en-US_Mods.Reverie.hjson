@@ -207,6 +207,31 @@ Items: {
 		DisplayName: Girthquake
 		Tooltip: ""
 	}
+
+	CoilArray: {
+		DisplayName: Coil Array
+		Tooltip: ""
+	}
+
+	DimensionalTuningFork: {
+		DisplayName: Dimensional Tuning Fork
+		Tooltip: ""
+	}
+
+	RealmCrystal: {
+		DisplayName: Realm Crystal
+		Tooltip: ""
+	}
+
+	DialogueInstance: {
+		DisplayName: Dialogue Instance
+		Tooltip: ""
+	}
+
+	PlayMissionUI: {
+		DisplayName: Play Mission U I
+		Tooltip: ""
+	}
 }
 
 NPCs: {
@@ -251,6 +276,7 @@ Projectiles: {
 	FungoreSlam.DisplayName: Fungore Slam
 	BrambleArrowProj.DisplayName: Bramble Arrow Proj
 	GirthquakeProj.DisplayName: Girthquake Proj
+	SwordProj.DisplayName: Sword Proj
 }
 
 UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker

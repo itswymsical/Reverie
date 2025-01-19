@@ -16,7 +16,7 @@ using Terraria.UI;
 
 namespace Reverie.Common.UI
 {
-    public class NPCDialogueBox : IInGameNotification
+    public class DialogueBox : IInGameNotification
     {
         #region Constants and Fields
         private const float AnimationDuration = 30f;
@@ -45,6 +45,7 @@ namespace Reverie.Common.UI
         #endregion
 
         #region Properties
+        public bool ShouldZoom { get; set; }
         public bool ShouldBeRemoved => isRemoved && animationProgress >= AnimationDuration;
         public float Opacity => isRemoved ? 1f - (animationProgress / AnimationDuration) : MathHelper.Clamp(animationProgress / AnimationDuration, 0f, 1f);
         public Color DefaultTextColor { get; init; } = Color.White;
@@ -57,15 +58,16 @@ namespace Reverie.Common.UI
         #endregion
 
         #region Public Methods
-        public static NPCDialogueBox CreateNewDialogueSequence(NPCData npcData, DialogueSequence sequence)
+        public static DialogueBox CreateNewSequence(NPCData npcData, DialogueSequence sequence, bool zoomIn)
         {
-            var notification = new NPCDialogueBox
+            var notification = new DialogueBox
             {
                 CurrentPortrait = npcData.Portrait,
                 npcData = npcData,
                 NpcName = npcData.NpcName,
                 Color = npcData.DialogueColor,
-                CharacterSound = npcData.CharacterSound
+                CharacterSound = npcData.CharacterSound,
+                ShouldZoom = zoomIn
             };
 
             foreach (var entry in sequence.Entries)
@@ -73,7 +75,7 @@ namespace Reverie.Common.UI
                 notification.currentSequence.Enqueue(entry);
             }
 
-            notification.NextDialogue();
+            notification.NextEntry();
 
             return notification;
         }
@@ -81,7 +83,7 @@ namespace Reverie.Common.UI
         public void Update()
         {
             UpdateAnimation();
-            UpdateDialogueDisplay();
+            UpdateDisplay();
             UpdateAutoRemove();
         }
 
@@ -104,7 +106,7 @@ namespace Reverie.Common.UI
         #endregion
 
         #region Private Methods
-        private void NextDialogue()
+        private void NextEntry()
         {
             if (currentSequence.Count > 0)
             {
@@ -130,7 +132,7 @@ namespace Reverie.Common.UI
             }
         }
 
-        private void UpdateDialogueDisplay()
+        private void UpdateDisplay()
         {
             LocalizedText currentDialogueText = currentDialogue.GetText();
 
@@ -166,7 +168,7 @@ namespace Reverie.Common.UI
                 autoRemoveTimer--;
                 if (autoRemoveTimer == 0)
                 {
-                    NextDialogue();
+                    NextEntry();
                 }
             }
         }
@@ -286,7 +288,7 @@ namespace Reverie.Common.UI
             }
             else if (currentSequence.Count > 0)
             {
-                NextDialogue();
+                NextEntry();
             }
             else
             {

@@ -34,13 +34,13 @@ namespace Reverie.Common.Systems
         {
             if (Main.netMode != NetmodeID.Server) // multiplayer support in the future
             {
-                DialogueManager.Instance.UpdateActiveDialogue();
+                DialogueManager.Instance.UpdateActive();
             }
         }
         public override void PostDrawInterface(SpriteBatch spriteBatch)
         {
             Vector2 bottomAnchorPosition = new(Main.screenWidth / 2, Main.screenHeight - 20);
-            DialogueManager.Instance.DrawActiveDialogue(spriteBatch, bottomAnchorPosition);
+            DialogueManager.Instance.Draw(spriteBatch, bottomAnchorPosition);
         }
     }
 }

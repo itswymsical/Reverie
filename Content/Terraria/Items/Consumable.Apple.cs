@@ -19,6 +19,7 @@ namespace Reverie.Content.Terraria.Items
             Item.maxStack = 999;
             Item.UseSound = SoundID.Item2;
             Item.potion = true;
+            Item.potionDelay = 1800;
         }
     }
 }

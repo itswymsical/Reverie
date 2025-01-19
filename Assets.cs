@@ -27,6 +27,7 @@
                 public const string Lodestone = Dir + "Lodestone/";
                 public const string Weapons = Dir + "Weapons/";
                 public const string Shovels = Dir + "Shovels/";
+                public const string Mission = Dir + "Mission/";
 
                 public const string Fungore = Dir + "Fungore/";
                 public const string WoodenWarden = Dir + "WoodenWarden/";

@@ -9,22 +9,12 @@ using Terraria.ID;
 using Terraria.Audio;
 using Reverie.Common.UI.MissionUI;
 using Terraria.UI;
+using Reverie.Common.MissionAttributes;
+using System;
+using Terraria.ModLoader;
 
 namespace Reverie.Core.Missions
 {
-    public class MissionData(int id, string name, string description, List<List<(string, int)>> objectiveSets, List<Item> rewards, bool isMainline, int npc, int nextMissionID = -1, int xpReward = 0)
-    {
-        public int ID { get; set; } = id;
-        public string Name { get; private set; } = name;
-        public string Description { get; private set; } = description;
-        public List<ObjectiveSet> ObjectiveSets { get; protected set; } = objectiveSets.Select(set => new ObjectiveSet(set.Select(o => new Objective(o.Item1, o.Item2)).ToList())).ToList();
-        public List<Item> Rewards { get; private set; } = rewards;
-        public bool IsMainline { get; } = isMainline;
-        public int Commissioner { get; set; } = npc;
-        public int XPReward { get; private set; } = xpReward;
-        public int NextMissionID { get; private set; } = nextMissionID;
-    }
-
     public enum MissionProgress
     {
         Inactive,
@@ -37,6 +27,75 @@ namespace Reverie.Core.Missions
         Unlocked,
         Completed
     }
+
+    public class MissionData(int id, string name, string description, List<List<(string, int)>> objectiveSets, List<Item> rewards, bool isMainline, int npc, int nextMissionID = -1, int xpReward = 0)
+    {
+        public int ID { get; set; } = id;
+        public string Name { get; private set; } = name;
+        public string Description { get; private set; } = description;
+        public List<ObjectiveSet> ObjectiveSets { get; protected set; } = objectiveSets.Select(set => new ObjectiveSet(set.Select(o => new Objective(o.Item1, o.Item2)).ToList())).ToList();
+        public List<Item> Rewards { get; private set; } = rewards;
+        public bool IsMainline { get; } = isMainline;
+        public int Commissioner { get; set; } = npc;
+        public int XPReward { get; private set; } = xpReward;
+        public int NextMissionID { get; private set; } = nextMissionID;
+        public int Version { get; private set; } = 1; // Increment this when you make structural changes
+
+    }
+
+    public class MissionDataContainer
+    {
+        public int ID { get; set; }
+        public int Version { get; set; }
+        public MissionProgress Progress { get; set; }
+        public MissionState State { get; set; }
+        public bool Unlocked { get; set; }
+        public int CurrentSetIndex { get; set; }
+        public List<ObjectiveSetState> ObjectiveSets { get; set; } = [];
+        public int NextMissionID { get; set; }
+
+        public TagCompound Serialize()
+        {
+            return new TagCompound
+            {
+                ["ID"] = ID,
+                ["Version"] = Version,
+                ["Progress"] = (int)Progress,
+                ["State"] = (int)State,
+                ["Unlocked"] = Unlocked,
+                ["CurrentSetIndex"] = CurrentSetIndex,
+                ["ObjectiveSets"] = ObjectiveSets.Select(set => set.Serialize()).ToList(),
+                ["NextMissionID"] = NextMissionID
+            };
+        }
+
+        public static MissionDataContainer Deserialize(TagCompound tag)
+        {
+            try
+            {
+                return new MissionDataContainer
+                {
+                    ID = tag.GetInt("ID"),
+                    Version = tag.GetInt("Version"),
+                    Progress = (MissionProgress)tag.GetInt("Progress"),
+                    State = (MissionState)tag.GetInt("State"),
+                    Unlocked = tag.GetBool("Unlocked"),
+                    CurrentSetIndex = tag.GetInt("CurrentSetIndex"),
+                    ObjectiveSets = tag.GetList<TagCompound>("ObjectiveSets")
+                        .Select(t => ObjectiveSetState.Deserialize(t))
+                        .ToList(),
+                    NextMissionID = tag.GetInt("NextMissionID")
+                };
+            }
+            catch (Exception ex)
+            {
+                // Log error and return null to trigger fallback
+                ModContent.GetInstance<Reverie>().Logger.Error($"Failed to deserialize mission container: {ex.Message}");
+                return null;
+            }
+        }
+    }
+
     public class Mission(MissionData missionData)
     {
         public int ID { get; set; } = missionData.ID;
@@ -63,13 +122,13 @@ namespace Reverie.Core.Missions
             if (rewards)
                 GiveRewards();
 
-            InGameNotificationsTracker.AddNotification(new MissionStatusIndicator(this));
+            InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(this));
         }
         /// <summary>
-        /// Use this method to update/complete an objective. the index is the 'objectiveIndex' within whichever 'ObjectiveSet' you are checking.
+        /// Use this method to update/complete an objective. You will need to manually check 'ObjectiveSet'.
         /// </summary>
-        /// <param name="objectiveIndex"></param>
-        /// <param name="amount"></param>
+        /// <param name="objectiveIndex">The objective we are currently updating.</param>
+        /// <param name="amount">How many times we update the objective. If an objective only has a value of 1, no need to set this parameter.</param>
         /// <returns></returns>
         public bool UpdateProgress(int objectiveIndex, int amount = 1)
         {
@@ -82,11 +141,11 @@ namespace Reverie.Core.Missions
                 var obj = currentSet.Objectives[objectiveIndex];
                 if (!obj.IsCompleted || amount < 0)
                 {
-                    bool objectiveCompleted = obj.UpdateProgress(amount);
-
-                    if (objectiveCompleted && amount > 0)
+                    bool wasCompleted = obj.UpdateProgress(amount);
+                    if (wasCompleted && amount > 0)
                     {
                         OnObjectiveComplete(objectiveIndex);
+                        MissionHandlerManager.Instance.OnObjectiveComplete(this, objectiveIndex);
                         SoundEngine.PlaySound(SoundID.ResearchComplete with { Volume = 0.65f }, Main.LocalPlayer.position);
                     }
 
@@ -105,7 +164,6 @@ namespace Reverie.Core.Missions
                     }
                 }
             }
-
             return false;
         }
 
@@ -163,62 +221,6 @@ namespace Reverie.Core.Missions
                 Main.NewText($"{Main.LocalPlayer.name} " +
                     $"Gained [c/73d5ff:{MissionData.XPReward} Exp.] " +
                     $"from completing [c/73d5ff:{MissionData.Name}]!", Color.White);
-            }
-        }
-    }
-
-    public class Objective(string description, int requiredCount = 1)
-    {
-        public string Description { get; set; } = description;
-        public bool IsCompleted { get; set; } = false;
-        public int RequiredCount { get; set; } = requiredCount;
-        public int CurrentCount { get; set; } = 0;
-
-        public bool UpdateProgress(int amount = 1)
-        {
-            CurrentCount += amount;
-            if (CurrentCount >= RequiredCount)
-            {
-                IsCompleted = true;
-                CurrentCount = RequiredCount; // Cap at required count
-                return true;
-            }
-            return false;
-        }
-
-        public TagCompound Save()
-        {
-            return new TagCompound
-            {
-                ["Description"] = Description,
-                ["IsCompleted"] = IsCompleted,
-                ["RequiredCount"] = RequiredCount,
-                ["CurrentCount"] = CurrentCount
-            };
-        }
-
-        public static Objective Load(TagCompound tag)
-        {
-            var objective = new Objective(tag.GetString("Description"), tag.GetInt("RequiredCount"))
-            {
-                IsCompleted = tag.GetBool("IsCompleted"),
-                CurrentCount = tag.GetInt("CurrentCount")
-            };
-            return objective;
-        }
-    }
-
-    public class ObjectiveSet(List<Objective> objectives)
-    {
-        public List<Objective> Objectives { get; } = objectives;
-        public bool IsCompleted => Objectives.All(o => o.IsCompleted);
-
-        public void Reset()
-        {
-            foreach (var objective in Objectives)
-            {
-                objective.IsCompleted = false;
-                objective.CurrentCount = 0;
             }
         }
     }

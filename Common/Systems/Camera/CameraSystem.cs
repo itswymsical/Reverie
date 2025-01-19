@@ -9,7 +9,7 @@ namespace Reverie.Core.Mechanics
 {
     public class CameraSystem : ModSystem
     {
-        public static int Shake = 0;
+        public static float Shake = 0;
         private static PanModifier PanModifier = new();
         private static MoveModifier MoveModifier = new();
 
