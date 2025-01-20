@@ -3,12 +3,12 @@ using Terraria.ID;
 using Terraria;
 using Reverie.Common.MissionAttributes;
 
-namespace Reverie.Content.Terraria.Missions.Sideline
+namespace Reverie.Core.Missions.Sideline
 {
     [MissionHandler(MissionID.DirtiestBlock)]
-    public class DirtiestBlockHandler : MissionObjectiveHandler
+    public class DirtiestBlock : MissionObjectiveHandler
     {
-        public DirtiestBlockHandler(Mission mission) : base(mission) { }
+        public DirtiestBlock(Mission mission) : base(mission) { }
 
         public override void OnItemPickup(Item item)
         {

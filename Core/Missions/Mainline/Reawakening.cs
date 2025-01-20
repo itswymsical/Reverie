@@ -10,10 +10,10 @@ using Reverie.Core.Missions;
 using System;
 using Terraria.ModLoader;
 
-namespace Reverie.Content.Terraria.Missions.Mainline
+namespace Reverie.Core.Missions.Mainline
 {
     [MissionHandler(MissionID.Reawakening)]
-    public class ReawakeningHandler : MissionObjectiveHandler
+    public class Reawakening : MissionObjectiveHandler
     {
         private readonly List<Item> giveStarterItems = [new Item(ItemID.CopperPickaxe),
          new Item(ItemID.CopperAxe)];
@@ -23,7 +23,7 @@ namespace Reverie.Content.Terraria.Missions.Mainline
          new Item(ItemID.WoodBreastplate),
          new Item(ItemID.WoodGreaves)];
 
-        public ReawakeningHandler(Mission mission) : base(mission)
+        public Reawakening(Mission mission) : base(mission)
         {
             ModContent.GetInstance<Reverie>().Logger.Info("ReawakeningHandler constructed");
         }
@@ -68,6 +68,40 @@ namespace Reverie.Content.Terraria.Missions.Mainline
                 catch (Exception ex)
                 {
                     ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnObjectiveComplete: {ex.Message}");
+                }
+            }
+        }
+        public override void OnItemCreated(Item item, ItemCreationContext context)
+        {
+            lock (handlerLock)
+            {
+                try
+                {
+                    if (Mission.CurrentSetIndex == 2)
+                    {
+                        if (ItemID.Sets.Torches[item.type])
+                        {
+                            Mission.UpdateProgress(1, item.stack);
+                            ModContent.GetInstance<Reverie>().Logger.Debug($"Updated torch progress: +{item.stack}");
+                        }
+                    }
+                    else if (Mission.CurrentSetIndex == 3)
+                    {
+                        if (item.IsPickaxe() && item.type != ItemID.CopperPickaxe)
+                        {
+                            Mission.UpdateProgress(0);
+                            ModContent.GetInstance<Reverie>().Logger.Debug("Updated pickaxe progress");
+                        }
+                        if (item.type == ItemID.IronOre || item.type == ItemID.LeadOre)
+                        {
+                            Mission.UpdateProgress(1, item.stack);
+                            ModContent.GetInstance<Reverie>().Logger.Debug($"Updated ore progress: +{item.stack}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnItemPickup: {ex.Message}");
                 }
             }
         }

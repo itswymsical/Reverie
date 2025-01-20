@@ -48,6 +48,18 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
             noise.SetFractalWeightedStrength(0.12f);
             return noise;
         }
+        private FastNoiseLite SetupWallNoise()
+        {
+            var noise = new FastNoiseLite();
+            noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2S);
+            noise.SetFrequency(0.09f);
+            noise.SetFractalType(FastNoiseLite.FractalType.FBm);
+            noise.SetFractalOctaves(2);
+            noise.SetFractalLacunarity(3f);
+            noise.SetFractalGain(0.27f);
+            noise.SetFractalWeightedStrength(0.12f);
+            return noise;
+        }
 
         private FastNoiseLite SetupOpenCaveNoise()
         {
@@ -76,13 +88,14 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
         }
 
         private void GenerateChunk(
-            int startX,
-            int startY,
-            int width,
-            int height,
-            FastNoiseLite caveNoise,
-            FastNoiseLite openCaveNoise,
-            GenerationProgress progress)
+                   int startX,
+                   int startY,
+                   int width,
+                   int height,
+                   FastNoiseLite caveNoise,
+                   FastNoiseLite openCaveNoise,
+                   FastNoiseLite wallNoise,
+                   GenerationProgress progress)
         {
             int endX = Math.Min(startX + width, Main.maxTilesX);
             int endY = Math.Min(startY + height, Main.UnderworldLayer);
@@ -97,12 +110,21 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
 
                     float caveNoiseValue = caveNoise.GetNoise(x / 3f, y - (y / 4f));
                     float openCaveNoiseValue = openCaveNoise.GetNoise(x, y);
+                    float wallNoiseValue = wallNoise.GetNoise(x / 2f, y / 2f);
 
+                    Tile tile = Main.tile[x, y];
+
+                    // Generate cave space
                     if (caveNoiseValue > CAVE_THRESHOLD ||
                         (y >= GenVars.rockLayerHigh && openCaveNoiseValue > OPEN_CAVE_THRESHOLD))
                     {
-                        Tile tile = Main.tile[x, y];
                         tile.HasTile = false;
+
+                        // Add walls in caves where wall noise is above threshold
+                        if (wallNoiseValue > 0.2f)
+                        {
+                            tile.WallType = WallID.RocksUnsafe1;
+                        }
                     }
 
                     float currentProgress = (float)(((x * (Main.UnderworldLayer - (Main.rockLayer - GenVars.worldSurfaceLow))) +
@@ -209,12 +231,12 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
 
             var caveNoise = SetupCaveNoise();
             var openCaveNoise = SetupOpenCaveNoise();
-
+            var wallNoise = SetupWallNoise();
             for (int y = 0; y < Main.UnderworldLayer; y += CHUNK_SIZE)
             {
                 for (int x = 0; x < Main.maxTilesX; x += CHUNK_SIZE)
                 {
-                    GenerateChunk(x, y, CHUNK_SIZE, CHUNK_SIZE, caveNoise, openCaveNoise, progress);
+                    GenerateChunk(x, y, CHUNK_SIZE, CHUNK_SIZE, caveNoise, openCaveNoise, wallNoise, progress);
                 }
             }
 

@@ -6,12 +6,12 @@ using Terraria.ModLoader;
 using Reverie.Content.Terraria.Items.Mission;
 using Terraria.DataStructures;
 
-namespace Reverie.Content.Terraria.Missions.Mainline
+namespace Reverie.Core.Missions.Mainline
 {
     [MissionHandler(MissionID.Translocator)]
-    public class RealmRepositionHandler : MissionObjectiveHandler
+    public class RealmReposition : MissionObjectiveHandler
     {
-        public RealmRepositionHandler(Mission mission) : base(mission)
+        public RealmReposition(Mission mission) : base(mission)
         {
             Main.NewText("RealmRepositionHandler constructed"); // Debug
         }

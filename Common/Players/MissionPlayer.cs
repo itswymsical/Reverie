@@ -17,7 +17,7 @@ namespace Reverie.Common.Players
     {
         public readonly Dictionary<int, MissionData> missionDataDict = [];
         public readonly Dictionary<int, Mission> missionDict = [];
-        private readonly Dictionary<int, List<int>> npcMissionsDict = [];
+        public readonly Dictionary<int, List<int>> npcMissionsDict = [];
         private readonly HashSet<int> notifiedMissions = [];
         private readonly MissionDataFactory missionDataFactory = new();
         

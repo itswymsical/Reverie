@@ -9,7 +9,7 @@ namespace Reverie.Core.Graphics
     {
         public static int LetterboxHeight { get; private set; }
 
-        private const int ANIMATION_DURATION = 30;
+        private const int ANIMATION_DURATION = 60;
         private static int _currentFrame;
         private static bool _isAnimating;
         private static bool _isShowing;
@@ -49,7 +49,7 @@ namespace Reverie.Core.Graphics
                 (float)_currentFrame / ANIMATION_DURATION :
                 1f - ((float)_currentFrame / ANIMATION_DURATION);
 
-            LetterboxHeight = (int)(Main.screenHeight * 0.15f * progress);
+            LetterboxHeight = (int)(Main.screenHeight * 0.075f * progress);
         }
 
         public static void Draw(SpriteBatch spriteBatch)

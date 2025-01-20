@@ -3,12 +3,12 @@ using Terraria.ID;
 using Terraria;
 using Reverie.Common.MissionAttributes;
 
-namespace Reverie.Content.Terraria.Missions.Sideline
+namespace Reverie.Core.Missions.Sideline
 {
     [MissionHandler(MissionID.TestMission)]
-    public class TestMissionHandler : MissionObjectiveHandler
+    public class TestMission : MissionObjectiveHandler
     {
-        public TestMissionHandler(Mission mission) : base(mission) { }
+        public TestMission(Mission mission) : base(mission) { }
 
         public override void OnItemPickup(Item item)
         {

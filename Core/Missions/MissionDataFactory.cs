@@ -34,13 +34,11 @@ namespace Reverie.Core.Missions
                 {MissionID.DirtiestBlock, () => new MissionData(
                     MissionID.DirtiestBlock,
                     "Merchant's Resolve",
-                    "The merchant has been searchin' for decades, he's almost given up" +
-                    "\n on finding ye' old's Dirtiest Block." +
-                    "\nWill you make this old fart's dream come true?",
+                    "The merchant has been searchin' for the Dirtiest Block. Help him find it!",
                     [
                         [("Find the Dirtiest Block", 1)],
                     ],
-                    [new Item(ItemID.DirtiestBlock)],
+                    [ new Item(ItemID.CopperCoin, 9999), new Item(ItemID.CopperBar, 100)],
                     isMainline: false,
                     npc: NPCID.Merchant,
                     xpReward: 500
@@ -49,38 +47,25 @@ namespace Reverie.Core.Missions
                 {MissionID.FoolsGold, () => new MissionData(
                     MissionID.FoolsGold,
                     "Fool's Gold",
-                    "'The gold market isn't thriving too well, and the I've got has bills to pay. You're bills keep in mind.'" +
+                    "'The gold market isn't thriving too well, and the I've got has bills to pay. You're bills, keep in mind.'" +
                     "\nCollect copper and lead to help the merchant cultivate fools gold.",
                     [
                         [("Collect Copper", 38), ("Collect Lead", 24)],
                         [("Check in with the Merchant", 1)]
                     ],
-                    [new Item(ItemID.AncientGoldHelmet), new Item(ItemID.GoldBar, Main.rand.Next(6, 9)), new Item(ItemID.SilverCoin, 75)],
+                    [new Item(ItemID.AncientGoldHelmet), new Item(ItemID.GoldBar, Main.rand.Next(9, 18)), new Item(ItemID.SilverCoin, 75)],
                     isMainline: false,
                     NPCID.Merchant,
                     xpReward: 70
                 )},
 
-                {MissionID.ArgiesHunt, () => new MissionData(
-                    MissionID.ArgiesHunt,
-                    "Argie's Hunt",
-                    "Ms. Argie is looking to decorate her home. Collect her favorite fungi and bring them to her",
-                    [
-                        [("Collect mushrooms", 10), ("Collect glowing mushrooms", 10), ("Collect amanita fungus", 3)],
-                    ],
-                    [new Item(ItemID.GoldCoin, 8)],
-                    isMainline: false,
-                    ModContent.NPCType<Argie>()
-                )},
                 #endregion
 
                 #region Mainline Missions
                 {MissionID.Reawakening, () => new MissionData(
                     MissionID.Reawakening,
                     "Reawakening",
-                    "Speak to the guide and gather materials." +
-                    "\nYou wake up from comatose greeted by the handsome and charming guide. (wait did he write that?)" +
-                    "\nYou are the one appointed 'HERO', and you must do HERO things...",
+                    "\nYou wake up from comatose greeted by the Guide.",
                     [
                         [("Talk to the Guide", 1)],
                         [("Attack the target dummy", 10), ("Talk to the Guide", 1)],

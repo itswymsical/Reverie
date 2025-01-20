@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
 using Terraria;
+using System;
 
 public static class ItemDisplayExtensions
 {
@@ -23,20 +24,18 @@ public static class ItemDisplayExtensions
         float dir = MathHelper.ToRadians(182) * player.direction;
         SpriteEffects flip = player.direction == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
 
-        // Get the lighting color at the item's world position
         Color lightColor = Lighting.GetColor(
             (int)((player.Center.X) / 16f),
             (int)((player.Center.Y) / 16f)
         );
 
-        // Apply lighting to the item's color
         Color itemColor = item.GetAlpha(lightColor);
 
         DrawData itemDrawData = new(
             itemTexture,
             itemPosition,
             null,
-            itemColor, // Use the lighting-adjusted color
+            itemColor,
             player.bodyRotation + dir,
             new Vector2(itemTexture.Width / 2, itemTexture.Height / 2),
             1.07f,
@@ -44,5 +43,47 @@ public static class ItemDisplayExtensions
             0
         );
         drawInfo.DrawDataCache.Insert(0, itemDrawData);
+    }
+
+    public static void DrawItemInFrontHand(this Player player, ref PlayerDrawSet drawInfo)
+    {
+        if (player.HeldItem == null || player.HeldItem.IsAir || player.HeldItem.damage > 0) return;
+
+        Item item = player.HeldItem;
+        Main.instance.LoadItem(item.type);
+
+        Texture2D itemTexture = ModContent.Request<Texture2D>(
+            item.ModItem?.Texture ?? $"Terraria/Images/Item_{item.type}"
+        ).Value;
+
+        Vector2 itemPosition = player.Center - Main.screenPosition;
+
+        itemPosition.X += (player.direction == 1 ? -10f : 10f);
+        itemPosition.Y += 8f;
+
+        float rotation = player.bodyRotation;
+
+        SpriteEffects flip = player.direction == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+
+        Color lightColor = Lighting.GetColor(
+            (int)((player.Center.X) / 16f),
+            (int)((player.Center.Y) / 16f)
+        );
+
+        Color itemColor = item.GetAlpha(lightColor);
+
+        DrawData itemDrawData = new(
+            itemTexture,
+            itemPosition,
+            null,
+            itemColor,
+            rotation,
+            new Vector2(itemTexture.Width / 2, itemTexture.Height / 2),
+            1f,
+            flip,
+            0
+        );
+
+        drawInfo.DrawDataCache.Add(itemDrawData);
     }
 }

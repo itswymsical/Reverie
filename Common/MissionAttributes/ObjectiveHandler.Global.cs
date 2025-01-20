@@ -18,6 +18,7 @@ using Reverie.Core.Missions;
 
 using SubworldLibrary;
 using static Reverie.Common.Players.MissionPlayer;
+using Reverie.Common.UI;
 
 namespace Reverie.Common.MissionEventTrackers
 {
@@ -50,6 +51,7 @@ namespace Reverie.Common.MissionEventTrackers
         public override void GetChat(NPC npc, ref string chat)
         {
             base.GetChat(npc, ref chat);
+            ModContent.GetInstance<MissionUISystem>().ShowMissionInterface(npc.type);
             MissionHandlerManager.Instance.OnNPCChat(npc);
         }
 

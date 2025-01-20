@@ -67,7 +67,19 @@ namespace Reverie.Common.Players
         public override void ModifyDrawInfo(ref PlayerDrawSet drawInfo)
         {
             if (!drawInfo.drawPlayer.IsUsingItem())
-                drawInfo.drawPlayer.DrawItemBehindPlayer(ref drawInfo);
+            {
+                
+                if (drawInfo.drawPlayer.HeldItem.IsWeapon())
+                {
+                    drawInfo.drawPlayer.DrawItemBehindPlayer(ref drawInfo);
+                }
+                else
+                {
+                    drawInfo.drawPlayer.DrawItemInFrontHand(ref drawInfo);
+                }
+            }
+             
+
             if (drawInfo.drawPlayer.IsJumping() && !drawInfo.drawPlayer.IsUsingItem())
                 drawInfo.drawPlayer.bodyFrame.Y = 0 * 56;
             if (Player.IsGrappling())

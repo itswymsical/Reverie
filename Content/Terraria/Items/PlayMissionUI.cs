@@ -24,14 +24,15 @@ namespace Reverie.Content.Terraria.Items
             Item.useTime = Item.useAnimation = 20;
             Item.value = Item.buyPrice(0);
             Item.rare = ItemRarityID.Quest;
-            Item.useStyle = ItemUseStyleID.HoldUp;      
+            Item.useStyle = ItemUseStyleID.HoldUp;
         }
-
         public override bool? UseItem(Player player)
         {
             Core.Missions.Mission mission = Main.LocalPlayer.GetModPlayer<MissionPlayer>().GetMission(MissionID.Reawakening);
+
             if (Main.myPlayer == player.whoAmI)
                 InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(mission));
+
             return true;
         }
     }
