@@ -64,10 +64,10 @@ namespace Reverie.Core.Dialogue
 
             Default = new NPCData(
                 basicPortrait,
-                "",
+                "You",
                 -1,
-                Color.LightBlue,
-                SoundID.MenuOpen
+                 new Color(64, 109, 164),
+                SoundID.MenuTick
             );
 
             var guidePortrait = new NPCPortrait(

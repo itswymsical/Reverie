@@ -1,14 +1,14 @@
 ﻿using Terraria.ID;
 using Terraria;
-using Reverie.Common.Players;
-using Reverie.Core.Dialogue;
-using System.Collections.Generic;
 using Terraria.DataStructures;
+using Terraria.ModLoader;
+
+using System;
+using System.Collections.Generic;
+
+using Reverie.Core.Dialogue;
 using Reverie.Common;
 using Reverie.Common.MissionAttributes;
-using Reverie.Core.Missions;
-using System;
-using Terraria.ModLoader;
 
 namespace Reverie.Core.Missions.Mainline
 {
@@ -59,7 +59,7 @@ namespace Reverie.Core.Missions.Mainline
                             }
                             break;
 
-                        case 3 when objectiveIndex == 2: // "Check in with the Guide"
+                        case 6: // "Check in with the Guide"
                             DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData,
                                 DialogueID.Mission_01_Outro, true);
                             break;
@@ -71,6 +71,7 @@ namespace Reverie.Core.Missions.Mainline
                 }
             }
         }
+
         public override void OnItemCreated(Item item, ItemCreationContext context)
         {
             lock (handlerLock)
@@ -87,15 +88,36 @@ namespace Reverie.Core.Missions.Mainline
                     }
                     else if (Mission.CurrentSetIndex == 3)
                     {
+                        if (item.type == ItemID.IronOre || item.type == ItemID.LeadOre)
+                        {
+                            Mission.UpdateProgress(0, item.stack);
+                            ModContent.GetInstance<Reverie>().Logger.Debug($"Updated ore creation progress: +{item.stack}");
+                        }
+                        if (item.type == ItemID.IronAnvil || item.type == ItemID.LeadAnvil)
+                        {
+                            Mission.UpdateProgress(1);
+                            ModContent.GetInstance<Reverie>().Logger.Debug("Updated anvil progress");
+                        }
+                    }
+                    else if (Mission.CurrentSetIndex == 4)
+                    {
                         if (item.IsPickaxe() && item.type != ItemID.CopperPickaxe)
                         {
                             Mission.UpdateProgress(0);
                             ModContent.GetInstance<Reverie>().Logger.Debug("Updated pickaxe progress");
                         }
-                        if (item.type == ItemID.IronOre || item.type == ItemID.LeadOre)
+                        if (item.CountsAsArmor())
                         {
                             Mission.UpdateProgress(1, item.stack);
-                            ModContent.GetInstance<Reverie>().Logger.Debug($"Updated ore progress: +{item.stack}");
+                            ModContent.GetInstance<Reverie>().Logger.Debug("Updated armor progress");
+                        }
+                    }
+                    else if (Mission.CurrentSetIndex == 5)
+                    {
+                        if (item.IsHealingPot())
+                        {
+                            Mission.UpdateProgress(1, item.stack);
+                            ModContent.GetInstance<Reverie>().Logger.Debug("Updated heal pot progress");
                         }
                     }
                 }
@@ -122,15 +144,41 @@ namespace Reverie.Core.Missions.Mainline
                     }
                     else if (Mission.CurrentSetIndex == 3)
                     {
+                        if (item.type == ItemID.IronOre || item.type == ItemID.LeadOre)
+                        {
+                            Mission.UpdateProgress(0, item.stack);
+                            ModContent.GetInstance<Reverie>().Logger.Debug($"Updated ore pickup progress: +{item.stack}");
+                        }
+                        if (item.type == ItemID.IronAnvil || item.type == ItemID.LeadAnvil)
+                        {
+                            Mission.UpdateProgress(1);
+                            ModContent.GetInstance<Reverie>().Logger.Debug("Updated anvil progress");
+                        }
+                    }
+                    else if (Mission.CurrentSetIndex == 4)
+                    {
                         if (item.IsPickaxe() && item.type != ItemID.CopperPickaxe)
                         {
                             Mission.UpdateProgress(0);
                             ModContent.GetInstance<Reverie>().Logger.Debug("Updated pickaxe progress");
                         }
-                        if (item.type == ItemID.IronOre || item.type == ItemID.LeadOre)
+                        if (item.CountsAsArmor())
                         {
                             Mission.UpdateProgress(1, item.stack);
-                            ModContent.GetInstance<Reverie>().Logger.Debug($"Updated ore progress: +{item.stack}");
+                            ModContent.GetInstance<Reverie>().Logger.Debug("Updated armor progress");
+                        }
+                    }
+                    else if (Mission.CurrentSetIndex == 5)
+                    {
+                        if (item.type == ItemID.LifeCrystal)
+                        {
+                            Mission.UpdateProgress(0, item.stack);
+                            ModContent.GetInstance<Reverie>().Logger.Debug("Updated life crystal progress");
+                        }
+                        if (item.IsHealingPot())
+                        {
+                            Mission.UpdateProgress(1, item.stack);
+                            ModContent.GetInstance<Reverie>().Logger.Debug("Updated heal pot progress");
                         }
                     }
                 }
@@ -203,11 +251,9 @@ namespace Reverie.Core.Missions.Mainline
                             Mission.UpdateProgress(1);
                             ModContent.GetInstance<Reverie>().Logger.Debug("Updated training Guide chat progress");
                         }
-                        else if (Mission.CurrentSetIndex == 3 &&
-                            Mission.MissionData.ObjectiveSets[3].Objectives[0].IsCompleted &&
-                            Mission.MissionData.ObjectiveSets[3].Objectives[1].IsCompleted)
+                        else if (Mission.CurrentSetIndex == 6)
                         {
-                            Mission.UpdateProgress(2);
+                            Mission.UpdateProgress(0);
                             ModContent.GetInstance<Reverie>().Logger.Debug("Updated final Guide chat progress");
                         }
                     }

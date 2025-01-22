@@ -70,7 +70,10 @@ namespace Reverie.Core.Missions
                         [("Talk to the Guide", 1)],
                         [("Attack the target dummy", 10), ("Talk to the Guide", 1)],
                         [("Kill slimes", 3), ("Obtain torches", 16)],
-                        [("Obtain a better pickaxe", 1), ("Obtain Iron or Lead ore", 15), ("Check in with the Guide", 1)]
+                        [("Obtain Iron or Lead ore", 15), ("Obtain an Anvil", 1)],
+                        [("Obtain a better pickaxe", 1), ("Obtain a set of armor", 3)],
+                        [("Obtain Life Crystals", 3), ("Obtain healing potions", 5)],
+                        [("Check in with the Guide", 1)]
                     ],
 
                     [new Item(ItemID.SilverCoin, Main.rand.Next(7, 19)),

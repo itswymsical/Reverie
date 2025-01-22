@@ -15,6 +15,10 @@ namespace Reverie.Common
         {
             return item.Name.Contains("Pickaxe");
         }
+        public static bool IsHealingPot(this Item item)
+        {
+            return item.type == ItemID.LesserHealingPotion || item.type == ItemID.HealingPotion || item.type == ItemID.GreaterHealingPotion;
+        }
 
         private static readonly HashSet<string> MetalKeywords = new HashSet<string>
         {

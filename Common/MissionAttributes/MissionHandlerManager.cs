@@ -28,6 +28,8 @@ namespace Reverie.Common.MissionAttributes
             {
                 try
                 {
+                    ModContent.GetInstance<Reverie>().Logger.Debug($"Handler count before registration: {handlers.Count}");
+
                     if (handlers.ContainsKey(mission.ID))
                     {
                         ModContent.GetInstance<Reverie>().Logger.Debug($"Handler already exists for mission {mission.ID}");
@@ -45,6 +47,9 @@ namespace Reverie.Common.MissionAttributes
                         handlers[mission.ID] = handler;
                         ModContent.GetInstance<Reverie>().Logger.Info($"Registered handler for mission {mission.MissionData.Name}");
                     }
+                    ModContent.GetInstance<Reverie>().Logger.Debug($"Handler count after registration: {handlers.Count}");
+                    ModContent.GetInstance<Reverie>().Logger.Debug($"Current handlers: {string.Join(", ", handlers.Keys)}");
+
                 }
                 catch (Exception ex)
                 {
