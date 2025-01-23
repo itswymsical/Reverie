@@ -1,60 +1,33 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  
   <Import Project="..\tModLoader.targets" />
+  
   <PropertyGroup>
-    <AssemblyName>Reverie</AssemblyName>
-    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
-  <ItemGroup>
-    <AdditionalFiles Remove="Common\Cutscenes\**" />
-    <AdditionalFiles Remove="Content\Items\Boss\**" />
-    <AdditionalFiles Remove="Content\Missions\Archaea\**" />
-    <AdditionalFiles Remove="Content\Prefixes\**" />
-    <AdditionalFiles Remove="Core\Trails\**" />
-    <Compile Remove="Common\Cutscenes\**" />
-    <Compile Remove="Content\Items\Boss\**" />
-    <Compile Remove="Content\Missions\Archaea\**" />
-    <Compile Remove="Content\Prefixes\**" />
-    <Compile Remove="Core\Trails\**" />
-    <EmbeddedResource Remove="Common\Cutscenes\**" />
-    <EmbeddedResource Remove="Content\Items\Boss\**" />
-    <EmbeddedResource Remove="Content\Missions\Archaea\**" />
-    <EmbeddedResource Remove="Content\Prefixes\**" />
-    <EmbeddedResource Remove="Core\Trails\**" />
-    <None Remove="Common\Cutscenes\**" />
-    <None Remove="Content\Items\Boss\**" />
-    <None Remove="Content\Missions\Archaea\**" />
-    <None Remove="Content\Prefixes\**" />
-    <None Remove="Core\Trails\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="Content\Items\Shovels\Shovels.cs~RF7b713434.TMP" />
-    <None Remove="Effects\Shockwave.fx" />
-    <None Remove="Helpers\DustHelpers.cs~RF7d9f0961.TMP" />
-  </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="JetBrains.ReSharper.SDK" Version="2024.1.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+  
   <ItemGroup>
     <Reference Include="ReverieMusic">
       <HintPath>..\ModAssemblies\ReverieMusic_v0.1.dll</HintPath>
     </Reference>
+    
     <Reference Include="StructureHelper">
-      <HintPath>Utilities\StructureHelper.dll</HintPath>
+      <HintPath>lib\StructureHelper.dll</HintPath>
     </Reference>
-    <Reference Include="StructureHelper">
-      <HintPath>Utilities\StructureHelper.dll</HintPath>
-    </Reference>
-    <Reference Include="StructureHelper">
-      <HintPath>Utilities\StructureHelper.dll</HintPath>
-    </Reference>
+    
     <Reference Include="SubworldLibrary">
-      <HintPath>Helpers\SubworldLibrary.dll</HintPath>
+      <HintPath>lib\SubworldLibrary.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Content\Sylvanwalde\Tiles\DruidsGarden\" />
-  </ItemGroup>
+
 </Project>
