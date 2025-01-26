@@ -232,6 +232,11 @@ Items: {
 		DisplayName: Play Mission U I
 		Tooltip: ""
 	}
+
+	WardensArm: {
+		Tooltip: ""
+		DisplayName: Wardens Arm
+	}
 }
 
 NPCs: {
@@ -277,6 +282,8 @@ Projectiles: {
 	BrambleArrowProj.DisplayName: Bramble Arrow Proj
 	GirthquakeProj.DisplayName: Girthquake Proj
 	SwordProj.DisplayName: Sword Proj
+	WardensArmProj.DisplayName: Wardens Arm Proj
+	AlluvialBoulderProj.DisplayName: Alluvial Boulder Proj
 }
 
 UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
