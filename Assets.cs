@@ -66,6 +66,12 @@
             }
         }
 
+        internal class Gores
+        {
+            public const string Directory = Path + "Gores/";
+            public const string Warden = Directory + "Warden/";
+        }
+
         internal class Archaea
         {
             public const string Directory = Path + "Archaea/";

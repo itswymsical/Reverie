@@ -63,6 +63,17 @@ namespace Reverie.Common.Players
         }
 
         public override void PostUpdate() => UpdateAnimationState();
+        public override void DrawEffects(PlayerDrawSet drawInfo, ref float r, ref float g, ref float b, ref float a, ref bool fullBright)
+        {
+            if (!drawInfo.drawPlayer.IsUsingItem())
+            {
+
+                if (!drawInfo.drawPlayer.HeldItem.IsWeapon())
+                {
+                    drawInfo.drawPlayer.DrawItemInFrontHand(ref drawInfo);
+                }
+            }
+        }
 
         public override void ModifyDrawInfo(ref PlayerDrawSet drawInfo)
         {
@@ -71,11 +82,7 @@ namespace Reverie.Common.Players
                 
                 if (drawInfo.drawPlayer.HeldItem.IsWeapon())
                 {
-                    drawInfo.drawPlayer.DrawItemBehindPlayer(ref drawInfo);
-                }
-                else
-                {
-                    drawInfo.drawPlayer.DrawItemInFrontHand(ref drawInfo);
+                    //drawInfo.drawPlayer.DrawItemBehindPlayer(ref drawInfo);
                 }
             }
              

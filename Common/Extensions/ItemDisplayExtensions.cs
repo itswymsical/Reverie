@@ -42,6 +42,7 @@ public static class ItemDisplayExtensions
             flip,
             0
         );
+
         drawInfo.DrawDataCache.Insert(0, itemDrawData);
     }
 
@@ -56,11 +57,8 @@ public static class ItemDisplayExtensions
             item.ModItem?.Texture ?? $"Terraria/Images/Item_{item.type}"
         ).Value;
 
-        Vector2 itemPosition = player.Center - Main.screenPosition;
-
-        itemPosition.X += (player.direction == 1 ? -10f : 10f);
-        itemPosition.Y += 8f;
-
+        Vector2 itemPosition = player.HandPosition.Value - Main.screenPosition;
+        
         float rotation = player.bodyRotation;
 
         SpriteEffects flip = player.direction == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;

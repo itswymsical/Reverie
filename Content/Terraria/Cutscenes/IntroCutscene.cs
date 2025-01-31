@@ -12,7 +12,7 @@ namespace Reverie.Cutscenes
 {
     public class IntroCutscene : CutsceneSystem
     {
-        private const float CUTSCENE_DURATION = 18f;
+        private const float CUTSCENE_DURATION = 24f;
         private float _elapsedTime;
 
         public override void Start()
@@ -33,8 +33,7 @@ namespace Reverie.Cutscenes
             base.Update(gameTime);
             DisablePlayerMovement();
             Player player = Main.LocalPlayer;
-            //player.sleeping.isSleeping = true;
-            player.fullRotation = MathHelper.Pi;
+
             if (!IsPlaying) return;
 
             _elapsedTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -49,7 +48,6 @@ namespace Reverie.Cutscenes
             DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.Mission_01_WakingUp, true);
             EnablePlayerMovement();
             Player player = Main.LocalPlayer;
-            player.sleeping.isSleeping = false;
             base.End();
         }
     }

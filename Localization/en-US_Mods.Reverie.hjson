@@ -234,8 +234,13 @@ Items: {
 	}
 
 	WardensArm: {
+		Tooltip: Conjures a Warden Arm that tosses high-velocity boulders at enemies.
+		DisplayName: Warden's Arm
+	}
+
+	BoulderBludgeon: {
+		DisplayName: Boulder Bludgeon
 		Tooltip: ""
-		DisplayName: Wardens Arm
 	}
 }
 
@@ -284,6 +289,7 @@ Projectiles: {
 	SwordProj.DisplayName: Sword Proj
 	WardensArmProj.DisplayName: Wardens Arm Proj
 	AlluvialBoulderProj.DisplayName: Alluvial Boulder Proj
+	BoulderBludgeonProj.DisplayName: Boulder Bludgeon Proj
 }
 
 UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker

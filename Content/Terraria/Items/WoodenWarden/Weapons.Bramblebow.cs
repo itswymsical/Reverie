@@ -31,7 +31,7 @@ namespace Reverie.Content.Terraria.Items.WoodenWarden
 
             Item.useStyle = ItemUseStyleID.Shoot;
             Item.UseSound = SoundID.Item5;
-            Item.shootSpeed = 13.75f;
+            Item.shootSpeed = 9.75f;
             Item.useAmmo = AmmoID.Arrow;
             Item.DamageType = DamageClass.Ranged;
 
@@ -42,6 +42,7 @@ namespace Reverie.Content.Terraria.Items.WoodenWarden
         public override void ModifyShootStats(Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
         {
             if (type == ProjectileID.WoodenArrowFriendly) type = ModContent.ProjectileType<BrambleArrowProj>();
+            damage = damage / 3;
         }
     }
 
@@ -61,11 +62,10 @@ namespace Reverie.Content.Terraria.Items.WoodenWarden
 
         private float oldRotation;
 
-        private List<Vector2> cache;
         private Trail trail;
-        private Trail trail2;
-        private Color color = new(255, 255, 255);
-        private readonly Vector2 Size = new(46, 50);
+        private List<Vector2> cache;
+        private List<Vector2> oldPosition = [];
+
         public override void SetStaticDefaults()
         {
             ProjectileID.Sets.TrailCacheLength[Type] = 4;
@@ -90,6 +90,14 @@ namespace Reverie.Content.Terraria.Items.WoodenWarden
         }
         public override void AI()
         {
+            oldPosition.Add(Projectile.Center);
+            if (oldPosition.Count > 4)
+                oldPosition.RemoveAt(0);
+
+            // Trail management
+            ManageCaches();
+            ManageTrail();
+
             Projectile.ai[0] += 1f;
             if (Projectile.ai[0] >= 15f)
             {
@@ -167,18 +175,76 @@ namespace Reverie.Content.Terraria.Items.WoodenWarden
             }
         }
 
+        private void ManageCaches()
+        {
+            if (cache == null)
+            {
+                cache = [];
+                for (int i = 0; i < 4; i++)
+                {
+                    cache.Add(Projectile.Center);
+                }
+            }
+
+            cache.Add(Projectile.Center);
+
+            while (cache.Count > 4)
+            {
+                cache.RemoveAt(0);
+            }
+        }
+
+        private void ManageTrail()
+        {
+            if (trail is null)
+            {
+                trail = new Trail(Main.instance.GraphicsDevice, 4, new NoTip(), factor => 12, factor =>
+                {
+                    float progress = factor.Length(); // or factor.X if you want just one component
+                    float opacity = (1f - progress) * 0.15f;
+                    return Color.DarkGray * opacity;
+                });
+            }
+            trail.Positions = cache.ToArray();
+            trail.NextPosition = Projectile.Center;
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
-            Main.instance.LoadProjectile(Projectile.type);
             Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
+            Vector2 origin = texture.Size() / 1.8f;
 
-            Vector2 drawOrigin = new Vector2(texture.Width * 0.5f, Projectile.height * 0.5f);
-            for (int k = 0; k < Projectile.oldPos.Length; k++)
+            // Draw shadow trail
+            for (int k = 0; k < oldPosition.Count; k++)
             {
-                Vector2 drawPos = (Projectile.oldPos[k] - Main.screenPosition) + drawOrigin + new Vector2(0f, Projectile.gfxOffY);
-                Color color = Projectile.GetAlpha(lightColor) * ((Projectile.oldPos.Length - k) / (float)Projectile.oldPos.Length);
-                Main.EntitySpriteDraw(texture, drawPos, null, color, Projectile.rotation, drawOrigin, Projectile.scale, SpriteEffects.None, 0);
+                float progress = k / (float)oldPosition.Count;
+                Color color = lightColor * (1f - -progress) * 0.1f; // Fade out as trail gets older
+
+                Vector2 position = oldPosition[k];
+                Main.spriteBatch.Draw(
+                    texture,
+                    position - Main.screenPosition,
+                    null,
+                    color,
+                    Projectile.rotation,
+                    origin,
+                    1f - (-progress * 0.01f),
+                    SpriteEffects.None,
+                    0f
+                );
             }
+
+            Main.spriteBatch.Draw(
+                texture,
+                Projectile.Center - Main.screenPosition,
+                null,
+                lightColor,
+                Projectile.rotation,
+                origin,
+                1f,
+                SpriteEffects.None,
+                0f
+            );
 
             return false;
         }

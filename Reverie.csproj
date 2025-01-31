@@ -30,6 +30,7 @@
     <None Remove="Content\Items\Shovels\Shovels.cs~RF7b713434.TMP" />
     <None Remove="Effects\Shockwave.fx" />
     <None Remove="Helpers\DustHelpers.cs~RF7d9f0961.TMP" />
+    <None Remove="Localization\DialogueLibrary\ReverieDialogue.hjson" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="JetBrains.ReSharper.SDK" Version="2024.1.4">

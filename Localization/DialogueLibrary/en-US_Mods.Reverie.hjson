@@ -1,17 +1,22 @@
 DialogueLibrary: {
 	Mission_01: {
-		WakingUp: {
-			Line1: ...?
-			Line2: You're up?!
-			Line3: Long nap, you took.
-			Line4: Honestly, I thought you'd never wake.
-			Line5: OH...!
-			Line6: You've got to get to Sylvanwalde and tell the council!
-			Line7: "[You give a blank stare...]"
-			Line8: You look, confused?
-			Line9: Amnesia...
-			Line10: Hey, this is a lot to take in for me too!
-			Line11: Hold on, just take these copper tools.
+		Seq1: {
+			L1: You all made it, welcome back to life.
+			L2: You all may be confused by this, but you've all died before.
+			L3: I've brought you back...
+			L4: with the power of 'Reverie'.
+			L5: Reverie?
+			L6: It's essentially life energy; it can be used to CREATE or MANIPULATE life.
+			L7: But all of you, where brought back to consciousness,
+			L8: specifically because the worlds have a task for you:
+			L9: Your four heroes must take on the task no one could triumph...
+			L10: Kill. Cthulhu.
+			L11: Alongside his Assailants, of course.
+			L12: To make a long story short:
+			L13: He's been on a crusade to take over the worlds with his empirical tyranny.
+			L14: Right now, he's trapped in the Wyrmscape. But his royal gaurd of Paladins are actively finding a way to unseal him.
+			L15: It's getting way too dark, and I feel an evil presence watching...
+			L16: All of you, get inside and gear up. Something's about to go down.
 		}
 
 		Briefing: {

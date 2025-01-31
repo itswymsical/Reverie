@@ -16,7 +16,7 @@ namespace Reverie.Content.Terraria.Items
 
         public override void SetDefaults()
         {
-            Item.DamageType = DamageClass.Summon;
+            Item.DamageType = DamageClass.MagicSummonHybrid;
             Item.damage = 3;
             Item.knockBack = 0.8f;
             Item.width = 24;

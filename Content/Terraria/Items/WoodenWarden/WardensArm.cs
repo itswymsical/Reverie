@@ -9,25 +9,27 @@ using Terraria;
 using System;
 using Terraria.Audio;
 using Reverie.Core;
+using Reverie.Core.PrimitiveDrawing;
+using System.Collections.Generic;
 
 public class WardensArm : ModItem
 {
     public override string Texture => Assets.Terraria.Items.WoodenWarden + Name;
     public override void SetDefaults()
     {
-        Item.damage = 20;
+        Item.damage = 17;
         Item.width = 30;
         Item.height = 32;
-        Item.useTime = Item.useAnimation = 30;
+        Item.useTime = Item.useAnimation = 34;
         Item.knockBack = 4.2f;
-        Item.crit = 7;
+        Item.crit = 21;
         Item.mana = 6;
         Item.noUseGraphic = true;
-        Item.value = Item.sellPrice(silver: 29);
+        Item.value = Item.sellPrice(silver: 88);
         Item.rare = ItemRarityID.Blue;
         Item.useStyle = ItemUseStyleID.Shoot;
         Item.UseSound = SoundID.DD2_DarkMageHealImpact;
-        Item.DamageType = DamageClass.MagicSummonHybrid;
+        Item.DamageType = DamageClass.Magic;
         Item.shoot = ModContent.ProjectileType<WardensArmProj>();
     }
 
@@ -35,9 +37,10 @@ public class WardensArm : ModItem
     {
         // Spawn arm projectile at random position around player
         float randomRotation = Main.rand.NextFloat(MathHelper.TwoPi);
-        float distance = Main.rand.NextFloat(-50f, 90f);
-        float x = player.Center.X + distance;
-        Vector2 spawnPosition = player.Center - new Vector2(distance * player.direction, distance / 2);
+        float distanceX = Main.rand.NextFloat(30f, 90f);
+        float distanceY = Main.rand.NextFloat(20f, 90f);
+        float x = player.Center.X + distanceX;
+        Vector2 spawnPosition = player.Center - new Vector2(distanceX * player.direction, distanceY / 2);
 
         Projectile.NewProjectile(
             source,
@@ -92,7 +95,7 @@ public class WardensArmProj : ModProjectile
 
         // Calculate throw animation progress (0 to 1)
         ThrowProgress = 1f - (Projectile.timeLeft / (float)THROW_DURATION);
-
+        
         // Update rotation using EaseBuilder
         Projectile.rotation = (AnimationEase.Ease(ThrowProgress) * 2f) * Owner.direction;
 
@@ -127,6 +130,10 @@ public class WardensArmProj : ModProjectile
         Vector2 origin = texture.Size() / 2f;
         float scale = 1f + MathF.Sin(ThrowProgress * MathHelper.Pi) * 0.2f;
 
+        SpriteEffects flip = SpriteEffects.FlipHorizontally;
+        if (Projectile.position.X < Owner.Center.X)
+            flip = SpriteEffects.None;
+        
         Main.spriteBatch.Draw(
             texture,
             Projectile.Center - Main.screenPosition,
@@ -135,7 +142,7 @@ public class WardensArmProj : ModProjectile
             Projectile.rotation,
             origin,
             scale,
-            SpriteEffects.None,
+            flip,
             0f
         );
 
@@ -145,7 +152,12 @@ public class WardensArmProj : ModProjectile
 
 public class AlluvialBoulderProj : ModProjectile
 {
+    private Trail trail;
+    private List<Vector2> cache;
+    private List<Vector2> oldPosition = [];
+
     public override string Texture => Assets.Terraria.Projectiles.WoodenWarden + Name;
+
     public override void SetDefaults()
     {
         Projectile.width = Projectile.height = 34;
@@ -158,9 +170,18 @@ public class AlluvialBoulderProj : ModProjectile
     public override void AI()
     {
         Projectile.rotation += 0.2f * Projectile.velocity.X;
-
         Projectile.velocity.Y += 0.3f;
 
+        // Store position history for trail
+        oldPosition.Add(Projectile.Center);
+        if (oldPosition.Count > 4)
+            oldPosition.RemoveAt(0);
+
+        // Trail management
+        ManageCaches();
+        ManageTrail();
+
+        // Dust effects
         if (Main.rand.NextBool(2))
         {
             Dust dust = Dust.NewDustDirect(
@@ -177,23 +198,65 @@ public class AlluvialBoulderProj : ModProjectile
             dust.noGravity = true;
         }
     }
-    public override void OnKill(int timeLeft)
+
+    private void ManageCaches()
     {
-        // Create impact effect
-        for (int i = 0; i < 15; i++)
+        if (cache == null)
         {
-            Vector2 speed = Main.rand.NextVector2Circular(5f, 5f);
-            Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.Stone, speed.X, speed.Y);
+            cache = [];
+            for (int i = 0; i < 4; i++)
+            {
+                cache.Add(Projectile.Center);
+            }
         }
 
-        // Play impact sound
-        SoundEngine.PlaySound(SoundID.Item10, Projectile.position);
+        cache.Add(Projectile.Center);
+
+        while (cache.Count > 4)
+        {
+            cache.RemoveAt(0);
+        }
+    }
+
+    private void ManageTrail()
+    {
+        if (trail is null)
+        {
+            trail = new Trail(Main.instance.GraphicsDevice, 4, new NoTip(), factor => 12, factor =>
+            {
+                float progress = factor.Length(); // or factor.X if you want just one component
+                float opacity = (1f - progress) * 0.15f;
+                return Color.DarkGray * opacity;
+            });
+        }
+        trail.Positions = cache.ToArray();
+        trail.NextPosition = Projectile.Center;
     }
 
     public override bool PreDraw(ref Color lightColor)
     {
         Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
         Vector2 origin = texture.Size() / 2f;
+
+        // Draw shadow trail
+        for (int k = 0; k < oldPosition.Count; k++)
+        {
+            float progress = k / (float)oldPosition.Count;
+            Color color = lightColor * (1f - -progress) * 0.1f; // Fade out as trail gets older
+
+            Vector2 position = oldPosition[k];
+            Main.spriteBatch.Draw(
+                texture,
+                position - Main.screenPosition,
+                null,
+                color,
+                Projectile.rotation,
+                origin,
+                1f - (-progress * 0.01f),
+                SpriteEffects.None,
+                0f
+            );
+        }
 
         Main.spriteBatch.Draw(
             texture,
@@ -208,5 +271,61 @@ public class AlluvialBoulderProj : ModProjectile
         );
 
         return false;
+    }
+
+    public override void OnKill(int timeLeft)
+    {
+        for (int i = 0; i < 15; i++)
+        {
+            Vector2 speed = Main.rand.NextVector2Circular(5f, 5f);
+            Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.Dirt, speed.X, speed.Y);
+        }
+
+        for (int i = 0; i < 3; i++)
+        {
+            Vector2 speed = Main.rand.NextVector2Circular(5f, 5f);
+            Gore.NewGore(Projectile.GetSource_FromThis(), Projectile.position, speed, Mod.Find<ModGore>($"{Name}_Gore_{i}").Type, 1f);
+            Gore.NewGore(Projectile.GetSource_FromThis(), Projectile.position, speed, Mod.Find<ModGore>($"{Name}_Gore_{i}").Type, 0.75f);
+        }
+
+        SoundEngine.PlaySound(new SoundStyle($"{Assets.SFX.Directory}BoulderImpact")
+        {
+            Volume = 1f,
+            PitchVariance = 0.2f,
+            MaxInstances = 3,
+        }, Projectile.position);
+    }
+}
+
+public class AlluvialBoulderProj_Gore_0 : ModGore
+{
+    public override string Texture => Assets.Gores.Warden + Name;
+    public override void SetStaticDefaults()
+    {
+        ChildSafety.SafeGore[Type] = true;
+    }
+}
+public class AlluvialBoulderProj_Gore_1 : ModGore
+{
+    public override string Texture => Assets.Gores.Warden + Name;
+    public override void SetStaticDefaults()
+    {
+        ChildSafety.SafeGore[Type] = true;
+    }
+}
+public class AlluvialBoulderProj_Gore_2 : ModGore
+{
+    public override string Texture => Assets.Gores.Warden + Name;
+    public override void SetStaticDefaults()
+    {
+        ChildSafety.SafeGore[Type] = true;
+    }
+}
+public class AlluvialBoulderProj_Gore_3 : ModGore
+{
+    public override string Texture => Assets.Gores.Warden + Name;
+    public override void SetStaticDefaults()
+    {
+        ChildSafety.SafeGore[Type] = true;
     }
 }
