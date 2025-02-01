@@ -12,6 +12,7 @@ using Terraria.UI;
 using Reverie.Common.MissionAttributes;
 using System;
 using Terraria.ModLoader;
+using System.IO;
 
 namespace Reverie.Core.Missions
 {
@@ -21,7 +22,7 @@ namespace Reverie.Core.Missions
         Active,
         Completed
     }
-    public enum MissionState
+    public enum MissionAvailability
     {
         Locked,
         Unlocked,
@@ -39,16 +40,14 @@ namespace Reverie.Core.Missions
         public int Commissioner { get; set; } = npc;
         public int XPReward { get; private set; } = xpReward;
         public int NextMissionID { get; private set; } = nextMissionID;
-        public int Version { get; private set; } = 1; // Increment this when you make structural changes
 
     }
 
     public class MissionDataContainer
     {
         public int ID { get; set; }
-        public int Version { get; set; }
         public MissionProgress Progress { get; set; }
-        public MissionState State { get; set; }
+        public MissionAvailability State { get; set; }
         public bool Unlocked { get; set; }
         public int CurrentSetIndex { get; set; }
         public List<ObjectiveSetState> ObjectiveSets { get; set; } = [];
@@ -59,7 +58,6 @@ namespace Reverie.Core.Missions
             return new TagCompound
             {
                 ["ID"] = ID,
-                ["Version"] = Version,
                 ["Progress"] = (int)Progress,
                 ["State"] = (int)State,
                 ["Unlocked"] = Unlocked,
@@ -76,9 +74,8 @@ namespace Reverie.Core.Missions
                 return new MissionDataContainer
                 {
                     ID = tag.GetInt("ID"),
-                    Version = tag.GetInt("Version"),
                     Progress = (MissionProgress)tag.GetInt("Progress"),
-                    State = (MissionState)tag.GetInt("State"),
+                    State = (MissionAvailability)tag.GetInt("State"),
                     Unlocked = tag.GetBool("Unlocked"),
                     CurrentSetIndex = tag.GetInt("CurrentSetIndex"),
                     ObjectiveSets = tag.GetList<TagCompound>("ObjectiveSets")
@@ -101,7 +98,7 @@ namespace Reverie.Core.Missions
         public int ID { get; set; } = missionData.ID;
         public MissionData MissionData { get; } = missionData;
         public MissionProgress Progress { get; set; }
-        public MissionState State { get; set; }
+        public MissionAvailability State { get; set; }
         public bool Unlocked { get; set; }
         public int CurrentSetIndex { get; set; }
 
@@ -117,7 +114,7 @@ namespace Reverie.Core.Missions
         /// </summary>
         /// <param name="rewards"></param>
         /// <param name="nextMission"></param>
-        public virtual void OnMissionComplete(bool rewards = true) 
+        public virtual void OnMissionComplete(bool rewards = true)
         {
             if (rewards)
                 GiveRewards();
@@ -130,6 +127,9 @@ namespace Reverie.Core.Missions
         /// <param name="objectiveIndex">The objective we are currently updating.</param>
         /// <param name="amount">How many times we update the objective. If an objective only has a value of 1, no need to set this parameter.</param>
         /// <returns></returns>
+        /// 
+        private bool isDirty; // Track if state has changed
+
         public bool UpdateProgress(int objectiveIndex, int amount = 1)
         {
             if (Progress != MissionProgress.Active)
@@ -142,6 +142,11 @@ namespace Reverie.Core.Missions
                 if (!obj.IsCompleted || amount < 0)
                 {
                     bool wasCompleted = obj.UpdateProgress(amount);
+
+                    // Notify MissionPlayer of the update
+                    var player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+                    player.NotifyMissionUpdate(this);
+
                     if (wasCompleted && amount > 0)
                     {
                         OnObjectiveComplete(objectiveIndex);
@@ -167,25 +172,6 @@ namespace Reverie.Core.Missions
             return false;
         }
 
-        public void RemoveProgress(int objectiveIndex, int amount = 1)
-        {
-            if (Progress != MissionProgress.Active)
-                return;
-
-            var currentSet = MissionData.ObjectiveSets[CurrentSetIndex];
-            if (objectiveIndex >= 0 && objectiveIndex < currentSet.Objectives.Count)
-            {
-                var obj = currentSet.Objectives[objectiveIndex];
-                obj.UpdateProgress(-amount);
-
-                // If this set is no longer completed, we need to decrement the CurrentSetIndex
-                if (!currentSet.IsCompleted && CurrentSetIndex > 0)
-                {
-                    CurrentSetIndex--;
-                }
-            }
-        }
-
         public void Reset()
         {
             Progress = MissionProgress.Inactive;
@@ -201,13 +187,18 @@ namespace Reverie.Core.Missions
             if (Progress == MissionProgress.Active && MissionData.ObjectiveSets.All(set => set.IsCompleted))
             {
                 Progress = MissionProgress.Completed;
-                State = MissionState.Completed;
-                OnMissionComplete();         
-                
+                State = MissionAvailability.Completed;
+                isDirty = true;
+                OnMissionComplete();
+
                 MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
                 player.StartNextMission(this);
             }
         }
+
+        public bool IsDirty => isDirty;
+
+        public void ClearDirtyFlag() => isDirty = false; 
 
         private void GiveRewards()
         {
@@ -221,6 +212,51 @@ namespace Reverie.Core.Missions
                 Main.NewText($"{Main.LocalPlayer.name} " +
                     $"Gained [c/73d5ff:{MissionData.XPReward} Exp.] " +
                     $"from completing [c/73d5ff:{MissionData.Name}]!", Color.White);
+            }
+        }
+
+        public byte[] SerializeState()
+        {
+            using (MemoryStream ms = new())
+            {
+                using (BinaryWriter writer = new(ms))
+                {
+                    writer.Write(ID);
+                    writer.Write((int)Progress);
+                    writer.Write((int)State);
+                    writer.Write(Unlocked);
+                    writer.Write(CurrentSetIndex);
+
+                    // Write objective sets
+                    writer.Write(MissionData.ObjectiveSets.Count);
+                    foreach (var set in MissionData.ObjectiveSets)
+                    {
+                        set.WriteData(writer);
+                    }
+                }
+                return ms.ToArray();
+            }
+        }
+
+        public void DeserializeState(byte[] data)
+        {
+            using (MemoryStream ms = new(data))
+            {
+                using (BinaryReader reader = new(ms))
+                {
+                    ID = reader.ReadInt32();
+                    Progress = (MissionProgress)reader.ReadInt32();
+                    State = (MissionAvailability)reader.ReadInt32();
+                    Unlocked = reader.ReadBoolean();
+                    CurrentSetIndex = reader.ReadInt32();
+
+                    // Read objective sets
+                    int setCount = reader.ReadInt32();
+                    for (int i = 0; i < setCount; i++)
+                    {
+                        MissionData.ObjectiveSets[i].ReadData(reader);
+                    }
+                }
             }
         }
     }

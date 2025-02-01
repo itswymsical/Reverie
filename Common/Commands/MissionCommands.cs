@@ -35,7 +35,7 @@ namespace Reverie.Core.Commands
                 foreach (var missionEntry in missionPlayer.missionDict.Values)
                 {
                     missionEntry.Reset();
-                    missionEntry.State = MissionState.Unlocked;
+                    missionEntry.State = MissionAvailability.Unlocked;
                 }
                 Main.NewText("All missions have been reset.", 255, 255, 0);
                 return;
@@ -49,7 +49,7 @@ namespace Reverie.Core.Commands
                 throw new UsageException($"No mission found with ID: {missionId}");
 
             mission.Reset();
-            mission.State = MissionState.Unlocked;
+            mission.State = MissionAvailability.Unlocked;
             Main.NewText($"Mission '{mission.MissionData.Name}' has been reset.", 255, 255, 0);
         }
     }
@@ -63,7 +63,7 @@ namespace Reverie.Core.Commands
         public override void Action(CommandCaller caller, string input, string[] args)
         {
             MissionPlayer missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-            missionPlayer.DebugMissionStates();
+            missionPlayer.DebugMissionAvailabilitys();
         }
     }
 }

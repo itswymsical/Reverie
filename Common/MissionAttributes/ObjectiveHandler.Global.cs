@@ -95,9 +95,9 @@ namespace Reverie.Common.MissionEventTrackers
                 MissionPlayer missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
                 Mission dirtiestBlockMission = missionPlayer.GetMission(MissionID.DirtiestBlock);
 
-                if (dirtiestBlockMission?.State == MissionState.Locked)
+                if (dirtiestBlockMission?.State == MissionAvailability.Locked)
                 {
-                    dirtiestBlockMission.State = MissionState.Unlocked;
+                    dirtiestBlockMission.State = MissionAvailability.Unlocked;
                     missionPlayer.AssignMissionToNPC(NPCID.Merchant, MissionID.DirtiestBlock);
                 }
             }

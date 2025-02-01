@@ -51,7 +51,7 @@ namespace Reverie.Common.UI
             foreach (var missionId in missionIds)
             {
                 var mission = missionPlayer.GetMission(missionId);
-                if (mission?.State != MissionState.Unlocked || mission.Progress != MissionProgress.Inactive)
+                if (mission?.State != MissionAvailability.Unlocked || mission.Progress != MissionProgress.Inactive)
                     continue;
 
                 string iconPath = "Reverie/Assets/UI/MissionUI/MissionAvailable";
