@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Terraria.ModLoader.IO;
 
@@ -23,25 +24,43 @@ namespace Reverie.Core.Missions
             return false;
         }
 
-        public TagCompound Save()
+        public void WriteData(BinaryWriter writer)
         {
-            return new TagCompound
-            {
-                ["Description"] = Description,
-                ["IsCompleted"] = IsCompleted,
-                ["RequiredCount"] = RequiredCount,
-                ["CurrentCount"] = CurrentCount
-            };
+            writer.Write(Description);
+            writer.Write(IsCompleted);
+            writer.Write(RequiredCount);
+            writer.Write(CurrentCount);
         }
 
-        public static Objective Load(TagCompound tag)
+        public void ReadData(BinaryReader reader)
         {
-            var objective = new Objective(tag.GetString("Description"), tag.GetInt("RequiredCount"))
+            Description = reader.ReadString();
+            IsCompleted = reader.ReadBoolean();
+            RequiredCount = reader.ReadInt32();
+            CurrentCount = reader.ReadInt32();
+        }
+
+        public byte[] Serialize()
+        {
+            using (MemoryStream ms = new())
             {
-                IsCompleted = tag.GetBool("IsCompleted"),
-                CurrentCount = tag.GetInt("CurrentCount")
-            };
-            return objective;
+                using (BinaryWriter writer = new(ms))
+                {
+                    WriteData(writer);
+                }
+                return ms.ToArray();
+            }
+        }
+
+        public void Deserialize(byte[] data)
+        {
+            using (MemoryStream ms = new(data))
+            {
+                using (BinaryReader reader = new(ms))
+                {
+                    ReadData(reader);
+                }
+            }
         }
     }
 
@@ -124,6 +143,49 @@ namespace Reverie.Core.Missions
             {
                 objective.IsCompleted = false;
                 objective.CurrentCount = 0;
+            }
+        }
+        public void WriteData(BinaryWriter writer)
+        {
+            writer.Write(Objectives.Count);
+            foreach (var objective in Objectives)
+            {
+                objective.WriteData(writer);
+            }
+        }
+
+        public void ReadData(BinaryReader reader)
+        {
+            int count = reader.ReadInt32();
+            Objectives.Clear();
+            for (int i = 0; i < count; i++)
+            {
+                var objective = new Objective("", 1);
+                objective.ReadData(reader);
+                Objectives.Add(objective);
+            }
+        }
+
+        public byte[] Serialize()
+        {
+            using (MemoryStream ms = new())
+            {
+                using (BinaryWriter writer = new(ms))
+                {
+                    WriteData(writer);
+                }
+                return ms.ToArray();
+            }
+        }
+
+        public void Deserialize(byte[] data)
+        {
+            using (MemoryStream ms = new(data))
+            {
+                using (BinaryReader reader = new(ms))
+                {
+                    ReadData(reader);
+                }
             }
         }
     }

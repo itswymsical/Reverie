@@ -9,7 +9,6 @@ public static class MissionExtensions
         return new MissionDataContainer
         {
             ID = mission.ID,
-            Version = mission.MissionData.Version,
             Progress = mission.Progress,
             State = mission.State,
             Unlocked = mission.Unlocked,
@@ -39,24 +38,21 @@ public static class MissionExtensions
         mission.Unlocked = state.Unlocked;
         mission.CurrentSetIndex = state.CurrentSetIndex;
 
-        // Only load objective states if version matches
-        if (mission.MissionData.Version == state.Version)
+
+        for (int i = 0; i < Math.Min(mission.MissionData.ObjectiveSets.Count, state.ObjectiveSets.Count); i++)
         {
-            for (int i = 0; i < Math.Min(mission.MissionData.ObjectiveSets.Count, state.ObjectiveSets.Count); i++)
+            var savedSet = state.ObjectiveSets[i];
+            var currentSet = mission.MissionData.ObjectiveSets[i];
+
+            for (int j = 0; j < Math.Min(currentSet.Objectives.Count, savedSet.Objectives.Count); j++)
             {
-                var savedSet = state.ObjectiveSets[i];
-                var currentSet = mission.MissionData.ObjectiveSets[i];
+                var savedObj = savedSet.Objectives[j];
+                var currentObj = currentSet.Objectives[j];
 
-                for (int j = 0; j < Math.Min(currentSet.Objectives.Count, savedSet.Objectives.Count); j++)
+                if (savedObj.Description == currentObj.Description)
                 {
-                    var savedObj = savedSet.Objectives[j];
-                    var currentObj = currentSet.Objectives[j];
-
-                    if (savedObj.Description == currentObj.Description)
-                    {
-                        currentObj.IsCompleted = savedObj.IsCompleted;
-                        currentObj.CurrentCount = savedObj.CurrentCount;
-                    }
+                    currentObj.IsCompleted = savedObj.IsCompleted;
+                    currentObj.CurrentCount = savedObj.CurrentCount;
                 }
             }
         }
