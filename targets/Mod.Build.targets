@@ -1,0 +1,11 @@
+﻿<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <Import Project="..\..\tModLoader.targets" />
+
+    <Import Project="Mod.Usings.targets"/>
+    <Import Project="Mod.Publicizer.targets"/>
+    
+    <Import Condition="'$(NoModPackaging)' != ''" Project="Mod.Packaging.targets"/>
+
+</Project>
+ 
