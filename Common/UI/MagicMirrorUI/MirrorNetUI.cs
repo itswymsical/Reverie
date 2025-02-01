@@ -356,7 +356,7 @@ namespace Reverie.Common.UI
             ChatManager.DrawColorCodedString(
                 spriteBatch,
                 FontAssets.MouseText.Value,
-                mission.MissionData.Name,
+                mission.Name,
                 position,
                 Color.White,
                 0f,
@@ -368,7 +368,7 @@ namespace Reverie.Common.UI
             ChatManager.DrawColorCodedString(
                 spriteBatch,
                 FontAssets.MouseText.Value,
-                mission.MissionData.Description,
+                mission.Description,
                 position + new Vector2(0, 20),
                 Color.Gray,
                 0f,

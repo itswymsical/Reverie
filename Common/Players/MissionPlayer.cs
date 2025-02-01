@@ -17,7 +17,6 @@ namespace Reverie.Common.Players
     public partial class MissionPlayer : ModPlayer
     {
         // Dictionary to store mission data templates
-        public readonly Dictionary<int, MissionData> missionDataDict = [];
 
         // Dictionary to store active mission instances
         public readonly Dictionary<int, Mission> missionDict = [];
@@ -29,7 +28,7 @@ namespace Reverie.Common.Players
         private readonly HashSet<int> notifiedMissions = [];
 
         // Factory instance for creating mission data
-        private readonly MissionDataFactory missionDataFactory = new();
+        private readonly MissionFactory missionFactory = new();
         private readonly HashSet<int> dirtyMissions = [];
 
         public void NotifyMissionUpdate(Mission mission)
@@ -47,7 +46,7 @@ namespace Reverie.Common.Players
                 // Convert current state to container and store
                 var container = mission.ToState();
 
-                ModContent.GetInstance<Reverie>().Logger.Debug($"Mission {mission.MissionData.Name} progress updated: Set {mission.CurrentSetIndex}");
+                ModContent.GetInstance<Reverie>().Logger.Debug($"Mission {mission.Name} progress updated: Set {mission.CurrentSetIndex}");
             }
             catch (Exception ex)
             {
@@ -59,7 +58,7 @@ namespace Reverie.Common.Players
             if (mission == null) return;
 
             // Create or update mission state in storage
-            var state = mission.ToState();
+            _ = mission.ToState();
             if (missionDict.ContainsKey(mission.ID))
             {
                 missionDict[mission.ID] = mission;
@@ -105,7 +104,7 @@ namespace Reverie.Common.Players
                             ["State"] = (int)mission.State,
                             ["Unlocked"] = mission.Unlocked,
                             ["CurrentSetIndex"] = mission.CurrentSetIndex,
-                            ["ObjectiveSets"] = SerializeObjectiveSets(mission.MissionData.ObjectiveSets)
+                            ["ObjectiveSets"] = SerializeObjectiveSets(mission.ObjectiveSets)
                         }
                     };
                     activeMissionData.Add(MissionAvailability);
@@ -123,7 +122,7 @@ namespace Reverie.Common.Players
                             ["State"] = (int)mission.State,
                             ["Unlocked"] = mission.Unlocked,
                             ["CurrentSetIndex"] = mission.CurrentSetIndex,
-                            ["ObjectiveSets"] = SerializeObjectiveSets(mission.MissionData.ObjectiveSets)
+                            ["ObjectiveSets"] = SerializeObjectiveSets(mission.ObjectiveSets)
                         }
                     };
                     activeMissionData.Add(MissionAvailability);
@@ -253,19 +252,18 @@ namespace Reverie.Common.Players
 
         private void LoadObjectiveSets(Mission mission, IList<TagCompound> serializedSets)
         {
-            for (int i = 0; i < Math.Min(serializedSets.Count, mission.MissionData.ObjectiveSets.Count); i++)
+            for (int i = 0; i < Math.Min(serializedSets.Count, mission.ObjectiveSets.Count); i++)
             {
                 var setData = serializedSets[i].GetByteArray("SetData");
                 using var ms = new MemoryStream(setData);
                 using var reader = new BinaryReader(ms);
-                mission.MissionData.ObjectiveSets[i].ReadData(reader);
+                mission.ObjectiveSets[i].ReadData(reader);
             }
         }
 
         private void ResetToCleanState()
         {
             missionDict.Clear();
-            missionDataDict.Clear();
             npcMissionsDict.Clear();
             notifiedMissions.Clear();
             MissionHandlerManager.Instance.Reset();
@@ -275,23 +273,15 @@ namespace Reverie.Common.Players
         {
             if (!missionDict.TryGetValue(missionId, out var mission))
             {
-                if (!missionDataDict.TryGetValue(missionId, out var missionData))
+                mission = missionFactory.GetMissionData(missionId);
+                if (mission != null)
                 {
-                    missionData = missionDataFactory.GetMissionData(missionId);
-                    if (missionData != null)
-                    {
-                        missionDataDict[missionId] = missionData;
-                    }
-                }
-
-                if (missionData != null)
-                {
-                    mission = new Mission(missionData);
                     missionDict[missionId] = mission;
                 }
             }
             return mission;
         }
+
 
         public void ResetMission(int missionId)
         {
@@ -306,16 +296,16 @@ namespace Reverie.Common.Players
         {
             foreach (var mission in missionDict.Values)
             {
-                Main.NewText($"Mission: {mission.MissionData.Name}");
+                Main.NewText($"Mission: {mission.Name}");
                 Main.NewText($"  State: {mission.State}");
                 Main.NewText($"  Progress: {mission.Progress}");
-                Main.NewText($"  NextMissionID: {mission.MissionData.NextMissionID}");
+                Main.NewText($"  NextMissionID: {mission.NextMissionID}");
             }
         }
 
         public void StartNextMission(Mission completedMission)
         {
-            int nextMissionID = completedMission.MissionData.NextMissionID;
+            int nextMissionID = completedMission.NextMissionID;
             if (nextMissionID != -1)
             {
                 Mission nextMission = GetMission(nextMissionID);
@@ -326,8 +316,8 @@ namespace Reverie.Common.Players
                     {
                         nextMission.State = MissionAvailability.Unlocked;
                         nextMission.Progress = MissionProgress.Active;
-                        StartMission(nextMissionID);  // Add this line to register the handler
-                        Main.NewText($"New mission available: {nextMission.MissionData.Name}", Color.Yellow);
+                        StartMission(nextMissionID);
+                        Main.NewText($"New mission available: {nextMission.Name}", Color.Yellow);
                     }
                 }
             }
@@ -413,9 +403,9 @@ namespace Reverie.Common.Players
                     var mission = GetMission(missionId);
                     if (mission != null && mission.State == MissionAvailability.Unlocked && mission.Progress == MissionProgress.Inactive)
                     {
-                        if (!mission.MissionData.IsMainline)
+                        if (!mission.IsMainline)
                         {
-                            string npcName = Lang.GetNPCNameValue(mission.MissionData.Commissioner);
+                            string npcName = Lang.GetNPCNameValue(mission.Commissioner);
                             Main.NewText($"{npcName} has a job opportunity!", Color.Yellow);
                             notifiedMissions.Add(missionId);
                         }

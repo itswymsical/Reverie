@@ -50,7 +50,7 @@ namespace Reverie.Core.Commands
 
             mission.Reset();
             mission.State = MissionAvailability.Unlocked;
-            Main.NewText($"Mission '{mission.MissionData.Name}' has been reset.", 255, 255, 0);
+            Main.NewText($"Mission '{mission.Name}' has been reset.", 255, 255, 0);
         }
     }
 

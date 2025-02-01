@@ -57,7 +57,7 @@ namespace Reverie.Common.UI
                 string iconPath = "Reverie/Assets/UI/MissionUI/MissionAvailable";
 
                 var button = new UIHoverImageButton(ModContent.Request<Texture2D>(iconPath),
-                    $"{(mission.MissionData.IsMainline ? "Story Mission" : "Job Opportunity")}: {mission.MissionData.Name}"
+                    $"{(mission.IsMainline ? "Story Mission" : "Job Opportunity")}: {mission.Name}"
                 );
 
                 button.Left.Set(15f, 0f);
@@ -80,7 +80,7 @@ namespace Reverie.Common.UI
         {
             missionPlayer.StartMission(mission.ID);
             InGameNotificationsTracker.AddNotification(new MissionAcceptNotification(mission));
-            Main.npcChatText = $"{mission.MissionData.Description}";
+            Main.npcChatText = $"{mission.Description}";
             Visible = false;
         }
 

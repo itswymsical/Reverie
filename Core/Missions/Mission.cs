@@ -29,20 +29,220 @@ namespace Reverie.Core.Missions
         Completed
     }
 
-    public class MissionData(int id, string name, string description, List<List<(string, int)>> objectiveSets, List<Item> rewards, bool isMainline, int npc, int nextMissionID = -1, int xpReward = 0)
+    /// <summary>
+    /// Represents a mission within the Reverie mod, managing both mission definition and state.
+    /// A mission consists of a series of objectives organized into sets that the player must complete,
+    /// along with associated rewards, progression logic, and completion tracking.
+    /// </summary>
+    /// <remarks>
+    /// Key features:
+    /// - Manages mission progress and availability states
+    /// - Handles objective completion and progression
+    /// - Tracks rewards and experience points
+    /// - Supports mainline (story) and side missions
+    /// - Handles mission chaining through NextMissionID
+    /// - Provides serialization support for save/load operations
+    /// 
+    /// Mission progression occurs through objective sets, where each set must be completed
+    /// in sequence. When all objective sets are completed, the mission is marked as complete
+    /// and rewards are distributed to the player.
+    /// </remarks>
+    public class Mission
     {
-        public int ID { get; set; } = id;
-        public string Name { get; private set; } = name;
-        public string Description { get; private set; } = description;
-        public List<ObjectiveSet> ObjectiveSets { get; protected set; } = objectiveSets.Select(set => new ObjectiveSet(set.Select(o => new Objective(o.Item1, o.Item2)).ToList())).ToList();
-        public List<Item> Rewards { get; private set; } = rewards;
-        public bool IsMainline { get; } = isMainline;
-        public int Commissioner { get; set; } = npc;
-        public int XPReward { get; private set; } = xpReward;
-        public int NextMissionID { get; private set; } = nextMissionID;
+        // Properties merged from MissionData
+        public int ID { get; set; }
+        public string Name { get; private set; }
+        public string Description { get; private set; }
+        public List<ObjectiveSet> ObjectiveSets { get; protected set; }
+        public List<Item> Rewards { get; private set; }
+        public bool IsMainline { get; }
+        public int Commissioner { get; set; }
+        public int XPReward { get; private set; }
+        public int NextMissionID { get; private set; }
 
+        // Original Mission properties
+        public MissionProgress Progress { get; set; }
+        public MissionAvailability State { get; set; }
+        public bool Unlocked { get; set; }
+        public int CurrentSetIndex { get; set; }
+        private bool isDirty;
+
+        public Mission(int id, string name, string description, List<List<(string, int)>> objectiveSets,
+            List<Item> rewards, bool isMainline, int npc, int nextMissionID = -1, int xpReward = 0)
+        {
+            ID = id;
+            Name = name;
+            Description = description;
+            ObjectiveSets = objectiveSets.Select(set =>
+                new ObjectiveSet(set.Select(o =>
+                    new Objective(o.Item1, o.Item2)).ToList())).ToList();
+            Rewards = rewards;
+            IsMainline = isMainline;
+            Commissioner = npc;
+            XPReward = xpReward;
+            NextMissionID = nextMissionID;
+
+            // Initialize state
+            Progress = MissionProgress.Inactive;
+            State = MissionAvailability.Locked;
+            CurrentSetIndex = 0;
+            Unlocked = false;
+            isDirty = false;
+        }
+
+        public virtual void OnObjectiveComplete(int objectiveIndex) { }
+
+        public virtual void OnMissionComplete(bool rewards = true)
+        {
+            if (rewards)
+                GiveRewards();
+
+            InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(this));
+        }
+
+        public bool UpdateProgress(int objectiveIndex, int amount = 1)
+        {
+            if (Progress != MissionProgress.Active)
+                return false;
+
+            var currentSet = ObjectiveSets[CurrentSetIndex];
+            if (objectiveIndex >= 0 && objectiveIndex < currentSet.Objectives.Count)
+            {
+                var obj = currentSet.Objectives[objectiveIndex];
+                if (!obj.IsCompleted || amount < 0)
+                {
+                    bool wasCompleted = obj.UpdateProgress(amount);
+
+                    // Notify MissionPlayer of the update
+                    var player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+                    player.NotifyMissionUpdate(this);
+
+                    if (wasCompleted && amount > 0)
+                    {
+                        OnObjectiveComplete(objectiveIndex);
+                        MissionHandlerManager.Instance.OnObjectiveComplete(this, objectiveIndex);
+                        SoundEngine.PlaySound(new SoundStyle($"{Assets.SFX.Mission}ObjectiveComplete") with { Volume = 0.65f }, Main.LocalPlayer.position);
+                    }
+
+                    if (currentSet.IsCompleted)
+                    {
+                        if (CurrentSetIndex < ObjectiveSets.Count - 1)
+                        {
+                            CurrentSetIndex++;
+                            return true;
+                        }
+                        if (ObjectiveSets.All(set => set.IsCompleted))
+                        {
+                            Complete();
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        public void Reset()
+        {
+            Progress = MissionProgress.Inactive;
+            CurrentSetIndex = 0;
+            foreach (var set in ObjectiveSets)
+            {
+                set.Reset();
+            }
+        }
+
+        public void Complete()
+        {
+            if (Progress == MissionProgress.Active && ObjectiveSets.All(set => set.IsCompleted))
+            {
+                Progress = MissionProgress.Completed;
+                State = MissionAvailability.Completed;
+                isDirty = true;
+                OnMissionComplete();
+
+                MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+                player.StartNextMission(this);
+            }
+        }
+
+        public bool IsDirty => isDirty;
+        public void ClearDirtyFlag() => isDirty = false;
+
+        private void GiveRewards()
+        {
+            foreach (Item reward in Rewards)
+            {
+                Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), reward.type, reward.stack);
+            }
+            if (XPReward > 0)
+            {
+                ExperiencePlayer.AddExperience(Main.LocalPlayer, XPReward);
+                Main.NewText($"{Main.LocalPlayer.name} " +
+                    $"Gained [c/73d5ff:{XPReward} Exp.] " +
+                    $"from completing [c/73d5ff:{Name}]!", Color.White);
+            }
+        }
+
+        public byte[] SerializeState()
+        {
+            using (MemoryStream ms = new())
+            {
+                using (BinaryWriter writer = new(ms))
+                {
+                    writer.Write(ID);
+                    writer.Write((int)Progress);
+                    writer.Write((int)State);
+                    writer.Write(Unlocked);
+                    writer.Write(CurrentSetIndex);
+
+                    // Write objective sets
+                    writer.Write(ObjectiveSets.Count);
+                    foreach (var set in ObjectiveSets)
+                    {
+                        set.WriteData(writer);
+                    }
+                }
+                return ms.ToArray();
+            }
+        }
+
+        public void DeserializeState(byte[] data)
+        {
+            using (MemoryStream ms = new(data))
+            {
+                using (BinaryReader reader = new(ms))
+                {
+                    ID = reader.ReadInt32();
+                    Progress = (MissionProgress)reader.ReadInt32();
+                    State = (MissionAvailability)reader.ReadInt32();
+                    Unlocked = reader.ReadBoolean();
+                    CurrentSetIndex = reader.ReadInt32();
+
+                    // Read objective sets
+                    int setCount = reader.ReadInt32();
+                    for (int i = 0; i < setCount; i++)
+                    {
+                        ObjectiveSets[i].ReadData(reader);
+                    }
+                }
+            }
+        }
     }
 
+    /// <summary>
+    /// A serializable container class that stores mission state data for save/load operations.
+    /// This container maintains the progress, completion status, and objective states of a mission
+    /// without storing the full mission definition. Used as an intermediary between Mission objects
+    /// and their TagCompound representation in save files.
+    /// </summary>
+    /// <remarks>
+    /// The container stores:
+    /// - Basic mission identification and state
+    /// - Current objective progress and completion status
+    /// - Mission availability and unlock status
+    /// - Links to next missions in a sequence
+    /// </remarks>
     public class MissionDataContainer
     {
         public int ID { get; set; }
@@ -89,174 +289,6 @@ namespace Reverie.Core.Missions
                 // Log error and return null to trigger fallback
                 ModContent.GetInstance<Reverie>().Logger.Error($"Failed to deserialize mission container: {ex.Message}");
                 return null;
-            }
-        }
-    }
-
-    public class Mission(MissionData missionData)
-    {
-        public int ID { get; set; } = missionData.ID;
-        public MissionData MissionData { get; } = missionData;
-        public MissionProgress Progress { get; set; }
-        public MissionAvailability State { get; set; }
-        public bool Unlocked { get; set; }
-        public int CurrentSetIndex { get; set; }
-
-        /// <summary>
-        /// Allows you to perform actions such as spawning items or creating a dialogue sequence when an objective is complete.
-        /// Requires the objective's string description.
-        /// </summary>
-        /// <param name="objective"></param>
-        public virtual void OnObjectiveComplete(int objectiveIndex) { }
-        /// <summary>
-        /// Allows you to perform actions when a mission is completed. 
-        /// Ensure you are using "Base.OnMissionComplete(bool rewards, Mission nextMission)" to prevent issues.
-        /// </summary>
-        /// <param name="rewards"></param>
-        /// <param name="nextMission"></param>
-        public virtual void OnMissionComplete(bool rewards = true)
-        {
-            if (rewards)
-                GiveRewards();
-
-            InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(this));
-        }
-        /// <summary>
-        /// Use this method to update/complete an objective. You will need to manually check 'ObjectiveSet'.
-        /// </summary>
-        /// <param name="objectiveIndex">The objective we are currently updating.</param>
-        /// <param name="amount">How many times we update the objective. If an objective only has a value of 1, no need to set this parameter.</param>
-        /// <returns></returns>
-        /// 
-        private bool isDirty; // Track if state has changed
-
-        public bool UpdateProgress(int objectiveIndex, int amount = 1)
-        {
-            if (Progress != MissionProgress.Active)
-                return false;
-
-            var currentSet = MissionData.ObjectiveSets[CurrentSetIndex];
-            if (objectiveIndex >= 0 && objectiveIndex < currentSet.Objectives.Count)
-            {
-                var obj = currentSet.Objectives[objectiveIndex];
-                if (!obj.IsCompleted || amount < 0)
-                {
-                    bool wasCompleted = obj.UpdateProgress(amount);
-
-                    // Notify MissionPlayer of the update
-                    var player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-                    player.NotifyMissionUpdate(this);
-
-                    if (wasCompleted && amount > 0)
-                    {
-                        OnObjectiveComplete(objectiveIndex);
-                        MissionHandlerManager.Instance.OnObjectiveComplete(this, objectiveIndex);
-                        SoundEngine.PlaySound(SoundID.ResearchComplete with { Volume = 0.65f }, Main.LocalPlayer.position);
-                    }
-
-                    if (currentSet.IsCompleted)
-                    {
-                        if (CurrentSetIndex < MissionData.ObjectiveSets.Count - 1)
-                        {
-                            CurrentSetIndex++;
-                            return true;
-                        }
-                        if (MissionData.ObjectiveSets.All(set => set.IsCompleted))
-                        {
-                            Complete();
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
-        }
-
-        public void Reset()
-        {
-            Progress = MissionProgress.Inactive;
-            CurrentSetIndex = 0;
-            foreach (var set in MissionData.ObjectiveSets)
-            {
-                set.Reset();
-            }
-        }
-
-        public void Complete()
-        {
-            if (Progress == MissionProgress.Active && MissionData.ObjectiveSets.All(set => set.IsCompleted))
-            {
-                Progress = MissionProgress.Completed;
-                State = MissionAvailability.Completed;
-                isDirty = true;
-                OnMissionComplete();
-
-                MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-                player.StartNextMission(this);
-            }
-        }
-
-        public bool IsDirty => isDirty;
-
-        public void ClearDirtyFlag() => isDirty = false; 
-
-        private void GiveRewards()
-        {
-            foreach (Item reward in MissionData.Rewards)
-            {
-                Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), reward.type, reward.stack);
-            }
-            if (MissionData.XPReward > 0)
-            {
-                ExperiencePlayer.AddExperience(Main.LocalPlayer, MissionData.XPReward);
-                Main.NewText($"{Main.LocalPlayer.name} " +
-                    $"Gained [c/73d5ff:{MissionData.XPReward} Exp.] " +
-                    $"from completing [c/73d5ff:{MissionData.Name}]!", Color.White);
-            }
-        }
-
-        public byte[] SerializeState()
-        {
-            using (MemoryStream ms = new())
-            {
-                using (BinaryWriter writer = new(ms))
-                {
-                    writer.Write(ID);
-                    writer.Write((int)Progress);
-                    writer.Write((int)State);
-                    writer.Write(Unlocked);
-                    writer.Write(CurrentSetIndex);
-
-                    // Write objective sets
-                    writer.Write(MissionData.ObjectiveSets.Count);
-                    foreach (var set in MissionData.ObjectiveSets)
-                    {
-                        set.WriteData(writer);
-                    }
-                }
-                return ms.ToArray();
-            }
-        }
-
-        public void DeserializeState(byte[] data)
-        {
-            using (MemoryStream ms = new(data))
-            {
-                using (BinaryReader reader = new(ms))
-                {
-                    ID = reader.ReadInt32();
-                    Progress = (MissionProgress)reader.ReadInt32();
-                    State = (MissionAvailability)reader.ReadInt32();
-                    Unlocked = reader.ReadBoolean();
-                    CurrentSetIndex = reader.ReadInt32();
-
-                    // Read objective sets
-                    int setCount = reader.ReadInt32();
-                    for (int i = 0; i < setCount; i++)
-                    {
-                        MissionData.ObjectiveSets[i].ReadData(reader);
-                    }
-                }
             }
         }
     }

@@ -62,7 +62,7 @@ namespace Reverie.Common.MissionEventTrackers
 
             if (Reawakening?.Progress == MissionProgress.Active)
             {
-                var currentSet = Reawakening.MissionData.ObjectiveSets[Reawakening.CurrentSetIndex];
+                var currentSet = Reawakening.ObjectiveSets[Reawakening.CurrentSetIndex];
                 if (!currentSet.IsCompleted && Reawakening.CurrentSetIndex < 2)
                 {
                     pool.Clear();
@@ -93,12 +93,12 @@ namespace Reverie.Common.MissionEventTrackers
             if (NPC.AnyNPCs(NPCID.Merchant))
             {
                 MissionPlayer missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-                Mission dirtiestBlockMission = missionPlayer.GetMission(MissionID.DirtiestBlock);
+                Mission dirtiestBlockMission = missionPlayer.GetMission(MissionID.FoolsGold);
 
                 if (dirtiestBlockMission?.State == MissionAvailability.Locked)
                 {
                     dirtiestBlockMission.State = MissionAvailability.Unlocked;
-                    missionPlayer.AssignMissionToNPC(NPCID.Merchant, MissionID.DirtiestBlock);
+                    missionPlayer.AssignMissionToNPC(NPCID.Merchant, MissionID.FoolsGold);
                 }
             }
             return base.CheckActive(npc);

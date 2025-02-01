@@ -45,7 +45,7 @@ namespace Reverie.Common.MissionAttributes
                     {
                         var handler = (MissionObjectiveHandler)Activator.CreateInstance(handlerType, mission);
                         handlers[mission.ID] = handler;
-                        ModContent.GetInstance<Reverie>().Logger.Info($"Registered handler for mission {mission.MissionData.Name}");
+                        ModContent.GetInstance<Reverie>().Logger.Info($"Registered handler for mission {mission.Name}");
                     }
                     ModContent.GetInstance<Reverie>().Logger.Debug($"Handler count after registration: {handlers.Count}");
                     ModContent.GetInstance<Reverie>().Logger.Debug($"Current handlers: {string.Join(", ", handlers.Keys)}");

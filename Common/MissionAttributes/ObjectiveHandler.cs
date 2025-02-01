@@ -14,7 +14,7 @@ namespace Reverie.Common.MissionAttributes
         protected MissionObjectiveHandler(Mission mission)
         {
             Mission = mission ?? throw new ArgumentNullException(nameof(mission));
-            ModContent.GetInstance<Reverie>().Logger.Debug($"Created handler for mission: {mission.MissionData.Name}");
+            ModContent.GetInstance<Reverie>().Logger.Debug($"Created handler for mission: {mission.Name}");
         }
 
         #region Virtual Event Handlers
@@ -24,12 +24,12 @@ namespace Reverie.Common.MissionAttributes
             {
                 try
                 {
-                    ModContent.GetInstance<Reverie>().Logger.Debug($"Objective {objectiveIndex} completed in mission {Mission.MissionData.Name}");
+                    ModContent.GetInstance<Reverie>().Logger.Debug($"Objective {objectiveIndex} completed in mission {Mission.Name}");
                     HandleObjectiveComplete(objectiveIndex);
                 }
                 catch (Exception ex)
                 {
-                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnObjectiveComplete for mission {Mission.MissionData.Name}: {ex.Message}");
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnObjectiveComplete for mission {Mission.Name}: {ex.Message}");
                 }
             }
         }
@@ -46,7 +46,7 @@ namespace Reverie.Common.MissionAttributes
                 }
                 catch (Exception ex)
                 {
-                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnItemPickup for mission {Mission.MissionData.Name}: {ex.Message}");
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnItemPickup for mission {Mission.Name}: {ex.Message}");
                 }
             }
         }
@@ -63,7 +63,7 @@ namespace Reverie.Common.MissionAttributes
                 }
                 catch (Exception ex)
                 {
-                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnItemCreated for mission {Mission.MissionData.Name}: {ex.Message}");
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnItemCreated for mission {Mission.Name}: {ex.Message}");
                 }
             }
         }
@@ -80,7 +80,7 @@ namespace Reverie.Common.MissionAttributes
                 }
                 catch (Exception ex)
                 {
-                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCKill for mission {Mission.MissionData.Name}: {ex.Message}");
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCKill for mission {Mission.Name}: {ex.Message}");
                 }
             }
         }
@@ -97,7 +97,7 @@ namespace Reverie.Common.MissionAttributes
                 }
                 catch (Exception ex)
                 {
-                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCChat for mission {Mission.MissionData.Name}: {ex.Message}");
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCChat for mission {Mission.Name}: {ex.Message}");
                 }
             }
         }
@@ -114,7 +114,7 @@ namespace Reverie.Common.MissionAttributes
                 }
                 catch (Exception ex)
                 {
-                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCSpawn for mission {Mission.MissionData.Name}: {ex.Message}");
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCSpawn for mission {Mission.Name}: {ex.Message}");
                 }
             }
         }
@@ -131,7 +131,7 @@ namespace Reverie.Common.MissionAttributes
                 }
                 catch (Exception ex)
                 {
-                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCLoot for mission {Mission.MissionData.Name}: {ex.Message}");
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCLoot for mission {Mission.Name}: {ex.Message}");
                 }
             }
         }
@@ -144,12 +144,12 @@ namespace Reverie.Common.MissionAttributes
             {
                 try
                 {
-                    ModContent.GetInstance<Reverie>().Logger.Debug($"NPC Hit detected in mission {Mission.MissionData.Name}: Type={npc.type}, Damage={damage}");
+                    ModContent.GetInstance<Reverie>().Logger.Debug($"NPC Hit detected in mission {Mission.Name}: Type={npc.type}, Damage={damage}");
                     HandleNPCHit(npc, damage);
                 }
                 catch (Exception ex)
                 {
-                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCHit for mission {Mission.MissionData.Name}: {ex.Message}");
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCHit for mission {Mission.Name}: {ex.Message}");
                 }
             }
         }

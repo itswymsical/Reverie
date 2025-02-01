@@ -13,7 +13,7 @@ public static class MissionExtensions
             State = mission.State,
             Unlocked = mission.Unlocked,
             CurrentSetIndex = mission.CurrentSetIndex,
-            ObjectiveSets = mission.MissionData.ObjectiveSets
+            ObjectiveSets = mission.ObjectiveSets
                 .Select(set => new ObjectiveSetState
                 {
                     Objectives = set.Objectives
@@ -25,7 +25,7 @@ public static class MissionExtensions
                             CurrentCount = obj.CurrentCount
                         }).ToList()
                 }).ToList(),
-            NextMissionID = mission.MissionData.NextMissionID
+            NextMissionID = mission.NextMissionID
         };
     }
 
@@ -39,10 +39,10 @@ public static class MissionExtensions
         mission.CurrentSetIndex = state.CurrentSetIndex;
 
 
-        for (int i = 0; i < Math.Min(mission.MissionData.ObjectiveSets.Count, state.ObjectiveSets.Count); i++)
+        for (int i = 0; i < Math.Min(mission.ObjectiveSets.Count, state.ObjectiveSets.Count); i++)
         {
             var savedSet = state.ObjectiveSets[i];
-            var currentSet = mission.MissionData.ObjectiveSets[i];
+            var currentSet = mission.ObjectiveSets[i];
 
             for (int j = 0; j < Math.Min(currentSet.Objectives.Count, savedSet.Objectives.Count); j++)
             {

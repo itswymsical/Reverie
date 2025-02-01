@@ -103,7 +103,7 @@ namespace Reverie.Common.UI.MissionUI
                 titleScale
             );
 
-            string missionName = completedMission.MissionData.Name;
+            string missionName = completedMission.Name;
             float nameScale = TextScale * 1f;
             Vector2 nameSize = FontAssets.MouseText.Value.MeasureString(missionName) * nameScale;
             Vector2 namePos = screenCenter + new Vector2(-nameSize.X / 2f, titleSize.Y / 2f);
@@ -120,7 +120,7 @@ namespace Reverie.Common.UI.MissionUI
                 nameScale
             );
 
-            string rewards = $"Rewards: {string.Join(", ", completedMission.MissionData.Rewards.Select(r => $"{r.stack} {r.Name}"))}";
+            string rewards = $"Rewards: {string.Join(", ", completedMission.Rewards.Select(r => $"{r.stack} {r.Name}"))}";
             float rewardScale = TextScale * 0.6f;
             Vector2 rewardSize = FontAssets.MouseText.Value.MeasureString(rewards) * rewardScale;
             Vector2 rewardPos = namePos + new Vector2(-32, rewardSize.Y + 24);
@@ -141,7 +141,7 @@ namespace Reverie.Common.UI.MissionUI
         public void Update()
         {
             if (timeLeft == DISPLAY_TIME)
-                SoundEngine.PlaySound(SoundID.AchievementComplete);
+                SoundEngine.PlaySound(new SoundStyle($"{Assets.SFX.Mission}MissionComplete"));
 
             timeLeft--;
             timeLeft = Math.Max(0, timeLeft);
@@ -223,7 +223,7 @@ namespace Reverie.Common.UI.MissionUI
                 0f
             );
 
-            string title = startedMission.MissionData.Name;
+            string title = startedMission.Name;
             float titleScale = TextScale * 1.05f;
             Vector2 titleSize = FontAssets.DeathText.Value.MeasureString(title) * titleScale;
             Vector2 titlePos = screenCenter - titleSize / 2f;
@@ -240,7 +240,7 @@ namespace Reverie.Common.UI.MissionUI
                 titleScale
             );
 
-            string desc = $"{startedMission.MissionData.Description}";
+            string desc = $"{startedMission.Description}";
             float descScale = TextScale * 0.6f;
             Vector2 descSize = FontAssets.MouseText.Value.MeasureString(desc) * descScale;
             Vector2 descPos = titlePos + new Vector2(16, descSize.Y + 50);
@@ -261,7 +261,7 @@ namespace Reverie.Common.UI.MissionUI
         public void Update()
         {
             if (timeLeft == DISPLAY_TIME)
-                SoundEngine.PlaySound(new SoundStyle($"{Assets.SFX.Directory}NewMissionAvailable"));
+                SoundEngine.PlaySound(new SoundStyle($"{Assets.SFX.Mission}MissionAccept"));
 
             timeLeft--;
             timeLeft = Math.Max(0, timeLeft);

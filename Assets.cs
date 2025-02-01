@@ -138,6 +138,7 @@
         {
             public const string Directory = Path + "SFX/";
             public const string Dialogue = Directory + "Dialogue/";
+            public const string Mission = Directory + "Mission/";
         }
 
         internal class VFX 

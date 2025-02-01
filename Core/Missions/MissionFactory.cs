@@ -7,19 +7,19 @@ using Reverie.Content.Terraria.NPCs.WorldNPCs;
 
 namespace Reverie.Core.Missions
 {
-    public class MissionDataFactory
+    public class MissionFactory
     {
-        private Dictionary<int, Func<MissionData>> missionData;
-        public static MissionDataFactory Instance => ModContent.GetInstance<MissionDataFactory>();
-        public MissionDataFactory() => InitializeMissionData();
+        private Dictionary<int, Func<Mission>> missionData;
+        public static MissionFactory Instance => ModContent.GetInstance<MissionFactory>();
+        public MissionFactory() => InitializeMissionData();
 
         private void InitializeMissionData()
         {
-            missionData = new Dictionary<int, Func<MissionData>>
+            missionData = new Dictionary<int, Func<Mission>>
             {
                 #region Sideline Missions
 
-                {MissionID.TestMission, () => new MissionData(
+                {MissionID.TestMission, () => new Mission(
                     MissionID.TestMission,
                     "Test Mission",
                     "This should not be playable. how did you get this, bud?",
@@ -31,7 +31,7 @@ namespace Reverie.Core.Missions
                     NPCID.Guide
                 )},
 
-                {MissionID.DirtiestBlock, () => new MissionData(
+                {MissionID.DirtiestBlock, () => new Mission(
                     MissionID.DirtiestBlock,
                     "Merchant's Resolve",
                     "The merchant has been searchin' for the Dirtiest Block. Help him find it!",
@@ -44,7 +44,7 @@ namespace Reverie.Core.Missions
                     xpReward: 500
                 )},
 
-                {MissionID.FoolsGold, () => new MissionData(
+                {MissionID.FoolsGold, () => new Mission(
                     MissionID.FoolsGold,
                     "Fool's Gold",
                     "'The gold market isn't thriving too well, and the I've got has bills to pay. You're bills, keep in mind.'" +
@@ -62,7 +62,7 @@ namespace Reverie.Core.Missions
                 #endregion
 
                 #region Mainline Missions
-                {MissionID.Reawakening, () => new MissionData(
+                {MissionID.Reawakening, () => new Mission(
                     MissionID.Reawakening,
                     "Reawakening",
                     "\nYou wake up from comatose greeted by the Guide.",
@@ -85,7 +85,7 @@ namespace Reverie.Core.Missions
                     nextMissionID: MissionID.Translocator
                 )},
 
-                {MissionID.Translocator, () => new MissionData(
+                {MissionID.Translocator, () => new Mission(
                     MissionID.Translocator,
                     "Realm Reposition",
                     "Create a Translocator with the item's on your task list." +
@@ -106,7 +106,7 @@ namespace Reverie.Core.Missions
                     //nextMissionID: MissionID.RedEyedRetribution
                 )},
 
-                {MissionID.RedEyedRetribution, () => new MissionData(
+                {MissionID.RedEyedRetribution, () => new Mission(
                     MissionID.RedEyedRetribution,
                     "Red Eyed Retribution",
                     "Prepare to kill the Eye of Cthulhu.",
@@ -126,7 +126,7 @@ namespace Reverie.Core.Missions
             };
         }
 
-        public MissionData GetMissionData(int missionId)
+        public Mission GetMissionData(int missionId)
         {
             if (missionData.TryGetValue(missionId, out var missionDataFactory))
             {

@@ -386,7 +386,7 @@ namespace Reverie.Common.UI
                     missionPanel.Width.Set(0, 0.6f);
                     missionPanel.Height.Set(50, 0f);
 
-                    var nameText = new UIText(mission.MissionData.Name, 0.7f);
+                    var nameText = new UIText(mission.Name, 0.7f);
                     nameText.Top.Set(4, 0f);
                     missionPanel.Append(nameText);
 
@@ -413,14 +413,14 @@ namespace Reverie.Common.UI
 
         private void ShowDescription(Mission mission)
         {
-            string description = $"{mission.MissionData.Description}\n\nRewards:";
+            string description = $"{mission.Description}\n\nRewards:";
 
-            if (mission.MissionData.XPReward > 0)
+            if (mission.XPReward > 0)
             {
-                description += $"\n- {mission.MissionData.XPReward} Exp.";
+                description += $"\n- {mission.XPReward} Exp.";
             }
 
-            foreach (var reward in mission.MissionData.Rewards)
+            foreach (var reward in mission.Rewards)
             {
                 description += $"\n- [i:{reward.type}] {reward.stack}x {reward.Name}";
             }
@@ -438,7 +438,7 @@ namespace Reverie.Common.UI
             if (mission.Progress == MissionProgress.Inactive)
             {
                 missionPlayer.StartMission(mission.ID);
-                Main.NewText($"Accepted mission: {mission.MissionData.Name}!", Color.Green);
+                Main.NewText($"Accepted mission: {mission.Name}!", Color.Green);
                 RefreshMissionList();
             }
         }
