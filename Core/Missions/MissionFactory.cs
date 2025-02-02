@@ -3,7 +3,6 @@ using Terraria.ID;
 using Terraria;
 using System;
 using Terraria.ModLoader;
-using Reverie.Content.Terraria.NPCs.WorldNPCs;
 
 namespace Reverie.Core.Missions
 {
@@ -31,17 +30,22 @@ namespace Reverie.Core.Missions
                     NPCID.Guide
                 )},
 
-                {MissionID.DirtiestBlock, () => new Mission(
-                    MissionID.DirtiestBlock,
-                    "Merchant's Resolve",
-                    "The merchant has been searchin' for the Dirtiest Block. Help him find it!",
+                {MissionID.LostBrother, () => new Mission(
+                    MissionID.LostBrother,
+                    "The Merchant's Lost Brother",
+                    "The Merchant opens up about his missing brother, a fellow trader who vanished years ago. " +
+                    "His last known whereabouts were in these lands, trading rare goods in dangerous territories.",
                     [
-                        [("Find the Dirtiest Block", 1)],
+                        [("Find Old Trading Receipts", 3)],
+                        [("Talk to the Merchant", 1)],
+                        [("Explore the Corruption/Crimson", 1)],
+                        [("Talk to the Merchant's Brother", 1)],
+                        [("Return to the Merchant", 1)]
                     ],
-                    [ new Item(ItemID.CopperCoin, 9999), new Item(ItemID.CopperBar, 100)],
+                    [new Item(ItemID.LuckyCoin), new Item(ItemID.GoldCoin, 3)],
                     isMainline: false,
-                    npc: NPCID.Merchant,
-                    xpReward: 500
+                    NPCID.Merchant,
+                    xpReward: 200
                 )},
 
                 {MissionID.FoolsGold, () => new Mission(
@@ -62,62 +66,31 @@ namespace Reverie.Core.Missions
                 #endregion
 
                 #region Mainline Missions
-                {MissionID.Reawakening, () => new Mission(
+                    {MissionID.Reawakening, () => new Mission(
                     MissionID.Reawakening,
                     "Reawakening",
-                    "\nYou wake up from comatose greeted by the Guide.",
+                    "Awakened from death by the power of Reverie, you must prepare for the coming darkness.",
                     [
+                        // 0, Opening sequence
                         [("Talk to the Guide", 1)],
-                        [("Attack the target dummy", 10), ("Talk to the Guide", 1)],
-                        [("Kill slimes", 3), ("Obtain torches", 16)],
-                        [("Obtain Iron or Lead ore", 15), ("Obtain an Anvil", 1)],
-                        [("Obtain a better pickaxe", 1), ("Obtain a set of armor", 3)],
-                        [("Obtain Life Crystals", 3), ("Obtain healing potions", 5)],
-                        [("Check in with the Guide", 1)]
+                        // 1, EOC cutscene
+                        [("Prepare Yourself...", 1)],
+                        // 2, Basic resource gathering
+                        [("Gather Wood", 50), ("Craft/Obtain Torches", 20)],  
+                        // 3, Underground preparation
+                        [("Mine Iron/Lead Ore", 25), ("Craft an Anvil", 1)],
+                        // 4, Combat preparation
+                        [("Craft Armor Pieces", 3), ("Obtain Healing Potions", 5)],     
+                        // 5, Life Crystal gathering
+                        [("Find Life Crystals", 3)],     
+                        // 6, Return for Mirror
+                        [("Speak with the Guide", 1)],       
+                        // 7, Final preparation and Eye encounter
+                        [("Defeat the Eye of Cthulhu", 1)]
                     ],
 
-                    [new Item(ItemID.SilverCoin, Main.rand.Next(7, 19)),
-                     new Item(ItemID.CopperCoin, Main.rand.Next(18, 44))],
-
-                    isMainline: true,
-                    NPCID.Guide,
-                    xpReward: 50,
-                    nextMissionID: MissionID.Translocator
-                )},
-
-                {MissionID.Translocator, () => new Mission(
-                    MissionID.Translocator,
-                    "Realm Reposition",
-                    "Create a Translocator with the item's on your task list." +
-                    "\nCreate a Translocator with the item's on your task list.",
-                    [
-                        [("Craft a Realm Crystal", 1), 
-                        ("Craft a Coil Array", 1), 
-                        ("Craft a Dimensional Tuning Fork", 1)],
-                        [("Check in with the Guide", 1)]
-                    ],
-
-                    [new Item(ItemID.SilverCoin, Main.rand.Next(11, 63)),
-                        new Item(ItemID.CopperCoin, Main.rand.Next(18, 62))],
-
-                    isMainline: true,
-                    NPCID.Guide,
-                    xpReward: 55
-                    //nextMissionID: MissionID.RedEyedRetribution
-                )},
-
-                {MissionID.RedEyedRetribution, () => new Mission(
-                    MissionID.RedEyedRetribution,
-                    "Red Eyed Retribution",
-                    "Prepare to kill the Eye of Cthulhu.",
-                    [
-                        [("Obtain lens OR Susp. Eye", 6), ("Obtain life crystals", 3)],
-                        [("Obtain buff potions", 3), ("Obtain healing potions", 3)],
-                        [("Speak to the Guide at night", 1)],
-
-                        [("Down the Eye of Cthulhu", 1)],
-                    ],
-                    [new Item(ItemID.GoldCoin, Main.rand.Next(2, 4))],
+                    [new Item(ItemID.SilverCoin, Main.rand.Next(38, 66)),
+                     new Item(ItemID.GoldCoin, Main.rand.Next(3, 4))],
                     isMainline: true,
                     NPCID.Guide,
                     xpReward: 150

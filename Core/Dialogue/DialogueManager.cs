@@ -32,6 +32,10 @@ namespace Reverie.Core.Dialogue
 
         public bool IsUIHidden { get; private set; }
 
+        private DialogueID? _nextDialogueId = null;
+        private NPCData _nextNpcData = null;
+        private bool _nextZoomIn = false;
+
         public void RegisterNPC(string npcId, NPCData npcData)
             => _npcDialogueData[npcId] = npcData;
 
@@ -39,7 +43,8 @@ namespace Reverie.Core.Dialogue
 
         public NPCData GetNPCData(string npcId) => _npcDialogueData.TryGetValue(npcId, out var npcData) ? npcData : null;
 
-        public bool StartDialogue(NPCData npcData, DialogueID dialogueId, bool zoomIn = false)
+        public bool StartDialogue(NPCData npcData, DialogueID dialogueId, bool zoomIn = false,
+                DialogueID? nextDialogueId = null, NPCData nextNpcData = null, bool nextZoomIn = false)
         {
             Main.CloseNPCChatOrSign();
             Letterbox.Show();
@@ -55,6 +60,12 @@ namespace Reverie.Core.Dialogue
                 _activeDialogue = DialogueBox.CreateNewSequence(npcData, dialogue, zoomIn);
                 ChangeMusic(dialogue.MusicID);
                 _currentDialogue = dialogueId;
+
+                // Store next dialogue information
+                _nextDialogueId = nextDialogueId;
+                _nextNpcData = nextNpcData;
+                _nextZoomIn = nextZoomIn;
+
                 return true;
             }
 
@@ -65,6 +76,7 @@ namespace Reverie.Core.Dialogue
         {
             Letterbox.Hide();
             IsUIHidden = false;
+
             if (_currentDialogue.HasValue)
             {
                 _currentDialogue = null;
@@ -83,7 +95,24 @@ namespace Reverie.Core.Dialogue
             }
 
             _activeDialogue = null;
+
+            // Check if we have a next dialogue to start
+            if (_nextDialogueId.HasValue && _nextNpcData != null)
+            {
+                var nextDialogueId = _nextDialogueId.Value;
+                var nextNpcData = _nextNpcData;
+                var nextZoomIn = _nextZoomIn;
+
+                // Clear the next dialogue data before starting new dialogue
+                _nextDialogueId = null;
+                _nextNpcData = null;
+                _nextZoomIn = false;
+
+                // Start the next dialogue
+                StartDialogue(nextNpcData, nextDialogueId, nextZoomIn);
+            }
         }
+
 
         public void UpdateActive()
         {
@@ -142,6 +171,7 @@ namespace Reverie.Core.Dialogue
 
             _activeDialogue.DrawInGame(spriteBatch, adjustedPosition);
         }
+
         public bool IsDialogueActive(DialogueID dialogueId)
             => _activeDialogue != null && DialogueList.GetDialogueById(dialogueId) != null;
 

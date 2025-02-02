@@ -26,7 +26,7 @@ namespace Reverie.Common.UI
         private float animationProgress;
 
         private int autoRemoveTimer;
-        private const int AutoRemoveDelay = 330; //5.5 seconds, read quick mf
+        private const int AutoRemoveDelay = 270; // read quick mf
 
         private bool isLastDialogue;
         private Vector2 targetPosition;

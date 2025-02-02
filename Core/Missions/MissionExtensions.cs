@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System;
 using Reverie.Core.Missions;
-
+using Reverie.Core.Dialogue;
 public static class MissionExtensions
 {
     public static MissionDataContainer ToState(this Mission mission)

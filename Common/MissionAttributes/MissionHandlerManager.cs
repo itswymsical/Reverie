@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
-using Terraria.ModLoader.IO;
 using Terraria.DataStructures;
 using Reverie.Core.Missions;
-using Reverie.Common.Players;
+using static Reverie.Common.Players.MissionPlayer;
 
 namespace Reverie.Common.MissionAttributes
 {
@@ -221,6 +219,24 @@ namespace Reverie.Common.MissionAttributes
                 catch (Exception ex)
                 {
                     ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCHit: {ex.Message}");
+                }
+            }
+        }
+
+        public void OnBiomeEnter(Player player, BiomeState biomeState)
+        {
+            lock (handlerLock)
+            {
+                try
+                {
+                    foreach (var handler in GetActiveHandlers())
+                    {
+                        handler.OnBiomeEnter(player, biomeState);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnBiomeEnter: {ex.Message}");
                 }
             }
         }

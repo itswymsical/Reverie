@@ -7,19 +7,20 @@ namespace Reverie.Core.Dialogue
 {
     public enum DialogueID
     {
-        Mission_01_WakingUp,
-        Mission_01_Briefing,
-        Mission_01_TrainingComplete,
-        Mission_01_MagicMirror,
-        Mission_01_Outro,
-
-        SelectedClass_Warrior,
-        SelectedClass_Marksman,
-        SelectedClass_Mage,
-        SelectedClass_Conjurer,
-
-        Mission_04_StumpyIntro
+        Reawakening_Opening,
+        Reawakening_ProcessingSequence,
+        Reawakening_EyeSequence,
+        Reawakening_GuideResponse,
+        Reawakening_TrainingSequence,
+        Reawakening_SylvanForeshadow,
+        Reawakening_ProgressCheck,
+        Reawakening_TrainingComplete,
+        Reawakening_MagicMirror,
+        Reawakening_EyeReturn,
+        Reawakening_SylvanwaldeTeaser,
+        Reawakening_Closing,
     }
+
     public static class DialogueList
     {
         private static Dictionary<DialogueID, DialogueSequence> _dialogues;
@@ -29,161 +30,166 @@ namespace Reverie.Core.Dialogue
         {
             _dialogues = new Dictionary<DialogueID, DialogueSequence>
             {
-                [DialogueID.Mission_01_WakingUp] = new(
-                DialogueType.ProgressionEvent,
+                [DialogueID.Reawakening_Opening] = new(
+                DialogueType.Mission,
                 [        
-                    new("DialogueLibrary.Mission_01.WakingUp.Line1", 1, 0),
-                    new("DialogueLibrary.Mission_01.WakingUp.Line2", 2, 0),
-                    new("DialogueLibrary.Mission_01.WakingUp.Line3", 2, 0),
-                    new("DialogueLibrary.Mission_01.WakingUp.Line4", 2, 0),
-                    new("DialogueLibrary.Mission_01.WakingUp.Line5", 2, 0),
-                    new("DialogueLibrary.Mission_01.WakingUp.Line6", 2, 0),
-                    new("DialogueLibrary.Mission_01.WakingUp.Line7", 2, 0, speakingNPC: NPCDataManager.Default),
-                    new("DialogueLibrary.Mission_01.WakingUp.Line8", 10, 0),
-                    new("DialogueLibrary.Mission_01.WakingUp.Line9", 2, 0),
-                    new("DialogueLibrary.Mission_01.WakingUp.Line10", 2, 0),
-                    new("DialogueLibrary.Mission_01.WakingUp.Line11", 2, 0)
+                    new("DialogueLibrary.Reawakening.Opening.Line1", 2, 0),
+                    new("DialogueLibrary.Reawakening.Opening.Line2", 2, 0),
+                    new("DialogueLibrary.Reawakening.Opening.Line3", 2, 0),
+                    new("DialogueLibrary.Reawakening.Opening.Line4", 2, 0),
+                    new("DialogueLibrary.Reawakening.Opening.Line5", 2, 0),
+                    new("DialogueLibrary.Reawakening.Opening.Line6", 2, 0),
+                    new("DialogueLibrary.Reawakening.Opening.Line7", 2, 0),
+                    new("DialogueLibrary.Reawakening.Opening.Line8", 2, 0),
+                    new("DialogueLibrary.Reawakening.Opening.Line9", 2, 0),
+                    new("DialogueLibrary.Reawakening.Opening.Line10", 2, 0),
+                    new("DialogueLibrary.Reawakening.Opening.Line11", 2, 0),
+                    new("DialogueLibrary.Reawakening.Opening.Line12", 2, 0),
+                    new("DialogueLibrary.Reawakening.Opening.Line13", 2, 0),
+                    new("DialogueLibrary.Reawakening.Opening.Line14", 2, 0)
 
-                    //new("DialogueLibrary.Mission_01.Seq1.L1", 1, 0),
-                    //new("DialogueLibrary.Mission_01.Seq1.L2", 2, 0),
-                    //new("DialogueLibrary.Mission_01.Seq1.L3", 2, 0),
-                    //new("DialogueLibrary.Mission_01.Seq1.L4", 2, 0),
-                    //new("DialogueLibrary.Mission_01.Seq1.L5", 2, 0),
-                    //new("DialogueLibrary.Mission_01.Seq1.L6", 2, 0),
-                    //new("DialogueLibrary.Mission_01.Seq1.L7", 2, 0),
-                    //new("DialogueLibrary.Mission_01.Seq1.L8", 3, 0),
-                    //new("DialogueLibrary.Mission_01.Seq1.L9", 2, 0),
-                    //new("DialogueLibrary.Mission_01.Seq1.L10", 2, 0),
-                    //new("DialogueLibrary.Mission_01.Seq1.L11", 2, 0),
-                    //new("DialogueLibrary.Mission_01.Seq1.L12", 2, 0),
-                    //new("DialogueLibrary.Mission_01.Seq1.L13", 2, 0),
-                    //new("DialogueLibrary.Mission_01.Seq1.L14", 2, 0),
-                    //new("DialogueLibrary.Mission_01.Seq1.L15", 2, 0),
-                    //new("DialogueLibrary.Mission_01.Seq1.L16", 2, 0)
+                ], MusicLoader.GetMusicSlot(ReverieMusic.ReverieMusic.Instance, $"{Assets.Music}Resurgence")),
 
-                ], MusicID.OtherworldlyDay),
-
-                [DialogueID.Mission_01_Briefing] = new(
-                DialogueType.ProgressionEvent,
-                [
-                    new("DialogueLibrary.Mission_01.Briefing.Line1", 2, 0),
-                    new("DialogueLibrary.Mission_01.Briefing.Line2", 2, 0),
-                    new("DialogueLibrary.Mission_01.Briefing.Line3", 2, 0),
-                    new("DialogueLibrary.Mission_01.Briefing.Line4", 2, 0),
-                    new("DialogueLibrary.Mission_01.Briefing.Line5", 2, 0),
-                    new("DialogueLibrary.Mission_01.Briefing.Line6", 2, 0),
-                    new("DialogueLibrary.Mission_01.Briefing.Line7", 4, 0),
-                    new("DialogueLibrary.Mission_01.Briefing.Line8", 2, 0),
-                    new("DialogueLibrary.Mission_01.Briefing.Line9", 2, 0),
-                    new("DialogueLibrary.Mission_01.Briefing.Line10", 2, 0),
-                    new("DialogueLibrary.Mission_01.Briefing.Line11", 2, 0),
-                    new("DialogueLibrary.Mission_01.Briefing.Line12", 2, 0),
-                    new("DialogueLibrary.Mission_01.Briefing.Line13", 2, 0),
-                    new("DialogueLibrary.Mission_01.Briefing.Line14", 2, 0),
-                    new("DialogueLibrary.Mission_01.Briefing.Line15", 2, 0),
-                    new("DialogueLibrary.Mission_01.Briefing.Line16", 2, 0),
-                    new("DialogueLibrary.Mission_01.Briefing.Line17", 2, 0),
-                    new("DialogueLibrary.Mission_01.Briefing.Line18", 2, 0)
-                ], MusicID.OtherworldlyDay),
-
-                [DialogueID.Mission_01_TrainingComplete] = new(
-                DialogueType.ProgressionEvent,
-                [
-                    new("DialogueLibrary.Mission_01.TrainingComplete.Line1", 2, 0),
-                    new("DialogueLibrary.Mission_01.TrainingComplete.Line2", 2, 0),
-                    new("DialogueLibrary.Mission_01.TrainingComplete.Line3", 2, 0),
-                ]),
-
-                [DialogueID.Mission_01_MagicMirror] = new(
-                DialogueType.ProgressionEvent,
-                [
-                    new("DialogueLibrary.Mission_01.MagicMirror.Line1", 2, 0),
-                    new("DialogueLibrary.Mission_01.MagicMirror.Line2", 2, 0),
-                    new("DialogueLibrary.Mission_01.MagicMirror.Line3", 1,  0, Color.Yellow),
-                    new("DialogueLibrary.Mission_01.MagicMirror.Line4", 2, 0),
-                    new("DialogueLibrary.Mission_01.MagicMirror.Line5", 2, 0),
-                    new("DialogueLibrary.Mission_01.MagicMirror.Line6", 2, 0),
-                    new("DialogueLibrary.Mission_01.MagicMirror.Line7", 2, 0),
-                ]),
-
-                [DialogueID.Mission_01_Outro] = new(
-                DialogueType.ProgressionEvent,
-                [
-                    new("DialogueLibrary.Mission_01.Outro.Line1", 2, 0),
-                    new("DialogueLibrary.Mission_01.Outro.Line2", 2, 0),
-                    new("DialogueLibrary.Mission_01.Outro.Line3", 2, 0),
-                    new("DialogueLibrary.Mission_01.Outro.Line4", 2, 0),
-                    new("DialogueLibrary.Mission_01.Outro.Line5", 2, 0)
-                ]),
-
-                #region Class Selection Dialogue
-                [DialogueID.SelectedClass_Marksman] = new(
-                DialogueType.ProgressionEvent,
-                [
-                    new("DialogueLibrary.Mission_01.SelectedClass.Marksman.Line1", 3, 0),
-                    new("DialogueLibrary.Mission_01.SelectedClass.Marksman.Line2", 3, 0),
-                    new("DialogueLibrary.Mission_01.SelectedClass.Marksman.Line3", 3, 0),
-                ]),
-
-                [DialogueID.SelectedClass_Warrior] = new(
-                DialogueType.ProgressionEvent,
-                [
-                    new("DialogueLibrary.Mission_01.SelectedClass.Warrior.Line1", 3, 0),
-                    new("DialogueLibrary.Mission_01.SelectedClass.Warrior.Line2", 3, 0),
-                    new("DialogueLibrary.Mission_01.SelectedClass.Warrior.Line3", 3, 0),
-                ]),
-
-                [DialogueID.SelectedClass_Mage] = new(
-                DialogueType.ProgressionEvent,
-                [
-                    new("DialogueLibrary.Mission_01.SelectedClass.Mage.Line1", 3, 0),
-                    new("DialogueLibrary.Mission_01.SelectedClass.Mage.Line2", 3, 0),
-                    new("DialogueLibrary.Mission_01.SelectedClass.Mage.Line3", 3, 0),
-                ]),
-
-                [DialogueID.SelectedClass_Conjurer] = new(
-                DialogueType.ProgressionEvent,
-                [
-                    new("DialogueLibrary.Mission_01.SelectedClass.Conjurer.Line1", 3, 0),
-                    new("DialogueLibrary.Mission_01.SelectedClass.Conjurer.Line2", 3, 0),
-                    new("DialogueLibrary.Mission_01.SelectedClass.Conjurer.Line3", 3, 0),
-                ]),
-                #endregion
-
-                #region SIDE MISSION
-
-                [DialogueID.Mission_04_StumpyIntro] = new(
+                [DialogueID.Reawakening_ProcessingSequence] = new(
                 DialogueType.Mission,
                 [
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line1", 3, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line2", 3, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line3", 3, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line4", 3, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line5", 3, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line6", 2, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line7", 3, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line8", 3, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line9", 3, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line10", 3, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line11", 3, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line12", 5, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line13", 4, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line14", 3, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line15", 3, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line16", 3, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line17", 3, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line18", 3, 0),
-                    new("DialogueLibrary.Mission_04.StumpyIntro.Line19", 3, 0)
-                ], MusicLoader.GetMusicSlot(ReverieMusic.ReverieMusic.Instance, Assets.Music + "StumpysTheme")),
+                    new("DialogueLibrary.Reawakening.ProcessingSequence.Line1", 2, 0),
+                    new("DialogueLibrary.Reawakening.ProcessingSequence.Line2", 2, 0),
+                    new("DialogueLibrary.Reawakening.ProcessingSequence.Line3", 2, 0),
+                    new("DialogueLibrary.Reawakening.ProcessingSequence.Line4", 2, 0),
+                    new("DialogueLibrary.Reawakening.ProcessingSequence.Line5", 2, 0),
+                    new("DialogueLibrary.Reawakening.ProcessingSequence.Line6", 2, 0),
+                    new("DialogueLibrary.Reawakening.ProcessingSequence.Line7", 2, 0),
+                ], MusicLoader.GetMusicSlot(ReverieMusic.ReverieMusic.Instance, $"{Assets.Music}Resurgence")),
 
-                #endregion
+                [DialogueID.Reawakening_EyeSequence] = new(
+                DialogueType.Mission,
+                [
+                    new("DialogueLibrary.Reawakening.EyeSequence.Line1", 2, 0),
+                    new("DialogueLibrary.Reawakening.EyeSequence.Line2", 2, 0),
+                    new("DialogueLibrary.Reawakening.EyeSequence.Line3", 2, 0),
+                    new("DialogueLibrary.Reawakening.EyeSequence.Line4", 2, 0),
+                    new("DialogueLibrary.Reawakening.EyeSequence.Line5", 2, 0),
+                    new("DialogueLibrary.Reawakening.EyeSequence.Line6", 2, 0),
+                    new("DialogueLibrary.Reawakening.EyeSequence.Line7", 2, 0),
+                    new("DialogueLibrary.Reawakening.EyeSequence.Line8", 2, 0)
+                ]),
+
+                [DialogueID.Reawakening_GuideResponse] = new(
+                DialogueType.Mission,
+                [
+                    new("DialogueLibrary.re.MagicMirror.Line1", 2, 0),
+                    new("DialogueLibrary.Reawakening.GuideResponse.Line2", 2, 0),
+                    new("DialogueLibrary.Reawakening.GuideResponse.Line3", 1,  0, Color.Yellow),
+                    new("DialogueLibrary.Reawakening.GuideResponse.Line4", 2, 0),
+                    new("DialogueLibrary.Reawakening.GuideResponse.Line5", 2, 0),
+                    new("DialogueLibrary.Reawakening.GuideResponse.Line6", 2, 0),
+                ]),
+
+                [DialogueID.Reawakening_TrainingSequence] = new(
+                DialogueType.Mission,
+                [
+                    new("DialogueLibrary.Reawakening.TrainingSequence.Line1", 2, 0),
+                    new("DialogueLibrary.Reawakening.TrainingSequence.Line2", 2, 0),
+                    new("DialogueLibrary.Reawakening.TrainingSequence.Line3", 2, 0),
+                    new("DialogueLibrary.Reawakening.TrainingSequence.Line4", 2, 0),
+                    new("DialogueLibrary.Reawakening.TrainingSequence.Line5", 2, 0),
+                    new("DialogueLibrary.Reawakening.TrainingSequence.Line6", 2, 0),
+                    new("DialogueLibrary.Reawakening.TrainingSequence.Line7", 2, 0),
+                    new("DialogueLibrary.Reawakening.TrainingSequence.Line8", 2, 0),
+                    new("DialogueLibrary.Reawakening.TrainingSequence.Line9", 2, 0),
+                    new("DialogueLibrary.Reawakening.TrainingSequence.Line10", 2, 0),
+                    new("DialogueLibrary.Reawakening.TrainingSequence.Line11", 2, 0),
+                ]),
+
+                [DialogueID.Reawakening_SylvanForeshadow] = new(
+                DialogueType.Mission,
+                [
+                    new("DialogueLibrary.Reawakening.SylvanForeshadow.Line1", 2, 0),
+                    new("DialogueLibrary.Reawakening.SylvanForeshadow.Line2", 2, 0),
+                    new("DialogueLibrary.Reawakening.SylvanForeshadow.Line3", 2, 0),
+                    new("DialogueLibrary.Reawakening.SylvanForeshadow.Line4", 2, 0),
+                    new("DialogueLibrary.Reawakening.SylvanForeshadow.Line5", 2, 0),
+                    new("DialogueLibrary.Reawakening.SylvanForeshadow.Line6", 2, 0),
+                    new("DialogueLibrary.Reawakening.SylvanForeshadow.Line7", 2, 0),
+                    new("DialogueLibrary.Reawakening.SylvanForeshadow.Line8", 2, 0),
+                    new("DialogueLibrary.Reawakening.SylvanForeshadow.Line9", 2, 0),
+                    new("DialogueLibrary.Reawakening.SylvanForeshadow.Line10", 2, 0)
+                ]),
+
+                [DialogueID.Reawakening_ProgressCheck] = new(
+                DialogueType.Mission,
+                [
+                    new("DialogueLibrary.Reawakening.ProgressCheck.Line1", 2, 0),
+                    new("DialogueLibrary.Reawakening.ProgressCheck.Line2", 2, 0),
+                    new("DialogueLibrary.Reawakening.ProgressCheck.Line3", 2, 0),
+                    new("DialogueLibrary.Reawakening.ProgressCheck.Line4", 2, 0),
+                    new("DialogueLibrary.Reawakening.ProgressCheck.Line5", 2, 0),
+                ]),
+
+                [DialogueID.Reawakening_TrainingComplete] = new(
+                DialogueType.Mission,
+                [
+                    new("DialogueLibrary.Reawakening.TrainingComplete.Line1", 2, 0),
+                    new("DialogueLibrary.Reawakening.TrainingComplete.Line2", 2, 0),
+                    new("DialogueLibrary.Reawakening.TrainingComplete.Line3", 2, 0),
+                    new("DialogueLibrary.Reawakening.TrainingComplete.Line4", 2, 0),
+                ]),
+
+                [DialogueID.Reawakening_MagicMirror] = new(
+                DialogueType.Mission,
+                [
+                    new("DialogueLibrary.Reawakening.MagicMirror.Line1", 2, 0),
+                    new("DialogueLibrary.Reawakening.MagicMirror.Line2", 2, 0),
+                    new("DialogueLibrary.Reawakening.MagicMirror.Line3", 2, 0),
+                    new("DialogueLibrary.Reawakening.MagicMirror.Line4", 2, 0),
+                    new("DialogueLibrary.Reawakening.MagicMirror.Line5", 2, 0),
+                    new("DialogueLibrary.Reawakening.MagicMirror.Line6", 2, 0),
+                    new("DialogueLibrary.Reawakening.MagicMirror.Line7", 2, 0),
+                ]),
+
+                [DialogueID.Reawakening_EyeReturn] = new(
+                DialogueType.Mission,
+                [
+                    new("DialogueLibrary.Reawakening.EyeReturn.Line1", 2, 0),
+                    new("DialogueLibrary.Reawakening.EyeReturn.Line2", 2, 0),
+                    new("DialogueLibrary.Reawakening.EyeReturn.Line3", 2, 0),
+                    new("DialogueLibrary.Reawakening.EyeReturn.Line4", 2, 0),
+                    new("DialogueLibrary.Reawakening.EyeReturn.Line5", 2, 0),
+                    new("DialogueLibrary.Reawakening.EyeReturn.Line6", 2, 0),
+                    new("DialogueLibrary.Reawakening.EyeReturn.Line7", 2, 0),
+                      new("DialogueLibrary.Reawakening.EyeReturn.Line8", 2, 0),
+                ]),
+
+                [DialogueID.Reawakening_SylvanwaldeTeaser] = new(
+                DialogueType.Mission,
+                [
+                    new("DialogueLibrary.Reawakening.SylvanwaldeTeaser.Line1", 2, 0),
+                    new("DialogueLibrary.Reawakening.SylvanwaldeTeaser.Line2", 2, 0),
+                    new("DialogueLibrary.Reawakening.SylvanwaldeTeaser.Line3", 2, 0),
+                    new("DialogueLibrary.Reawakening.SylvanwaldeTeaser.Line4", 2, 0),
+                    new("DialogueLibrary.Reawakening.SylvanwaldeTeaser.Line5", 2, 0),
+                    new("DialogueLibrary.Reawakening.SylvanwaldeTeaser.Line6", 2, 0),
+                    new("DialogueLibrary.Reawakening.SylvanwaldeTeaser.Line7", 2, 0),
+                      new("DialogueLibrary.Reawakening.SylvanwaldeTeaser.Line8", 2, 0),
+                ]),
+
+                [DialogueID.Reawakening_Closing] = new(
+                DialogueType.Mission,
+                [
+                    new("DialogueLibrary.Reawakening.Closing.Line1", 2, 0),
+                    new("DialogueLibrary.Reawakening.Closing.Line2", 2, 0),
+                    new("DialogueLibrary.Reawakening.Closing.Line3", 2, 0),
+                    new("DialogueLibrary.Reawakening.Closing.Line4", 2, 0),
+                    new("DialogueLibrary.Reawakening.Closing.Line5", 2, 0),
+                    new("DialogueLibrary.Reawakening.Closing.Line6", 2, 0),
+                    new("DialogueLibrary.Reawakening.Closing.Line7", 2, 0),
+                ]),
             };
         }
 
-        public static DialogueSequence GetDialogueById(DialogueID id)
-            => _dialogues.TryGetValue(id, out var dialogue) ? dialogue : null;
+        public static DialogueSequence GetDialogueById(DialogueID id) => _dialogues.TryGetValue(id, out var dialogue) ? dialogue : null;
 
         public static IEnumerable<DialogueSequence> GetAllDialogues() => _dialogues.Values;    
     }
-
 }

@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Reverie.Common.MissionAttributes;
-using Reverie.Common.Systems;
 using Reverie.Core.Graphics;
 using Reverie.Core.Missions;
 using Reverie.Cutscenes;
@@ -30,6 +29,21 @@ namespace Reverie.Common.Players
         // Factory instance for creating mission data
         private readonly MissionFactory missionFactory = new();
         private readonly HashSet<int> dirtyMissions = [];
+        private BiomeState previousBiomeState;
+        public override void OnEnterWorld()
+        {
+            Mission Reawakening = GetMission(MissionID.Reawakening);
+            ReveriePlayer player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
+
+            if (Reawakening != null &&
+                Reawakening.State != MissionAvailability.Completed &&
+                Reawakening.Progress != MissionProgress.Active)
+            {
+                CutsceneLoader.PlayCutscene(new IntroCutscene());
+                UnlockMission(MissionID.Reawakening);
+                StartMission(MissionID.Reawakening);
+            }
+        }
 
         public void NotifyMissionUpdate(Mission mission)
         {
@@ -53,6 +67,7 @@ namespace Reverie.Common.Players
                 ModContent.GetInstance<Reverie>().Logger.Error($"Failed to notify mission update: {ex}");
             }
         }
+
         private void SyncMissionAvailability(Mission mission)
         {
             if (mission == null) return;
@@ -437,20 +452,6 @@ namespace Reverie.Common.Players
             }
         }
 
-        public override void OnEnterWorld()
-        {
-            Mission Reawakening = GetMission(MissionID.Reawakening);
-            ReveriePlayer player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
-
-            if (Reawakening != null &&
-                Reawakening.State != MissionAvailability.Completed &&
-                Reawakening.Progress != MissionProgress.Active)
-            {
-                CutsceneLoader.PlayCutscene(new IntroCutscene());
-                UnlockMission(MissionID.Reawakening);
-                StartMission(MissionID.Reawakening);
-            }
-        }
         public override void PostUpdate()
         {
             if (dirtyMissions.Count > 0)
@@ -463,6 +464,40 @@ namespace Reverie.Common.Players
         {
             base.OnHitNPC(target, hit, damageDone);
             MissionHandlerManager.Instance.OnNPCHit(target, damageDone);
+        }
+
+        public override void PreUpdate()
+        {
+            base.PreUpdate();
+
+            BiomeState currentBiomeState = BiomeState.FromPlayer(Player);
+
+            // Check for any biome changes
+            if (!currentBiomeState.Equals(previousBiomeState))
+            {
+                // Only call if we're entering a biome (not leaving)
+                if (currentBiomeState.ZoneBeach && !previousBiomeState.ZoneBeach ||
+                    currentBiomeState.ZoneDungeon && !previousBiomeState.ZoneDungeon ||
+                    currentBiomeState.ZoneCorrupt && !previousBiomeState.ZoneCorrupt ||
+                    currentBiomeState.ZoneCrimson && !previousBiomeState.ZoneCrimson ||
+                    currentBiomeState.ZoneDesert && !previousBiomeState.ZoneDesert ||
+                    currentBiomeState.ZoneGlowshroom && !previousBiomeState.ZoneGlowshroom ||
+                    currentBiomeState.ZoneHallow && !previousBiomeState.ZoneHallow ||
+                    currentBiomeState.ZoneJungle && !previousBiomeState.ZoneJungle ||
+                    currentBiomeState.ZoneMeteor && !previousBiomeState.ZoneMeteor ||
+                    currentBiomeState.ZoneSnow && !previousBiomeState.ZoneSnow ||
+                    currentBiomeState.ZoneUndergroundDesert && !previousBiomeState.ZoneUndergroundDesert ||
+                    currentBiomeState.ZoneRain && !previousBiomeState.ZoneRain ||
+                    currentBiomeState.ZoneSandstorm && !previousBiomeState.ZoneSandstorm ||
+                    currentBiomeState.ZoneOldOneArmy && !previousBiomeState.ZoneOldOneArmy ||
+                    currentBiomeState.ZonePeaceCandle && !previousBiomeState.ZonePeaceCandle ||
+                    currentBiomeState.ZoneWaterCandle && !previousBiomeState.ZoneWaterCandle)
+                {
+                    MissionHandlerManager.Instance.OnBiomeEnter(Player, currentBiomeState);
+                }
+            }
+
+            previousBiomeState = currentBiomeState;
         }
 
         public override void ResetEffects()

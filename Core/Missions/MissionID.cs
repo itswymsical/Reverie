@@ -6,8 +6,10 @@
         public const int TestMission = 0;
 
         public const int FoolsGold = 100;
+        
         public const int DirtiestBlock = 101;
         public const int ArgiesHunt = 102;
+        public const int LostBrother = 103;
 
         #endregion
 

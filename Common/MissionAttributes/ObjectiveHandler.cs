@@ -3,12 +3,13 @@ using System;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
+using static Reverie.Common.Players.MissionPlayer;
 
 namespace Reverie.Common.MissionAttributes
 {
     public abstract class MissionObjectiveHandler
     {
-        protected readonly object handlerLock = new object();
+        protected readonly object handlerLock = new();
         public Mission Mission { get; }
 
         protected MissionObjectiveHandler(Mission mission)
@@ -155,6 +156,25 @@ namespace Reverie.Common.MissionAttributes
         }
 
         protected virtual void HandleNPCHit(NPC npc, int damage) { }
+
+        public virtual void OnBiomeEnter(Player player, BiomeState biomeState)
+        {
+            lock (handlerLock)
+            {
+                try
+                {
+                    HandleBiomeEnter(player, biomeState);
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnBiomeEnter for mission {Mission.Name}: {ex.Message}");
+                }
+            }
+        }
+
+        protected virtual void HandleBiomeEnter(Player player, BiomeState biomeState) { }
+
+
         #endregion
     }
 }

@@ -23,7 +23,7 @@ namespace Reverie.Cutscenes
 
             FadeColor = Color.Black;
             FadeAlpha = 1f;
-
+            
             Vector2 startPosition = Main.LocalPlayer.Center - new Vector2(0, Main.screenHeight);
             CameraSystem.DoPanAnimation((int)(CUTSCENE_DURATION * 60.5f), startPosition, Main.LocalPlayer.Center, useOffsetOrigin: true);
         }
@@ -35,7 +35,7 @@ namespace Reverie.Cutscenes
             Player player = Main.LocalPlayer;
 
             if (!IsPlaying) return;
-
+            Main.time = 46800;
             _elapsedTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
             FadeAlpha = MathHelper.Lerp(0.85f, 0f, _elapsedTime / CUTSCENE_DURATION);   
         }
@@ -45,7 +45,7 @@ namespace Reverie.Cutscenes
         
         public override void End()
         {
-            DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.Mission_01_WakingUp, true);
+            DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.Reawakening_Opening, true);
             EnablePlayerMovement();
             Player player = Main.LocalPlayer;
             base.End();

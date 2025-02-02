@@ -153,29 +153,9 @@ Items: {
 			'''
 	}
 
-	AmanitaMushroom: {
-		DisplayName: Amanita Mushroom
-		Tooltip: ""
-	}
-
-	ClassUITest: {
-		DisplayName: Class UI Test
-		Tooltip: ""
-	}
-
 	Apple: {
 		DisplayName: Apple
 		Tooltip: ""
-	}
-
-	AlluviumOre: {
-		Tooltip: ""
-		DisplayName: Alluvium Ore
-	}
-
-	SubworldTool: {
-		Tooltip: Teleports you to a subworld
-		DisplayName: Subworld Tool
 	}
 
 	MyconidSpore: {
@@ -223,14 +203,14 @@ Items: {
 		Tooltip: ""
 	}
 
-	DialogueInstance: {
-		DisplayName: Dialogue Instance
-		Tooltip: ""
+	DialogueTest: {
+		DisplayName: Dialogue Test
+		Tooltip: Loads a dialogue sequence
 	}
 
-	PlayMissionUI: {
-		DisplayName: Play Mission U I
-		Tooltip: ""
+	MissionCompleteTest: {
+		DisplayName: Mission Complete Test
+		Tooltip: Loads a mission complete notification
 	}
 
 	WardensArm: {
@@ -240,6 +220,11 @@ Items: {
 
 	BoulderBludgeon: {
 		DisplayName: Boulder Bludgeon
+		Tooltip: ""
+	}
+
+	OldTradeReceipt: {
+		DisplayName: Old Trade Receipt
 		Tooltip: ""
 	}
 }
@@ -259,6 +244,7 @@ NPCs: {
 	Scarab.DisplayName: Scarab
 	AirborneScarab.DisplayName: Airborne Scarab
 	Fungore.DisplayName: Fungore
+	MerchantsBrother.DisplayName: Merchants Brother
 }
 
 Projectiles: {
@@ -279,17 +265,16 @@ Projectiles: {
 	BorealHewerProj.DisplayName: Boreal Hewer
 	FlailstormProj.DisplayName: Flailstorm
 	FrostbarkClaymoreProj.DisplayName: Frostbark Claymore
-	LodestoneMagnetProj.DisplayName: Lodestone Magnet Proj
+	LodestoneMagnetProj.DisplayName: Lodestone Magnet
 	LodestoneMagnetTileProj.DisplayName: Lodestone Magnet
 	StoneProj.DisplayName: Stone
 	FungoreSmoke.DisplayName: Fungore Smoke
 	FungoreSlam.DisplayName: Fungore Slam
-	BrambleArrowProj.DisplayName: Bramble Arrow Proj
-	GirthquakeProj.DisplayName: Girthquake Proj
-	SwordProj.DisplayName: Sword Proj
-	WardensArmProj.DisplayName: Wardens Arm Proj
-	AlluvialBoulderProj.DisplayName: Alluvial Boulder Proj
-	BoulderBludgeonProj.DisplayName: Boulder Bludgeon Proj
+	BrambleArrowProj.DisplayName: Bramble Arrow
+	GirthquakeProj.DisplayName: Girthquake
+	WardensArmProj.DisplayName: Warden's Arm
+	AlluvialBoulderProj.DisplayName: Alluvial Boulder
+	BoulderBludgeonProj.DisplayName: Boulder Bludgeon
 }
 
 UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker

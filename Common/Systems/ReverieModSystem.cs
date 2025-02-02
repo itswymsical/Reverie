@@ -28,6 +28,10 @@ namespace Reverie.Common.Systems
             RecipeGroup SilverBarRecipeGroup = new(() => $"{Language.GetTextValue("LegacyMisc.37")} {Lang.GetItemNameValue(ItemID.SilverBar)}",
                         ItemID.SilverBar, ItemID.TungstenBar);
             RecipeGroup.RegisterGroup(nameof(ItemID.SilverBar), SilverBarRecipeGroup);
+
+            RecipeGroup GoldBarRecipeGroup = new(() => $"{Language.GetTextValue("LegacyMisc.37")} {Lang.GetItemNameValue(ItemID.GoldBar)}",
+                  ItemID.GoldBar, ItemID.PlatinumBar);
+            RecipeGroup.RegisterGroup(nameof(ItemID.GoldBar), GoldBarRecipeGroup);
         }
 
         public override void PostUpdateWorld()

@@ -1,18 +1,11 @@
-﻿using Reverie.Common.Systems.Subworlds.Archaea;
-using Reverie.Core.Dialogue;
-using SubworldLibrary;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Reverie.Core.Dialogue;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace Reverie.Content.Terraria.Items
 {
-    public class DialogueInstance : ModItem
+    public class DialogueTest : ModItem
     {
         public override string Texture => "Terraria/Images/UI/Bestiary/Icon_Locked";
         public override void SetDefaults()
@@ -24,7 +17,7 @@ namespace Reverie.Content.Terraria.Items
         }
         public override bool CanUseItem(Player player)
         {
-            if (DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.Mission_01_WakingUp, true))
+            if (DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.Reawakening_TrainingSequence, true))
                 return false;
 
             return base.CanUseItem(player);
@@ -32,7 +25,7 @@ namespace Reverie.Content.Terraria.Items
         public override bool? UseItem(Player player)
         {
             if (Main.myPlayer == player.whoAmI)
-                DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.Mission_01_WakingUp, true);
+                DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.Reawakening_TrainingSequence, true);
 
             return true;
         }
