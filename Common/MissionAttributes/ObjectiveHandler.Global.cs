@@ -26,7 +26,6 @@ namespace Reverie.Common.MissionEventTrackers
     {
         public override void OnCreated(Item item, ItemCreationContext context)
         {
-            Main.NewText($"Item Created: {item.Name} (Type: {item.type})"); // Debug log
             MissionHandlerManager.Instance.OnItemCreated(item, context);
             base.OnCreated(item, context);
         }

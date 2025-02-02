@@ -31,7 +31,7 @@ namespace Reverie.Core.Dialogue
             {
                 [DialogueID.Mission_01_WakingUp] = new(
                 DialogueType.ProgressionEvent,
-                [
+                [        
                     new("DialogueLibrary.Mission_01.WakingUp.Line1", 1, 0),
                     new("DialogueLibrary.Mission_01.WakingUp.Line2", 2, 0),
                     new("DialogueLibrary.Mission_01.WakingUp.Line3", 2, 0),
@@ -43,6 +43,24 @@ namespace Reverie.Core.Dialogue
                     new("DialogueLibrary.Mission_01.WakingUp.Line9", 2, 0),
                     new("DialogueLibrary.Mission_01.WakingUp.Line10", 2, 0),
                     new("DialogueLibrary.Mission_01.WakingUp.Line11", 2, 0)
+
+                    //new("DialogueLibrary.Mission_01.Seq1.L1", 1, 0),
+                    //new("DialogueLibrary.Mission_01.Seq1.L2", 2, 0),
+                    //new("DialogueLibrary.Mission_01.Seq1.L3", 2, 0),
+                    //new("DialogueLibrary.Mission_01.Seq1.L4", 2, 0),
+                    //new("DialogueLibrary.Mission_01.Seq1.L5", 2, 0),
+                    //new("DialogueLibrary.Mission_01.Seq1.L6", 2, 0),
+                    //new("DialogueLibrary.Mission_01.Seq1.L7", 2, 0),
+                    //new("DialogueLibrary.Mission_01.Seq1.L8", 3, 0),
+                    //new("DialogueLibrary.Mission_01.Seq1.L9", 2, 0),
+                    //new("DialogueLibrary.Mission_01.Seq1.L10", 2, 0),
+                    //new("DialogueLibrary.Mission_01.Seq1.L11", 2, 0),
+                    //new("DialogueLibrary.Mission_01.Seq1.L12", 2, 0),
+                    //new("DialogueLibrary.Mission_01.Seq1.L13", 2, 0),
+                    //new("DialogueLibrary.Mission_01.Seq1.L14", 2, 0),
+                    //new("DialogueLibrary.Mission_01.Seq1.L15", 2, 0),
+                    //new("DialogueLibrary.Mission_01.Seq1.L16", 2, 0)
+
                 ], MusicID.OtherworldlyDay),
 
                 [DialogueID.Mission_01_Briefing] = new(

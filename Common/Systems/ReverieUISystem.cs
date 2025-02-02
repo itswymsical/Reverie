@@ -58,34 +58,34 @@ namespace Reverie.Common.Systems
             }
         }
 
-        public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
-        {
-            int mouseTextIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
-            int resourceBarIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Resource Bars"));
-            int inventoryIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Inventory"));
+        //public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
+        //{
+        //    int mouseTextIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
+        //    int resourceBarIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Resource Bars"));
+        //    int inventoryIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Inventory"));
 
-            if (inventoryIndex != -1)
-            {
-                layers.Insert(inventoryIndex, new LegacyGameInterfaceLayer(
-                    "ReverieMod: Magic Mirror UI",
-                    delegate
-                    {
-                        MagicMirrorInterface.Draw(Main.spriteBatch, new GameTime());
-                        return true;
-                    },
-                    InterfaceScaleType.UI)
-                );
+        //    if (inventoryIndex != -1)
+        //    {
+        //        layers.Insert(inventoryIndex, new LegacyGameInterfaceLayer(
+        //            "ReverieMod: Magic Mirror UI",
+        //            delegate
+        //            {
+        //                MagicMirrorInterface.Draw(Main.spriteBatch, new GameTime());
+        //                return true;
+        //            },
+        //            InterfaceScaleType.UI)
+        //        );
 
-                layers.Insert(inventoryIndex, new LegacyGameInterfaceLayer(
-                    "ReverieMod: Class Selection UI",
-                    delegate
-                    {
-                        ClassInterface.Draw(Main.spriteBatch, new GameTime());
-                        return true;
-                    },
-                    InterfaceScaleType.UI)
-                );
-            }
-        }
+        //        layers.Insert(inventoryIndex, new LegacyGameInterfaceLayer(
+        //            "ReverieMod: Class Selection UI",
+        //            delegate
+        //            {
+        //                ClassInterface.Draw(Main.spriteBatch, new GameTime());
+        //                return true;
+        //            },
+        //            InterfaceScaleType.UI)
+        //        );
+        //    }
+        //}
     }
 }

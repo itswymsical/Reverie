@@ -232,7 +232,7 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
             var caveNoise = SetupCaveNoise();
             var openCaveNoise = SetupOpenCaveNoise();
             var wallNoise = SetupWallNoise();
-            for (int y = 0; y < Main.UnderworldLayer; y += CHUNK_SIZE)
+            for (int y = (int)Main.worldSurface; y < Main.UnderworldLayer; y += CHUNK_SIZE)
             {
                 for (int x = 0; x < Main.maxTilesX; x += CHUNK_SIZE)
                 {

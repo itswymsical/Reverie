@@ -11,13 +11,13 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
 {
     public class GuideShelterPass(string name, float loadWeight) : GenPass(name, loadWeight)
     {
-        private const int STRUCTURE_WIDTH = 66;
-        private const int STRUCTURE_HEIGHT = 46;
-        private const int SPAWN_OFFSET_X = 26;
+        private const int STRUCTURE_WIDTH = 44;
+        private const int STRUCTURE_HEIGHT = 24;
+        private const int SPAWN_OFFSET_X = -10;
         private const int SPAWN_OFFSET_Y = 22;
-        private const int GUIDE_OFFSET_X = 35;
-        private const int GUIDE_OFFSET_Y = 40;
-        private const int SURFACE_CHECK_HEIGHT = 30; // How far up from worldSurface to check
+        private const int GUIDE_OFFSET_X = 22;
+        private const int GUIDE_OFFSET_Y = 20;
+        private const int SURFACE_CHECK_HEIGHT = 22; // How far up from worldSurface to check
 
         protected override void ApplyPass(GenerationProgress progress, GameConfiguration configuration)
         {
@@ -122,7 +122,7 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
         private void PlaceGuideShelter(int x, int y)
         {
             int structureX = x - STRUCTURE_WIDTH / 2;
-            Generator.GenerateStructure("Structures/GuideShelter", new Point16(structureX, y), Reverie.Instance);
+            Generator.GenerateStructure("Structures/SpawnPoint_44x24", new Point16(structureX, y), Reverie.Instance);
 
             Main.spawnTileX = structureX + SPAWN_OFFSET_X;
             Main.spawnTileY = y + SPAWN_OFFSET_Y;

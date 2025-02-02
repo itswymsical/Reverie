@@ -187,7 +187,7 @@ namespace Reverie.Common.Players
                 }
 
                 // Load notification state
-                notifiedMissions.UnionWith(tag.GetList<int>("NotifiedMissions").ToList());
+                notifiedMissions.UnionWith([.. tag.GetList<int>("NotifiedMissions")]);
 
                 // Load NPC mission assignments
                 var npcMissionData = tag.GetList<TagCompound>("NPCMissions").ToList();
@@ -281,7 +281,6 @@ namespace Reverie.Common.Players
             }
             return mission;
         }
-
 
         public void ResetMission(int missionId)
         {

@@ -82,7 +82,7 @@ namespace Reverie.Common.Players
                 
                 if (drawInfo.drawPlayer.HeldItem.IsWeapon())
                 {
-                    //drawInfo.drawPlayer.DrawItemBehindPlayer(ref drawInfo);
+                    drawInfo.drawPlayer.DrawItemBehindPlayer(ref drawInfo);
                 }
             }
              
