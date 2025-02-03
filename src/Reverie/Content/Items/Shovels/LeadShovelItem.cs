@@ -3,14 +3,14 @@ using Reverie.Core.Items.Components;
 
 namespace Reverie.Content.Items.Shovels;
 
-public class IronShovelItem : ModItem
+public class LeadShovelItem : ModItem
 {
     public override void SetDefaults()
     {
         base.SetDefaults();
 
         Item.DamageType = DamageClass.Melee;
-        Item.damage = 4;
+        Item.damage = 5;
         Item.knockBack = 5f;
 
         Item.autoReuse = true;
@@ -20,18 +20,18 @@ public class IronShovelItem : ModItem
         Item.height = 32;
         
         Item.UseSound = SoundID.Item18;
-        Item.useTime = 19;
-        Item.useAnimation = 19;
+        Item.useTime = 18;
+        Item.useAnimation = 18;
         Item.useStyle = ItemUseStyleID.Swing;
         
-        Item.value = Item.sellPrice(silver: 4);
+        Item.value = Item.sellPrice(silver: 6);
 
         if (!Item.TryEnable(out ShovelItemComponent component))
         {
             return;
         }
 
-        component.Power = 38;
+        component.Power = 40;
     }
     
     public override void AddRecipes()
@@ -40,7 +40,7 @@ public class IronShovelItem : ModItem
         
         CreateRecipe()
             .AddIngredient(ItemID.Wood, 4)
-            .AddIngredient(ItemID.IronBar, 9)
+            .AddIngredient(ItemID.LeadBar, 9)
             .AddTile(TileID.Anvils)
             .Register();
     }

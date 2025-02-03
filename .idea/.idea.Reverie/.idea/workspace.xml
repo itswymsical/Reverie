@@ -9,18 +9,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3cd37da9-bf3a-4368-8577-09debc19be66" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Items/Shovels/ShovelPlayer.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Reverie/.idea/discord.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Reverie/.idea/discord.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Reverie/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Reverie/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Reverie/Common/Items/Components/MissionItemComponent.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Reverie/Common/Items/Components/MissionItemComponent.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Reverie/Common/Items/Components/ShovelItemComponent.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Reverie/Common/Items/Components/ShovelItemComponent.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Items/Shovels/GoldShovelItem.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Items/Shovels/LeadShovelItem.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Reverie/Content/Items/Shovels/IronShovelItem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Reverie/Content/Items/Shovels/IronShovelItem.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Reverie/Framework/Items/Components/ItemComponent.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Reverie/Core/Items/Components/ItemComponent.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Reverie/Framework/Items/Components/ItemComponentExtensions.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Reverie/Core/Items/Components/ItemComponentExtensions.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Reverie/Framework/NPCs/Actors/CritterNPCActor.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Reverie/Core/NPCs/Actors/CritterNPCActor.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Reverie/Framework/NPCs/Components/NPCComponent.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Reverie/Core/NPCs/Components/NPCComponent.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Reverie/Framework/NPCs/Components/NPCComponentExtensions.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Reverie/Core/NPCs/Components/NPCComponentExtensions.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Reverie/Reverie.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/src/Reverie/Reverie.csproj" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -113,7 +104,7 @@
       <workItem from="1738290981709" duration="1075000" />
       <workItem from="1738306122522" duration="22000" />
       <workItem from="1738408259475" duration="1985000" />
-      <workItem from="1738545443998" duration="1115000" />
+      <workItem from="1738545443998" duration="1417000" />
     </task>
     <servers />
   </component>
