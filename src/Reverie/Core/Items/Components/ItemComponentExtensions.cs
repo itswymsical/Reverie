@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace Reverie.Framework.Items.Components;
+namespace Reverie.Core.Items.Components;
 
 /// <summary>
 ///     Provides <see cref="Item"/> extension methods regarding <see cref="ItemComponent"/>.

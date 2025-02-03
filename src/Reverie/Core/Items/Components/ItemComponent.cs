@@ -1,9 +1,9 @@
-﻿namespace Reverie.Framework.NPCs.Components;
+﻿namespace Reverie.Core.Items.Components;
 
 /// <summary>
-///     Provides a base class for defining components that can extend the behavior of <see cref="NPC"/>.
+///     Provides a base class for defining components that can extend the behavior of <see cref="Item"/>.
 /// </summary>
-public abstract class NPCComponent : GlobalNPC
+public abstract class ItemComponent : GlobalItem
 {
     /// <summary>
     ///     Gets or sets whether this component is enabled.
@@ -11,7 +11,7 @@ public abstract class NPCComponent : GlobalNPC
     public bool Enabled { get; set; }
     
     /// <summary>
-    ///     <inheritdoc cref="GlobalNPC.InstancePerEntity"/>
+    ///     <inheritdoc cref="GlobalItem.InstancePerEntity"/>
     /// </summary>
     /// <remarks>
     ///     This property is overridden to return <see langword="true"/>.

@@ -1,4 +1,4 @@
-﻿namespace Reverie.Framework.NPCs.Actors;
+﻿namespace Reverie.Core.NPCs.Actors;
 
 public abstract class CritterNPCActor : ModNPC
 {

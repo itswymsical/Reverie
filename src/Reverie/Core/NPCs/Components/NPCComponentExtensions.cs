@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace Reverie.Framework.NPCs.Components;
+namespace Reverie.Core.NPCs.Components;
 
 /// <summary>
 ///     Provides <see cref="NPC"/> extension methods regarding <see cref="NPCComponent"/>.

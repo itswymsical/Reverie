@@ -21,7 +21,6 @@
 
     <ItemGroup>
       <Folder Include="Assets\Textures\Terraria\Items\Shovels\" />
-      <Folder Include="Core\Projectiles\Actors\" />
     </ItemGroup>
 
 </Project>

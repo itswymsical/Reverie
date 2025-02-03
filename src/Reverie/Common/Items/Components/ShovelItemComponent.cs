@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
-using Reverie.Framework.Items.Components;
+using Reverie.Content.Items.Shovels;
+using Reverie.Core.Items.Components;
+using Reverie.Utilities;
+using Reverie.Utilities.Extensions;
 using Terraria.Utilities;
 
 namespace Reverie.Common.Items.Components;
@@ -35,9 +38,24 @@ public sealed class ShovelItemComponent : ItemComponent
     ];
     
     /// <summary>
-    ///     Gets or sets the shovel range, in tiles.
+    ///     Gets or sets the shovel's range, in tiles.
     /// </summary>
-    public int ShovelRange { get; set; } = 5;
+    public int Range { get; set; } = 5;
+    
+    /// <summary>
+    ///     Gets or sets the shovel's power.
+    /// </summary>
+    public int Power { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the width of the shovel's digging area.
+    /// </summary>
+    public int Width { get; set; } = 3;
+    
+    /// <summary>
+    ///     Gets or sets the height of the shovel's digging area.
+    /// </summary>
+    public int Height { get; set; } = 3;
     
     public override int ChoosePrefix(Item item, UnifiedRandom rand)
     {
@@ -71,11 +89,13 @@ public sealed class ShovelItemComponent : ItemComponent
     
     public override bool? UseItem(Item item, Player player)
     {
-        var distance = 16f * ShovelRange;
-        
+        var distance = 16f * Range;
+
         if (player.DistanceSQ(Main.MouseWorld) < distance * distance)
         {
+            var position = InputUtils.CursorPosition.ToTileCoordinates();
             
+            player.DigArea(position.X, position.Y, Width, Height, Power);
         }
 
         return true;

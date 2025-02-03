@@ -1,5 +1,5 @@
 ﻿using Reverie.Common.Items.Components;
-using Reverie.Framework.Items.Components;
+using Reverie.Core.Items.Components;
 
 namespace Reverie.Content.Items.Shovels;
 

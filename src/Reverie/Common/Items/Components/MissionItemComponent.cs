@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Reverie.Framework.Items.Components;
+using Reverie.Core.Items.Components;
 
 namespace Reverie.Common.Items.Components;
 
