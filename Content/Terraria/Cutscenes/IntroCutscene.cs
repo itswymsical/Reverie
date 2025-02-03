@@ -19,12 +19,12 @@ namespace Reverie.Cutscenes
         public override void Start()
         {
             base.Start();
-            SetMusic(MusicID.OtherworldlyUnderworld); //MusicLoader.GetMusicSlot(Instance, $"{Assets.Music}Resurgence")
+            //SetMusic(MusicLoader.GetMusicSlot(Instance, $"{Assets.Music}Resurgence")); 
             _elapsedTime = 0f;
 
             FadeColor = Color.Black;
             FadeAlpha = 1f;
-            
+            Main.time = 51480;
             Vector2 startPosition = Main.LocalPlayer.Center - new Vector2(0, Main.screenHeight);
             CameraSystem.DoPanAnimation((int)(CUTSCENE_DURATION * 60.5f), startPosition, Main.LocalPlayer.Center, useOffsetOrigin: true);
         }
@@ -36,7 +36,7 @@ namespace Reverie.Cutscenes
             Player player = Main.LocalPlayer;
 
             if (!IsPlaying) return;
-            Main.time = 49800;
+            Main.time = 51480;
             _elapsedTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
             FadeAlpha = MathHelper.Lerp(0.85f, 0f, _elapsedTime / CUTSCENE_DURATION);   
         }
@@ -46,7 +46,7 @@ namespace Reverie.Cutscenes
         
         public override void End()
         {
-            DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.Reawakening_Opening, true);
+            DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SettlingIn, true);
             EnablePlayerMovement();
             Player player = Main.LocalPlayer;
             base.End();

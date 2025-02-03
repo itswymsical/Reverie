@@ -1,184 +1,127 @@
 DialogueLibrary: {
-	Reawakening: {
-		Opening: {
-			Line1: You made it, welcome back to life.
-			Line2: You may be confused by this, but you've died before.
-			Line3: I've brought you back...
-			Line4: with the power of 'Reverie'.
-			Line5: Reverie?
-			Line6: It's essentially life energy; it can be used to CREATE or MANIPULATE life.
-			Line7: You, where brought back to consciousness specifically because the worlds have a task for you:
-			Line8: Kill. Cthulhu.
-			Line9: Alongside his Assailants, of course.
-			Line10: To make a long story short:
-			Line11: He's been on a crusade to take over the worlds with his empirical tyranny.
-			Line12: Right now, he's trapped in the Wyrmscape. But his royal gaurd of Paladins are actively finding a way to unseal him.
-			Line13: It's getting way too dark, and I feel an evil presence watching...
-			Line14: get inside and gear up. Something's about to go down.
+	CrashLanding: {
+		Intro.Line1: What the HELL?!?!
+
+		SettlingIn: {
+			Line1: Are you alright? That was quite the entrance.
+			Line2: I'm Laine, and it seems fate has brought you to my doorstep.
+			Line3: Let's get you settled in. I could use some help repairing the damage from your, uh...
+			Line4: ...arrival.
 		}
 
-		ProcessingSequence: {
-			Line1: I know it's a lot to take in. Being dead and all that.
-			Line2: The other heroes... they had trouble accepting it too.
-			Line3: But Reverie chose you for a reason. I can sense it's stronger in you.
-			Line4: *looks around nervously*
-			Line5: We should start your training soon, but first-
-			Line6: Wait... something's wrong...
-			Line7: The air... it's getting colder...
+		GatheringResources: {
+			Line1: While you're out there, could you gather some wood, stone, and herbs?
+			Line2: I need to patch up the house, and those herbs might come in handy later.
 		}
 
-		EyeSequence: {
-			Line1: So... this is the one you've chosen, Laine?
-			Line2: Another pathetic vessel, pulled from death's embrace...
-			Line3: How many have you resurrected now? How many have failed?
-			Line4: Your precious 'Reverie' won't save them from what's coming.
-			Line5: Lord Cthulhu's Paladins grow stronger by the day.
-			Line6: The seals of the Wyrmscape weaken...
-			Line7: This "hero" will fall, just like all the others.
-			Line8: Enjoy this brief respite... while you still can.
+		FixHouse: {
+			Line1: Thanks, this should be enough. You're a natural at this, huh?
+			Line2: Alright, let's get to work on fixing up the house.
+			Line3: It'll serve as our base of operations for now.
 		}
 
-		GuideResponse: {
-			Line1: Well shit...
-			Line2: The Eye rarely shows itself this early. It must sense your power.
-			Line3: We don't have much time. The Paladins will be coming.
-			Line4: Listen carefully - we need to start your training immediately.
-			Line5: First, we need to ensure you can defend yourself.
-			Line6: Here's what you need to do:
+		ArmYourself: {
+			Line1: The wilderness can be dangerous, especially for newcomers.
+			Line2: You should craft some armor and a weapon to protect yourself.
 		}
 
-		TrainingSequence: {
-			Line1: Start by gathering resources - wood, stone, whatever you can find.
-			Line2: Craft basic tools. You'll need them for what's ahead.
-			Line3: Find iron or lead ore underground. We'll need it for proper armor.
-			Line4: The caves are dangerous, so craft torches before venturing down.
-			Line5: Once you have enough ore, we'll make you an anvil.
-			Line6: With that, you can forge basic armor and weapons.
-			Line7: We should also find some Life Crystals to increase your vitality.
-			Line8: And don't forget healing potions - they'll keep you alive down there.
-			Line9: Come back to me when you're properly equipped.
-			Line10: We'll need to be ready when they return...
-			Line11: And trust me, they will return.
+		Crafting: {
+			Line1: Use the workbench to craft a set of wooden or iron armor.
+			Line2: And don't forget a reliable weapon. A sword or a bow should do the trick.
 		}
 
-		SylvanForeshadow: {
-			Line1: You know... there's something I haven't told you yet.
-			Line2: Far beyond these lands lies an ancient forest - Sylvanwalde.
-			Line3: Back before Cthulhu's crusade, it was a sanctuary of knowledge.
-			Line4: The treants there... they were the first to harness Reverie.
-			Line5: Some say they even taught the first Guides how to use it.
-			Line6: If we're going to have any chance against the Paladins...
-			Line7: That's where we need to go.
-			Line8: But the journey there... let's focus on getting you stronger first.
-			Line9: We've got enough to worry about right here.
-			Line10: I can feel something watching us again...
+		WildlifeWoes: {
+			Line1: Something's not right. The wildlife has been unusually aggressive lately.
+			Line2: I suspect something has disrupted the local ecosystem.
 		}
 
-		ProgressCheck: {
-			Line1: You're picking this up faster than I expected.
-			Line2: The way you handle those tools, the way Reverie flows through you...
-			Line3: Maybe we actually have a chance this time.
-			Line4: Still, you'll need every advantage we can get.
-			Line5: I've been saving something special for when you check in...
+		Investigation: {
+			Line1: Could you investigate the surrounding forest?
+			Line2: Find out what's causing the creatures to behave so erratically.
 		}
 
-		TrainingComplete: {
-			Line1: Well, well! Look who's still breathing!
-			Line2: You're handling yourself pretty well, but those Assailants? They're on a whole different level.
-			Line3: Hell, what you've faced so far is just the warm-up act.
-			Line4: Here, I've got something that might help keep you alive.
+		SlimeInfestation: {
+			Line1: Is it just me, or are there more slimes around than usual?
+			Line2: I've never seen them so active and aggressive before.
 		}
 
-		MagicMirror: {
-			Line1: This here's a Magic Mirror - ancient tech, way beyond what we usually see.
-			Line2: It'll bring you back here in a flash, and it's your gateway to the MirrorNet.
-			Line3: Take a good look into it, and you'll see more than just your reflection.
-			Line4: (Right-Click or use the UI element to check your stats and progress)
-			Line5: You'll want to push beyond the forest now. The real treasures? They're underground.
-			Line6: Those caverns are packed with resources we need... and plenty of nasty surprises.
-			Line7: Get yourself geared up down there, then come back in one piece.
+		SlimeInfestation_Commentary.Line1: Gah! I can't take a step outside without being swarmed by these slimy menaces!
+
+		SlimeRain: {
+			Line1: You gotta be kidding me...
+			Line2: I've never seen anything like it... the slimes are raining from the sky!
 		}
 
-		SylvanwaldeTeaser: {
-			Line1: Sylvanwalde isn't just another forest, you know.
-			Line2: It's one of the ancient bastions, from before Cthulhu's rise.
-			Line3: The treants there... they guard secrets even the Paladins fear.
-			Line4: But getting there? That's the real challenge.
-			Line5: The Translocator components aren't just rare - they're dangerous to obtain.
-			Line6: Each piece is guarded by... well, you'll find out soon enough.
-			Line7: For now, focus on gathering what you need.
-			Line8: And remember - Reverie brought you back once. Let's not test if it can do it again.
+		SlimeRain_Commentary: {
+			Line1: Slimes falling from the sky? What's next, flying pigs?
+			// Reminder: Add a callback in the future to this line when a pigron is discovered.
+			
+			Line2: I thought I'd seen it all, but this takes the cake!
 		}
 
-		EyeReturn: {
-			Line1: *darkness swirls violently in the night sky*
-			Line2: Well, well... you've grown stronger.
-			Line3: The Reverie flows through you like a river now.
-			Line4: But strength alone won't save you from what's coming.
-			Line5: Lord Cthulhu's Paladins draw closer to breaking the seals.
-			Line6: You think you're ready? Then let me test your worth...
-			Line7: *the air grows heavy with malice*
-			Line8: Show me what the Guide's precious "hero" can do!
+		KS_Encounter: {
+			Line1: That's one big ass slime... Must be there king, or something.
+			Line2: I think you pissed it off by killing so many of it's servants.
+			Line3: Heh, didn't know that would cause this to happen. My bad.
 		}
 
-		Closing: {
-			Line1: *whistles* Now THAT'S what I'm talking about! You're starting to look like someone who could actually survive this mess.
-			Line2: The Eye of Cthulhu... I haven't seen anyone drive it back in ages.
-			Line3: But this victory comes with a price - they know your strength now.
-			Line4: The Paladins will be watching. Planning. Preparing.
-			Line5: We need to move faster. Get you to Sylvanwalde before they strike again.
-			Line6: You'll need a Translocator. I've uploaded the material list to your MirrorNet.
-			Line7: Just... try not to die out there. Finding another hero this promising is a real pain.
+		KS_Victory: {
+			Line1: Well fought! The King Slime is no more.
+			Line2: I don't have a good feeling about the nature of the creature aggression.
+			Line3: They've been like this since...
+			Line4: Wait, don't tell me...
 		}
 	}
 
-	LostBrother: {
-		Sequence1: {
-			Line1: *sigh*
-			Line2: Oh, hey there...
-			Line3: Sorry mate, I'm not in the best spirits today.
-			Line4: You see... Today marks five years since my brother disappeared.
-			Line5: He was a trader like me, always seeking rare goods in dangerous places.
-			Line6: His last letter mentioned trading in the wastelands, but...
-			Line7: I've found some old receipts with his handwriting scattered around.
-			Line8: Would you... would you help me look for more? Maybe we can piece together what happened.
-			Line9: I'll make it worth your while, of course. A merchant never forgets his debts.
+	CrashLanding_2: {
+		Suspicions: {
+			Line1: I can't help but wonder if your arrival and these disturbances are connected somehow.
+			Line2: There's an ancient power spoken of in legends, known as Reverie.
+			Line3: Chosen heroes were said to wield it. Could you be one of them?
 		}
 
-		ReceiptFound1: {
-			Line1: This receipt... these prices are my brother's style.
-			Line2: He always did drive a hard bargain.
-			Line3: Keep searching, there must be more.
+		Investigation: {
+			Line1: We should investigate the surrounding biomes, see if we can find any clues.
+			Line2: Keep an eye out for anything unusual or out of place.
 		}
 
-		ReceiptFound2: {
-			Line1: Another one! The dates are getting closer to when he...
-			Line2: These trading routes lead towards the corruption.
-			Line3: I should have known he'd risk those areas for rare goods.
+		WhispersOfThePast: {
+			Line1: Would you look at that! These textbooks seem to have a story to tell.
+			Line2: The inscriptions here might hold clues to the world's forgotten history.
+			Line3: Stay sharp, friend. You never know what secrets you might uncover.
 		}
 
-		ReceiptFound3: {
-			Line1: This is the last receipt we have... dated just before he vanished.
-			Line2: These markings... they lead to the corrupted lands.
-			Line3: I... I can't go there myself, but maybe you...
+		UnnaturalPhenomena: {
+			Line1: Something's not right with that creature. It's like it's been corrupted by a strange energy.
+			Line2: Be careful. It seems to be particularly aggressive towards you.
 		}
 
-		ZombieMerchant: {
-			Line1: *gurgled merchant noises*
-			Line2: C-c-copper... for... g-g-gold...
-			Line3: B-brother... why... didn't... you... come...
-			Line4: No... refunds... *gurgle*
+		AfterBattle: {
+			Line1: I couldn't help but notice how the creature seemed drawn to you, hero.
+			Line2: It's as if your presence intensified its aggression.
+			Line3: There might be more to your abilities than meets the eye.
+			Line4: I wonder if your arrival and these disturbances are somehow connected to Reverie.
+			Line5: If you are touched by Reverie, then your journey is just beginning.
+			Line6: I may not have all the answers, but I'll share my knowledge and help you hone your skills.
+			Line7: We'll need to be prepared for whatever challenges lie ahead.
 		}
 
-		ReturnSequence: {
-			Line1: My brother... so that's what became of him.
-			Line2: At least now I know. All these years of wondering...
-			Line3: wipes tears
-			Line4: Thank you, truly. You've given me closure I never thought I'd have.
-			Line5: Here, take this. It's my brother's lucky coin.
-			Line6: He'd want a kind soul like you to have it.
-			Line7: And please, from now on, consider my shop your shop.
-			Line8: It's the least I can do for bringing my brother peace.
+		LoomingThreat: {
+			Line1: This notebook says there was an ancient evil that once threatened our world.
+			Line2: it was sealed away long ago, but the emergence of Reverie will fast-track it's return.
+			Line3: Your powers might be linked to this whole thing!
+		}
+
+		Preparation: {
+			Line1: We need to be ready to face whatever comes our way.
+			Line2: You should get stronger and master your abilities.
+			Line3: The fate of the world may very well rest on your shoulders.
+		}
+
+		ThePathToRevelation: {
+			Line1: If we want to figure out why you ended up here, we should keep finding these ancient textbooks.
+			Line2: There are temples, ruins, and wise sages scattered throughout the land.
+			Line3: They may hold the key to unlocking the secrets of Reverie and why your here.
 		}
 	}
 }

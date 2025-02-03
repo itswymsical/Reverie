@@ -33,17 +33,17 @@ namespace Reverie.Common.Players
         private BiomeState previousBiomeState;
         public override void OnEnterWorld()
         {
-            Mission Reawakening = GetMission(MissionID.Reawakening);
-            ReveriePlayer player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
+            //Mission Reawakening = GetMission(MissionID.Reawakening);
+            //ReveriePlayer player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
 
-            if (Reawakening != null &&
-                Reawakening.State != MissionAvailability.Completed &&
-                Reawakening.Progress != MissionProgress.Active)
-            {
-                CutsceneLoader.PlayCutscene(new IntroCutscene());
-                UnlockMission(MissionID.Reawakening);
-                StartMission(MissionID.Reawakening);
-            }
+            //if (Reawakening != null &&
+            //    Reawakening.State != MissionAvailability.Completed &&
+            //    Reawakening.Progress != MissionProgress.Active)
+            //{
+            //    CutsceneLoader.PlayCutscene(new IntroCutscene());
+            //    UnlockMission(MissionID.Reawakening);
+            //    StartMission(MissionID.Reawakening);
+            //}
         }
 
         public void NotifyMissionUpdate(Mission mission)
@@ -460,18 +460,6 @@ namespace Reverie.Common.Players
             if (dirtyMissions.Count > 0)
             {
                 dirtyMissions.Clear();
-            }
-            Mission Reawakening = GetMission(MissionID.Reawakening);
-
-            if (Reawakening != null && Reawakening.Progress == MissionProgress.Active && Reawakening.CurrentSetIndex == 1 && !DialogueManager.Instance.IsAnyActive() && !hasTriggered)
-            {
-                timer++;
-
-                if (timer >= 300)
-                {
-                    CutsceneLoader.PlayCutscene(new EyeAppearanceCutscene());
-                    hasTriggered = true;
-                }
             }
         }
         

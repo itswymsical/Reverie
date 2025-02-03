@@ -17,7 +17,7 @@ namespace Reverie.Content.Terraria.Items
         }
         public override bool CanUseItem(Player player)
         {
-            if (DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.Reawakening_TrainingSequence, true))
+            if (DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SettlingIn, true))
                 return false;
 
             return base.CanUseItem(player);
@@ -25,7 +25,7 @@ namespace Reverie.Content.Terraria.Items
         public override bool? UseItem(Player player)
         {
             if (Main.myPlayer == player.whoAmI)
-                DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.Reawakening_TrainingSequence, true);
+                DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SettlingIn, true);
 
             return true;
         }

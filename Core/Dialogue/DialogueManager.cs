@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -183,30 +182,5 @@ namespace Reverie.Core.Dialogue
         }
 
         public bool IsAnyActive() => _activeDialogue != null;
-    }
-
-    public class DialogueEntry(string localizationKey, int delay, int emoteFrame, Color? entryTextColor = null, NPCData speakingNPC = null)
-    {
-        public string LocalizationKey { get; } = localizationKey;
-        public int Delay { get; } = delay;
-        public int EmoteFrame { get; } = emoteFrame;
-        public Color? EntryTextColor { get; } = entryTextColor;
-        public NPCData SpeakingNPC { get; } = speakingNPC;
-
-        public LocalizedText GetText() => Reverie.Instance.GetLocalization(LocalizationKey);
-    }
-
-    public enum DialogueType //useful later
-    {
-        Mission,
-        Banter,
-        ProgressionEvent,
-    }
-
-    public class DialogueSequence(DialogueType type, IEnumerable<DialogueEntry> entries, int? musicId = null)
-    {
-        public DialogueType Type { get; } = type;
-        public IReadOnlyList<DialogueEntry> Entries { get; } = new List<DialogueEntry>(entries);
-        public int? MusicID { get; } = musicId;
     }
 }
