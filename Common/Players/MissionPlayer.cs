@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Reverie.Common.MissionAttributes;
+using Reverie.Core.Dialogue;
 using Reverie.Core.Graphics;
 using Reverie.Core.Missions;
 using Reverie.Cutscenes;
@@ -452,13 +453,28 @@ namespace Reverie.Common.Players
             }
         }
 
+        private int timer = 0;
+        private bool hasTriggered = false;
         public override void PostUpdate()
         {
             if (dirtyMissions.Count > 0)
             {
                 dirtyMissions.Clear();
             }
+            Mission Reawakening = GetMission(MissionID.Reawakening);
+
+            if (Reawakening != null && Reawakening.Progress == MissionProgress.Active && Reawakening.CurrentSetIndex == 1 && !DialogueManager.Instance.IsAnyActive() && !hasTriggered)
+            {
+                timer++;
+
+                if (timer >= 300)
+                {
+                    CutsceneLoader.PlayCutscene(new EyeAppearanceCutscene());
+                    hasTriggered = true;
+                }
+            }
         }
+        
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {

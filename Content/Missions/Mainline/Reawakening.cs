@@ -43,13 +43,6 @@ namespace Reverie.Core.Missions.Mainline
                         case 1:
                             if (Mission.ObjectiveSets[1].IsCompleted)
                             {
-                                DialogueManager.Instance.StartDialogue(
-                                    NPCDataManager.GuideData,
-                                    DialogueID.Reawakening_GuideResponse,
-                                    
-                                    nextDialogueId: DialogueID.Reawakening_TrainingSequence,
-                                    nextNpcData: NPCDataManager.GuideData);
-
                                 foreach (var item in starterItems)
                                     Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), item.type, item.stack);
                             }
@@ -180,7 +173,7 @@ namespace Reverie.Core.Missions.Mainline
             {
                 try
                 {
-                    if (Mission.CurrentSetIndex == 8 && npc.type == NPCID.EyeofCthulhu)
+                    if (Mission.CurrentSetIndex == 7 && npc.type == NPCID.EyeofCthulhu)
                     {
                         Mission.UpdateProgress(0);
                         Reverie.Instance.Logger.Debug("Eye of Cthulhu defeated");

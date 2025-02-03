@@ -7,18 +7,19 @@ using static ReverieMusic.ReverieMusic;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Mechanics;
 using Reverie.Core.Graphics;
+using Terraria.ID;
 
 namespace Reverie.Cutscenes
 {
     public class IntroCutscene : CutsceneSystem
     {
-        private const float CUTSCENE_DURATION = 24f;
+        private const float CUTSCENE_DURATION = 36f;
         private float _elapsedTime;
 
         public override void Start()
         {
             base.Start();
-            SetMusic(MusicLoader.GetMusicSlot(Instance, $"{Assets.Music}Resurgence"));
+            SetMusic(MusicID.OtherworldlyUnderworld); //MusicLoader.GetMusicSlot(Instance, $"{Assets.Music}Resurgence")
             _elapsedTime = 0f;
 
             FadeColor = Color.Black;
@@ -35,7 +36,7 @@ namespace Reverie.Cutscenes
             Player player = Main.LocalPlayer;
 
             if (!IsPlaying) return;
-            Main.time = 46800;
+            Main.time = 49800;
             _elapsedTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
             FadeAlpha = MathHelper.Lerp(0.85f, 0f, _elapsedTime / CUTSCENE_DURATION);   
         }

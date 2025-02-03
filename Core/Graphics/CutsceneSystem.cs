@@ -4,6 +4,9 @@ using Terraria;
 using System;
 using Terraria.GameContent;
 using Terraria.ModLoader;
+using System.Collections.Generic;
+using Terraria.UI;
+using System.Linq;
 
 namespace Reverie.Core.Graphics
 {
@@ -15,12 +18,14 @@ namespace Reverie.Core.Graphics
         public float FadeAlpha { get; set; }
         public Color FadeColor { get; set; }
 
+        public static bool DisableMoment { get; set; }
         protected bool IsPlayerMovementDisabled { get; private set; }
         protected bool IsPlayerVisible { get; private set; }
 
+
         private int? _currentMusicID = null;
         private int _previousMusicBox = -1;
-        public static bool DisableMoment { get; set; }
+
         public virtual void Start()
         {
             try
@@ -123,10 +128,23 @@ namespace Reverie.Core.Graphics
             }
         }
     }
-
     public class CutsceneLoader : ModSystem
     {
         public static CutsceneSystem CurrentCutscene { get; private set; }
+
+        private static readonly string[] UILayersToHide =
+        [
+            "Vanilla: Inventory",
+            "Vanilla: Hotbar",
+            "Vanilla: Resource Bars",
+            "Vanilla: Map / Minimap",
+            "Vanilla: Info Accessories Bar",
+            "Vanilla: Builder Accessories Bar",
+            "Vanilla: Settings Button",
+            "Vanilla: Mouse Over",
+            "Vanilla: Radial Hotbars",
+            "Vanilla: Player Chat"
+        ];
 
         public override void Load()
         {
@@ -138,6 +156,25 @@ namespace Reverie.Core.Graphics
         {
             On_Main.DrawInterface -= DrawCutscene;
             On_Main.DoDraw -= UpdateCutscene;
+        }
+
+        public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
+        {
+            if (CurrentCutscene != null)
+            {
+                foreach (var layer in layers)
+                {
+                    if (UILayersToHide.Contains(layer.Name))
+                    {
+                        layer.Active = false;
+                    }
+                    else if (layer.Name == "Vanilla: NPC / Sign Dialog" ||
+                             layer.Name == "Vanilla: Achievement Complete Popups")
+                    {
+                        layer.Active = true;
+                    }
+                }
+            }
         }
 
         private void UpdateCutscene(On_Main.orig_DoDraw orig, Main self, GameTime gameTime)
@@ -161,7 +198,13 @@ namespace Reverie.Core.Graphics
             {
                 if (CurrentCutscene != null)
                 {
-                    Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
+                    Main.spriteBatch.Begin(SpriteSortMode.Deferred,
+                        BlendState.AlphaBlend,
+                        SamplerState.LinearClamp,
+                        DepthStencilState.None,
+                        Main.Rasterizer,
+                        null,
+                        Main.UIScaleMatrix);
 
                     if (CurrentCutscene is IDrawCutscene customDrawCutscene)
                     {
@@ -174,25 +217,8 @@ namespace Reverie.Core.Graphics
 
                     Main.spriteBatch.End();
                 }
-                else
-                {
-                    if (orig == null)
-                    {
-                        ModContent.GetInstance<Reverie>().Logger.Error("Original DrawInterface method is null");
-                        return;
-                    }
-                    if (self == null)
-                    {
-                        ModContent.GetInstance<Reverie>().Logger.Error("Main instance is null");
-                        return;
-                    }
-                    if (gameTime == null)
-                    {
-                        ModContent.GetInstance<Reverie>().Logger.Error("GameTime is null");
-                        return;
-                    }
-                    orig(self, gameTime);
-                }
+
+                orig(self, gameTime);
             }
             catch (Exception ex)
             {

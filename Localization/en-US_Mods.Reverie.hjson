@@ -245,6 +245,7 @@ NPCs: {
 	AirborneScarab.DisplayName: Airborne Scarab
 	Fungore.DisplayName: Fungore
 	MerchantsBrother.DisplayName: Merchants Brother
+	EOC_Cutscene.DisplayName: E O C_ Cutscene
 }
 
 Projectiles: {
