@@ -70,7 +70,6 @@ namespace Reverie.Core.Dialogue
         CrashLanding_SettlingIn,
         CrashLanding_GatheringResources,
         CrashLanding_FixHouse,
-        CrashLanding_ArmYourself,
         CrashLanding_Crafting,
         CrashLanding_WildlifeWoes,
         CrashLanding_Investigation,

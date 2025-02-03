@@ -33,17 +33,17 @@ namespace Reverie.Common.Players
         private BiomeState previousBiomeState;
         public override void OnEnterWorld()
         {
-            //Mission Reawakening = GetMission(MissionID.Reawakening);
-            //ReveriePlayer player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
+            Mission CrashLanding = GetMission(MissionID.CrashLanding);
+            ReveriePlayer player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
 
-            //if (Reawakening != null &&
-            //    Reawakening.State != MissionAvailability.Completed &&
-            //    Reawakening.Progress != MissionProgress.Active)
-            //{
-            //    CutsceneLoader.PlayCutscene(new IntroCutscene());
-            //    UnlockMission(MissionID.Reawakening);
-            //    StartMission(MissionID.Reawakening);
-            //}
+            if (CrashLanding != null &&
+                CrashLanding.State != MissionAvailability.Completed &&
+                CrashLanding.Progress != MissionProgress.Active)
+            {
+                CutsceneLoader.PlayCutscene(new IntroCutscene());
+                UnlockMission(MissionID.CrashLanding);
+                StartMission(MissionID.CrashLanding);
+            }
         }
 
         public void NotifyMissionUpdate(Mission mission)

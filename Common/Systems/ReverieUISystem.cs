@@ -20,9 +20,6 @@ namespace Reverie.Common.Systems
         internal SkillTreeManager excavationUI;
         private UserInterface ExcavationInterface;
 
-        internal ClassSelectionUI classUI;
-        internal UserInterface ClassInterface;
-
         internal MirrorNetUI mirrorUI;
         private UserInterface MagicMirrorInterface;
         public static LocalizedText ExperienceText { get; private set; }
@@ -31,9 +28,6 @@ namespace Reverie.Common.Systems
         {
             ExcavationInterface = new();
             excavationUI = new();
-
-            ClassInterface = new();
-            classUI = new();
 
             mirrorUI = new();
             MagicMirrorInterface = new();
@@ -46,7 +40,6 @@ namespace Reverie.Common.Systems
 
         public override void UpdateUI(GameTime gameTime)
         {
-            ClassInterface?.Update(gameTime);
             MagicMirrorInterface?.Update(gameTime);
 
             if (!Main.gameMenu && Main.LocalPlayer != null && Main.LocalPlayer.active)
@@ -71,16 +64,6 @@ namespace Reverie.Common.Systems
         //            delegate
         //            {
         //                MagicMirrorInterface.Draw(Main.spriteBatch, new GameTime());
-        //                return true;
-        //            },
-        //            InterfaceScaleType.UI)
-        //        );
-
-        //        layers.Insert(inventoryIndex, new LegacyGameInterfaceLayer(
-        //            "ReverieMod: Class Selection UI",
-        //            delegate
-        //            {
-        //                ClassInterface.Draw(Main.spriteBatch, new GameTime());
         //                return true;
         //            },
         //            InterfaceScaleType.UI)

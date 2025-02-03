@@ -57,14 +57,40 @@ namespace Reverie.Common.MissionEventTrackers
         public override void EditSpawnPool(IDictionary<int, float> pool, NPCSpawnInfo spawnInfo)
         {
             MissionPlayer mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-            Mission Reawakening = mPlayer.GetMission(MissionID.Reawakening);
+            Mission CrashLanding = mPlayer.GetMission(MissionID.CrashLanding);
 
-            if (Reawakening?.Progress == MissionProgress.Active)
+            if (CrashLanding?.Progress == MissionProgress.Active)
             {
-                var currentSet = Reawakening.ObjectiveSets[Reawakening.CurrentSetIndex];
-                if (!currentSet.IsCompleted && Reawakening.CurrentSetIndex < 2)
+                var currentSet = CrashLanding.ObjectiveSets[CrashLanding.CurrentSetIndex];
+                if (!currentSet.IsCompleted && CrashLanding.CurrentSetIndex < 1)
                 {
                     pool.Clear();
+                }
+                if (CrashLanding.CurrentSetIndex == 2)
+                {
+                    pool.Add(NPCID.GreenSlime, 0.2f);
+                    pool.Add(NPCID.BlueSlime, 0.2f);
+                    pool.Add(NPCID.PurpleSlime, 0.1f);
+                }
+                else if (CrashLanding.CurrentSetIndex == 5)
+                {
+                    pool.Add(NPCID.GreenSlime, 0.27f);
+                    pool.Add(NPCID.BlueSlime, 0.27f);
+                    pool.Add(NPCID.YellowSlime, 0.21f);
+                    pool.Add(NPCID.PurpleSlime, 0.13f);
+                    pool.Add(NPCID.RedSlime, 0.11f);
+                    pool.Add(NPCID.YellowSlime, 0.11f);
+                    pool.Add(NPCID.Pinky, 0.03f);
+                }
+                else if (CrashLanding.CurrentSetIndex == 7)
+                {
+                    pool.Add(NPCID.GreenSlime, 0.27f);
+                    pool.Add(NPCID.BlueSlime, 0.27f);
+                    pool.Add(NPCID.YellowSlime, 0.24f);
+                    pool.Add(NPCID.PurpleSlime, 0.19f);
+                    pool.Add(NPCID.RedSlime, 0.17f);
+                    pool.Add(NPCID.YellowSlime, 0.17f);
+                    pool.Add(NPCID.Pinky, 0.07f);
                 }
             }
 
@@ -82,25 +108,6 @@ namespace Reverie.Common.MissionEventTrackers
             base.AI(npc);
             if (npc.isLikeATownNPC)
                 npc.TownNPC_TalkState();
-        }
-
-        public override bool CheckActive(NPC npc)
-        {
-            if (npc.immortal)
-                return false;
-
-            if (NPC.AnyNPCs(NPCID.Merchant))
-            {
-                MissionPlayer missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-                Mission dirtiestBlockMission = missionPlayer.GetMission(MissionID.FoolsGold);
-
-                if (dirtiestBlockMission?.State == MissionAvailability.Locked)
-                {
-                    dirtiestBlockMission.State = MissionAvailability.Unlocked;
-                    missionPlayer.AssignMissionToNPC(NPCID.Merchant, MissionID.FoolsGold);
-                }
-            }
-            return base.CheckActive(npc);
         }
 
         public override void OnKill(NPC npc)

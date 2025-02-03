@@ -1,5 +1,7 @@
-﻿using Reverie.Content.Archaea.Biomes;
+﻿using Reverie.Common.Global;
+using Reverie.Content.Archaea.Biomes;
 using Reverie.Content.Biomes;
+using Reverie.Helpers;
 using System;
 using System.Collections.Generic;
 using Terraria;
@@ -13,7 +15,7 @@ namespace Reverie.Common
     {
         public static bool IsPickaxe(this Item item)
         {
-            return item.Name.Contains("Pickaxe");
+            return item.pick > 0 || item.GetGlobalItem<ReverieGlobalItem>().Shovel;
         }
         public static bool IsHealingPot(this Item item)
         {
@@ -64,18 +66,7 @@ namespace Reverie.Common
         }
         public static bool CountsAsArmor(this Item item)
         {
-            return item.Name.Contains("Leggings")
-                || item.Name.Contains("Greaves")
-                || item.Name.Contains("Brogues")
-                || item.Name.Contains("Chainmail")
-                || item.Name.Contains("Chestplate")
-                || item.Name.Contains("Breastplate")
-                || item.Name.Contains("Helmet")
-                || item.Name.Contains("Mask")
-                || item.Name.Contains("Hat")
-                || item.Name.Contains("Headgear")
-                || item.Name.Contains("Hauberk")
-                && !item.vanity || item.OriginalDefense > 0;
+            return (item.bodySlot != -1 || item.headSlot != -1 || item.legSlot != -1) && !item.vanity;
         }
         public static bool ZoneCanopy(this Player player) => player.InModBiome<WoodlandCanopyBiome>();
         public static bool ZoneEmberiteCaverns(this Player player) => player.InModBiome<EmberiteCavernsBiome>();

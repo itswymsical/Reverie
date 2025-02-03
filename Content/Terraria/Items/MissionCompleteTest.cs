@@ -20,7 +20,7 @@ namespace Reverie.Content.Terraria.Items
         }
         public override bool? UseItem(Player player)
         {
-            Core.Missions.Mission mission = Main.LocalPlayer.GetModPlayer<MissionPlayer>().GetMission(MissionID.Reawakening);
+            Core.Missions.Mission mission = Main.LocalPlayer.GetModPlayer<MissionPlayer>().GetMission(MissionID.CrashLanding);
 
             if (Main.myPlayer == player.whoAmI)
                 InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(mission));

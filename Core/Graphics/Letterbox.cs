@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using Terraria;
 using Terraria.GameContent;
 
@@ -13,6 +14,7 @@ namespace Reverie.Core.Graphics
         private static int _currentFrame;
         private static bool _isAnimating;
         private static bool _isShowing;
+        private static float _heightMultiplier = 0.05f;
 
         public static void Show()
         {
@@ -42,30 +44,33 @@ namespace Reverie.Core.Graphics
             if (_currentFrame >= ANIMATION_DURATION)
             {
                 _isAnimating = false;
-                _currentFrame = ANIMATION_DURATION;
             }
 
             float progress = _isShowing ?
                 (float)_currentFrame / ANIMATION_DURATION :
                 1f - ((float)_currentFrame / ANIMATION_DURATION);
 
-            LetterboxHeight = (int)(Main.screenHeight * 0.075f * progress);
+            progress = (float)Math.Sin(progress * MathHelper.PiOver2);
+
+            LetterboxHeight = (int)(Main.screenHeight * _heightMultiplier * progress);
         }
 
         public static void Draw(SpriteBatch spriteBatch)
         {
             if (LetterboxHeight <= 0) return;
 
+            var color = Color.Black * (LetterboxHeight / (Main.screenHeight * _heightMultiplier));
+
             spriteBatch.Draw(
                 TextureAssets.MagicPixel.Value,
                 new Rectangle(0, 0, Main.screenWidth, LetterboxHeight),
-                Color.Black
+                color
             );
 
             spriteBatch.Draw(
                 TextureAssets.MagicPixel.Value,
                 new Rectangle(0, Main.screenHeight - LetterboxHeight, Main.screenWidth, LetterboxHeight),
-                Color.Black
+                color
             );
         }
 

@@ -24,8 +24,7 @@ namespace Reverie.Core.Dialogue
                 [DialogueID.CrashLanding_SettlingIn] = DialogueBuilder.Build("CrashLanding", "SettlingIn", 4),
 
                 [DialogueID.CrashLanding_GatheringResources] = DialogueBuilder.Build("CrashLanding", "GatheringResources", 2),
-                [DialogueID.CrashLanding_FixHouse] = DialogueBuilder.Build("CrashLanding", "FixHouse", 3),
-                [DialogueID.CrashLanding_ArmYourself] = DialogueBuilder.Build("CrashLanding", "ArmYourself", 2),
+                [DialogueID.CrashLanding_FixHouse] = DialogueBuilder.Build("CrashLanding", "FixHouse", 5),
                 [DialogueID.CrashLanding_Crafting] = DialogueBuilder.Build("CrashLanding", "Crafting", 2),
             };
         }
