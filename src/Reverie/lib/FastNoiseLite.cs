@@ -47,13 +47,12 @@
 // VERSION: 1.1.1
 // https://github.com/Auburn/FastNoiseLite
 
-using System;
 using System.Runtime.CompilerServices;
 // Switch between using floats or doubles for input position
 using FNLfloat = float;
 
 //using FNLfloat = System.Double;
-namespace Reverie.Utilities;
+namespace Reverie.lib;
 
 public class FastNoiseLite
 {

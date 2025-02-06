@@ -1,4 +1,4 @@
-﻿namespace Reverie.Content.Tiles;
+﻿namespace Reverie.Content.Tiles.Sylvanwalde;
 
 public class LoamTile : ModTile
 {

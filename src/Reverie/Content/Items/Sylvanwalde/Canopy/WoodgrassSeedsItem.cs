@@ -1,6 +1,6 @@
-﻿using Reverie.Content.Tiles.Canopy;
+﻿using Reverie.Content.Tiles.Sylvanwalde.Canopy;
 
-namespace Reverie.Content.Items.Canopy;
+namespace Reverie.Content.Items.Sylvanwalde.Canopy;
 
 public class WoodgrassSeedsItem : ModItem
 {

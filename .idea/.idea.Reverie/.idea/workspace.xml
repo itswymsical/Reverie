@@ -9,79 +9,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3cd37da9-bf3a-4368-8577-09debc19be66" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/AppleItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/BananaItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/BellPepperItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/BreadItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/CarrotBundleItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/CarrotItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/CarrotPieItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/CoconutItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/ColdSodaItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/CookedSteakItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/CucumberItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/ElderberryItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/GarlicItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/GingerItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/HorseraddishItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/JalepenoItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/KiwiItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/LettuceItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/MangoItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/OnionItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/PineappleItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/PotatoItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/RaddishItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/RawMeatItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/RosemaryItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/SandwichItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/TomatoItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Food/WatermelonItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Frostbark/BorealHewerItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Frostbark/FlailstormItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Frostbark/FrostbarkClaymoreItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Frostbark/FrostbarkGreavesItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Frostbark/FrostbarkGreavesItem_Legs.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Frostbark/FrostbarkHauberkItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Frostbark/FrostbarkHauberkItem_Body.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Frostbark/FrostbarkHelmItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Frostbark/FrostbarkHelmItem_Head.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Sylvanwalde/Canopy/AlluviumOreItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Sylvanwalde/CobblestoneItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Sylvanwalde/LoamGrassSeedsItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Sylvanwalde/LoamItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Items/Sylvanwalde/WoodgrassSeedsItem.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Tiles/Sylvanwalde/CobblestoneTile.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Tiles/Sylvanwalde/CobblestoneWall.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Tiles/Sylvanwalde/LoamGrassTile.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Tiles/Sylvanwalde/LoamTile.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Tiles/Sylvanwalde/LoamWall.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Tiles/Sylvanwalde/SlateTile.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Assets/Textures/Tiles/Sylvanwalde/Woodgrass.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Common/Items/Types/AcornGlobalItem.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Common/Items/Types/MagicMirrorGlobalItem.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Items/Frostbark/BorealHewerItem.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Items/Frostbark/FlailstormItem.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Items/Frostbark/FrostbarkArmorSet.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Items/Sylvanwalde/Canopy/AlluviumOreItem.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Items/Sylvanwalde/Canopy/CobblestoneItem.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Items/Sylvanwalde/Canopy/LoamItem.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Items/Sylvanwalde/Canopy/WoodgrassSeedsItem.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Tiles/Sylvanwalde/Canopy/AlluviumOreTile.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Tiles/Sylvanwalde/Canopy/BramblerootTile.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Tiles/Sylvanwalde/Canopy/CanopyFoliageTile.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Tiles/Sylvanwalde/Canopy/CanopyLogTile.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Tiles/Sylvanwalde/Canopy/TeakWoodSaplingTile.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Tiles/Sylvanwalde/Canopy/TeakWoodTree.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Tiles/Sylvanwalde/Canopy/WoodgrassTile.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Tiles/Sylvanwalde/CobblestoneTile.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Tiles/Sylvanwalde/LoamGrassTile.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Content/Tiles/Sylvanwalde/LoamTile.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Reverie/Utilities/ItemUtils.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Reverie/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Reverie/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Reverie/Reverie.Filters.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Reverie/Reverie.Networking.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Reverie/Reverie.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/src/Reverie/Reverie.csproj" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -175,7 +103,7 @@
       <workItem from="1738306122522" duration="22000" />
       <workItem from="1738408259475" duration="1985000" />
       <workItem from="1738545443998" duration="2249000" />
-      <workItem from="1738581791533" duration="2269000" />
+      <workItem from="1738581791533" duration="3138000" />
     </task>
     <servers />
   </component>

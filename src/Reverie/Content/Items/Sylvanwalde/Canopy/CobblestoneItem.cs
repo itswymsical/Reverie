@@ -1,6 +1,6 @@
-﻿using Reverie.Content.Tiles;
+﻿using Reverie.Content.Tiles.Sylvanwalde;
 
-namespace Reverie.Content.Items.Canopy;
+namespace Reverie.Content.Items.Sylvanwalde.Canopy;
 
 public class CobblestoneItem : ModItem
 {

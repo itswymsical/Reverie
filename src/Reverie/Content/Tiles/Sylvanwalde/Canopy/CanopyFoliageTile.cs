@@ -1,6 +1,6 @@
 ﻿using Terraria.ObjectData;
 
-namespace Reverie.Content.Tiles.Canopy;
+namespace Reverie.Content.Tiles.Sylvanwalde.Canopy;
 
 public class CanopyFoliageTile : ModTile
 {

@@ -1,7 +1,7 @@
-﻿using Reverie.Content.Items.Canopy;
+﻿using Reverie.Content.Items.Sylvanwalde.Canopy;
 using Terraria.DataStructures;
 
-namespace Reverie.Content.Tiles.Canopy;
+namespace Reverie.Content.Tiles.Sylvanwalde.Canopy;
 
 public class WoodgrassTile : ModTile
 {

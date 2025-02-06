@@ -2,7 +2,7 @@
 using Terraria.Enums;
 using Terraria.GameContent;
 
-namespace Reverie.Content.Tiles.Canopy;
+namespace Reverie.Content.Tiles.Sylvanwalde.Canopy;
 
 public class TeakWoodTree : ModTree
 {
