@@ -40,8 +40,7 @@ namespace Reverie.Common
         }
         public static bool IsWeapon(this Item item)
         {
-            return item.pick <= 0 &&
-                (item.DamageType == DamageClass.Magic
+            return (item.DamageType == DamageClass.Magic
                 || item.DamageType == DamageClass.Summon
                 || item.DamageType == DamageClass.Melee
                 || item.DamageType == DamageClass.Throwing);

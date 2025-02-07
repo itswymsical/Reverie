@@ -1,9 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
+using Reverie.Common.Extensions;
 using Reverie.Common.MissionAttributes;
+using Reverie.Content.Terraria.Cutscenes;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Graphics;
 using Reverie.Core.Missions;
-using Reverie.Cutscenes;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,7 +31,6 @@ namespace Reverie.Common.Players
         // Factory instance for creating mission data
         private readonly MissionFactory missionFactory = new();
         private readonly HashSet<int> dirtyMissions = [];
-        private BiomeState previousBiomeState;
         public override void OnEnterWorld()
         {
             Mission CrashLanding = GetMission(MissionID.CrashLanding);
@@ -40,7 +40,7 @@ namespace Reverie.Common.Players
                 CrashLanding.State != MissionAvailability.Completed &&
                 CrashLanding.Progress != MissionProgress.Active)
             {
-                CutsceneLoader.PlayCutscene(new IntroCutscene());
+                CutsceneLoader.PlayCutscene(new FallingStarCutscene());
                 UnlockMission(MissionID.CrashLanding);
                 StartMission(MissionID.CrashLanding);
             }
@@ -455,53 +455,31 @@ namespace Reverie.Common.Players
 
         private int timer = 0;
         private bool hasTriggered = false;
+        private int check = 0;
         public override void PostUpdate()
         {
             if (dirtyMissions.Count > 0)
             {
                 dirtyMissions.Clear();
             }
+            check++;
+            if (check > 300)
+            {
+                foreach (BiomeType biome in Enum.GetValues<BiomeType>())
+                {
+                    if (biome.IsPlayerInBiome(Player))
+                    {
+                        MissionHandlerManager.Instance.OnBiomeEnter(Player, biome);
+                    }
+                }
+                check = 0;
+            }
         }
         
-
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             base.OnHitNPC(target, hit, damageDone);
             MissionHandlerManager.Instance.OnNPCHit(target, damageDone);
-        }
-
-        public override void PreUpdate()
-        {
-            base.PreUpdate();
-
-            BiomeState currentBiomeState = BiomeState.FromPlayer(Player);
-
-            // Check for any biome changes
-            if (!currentBiomeState.Equals(previousBiomeState))
-            {
-                // Only call if we're entering a biome (not leaving)
-                if (currentBiomeState.ZoneBeach && !previousBiomeState.ZoneBeach ||
-                    currentBiomeState.ZoneDungeon && !previousBiomeState.ZoneDungeon ||
-                    currentBiomeState.ZoneCorrupt && !previousBiomeState.ZoneCorrupt ||
-                    currentBiomeState.ZoneCrimson && !previousBiomeState.ZoneCrimson ||
-                    currentBiomeState.ZoneDesert && !previousBiomeState.ZoneDesert ||
-                    currentBiomeState.ZoneGlowshroom && !previousBiomeState.ZoneGlowshroom ||
-                    currentBiomeState.ZoneHallow && !previousBiomeState.ZoneHallow ||
-                    currentBiomeState.ZoneJungle && !previousBiomeState.ZoneJungle ||
-                    currentBiomeState.ZoneMeteor && !previousBiomeState.ZoneMeteor ||
-                    currentBiomeState.ZoneSnow && !previousBiomeState.ZoneSnow ||
-                    currentBiomeState.ZoneUndergroundDesert && !previousBiomeState.ZoneUndergroundDesert ||
-                    currentBiomeState.ZoneRain && !previousBiomeState.ZoneRain ||
-                    currentBiomeState.ZoneSandstorm && !previousBiomeState.ZoneSandstorm ||
-                    currentBiomeState.ZoneOldOneArmy && !previousBiomeState.ZoneOldOneArmy ||
-                    currentBiomeState.ZonePeaceCandle && !previousBiomeState.ZonePeaceCandle ||
-                    currentBiomeState.ZoneWaterCandle && !previousBiomeState.ZoneWaterCandle)
-                {
-                    MissionHandlerManager.Instance.OnBiomeEnter(Player, currentBiomeState);
-                }
-            }
-
-            previousBiomeState = currentBiomeState;
         }
 
         public override void ResetEffects()

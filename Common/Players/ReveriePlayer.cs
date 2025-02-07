@@ -12,6 +12,7 @@ using Terraria.ModLoader.IO;
 using Reverie.Content.Dusts;
 using static Reverie.Reverie;
 using Reverie.Core.Graphics;
+using Terraria.DataStructures;
 
 namespace Reverie.Common.Players
 {
@@ -46,11 +47,19 @@ namespace Reverie.Common.Players
             {
                 DrawSand();
             }
+            if (!Cutscene.IsPlayerVisible)
+            {
+                Player.AddBuff(BuffID.Invisibility, 1, true);
+            }
+            if (Cutscene.NoFallDamage)
+            {
+                Player.noFallDmg = true;
+            }
         }
 
         public override void SetControls()
         {
-            if (CutsceneSystem.DisableMoment)
+            if (Cutscene.DisableMoment)
             {
                 Player.controlLeft = false;
                 Player.controlRight = false;

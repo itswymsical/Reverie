@@ -116,19 +116,12 @@ namespace Reverie.Core.Missions
                     // Notify MissionPlayer of the update
                     var player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
                     player.NotifyMissionUpdate(this);
-                    float progressRatio = (float)obj.CurrentCount / obj.RequiredCount;
-                    float pitch = -1.1f + progressRatio;
-
-                    SoundEngine.PlaySound(new SoundStyle($"{Assets.SFX.Mission}ObjectiveComplete") with
-                    {
-                        Pitch = pitch,
-                        Volume = 0.75f
-                    }, Main.LocalPlayer.position);
 
                     if (wasCompleted && amount > 0)
                     {
                         OnObjectiveComplete(objectiveIndex);
                         MissionHandlerManager.Instance.OnObjectiveComplete(this, objectiveIndex);
+                        SoundEngine.PlaySound(new SoundStyle($"{Assets.SFX.Mission}ObjectiveComplete") with{ Volume = 0.75f }, Main.LocalPlayer.position);
                     }
 
                     if (currentSet.IsCompleted)

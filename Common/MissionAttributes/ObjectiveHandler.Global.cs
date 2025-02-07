@@ -11,7 +11,6 @@ using Terraria.DataStructures;
 using Reverie.Common.Players;
 using Reverie.Common.Systems.Subworlds.Archaea;
 using Reverie.Common.Extensions;
-using Reverie.Common.MissionAttributes;
 using Reverie.Content.Archaea.NPCs.Surface;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
@@ -19,8 +18,9 @@ using Reverie.Core.Missions;
 using SubworldLibrary;
 using static Reverie.Common.Players.MissionPlayer;
 using Reverie.Common.UI;
+using System.Linq;
 
-namespace Reverie.Common.MissionEventTrackers
+namespace Reverie.Common.MissionAttributes
 {
     public class ObjectiveHandlerItem : GlobalItem
     {
@@ -35,13 +35,33 @@ namespace Reverie.Common.MissionEventTrackers
             MissionHandlerManager.Instance.OnItemPickup(item);
             return base.OnPickup(item, player);
         }
+        public override void UpdateInventory(Item item, Player player)
+        {
+            var missionPlayer = player.GetModPlayer<MissionPlayer>();
+
+            foreach (var mission in missionPlayer.GetActiveMissions())
+            {
+                // Get current objective set
+                var currentSet = mission.ObjectiveSets[mission.CurrentSetIndex];
+
+                // Check if this is a new set (either just started or moved to next set)
+                if (item.stack > 0 && !currentSet.IsCompleted && !currentSet.HasCheckedInitialInventory)
+                {
+                    MissionHandlerManager.Instance.OnItemPickup(item);
+
+                    // Mark that we've checked this set's initial inventory
+                    currentSet.HasCheckedInitialInventory = true;
+                }
+            }
+            base.UpdateInventory(item, player);
+        }
     }
 
     public class ObjectiveHandlerNPC : GlobalNPC
     {
         public override bool InstancePerEntity => true;
 
-        public Texture2D missionAvailableTexture = 
+        public Texture2D missionAvailableTexture =
             ModContent.Request<Texture2D>($"{Assets.UI.MissionUI}MissionObjectives").Value;
 
         public override bool? CanChat(NPC npc)
@@ -61,48 +81,72 @@ namespace Reverie.Common.MissionEventTrackers
 
             if (CrashLanding?.Progress == MissionProgress.Active)
             {
+                var rateWeakSlimes = 0.15f;
+                var rateStrongSlimes = 0.08f;
+                var rateRareSlimes = 0.01f;
                 var currentSet = CrashLanding.ObjectiveSets[CrashLanding.CurrentSetIndex];
                 if (!currentSet.IsCompleted && CrashLanding.CurrentSetIndex < 1)
                 {
                     pool.Clear();
                 }
-                if (CrashLanding.CurrentSetIndex == 2)
+                if (CrashLanding.CurrentSetIndex >= 2 && Main.LocalPlayer.ZoneOverworldHeight)
                 {
-                    pool.Add(NPCID.GreenSlime, 0.2f);
-                    pool.Add(NPCID.BlueSlime, 0.2f);
-                    pool.Add(NPCID.PurpleSlime, 0.1f);
+                    pool.Add(NPCID.GreenSlime, rateWeakSlimes);
+                    pool.Add(NPCID.BlueSlime, rateWeakSlimes);
+                    pool.Add(NPCID.PurpleSlime, rateStrongSlimes);
+                    pool.Add(NPCID.RedSlime, rateRareSlimes);
+                    pool.Add(NPCID.YellowSlime, rateRareSlimes);
+                    pool.Add(NPCID.Pinky, rateRareSlimes);
+                    pool.Add(NPCID.MotherSlime, rateRareSlimes);
                 }
-                else if (CrashLanding.CurrentSetIndex == 5)
+                else if (CrashLanding.CurrentSetIndex >= 5 && Main.LocalPlayer.ZoneOverworldHeight)
                 {
-                    pool.Add(NPCID.GreenSlime, 0.27f);
-                    pool.Add(NPCID.BlueSlime, 0.27f);
-                    pool.Add(NPCID.YellowSlime, 0.21f);
-                    pool.Add(NPCID.PurpleSlime, 0.13f);
-                    pool.Add(NPCID.RedSlime, 0.11f);
-                    pool.Add(NPCID.YellowSlime, 0.11f);
-                    pool.Add(NPCID.Pinky, 0.03f);
+                   rateWeakSlimes = 0.17f;
+                   rateStrongSlimes = 0.1f;
+                   rateRareSlimes = 0.07f;
                 }
-                else if (CrashLanding.CurrentSetIndex == 7)
+                else if (CrashLanding.CurrentSetIndex >= 7 && Main.LocalPlayer.ZoneOverworldHeight)
                 {
-                    pool.Add(NPCID.GreenSlime, 0.27f);
-                    pool.Add(NPCID.BlueSlime, 0.27f);
-                    pool.Add(NPCID.YellowSlime, 0.24f);
-                    pool.Add(NPCID.PurpleSlime, 0.19f);
-                    pool.Add(NPCID.RedSlime, 0.17f);
-                    pool.Add(NPCID.YellowSlime, 0.17f);
-                    pool.Add(NPCID.Pinky, 0.07f);
+                    rateWeakSlimes = 0.2f;
+                    rateStrongSlimes = 0.14f;
+                    rateRareSlimes = 0.1f;
                 }
             }
 
             if (SubworldSystem.IsActive<ArchaeaSubworld>())
             {
                 pool.Clear();
-                pool.Add(ModContent.NPCType<Scarab>(), 0.7f);
+                pool.Add(ModContent.NPCType<Scarab>(), 0.3f);
             }
             else
                 base.EditSpawnPool(pool, spawnInfo);
         }
-
+        public override void EditSpawnRate(Player player, ref int spawnRate, ref int maxSpawns)
+        {
+            MissionPlayer mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+            Mission CrashLanding = mPlayer.GetMission(MissionID.CrashLanding);
+            if (CrashLanding?.Progress == MissionProgress.Active && player.ZoneOverworldHeight)
+            {
+                var currentSet = CrashLanding.ObjectiveSets[CrashLanding.CurrentSetIndex];
+                if (CrashLanding.CurrentSetIndex >= 5)
+                {
+                    spawnRate = 14;
+                    maxSpawns = 16;
+                }
+                else if (CrashLanding.CurrentSetIndex >= 7)
+                {
+                    spawnRate = 22;
+                    maxSpawns = 22;
+                }
+                else if (CrashLanding.CurrentSetIndex >= 9)
+                {
+                    spawnRate = 25;
+                    maxSpawns = 29;
+                }
+            }
+            else
+                base.EditSpawnRate(player, ref spawnRate, ref maxSpawns);
+        }
         public override void AI(NPC npc)
         {
             base.AI(npc);
@@ -114,7 +158,7 @@ namespace Reverie.Common.MissionEventTrackers
         {
             base.OnKill(npc);
             if (!npc.immortal)
-                MissionHandlerManager.Instance.OnNPCKill(npc);   
+                MissionHandlerManager.Instance.OnNPCKill(npc);
         }
 
         public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)

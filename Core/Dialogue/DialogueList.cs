@@ -20,12 +20,21 @@ namespace Reverie.Core.Dialogue
                 modifications: [
                     (line: 1, delay: 1, emote: 0),
                 ]),
-
-                [DialogueID.CrashLanding_SettlingIn] = DialogueBuilder.Build("CrashLanding", "SettlingIn", 4),
-
+                [DialogueID.CrashLanding_Cutscene] = DialogueBuilder.Build("CrashLanding", "Cutscene", 1,
+                modifications: [
+                    (line: 1, delay: 1, emote: 0),
+                ]),
+                [DialogueID.CrashLanding_SettlingIn] = DialogueBuilder.Build("CrashLanding", "SettlingIn", 5),
                 [DialogueID.CrashLanding_GatheringResources] = DialogueBuilder.Build("CrashLanding", "GatheringResources", 2),
                 [DialogueID.CrashLanding_FixHouse] = DialogueBuilder.Build("CrashLanding", "FixHouse", 5),
-                [DialogueID.CrashLanding_Crafting] = DialogueBuilder.Build("CrashLanding", "Crafting", 2),
+                [DialogueID.CrashLanding_WildlifeWoes] = DialogueBuilder.Build("CrashLanding", "WildlifeWoes", 3),
+                [DialogueID.CrashLanding_SlimeInfestation] = DialogueBuilder.Build("CrashLanding", "SlimeInfestation", 2),
+                [DialogueID.CrashLanding_SlimeInfestation_Commentary] = DialogueBuilder.Build("CrashLanding", "SlimeInfestation_Commentary", 1),
+                [DialogueID.CrashLanding_SlimeRain] = DialogueBuilder.Build("CrashLanding", "SlimeRain", 2),
+                [DialogueID.CrashLanding_SlimeRain_Commentary] = DialogueBuilder.Build("CrashLanding", "SlimeRain_Commentary", 2),
+
+                [DialogueID.CrashLanding_KS_Encounter] = DialogueBuilder.Build("CrashLanding", "KS_Encounter", 3),
+                [DialogueID.CrashLanding_KS_Victory] = DialogueBuilder.Build("CrashLanding", "KS_Victory", 4),
             };
         }
 

@@ -3,7 +3,7 @@ using System;
 using Terraria;
 using Terraria.Graphics.CameraModifiers;
 
-namespace Reverie.Core.Abstraction
+namespace Reverie.Common.Systems.Camera
 {
     internal class MoveModifier : ICameraModifier
     {

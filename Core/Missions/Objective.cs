@@ -136,6 +136,7 @@ namespace Reverie.Core.Missions
     {
         public List<Objective> Objectives { get; } = objectives;
         public bool IsCompleted => Objectives.All(o => o.IsCompleted);
+        public bool HasCheckedInitialInventory { get; set; } = false;
 
         public void Reset()
         {
@@ -144,10 +145,12 @@ namespace Reverie.Core.Missions
                 objective.IsCompleted = false;
                 objective.CurrentCount = 0;
             }
+            HasCheckedInitialInventory = false;
         }
         public void WriteData(BinaryWriter writer)
         {
             writer.Write(Objectives.Count);
+            writer.Write(HasCheckedInitialInventory);
             foreach (var objective in Objectives)
             {
                 objective.WriteData(writer);
@@ -157,6 +160,7 @@ namespace Reverie.Core.Missions
         public void ReadData(BinaryReader reader)
         {
             int count = reader.ReadInt32();
+            HasCheckedInitialInventory = reader.ReadBoolean();
             Objectives.Clear();
             for (int i = 0; i < count; i++)
             {

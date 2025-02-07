@@ -19,19 +19,19 @@ namespace Reverie.Core.Missions
 
                 {MissionID.CrashLanding, () => new Mission(
                     MissionID.CrashLanding,
-                    "Crash Landing [pt.1]",
+                    "Falling Star",
                     "Awakened from death by the power of Reverie, you must prepare for the coming darkness.",
                     [
                         [("Talk to Laine", 1)],
-                        [("Collect Stone", 25), ("Collect Wood", 50), ("Collect Herbs", 8)],
-                        [("Give Laine resources", 1), ("Build a House", 1)],
-                        [("Obtain a Helmet", 1), ("Obtain a Chestplate", 1), ("Obtain Greaves", 1), ("Obtain better weapon", 1)],
-                        [("Investigate the forest", 1)],
-                        [("Clear slimes", 10)],
+                        [("Collect Stone", 25), ("Collect Wood", 50), ("Collect Potions", 8)],
+                        [("Give Laine resources", 1)],
+                        [("Obtain a Helmet", 1), ("Obtain a Chestplate", 1), ("Obtain Greaves", 1), ("Obtain Better Weapon", 1)],
+                        [("Clear Slimes", 6)],
                         [("Explore the Underground", 1), ("Find Loot", 15)],
-                        [("Clear slimes again", 20)],     
-                        [("Find more Loot", 15)],
+                        [("Clear Slimes again", 20)],     
+                        [("Find More Loot", 15)],
                         [("Return to Laine", 1)],
+                        [("Clear Slime Infestation", 50)],
                         [("Defeat the King Slime", 1)]
                     ],
 

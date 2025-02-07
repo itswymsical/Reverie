@@ -1,9 +1,10 @@
-﻿using Reverie.Core.Missions;
+﻿using Reverie.Common.Extensions;
+using Reverie.Core.Missions;
 using System;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
-using static Reverie.Common.Players.MissionPlayer;
+
 
 namespace Reverie.Common.MissionAttributes
 {
@@ -37,6 +38,22 @@ namespace Reverie.Common.MissionAttributes
 
         protected virtual void HandleObjectiveComplete(int objectiveIndex) { }
 
+        public virtual void OnHouseCheck(int i, int j)
+        {
+            lock (handlerLock)
+            {
+                try
+                {
+                    HandleHouseCheck(i, j);
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnHouseCheck for mission {Mission.Name}: {ex.Message}");
+                }
+            }
+        }
+
+        protected virtual void HandleHouseCheck(int i, int j) { }
         public virtual void OnItemPickup(Item item)
         {
             lock (handlerLock)
@@ -157,13 +174,13 @@ namespace Reverie.Common.MissionAttributes
 
         protected virtual void HandleNPCHit(NPC npc, int damage) { }
 
-        public virtual void OnBiomeEnter(Player player, BiomeState biomeState)
+        public virtual void OnBiomeEnter(Player player, BiomeType biome)
         {
             lock (handlerLock)
             {
                 try
                 {
-                    HandleBiomeEnter(player, biomeState);
+                    HandleBiomeEnter(player, biome);
                 }
                 catch (Exception ex)
                 {
@@ -172,7 +189,7 @@ namespace Reverie.Common.MissionAttributes
             }
         }
 
-        protected virtual void HandleBiomeEnter(Player player, BiomeState biomeState) { }
+        protected virtual void HandleBiomeEnter(Player player, BiomeType biome) { }
 
 
         #endregion

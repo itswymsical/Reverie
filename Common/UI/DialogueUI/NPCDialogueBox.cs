@@ -26,7 +26,7 @@ namespace Reverie.Common.UI
         private float animationProgress;
 
         private int autoRemoveTimer;
-        private const int AutoRemoveDelay = 270; // read quick mf
+        private const int AutoRemoveDelay = 200; // read quick mf
 
         private bool isLastDialogue;
         private Vector2 targetPosition;
@@ -120,7 +120,9 @@ namespace Reverie.Common.UI
             }
             else
             {
+                isRemoved = true;
                 isLastDialogue = true;
+                animationProgress = 0f;
             }
         }
 
@@ -290,7 +292,7 @@ namespace Reverie.Common.UI
             {
                 NextEntry();
             }
-            else
+            else //todo: fix last entry remaining indefinitely
             {
                 isRemoved = true;
                 isLastDialogue = true;

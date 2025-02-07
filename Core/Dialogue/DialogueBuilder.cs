@@ -66,13 +66,12 @@ namespace Reverie.Core.Dialogue
     }
     public enum DialogueID
     {
+        CrashLanding_Cutscene,
         CrashLanding_Intro,
         CrashLanding_SettlingIn,
         CrashLanding_GatheringResources,
         CrashLanding_FixHouse,
-        CrashLanding_Crafting,
         CrashLanding_WildlifeWoes,
-        CrashLanding_Investigation,
         CrashLanding_SlimeInfestation,
         CrashLanding_SlimeInfestation_Commentary,
         CrashLanding_SlimeRain,

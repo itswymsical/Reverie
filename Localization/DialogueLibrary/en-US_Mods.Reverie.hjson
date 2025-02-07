@@ -1,17 +1,19 @@
 DialogueLibrary: {
 	CrashLanding: {
-		Intro.Line1: What the HELL?!?!
+		Intro.Line1: What the H*#@?!?!
+		Cutscene.Line1: Hmm? What's that?
 
 		SettlingIn: {
 			Line1: Are you alright? That was quite the entrance.
-			Line2: I'm Laine, and it seems fate has brought you to my doorstep.
-			Line3: Let's get you settled in. I could use some help repairing the damage from your, uh...
-			Line4: ...arrival.
+			Line2: Is crashing and exploding on people's property a custom where you come from?
+			Line3: I'm Laine. Nice to meet you.
+			Line4: Let's get settled in. I could use some help repairing the damage from your, uh...
+			Line5: ...arrival.
 		}
 
 		GatheringResources: {
-			Line1: While you're out there, could you gather some wood, stone, and herbs?
-			Line2: I need to patch up the house, and those herbs might come in handy later.
+			Line1: While you're out there, could you gather some wood, stone, and potions?
+			Line2: I need to patch up the house, and those potions might come in handy later.
 		}
 
 		FixHouse: {
@@ -22,19 +24,10 @@ DialogueLibrary: {
 			Line5: That'll serve as our base of operations for now.
 		}
 
-		Crafting: {
-			Line1: Use the workbench to craft a set of wooden or iron armor.
-			Line2: And don't forget a reliable weapon. A sword or a bow should do the trick.
-		}
-
 		WildlifeWoes: {
-			Line1: Something's not right. The wildlife has been unusually aggressive lately.
-			Line2: I suspect something has disrupted the local ecosystem.
-		}
-
-		Investigation: {
-			Line1: Could you investigate the surrounding forest?
-			Line2: Find out what's causing the creatures to behave so erratically.
+			Line1: We've got a lot of slimes prancing about lately.
+			Line2: Nothing to worry about, they're pretty easy to handle.
+			Line3: Clear them out, and we'll be able to explore the area more safely.
 		}
 
 		SlimeInfestation: {

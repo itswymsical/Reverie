@@ -1,12 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
-using Reverie.Core.Abstraction;
-using Reverie.Core.Systems.CameraSystem;
 using System;
 using Terraria;
 using Terraria.Graphics.CameraModifiers;
 using Terraria.ModLoader;
 
-namespace Reverie.Core.Mechanics
+namespace Reverie.Common.Systems.Camera
 {
     public class CameraSystem : ModSystem
     {
@@ -105,7 +103,7 @@ namespace Reverie.Core.Mechanics
                 Main.instance.CameraModifiers.Add(MoveModifier);
 
             float mult = 1f;
-            Main.instance.CameraModifiers.Add(new PunchCameraModifier(Main.LocalPlayer.position, Main.rand.NextFloat(3.14f).ToRotationVector2(), shake * mult, 15f, 30, 2000, "Starlight Shake"));
+            Main.instance.CameraModifiers.Add(new PunchCameraModifier(Main.LocalPlayer.position, Main.rand.NextFloat(3.14f).ToRotationVector2(), shake * mult, 15f, 30, 2000, "Shake"));
 
             if (shake > 0)
                 shake--;

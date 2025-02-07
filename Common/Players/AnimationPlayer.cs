@@ -4,7 +4,6 @@ using System;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
-using static Terraria.Player;
 
 namespace Reverie.Common.Players
 {
@@ -79,18 +78,18 @@ namespace Reverie.Common.Players
         {
             if (!drawInfo.drawPlayer.IsUsingItem())
             {
-                
+
                 if (drawInfo.drawPlayer.HeldItem.IsWeapon())
                 {
                     drawInfo.drawPlayer.DrawItemBehindPlayer(ref drawInfo);
                 }
             }
-             
+
 
             if (drawInfo.drawPlayer.IsJumping() && !drawInfo.drawPlayer.IsUsingItem())
                 drawInfo.drawPlayer.bodyFrame.Y = 0 * 56;
             if (Player.IsGrappling())
-                drawInfo.drawPlayer.GrappleAnimation(ref drawInfo);         
+                drawInfo.drawPlayer.GrappleAnimation(ref drawInfo);
 
             if (!Main.gameMenu && !Player.sleeping.isSleeping)
             {
@@ -168,8 +167,8 @@ namespace Reverie.Common.Players
             drawInfo.drawPlayer.bodyRotation = rotVelX;
             drawInfo.drawPlayer.legRotation = rotVelX * 0.75f;
             drawInfo.hidesBottomSkin = true;
-            
-            drawInfo.drawPlayer.legPosition = new Vector2(drawInfo.drawPlayer.legPosition.X - offset, -0.65f);      
+
+            drawInfo.drawPlayer.legPosition = new Vector2(drawInfo.drawPlayer.legPosition.X - offset, -0.65f);
         }
     }
 }

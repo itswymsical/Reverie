@@ -276,6 +276,7 @@ Projectiles: {
 	WardensArmProj.DisplayName: Warden's Arm
 	AlluvialBoulderProj.DisplayName: Alluvial Boulder
 	BoulderBludgeonProj.DisplayName: Boulder Bludgeon
+	ExplosiveLanding.DisplayName: Explosive Landing
 }
 
 UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker

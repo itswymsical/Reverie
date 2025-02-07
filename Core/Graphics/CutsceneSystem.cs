@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Reverie.Core.Graphics
 {
-    public abstract class CutsceneSystem
+    public abstract class Cutscene
     {
         protected bool IsPlaying { get; set; }
         protected bool IsUIHidden { get; set; }
@@ -19,8 +19,8 @@ namespace Reverie.Core.Graphics
         public Color FadeColor { get; set; }
 
         public static bool DisableMoment { get; set; }
-        protected bool IsPlayerMovementDisabled { get; private set; }
-        protected bool IsPlayerVisible { get; private set; }
+        public static bool NoFallDamage { get; set; }
+        public static bool IsPlayerVisible { get; set; } = true;
 
 
         private int? _currentMusicID = null;
@@ -31,7 +31,6 @@ namespace Reverie.Core.Graphics
             try
             {
                 IsPlaying = true;
-                IsPlayerVisible = true;
                 IsUIHidden = false;
                 Letterbox.Show();
                 SetMusic(_currentMusicID);
@@ -102,14 +101,15 @@ namespace Reverie.Core.Graphics
             }
         }
 
-        protected void DisablePlayerMovement()
-        {
-            DisableMoment = true;
-        }
-        protected void EnablePlayerMovement()
-        {
-            DisableMoment = false;
-        }
+        protected static void DisableFallDamage() => NoFallDamage = true;
+        protected static void EnableFallDamage() => NoFallDamage = false;
+
+        protected static void DisableInvisibility() => IsPlayerVisible = true;
+        protected static void EnableInvisibility() => IsPlayerVisible = false;
+
+        protected static void DisablePlayerMovement() => DisableMoment = true; 
+        protected static void EnablePlayerMovement() => DisableMoment = false;
+        
 
         protected void DrawFade(SpriteBatch spriteBatch)
         {
@@ -130,7 +130,7 @@ namespace Reverie.Core.Graphics
     }
     public class CutsceneLoader : ModSystem
     {
-        public static CutsceneSystem CurrentCutscene { get; private set; }
+        public static Cutscene CurrentCutscene { get; private set; }
 
         private static readonly string[] UILayersToHide =
         [
@@ -230,7 +230,7 @@ namespace Reverie.Core.Graphics
         /// Starts playing a new cutscene.
         /// </summary>
         /// <param name="cutscene">The cutscene to play.</param>
-        public static void PlayCutscene(CutsceneSystem cutscene)
+        public static void PlayCutscene(Cutscene cutscene)
         {
             try
             {

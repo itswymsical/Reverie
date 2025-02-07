@@ -6,7 +6,7 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.DataStructures;
 using Reverie.Core.Missions;
-using static Reverie.Common.Players.MissionPlayer;
+using Reverie.Common.Extensions;
 
 namespace Reverie.Common.MissionAttributes
 {
@@ -130,6 +130,24 @@ namespace Reverie.Common.MissionAttributes
             }
         }
 
+        public void OnHouseCheck(int i, int j)
+        {
+            lock (handlerLock)
+            {
+                try
+                {
+                    foreach (var handler in GetActiveHandlers())
+                    {
+                        handler.OnHouseCheck(i, j);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnHouseCheck: {ex.Message}");
+                }
+            }
+        }
+
         public void OnNPCKill(NPC npc)
         {
             lock (handlerLock)
@@ -223,7 +241,7 @@ namespace Reverie.Common.MissionAttributes
             }
         }
 
-        public void OnBiomeEnter(Player player, BiomeState biomeState)
+        public void OnBiomeEnter(Player player, BiomeType biome)
         {
             lock (handlerLock)
             {
@@ -231,7 +249,8 @@ namespace Reverie.Common.MissionAttributes
                 {
                     foreach (var handler in GetActiveHandlers())
                     {
-                        handler.OnBiomeEnter(player, biomeState);
+                        handler.OnBiomeEnter(player, biome);
+                        ModContent.GetInstance<Reverie>().Logger.Error($"OnBiomeEnter: {biome}");
                     }
                 }
                 catch (Exception ex)

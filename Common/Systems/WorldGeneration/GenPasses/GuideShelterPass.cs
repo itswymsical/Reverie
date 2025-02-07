@@ -15,7 +15,7 @@ namespace Reverie.Common.Systems.WorldGeneration.GenPasses
         private const int STRUCTURE_HEIGHT = 24;
         private const int SPAWN_OFFSET_X = -10;
         private const int SPAWN_OFFSET_Y = 22;
-        private const int GUIDE_OFFSET_X = 22;
+        private const int GUIDE_OFFSET_X = 24;
         private const int GUIDE_OFFSET_Y = 20;
         private const int SURFACE_CHECK_HEIGHT = 22; // How far up from worldSurface to check
 

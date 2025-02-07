@@ -16,7 +16,7 @@ namespace Reverie.Content.Terraria.Items.Lodestone
 {
     public class LodestoneMagnet : ModItem
     {
-        public override string Texture => "Terraria/Images/Item_" + ItemID.Minishark;
+        public override string Texture => Assets.Terraria.Items.Lodestone + Name;
         public override void SetDefaults()
         {
             Item.useTime = Item.useAnimation = 20;
@@ -61,7 +61,7 @@ namespace Reverie.Content.Terraria.Items.Lodestone
     }
     public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
     {
-        public override string Texture => "Terraria/Images/Item_" + ItemID.Minishark;
+        public override string Texture => Assets.Terraria.Projectiles.Lodestone + Name;
         private const float MagnetRange = 200f;
         private const float ItemVacuumRange = 300f;
         private const float ItemVacuumSpeed = 8f;
@@ -78,7 +78,8 @@ namespace Reverie.Content.Terraria.Items.Lodestone
         private readonly Vector2 Size = new(100, 50);
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 32;
+            Projectile.width = 26;
+            Projectile.height = 32;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.penetrate = -1;
@@ -97,7 +98,7 @@ namespace Reverie.Content.Terraria.Items.Lodestone
             }
 
             Vector2 aimDirection = Vector2.Normalize(Main.MouseWorld - owner.Center);
-            Projectile.Center = owner.Center + aimDirection * 50f;
+            Projectile.Center = owner.Center + aimDirection * 22f;
 
             if (Main.myPlayer == Projectile.owner)
             {
@@ -108,7 +109,6 @@ namespace Reverie.Content.Terraria.Items.Lodestone
             }
 
             owner.ChangeDir(Projectile.direction);
-            Projectile.spriteDirection = Projectile.direction;
 
             if (Projectile.owner == Main.myPlayer)
             {
@@ -239,35 +239,6 @@ namespace Reverie.Content.Terraria.Items.Lodestone
                         }
                     }
                 }
-            }
-        }
-  
-        private void DrawRaycastDust() //debugging thing for trail cache perimeter 
-        {
-            Vector2 start = Projectile.Center;
-            Vector2 end = Main.MouseWorld;
-            Vector2 direction = Vector2.Normalize(end - start);
-            float distance = Math.Min(Vector2.Distance(start, end), MagnetRange);
-
-            float leftAngle = direction.ToRotation() - ArcAngle / 2;
-            float rightAngle = direction.ToRotation() + ArcAngle / 2;
-
-            int dustCount = 20;
-            for (int i = 0; i <= dustCount; i++)
-            {
-                float progress = i / (float)dustCount;
-
-                // Left arc line
-                Vector2 leftDustPos = start + (leftAngle.ToRotationVector2() * distance * progress);
-                Dust leftDust = Dust.NewDustPerfect(leftDustPos, DustID.Electric, Vector2.Zero, 0, Color.Blue, 0.5f);
-                leftDust.noGravity = true;
-                leftDust.noLight = true;
-
-                // Right arc line
-                Vector2 rightDustPos = start + (rightAngle.ToRotationVector2() * distance * progress);
-                Dust rightDust = Dust.NewDustPerfect(rightDustPos, DustID.Electric, Vector2.Zero, 0, Color.Blue, 0.5f);
-                rightDust.noGravity = true;
-                rightDust.noLight = true;
             }
         }
 

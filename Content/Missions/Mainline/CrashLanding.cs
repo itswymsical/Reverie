@@ -6,28 +6,27 @@ using System.Collections.Generic;
 using Reverie.Core.Dialogue;
 using Reverie.Common.MissionAttributes;
 using Reverie.Common;
+using Reverie.Common.Extensions;
+using Reverie.Core.Missions;
 
-
-namespace Reverie.Core.Missions.Mainline
+namespace Reverie.Content.Missions.Mainline
 {
     [MissionHandler(MissionID.CrashLanding)]
     public class CrashLanding : MissionObjectiveHandler
     {
+        public CrashLanding(Mission mission) : base(mission) 
+            => Reverie.Instance.Logger.Info("[Crash Landing] Mission handler constructed");
+        
         private readonly List<Item> starterItems =
-        [ 
+        [
             new Item(ItemID.CopperShortsword),
             new Item(ItemID.CopperPickaxe),
             new Item(ItemID.CopperAxe)
         ];
 
-        public CrashLanding(Mission mission) : base(mission)
-        {
-            Reverie.Instance.Logger.Info("CrashLanding Handler constructed");
-        }
-
         public override void OnObjectiveComplete(int objectiveIndex)
         {
-            
+
             lock (handlerLock)
             {
                 try
@@ -42,7 +41,28 @@ namespace Reverie.Core.Missions.Mainline
                         case 2:
                             DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_FixHouse, true);
                             break;
-
+                        case 3:
+                            if (Mission.ObjectiveSets[Mission.CurrentSetIndex].Objectives[3].IsCompleted)
+                            {
+                                DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_WildlifeWoes, true);
+                            }
+                            break;
+                        case 4:
+                            DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation, true);
+                            break;
+                        case 5:
+                            DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation_Commentary, false);
+                            break;
+                        case 7:
+                            Main.StartSlimeRain(true);
+                            DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeRain);
+                            break;
+                        case 9:
+                            DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_KS_Encounter, true);
+                            break;
+                        case 10:
+                            DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_KS_Victory, true);
+                            break;
                         default:
                             break;
                     }
@@ -62,6 +82,10 @@ namespace Reverie.Core.Missions.Mainline
                 {
                     switch (Mission.CurrentSetIndex)
                     {
+                        case 1:
+                            if (item.buffTime > 0 || item.potion || item.useStyle is ItemUseStyleID.DrinkLiquid)
+                                Mission.UpdateProgress(2, item.stack);
+                            break;
                         case 3:
                             if (item.headSlot != -1 && !item.vanity)
                                 Mission.UpdateProgress(0, item.stack);
@@ -101,9 +125,7 @@ namespace Reverie.Core.Missions.Mainline
                             if (item.type == ItemID.Wood)
                                 Mission.UpdateProgress(1, item.stack);
 
-                            if (item.type is ItemID.Daybloom or ItemID.Blinkroot 
-                                or ItemID.Deathweed or ItemID.Moonglow 
-                                or ItemID.Fireblossom or ItemID.Shiverthorn or ItemID.Waterleaf)
+                            if (item.buffTime > 0 || item.potion || item.useStyle is ItemUseStyleID.DrinkLiquid)
                                 Mission.UpdateProgress(2, item.stack);
                             break;
                         case 3:
@@ -115,6 +137,18 @@ namespace Reverie.Core.Missions.Mainline
 
                             if (item.legSlot != -1 && !item.vanity)
                                 Mission.UpdateProgress(2, item.stack);
+                            break;
+                        case 5:
+                            if (item.value >= Item.sellPrice(silver: 2) || item.accessory || item.rare >= ItemRarityID.Blue)
+                                Mission.UpdateProgress(1, 1);
+                            if (Mission.ObjectiveSets[Mission.CurrentSetIndex].Objectives[1].CurrentCount == 10)
+                            {
+                                DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation);
+                            }
+                            break;
+                        case 7:
+                            if (item.value >= Item.sellPrice(silver: 2) || item.accessory || item.rare >= ItemRarityID.Blue)
+                                Mission.UpdateProgress(0, 1);
                             break;
                         default:
                             break;
@@ -133,11 +167,59 @@ namespace Reverie.Core.Missions.Mainline
             {
                 try
                 {
-
+                    switch (Mission.CurrentSetIndex)
+                    {
+                        case 4:
+                            if (npc.type == NPCAIStyleID.Slime)
+                                Mission.UpdateProgress(0);
+                            break;
+                        case 6:
+                            if (npc.type == NPCAIStyleID.Slime)
+                                Mission.UpdateProgress(0);
+                            break;
+                        case 9:
+                            if (npc.type == NPCAIStyleID.Slime)
+                                Mission.UpdateProgress(0);
+                            if (Mission.ObjectiveSets[Mission.CurrentSetIndex].Objectives[0].CurrentCount == 20)
+                                DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeRain_Commentary, false);
+                            break;
+                        case 10:
+                            if (npc.type == NPCID.KingSlime)
+                                Mission.UpdateProgress(0);
+                            break;
+                        default:
+                            break;
+                    }
                 }
                 catch (Exception ex)
                 {
                     Reverie.Instance.Logger.Error($"Error in OnNPCKill: {ex.Message}");
+                }
+            }
+        }
+        public override void OnBiomeEnter(Player player, BiomeType biome)
+        {
+            lock (handlerLock)
+            {
+                try
+                {
+                    switch (Mission.CurrentSetIndex)
+                    {
+                        case 5:
+                            if (biome == BiomeType.Underground)
+                                Mission.UpdateProgress(0);
+                            break;
+                        case 8:
+                            if (biome == BiomeType.Forest)
+                                Mission.UpdateProgress(0);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Reverie.Instance.Logger.Error($"Error in OnNPCChat: {ex.Message}");
                 }
             }
         }
@@ -159,7 +241,7 @@ namespace Reverie.Core.Missions.Mainline
                             break;
                         default:
                             break;
-                    }            
+                    }
                 }
                 catch (Exception ex)
                 {

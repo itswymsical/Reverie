@@ -5,7 +5,6 @@ using System;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
-using Reverie.Core.Mechanics;
 using System.Collections.Generic;
 
 namespace Reverie.Helpers
