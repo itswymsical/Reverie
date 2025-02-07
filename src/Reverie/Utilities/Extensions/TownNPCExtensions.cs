@@ -1,5 +1,6 @@
 ﻿
 namespace Reverie.Utilities.Extensions;
+
 /// <summary>
 ///     Provides <see cref="NPC"/> extension methods, specifically for Town NPCs.
 /// </summary>
