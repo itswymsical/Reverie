@@ -9,45 +9,53 @@ using ReLogic.Content.Sources;
 
 namespace Reverie.Core.IO.Sources;
 
+
 public sealed class RedirectContentSource(IContentSource source) : IContentSource
 {
-    private readonly Dictionary<string, string> redirects = [];
+    private readonly IContentSource _source = source;
+    private readonly Dictionary<string, string> _redirects = [];
 
-    IContentValidator IContentSource.ContentValidator
+    public IContentValidator ContentValidator
     {
-        get => source.ContentValidator;
-        set => source.ContentValidator = value;
+        get => _source.ContentValidator;
+        set => _source.ContentValidator = value;
     }
 
-    RejectedAssetCollection IContentSource.Rejections => source.Rejections;
+    public RejectedAssetCollection Rejections => _source.Rejections;
 
-    IEnumerable<string> IContentSource.EnumerateAssets()
+    public IEnumerable<string> EnumerateAssets()
     {
-        return source.EnumerateAssets().Select(RewritePath);
+        return _source.EnumerateAssets().Select(RewritePath);
     }
 
-    string IContentSource.GetExtension(string assetName)
+    public string GetExtension(string assetName)
     {
-        return source.GetExtension(RewritePath(assetName));
+        return _source.GetExtension(RewritePath(assetName));
     }
 
-    Stream IContentSource.OpenStream(string fullAssetName)
+    public Stream OpenStream(string fullAssetName)
     {
-        return source.OpenStream(RewritePath(fullAssetName));
+        return _source.OpenStream(RewritePath(fullAssetName));
     }
 
     public void AddRedirect(string from, string to)
     {
-        redirects.Add(from, to);
+        _redirects[from] = to;  // Use indexer to allow overwriting
     }
 
     private string RewritePath(string path)
     {
-        foreach (var (from, to) in redirects)
+        // Normalize path separators
+        path = path.Replace('\\', '/');
+
+        foreach (var (from, to) in _redirects)
         {
-            if (path.StartsWith(from))
+            if (path.StartsWith(from, StringComparison.OrdinalIgnoreCase))
             {
-                return path.Replace(from, to);
+                // Use Path.Combine for proper path joining
+                var relativePath = path[from.Length..];
+                if (relativePath.StartsWith('/')) relativePath = relativePath[1..];
+                return to + '/' + relativePath;
             }
         }
 

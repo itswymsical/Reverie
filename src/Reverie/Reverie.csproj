@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="..\..\targets\Mod.Build.targets"/>
+    <Import Project="..\..\targets\Mod.Build.targets" />
 
     <PropertyGroup>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -20,7 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Content\Items\Sylvanwalde\" />
+      <Folder Include="Content\Items\" />
     </ItemGroup>
 
 </Project>

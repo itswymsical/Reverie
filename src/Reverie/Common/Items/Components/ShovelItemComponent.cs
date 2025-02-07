@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Reverie.Content.Items.Shovels;
 using Reverie.Core.Items.Components;
 using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
@@ -10,9 +9,7 @@ namespace Reverie.Common.Items.Components;
 public sealed class ShovelItemComponent : ItemComponent
 {
     public const string TOOLTIP_NAME = $"{nameof(Reverie)}:ShovelInfo";
-    
-    public const string SMART_CURSOR_TOOLTIP_NAME = $"{nameof(Reverie)}:ShovelInfo_SmartCursor";
-    
+    public const string TOOLTIP_POWER = $"{nameof(Reverie)}:ShovelPower";
     /// <summary>
     ///     Gets or sets the prefixes that can be applied to the shovel.
     /// </summary>
@@ -46,16 +43,6 @@ public sealed class ShovelItemComponent : ItemComponent
     ///     Gets or sets the shovel's power.
     /// </summary>
     public int Power { get; set; }
-
-    /// <summary>
-    ///     Gets or sets the width of the shovel's digging area.
-    /// </summary>
-    public int Width { get; set; } = 3;
-    
-    /// <summary>
-    ///     Gets or sets the height of the shovel's digging area.
-    /// </summary>
-    public int Height { get; set; } = 3;
     
     public override int ChoosePrefix(Item item, UnifiedRandom rand)
     {
@@ -72,30 +59,40 @@ public sealed class ShovelItemComponent : ItemComponent
         }
         
         // TODO: Localize.
-        var tooltip = new TooltipLine(Mod, TOOLTIP_NAME, "Stronger on soft tiles");
+        var tooltip = new TooltipLine(Mod, TOOLTIP_NAME, "'stronger on soft tiles'");
         
         tooltips.Add(tooltip);
-        
-        if (!Main.SmartCursorWanted)
+
+        // TODO: Localize.
+        var power = new TooltipLine(Mod, TOOLTIP_POWER, $"{Power}% digging power");
+
+        tooltips.Add(power);
+    }
+    public override void HoldItem(Item item, Player player)
+    {
+        base.HoldItem(item, player);
+
+        if (!Enabled)
         {
             return;
         }
-        
-        // TODO: Localize.
-        var smartTooltip = new TooltipLine(Mod, SMART_CURSOR_TOOLTIP_NAME, "Smart cursor disables craters");
-            
-        tooltips.Add(smartTooltip);
+
+        var distance = 16f * Range;
+
+        if (player.DistanceSQ(Main.MouseWorld) < distance * distance)
+        {
+
+            player.cursorItemIconEnabled = true;
+        }
     }
-    
     public override bool? UseItem(Item item, Player player)
     {
         var distance = 16f * Range;
 
         if (player.DistanceSQ(Main.MouseWorld) < distance * distance)
         {
-            var position = InputUtils.CursorPosition.ToTileCoordinates();
             
-            player.DigArea(position.X, position.Y, Width, Height, Power);
+            player.DigArea((int)Main.MouseWorld.X, (int)Main.MouseWorld.Y, Power);
         }
 
         return true;

@@ -1,0 +1,41 @@
+Items: {
+	CopperShovelItem: {
+		DisplayName: Copper Shovel Item
+		Tooltip: ""
+	}
+
+	GoldShovelItem: {
+		DisplayName: Gold Shovel Item
+		Tooltip: ""
+	}
+
+	IronShovelItem: {
+		DisplayName: Iron Shovel Item
+		Tooltip: ""
+	}
+
+	LeadShovelItem: {
+		DisplayName: Lead Shovel Item
+		Tooltip: ""
+	}
+
+	PlatinumShovelItem: {
+		DisplayName: Platinum Shovel Item
+		Tooltip: ""
+	}
+
+	SilverShovelItem: {
+		DisplayName: Silver Shovel Item
+		Tooltip: ""
+	}
+
+	TinShovelItem: {
+		DisplayName: Tin Shovel Item
+		Tooltip: ""
+	}
+
+	TungstenShovelItem: {
+		DisplayName: Tungsten Shovel Item
+		Tooltip: ""
+	}
+}
