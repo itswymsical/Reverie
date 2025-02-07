@@ -1,4 +1,4 @@
-using Terraria;
+﻿using Terraria;
 using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
@@ -15,7 +15,10 @@ public sealed partial class Reverie : Mod
     ///     The name of this mod.
     /// </summary>
     public const string NAME = nameof(Reverie);
-    
+    /// <summary>
+    ///     Directory for UI assets.
+    /// </summary>
+    public const string UI_ASSET_DIRECTORY = nameof(Reverie) + "/Assets/Textures/UI/";
     /// <summary>
     ///     The prefix to use for the name of this mod.
     /// </summary>

@@ -10,6 +10,19 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <None Remove="Assets\Textures\Items\AcornLauncher.png" />
+      <None Remove="Assets\Textures\Items\ArchiverChronicle.png" />
+      <None Remove="Assets\Textures\Items\SeedBag.png" />
+      <None Remove="Assets\Textures\Items\Snailflail.png" />
+      <None Remove="Assets\Textures\Items\StalactiteCannon.png" />
+      <None Remove="Assets\Textures\Items\Sylvanwalde\PeculiarTwig.png" />
+      <None Remove="Assets\Textures\Projectiles\Archaea\ShattertailShot.png" />
+      <None Remove="Assets\Textures\Projectiles\Archaea\Tumbleweed.png" />
+      <None Remove="Assets\Textures\Tiles\Fungore\FungoreTrophyTile.png" />
+      <None Remove="Assets\Textures\Tiles\LodestoneTile.png" />
+    </ItemGroup>
+
+    <ItemGroup>
         <Reference Include="StructureHelper">
             <HintPath>lib\StructureHelper.dll</HintPath>
         </Reference>
@@ -17,10 +30,6 @@
         <Reference Include="SubworldLibrary">
             <HintPath>lib\SubworldLibrary.dll</HintPath>
         </Reference>
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Content\Items\" />
     </ItemGroup>
 
 </Project>

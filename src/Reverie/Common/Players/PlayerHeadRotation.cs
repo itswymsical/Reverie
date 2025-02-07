@@ -7,7 +7,6 @@ using Terraria.DataStructures;
 
 namespace Reverie.Common.Players;
 
-
 /// <summary>
 /// Adapted from Terraria Overhaul, by Mirsario. Rotates the <see cref="Player"/> head by (<see cref="Main.MouseWorld"/> - <see cref="Player.Center"/>).
 /// </summary>
@@ -45,11 +44,9 @@ public class PlayerHeadRotation : ModPlayer
         }
         else
         {
-            // Get mouse position in world coordinates
             Vector2 lookPosition = Main.MouseWorld;
             Vector2 offset = lookPosition - Player.Center;
 
-            // Only rotate head if looking in the direction player is facing
             if (Math.Sign(offset.X) == Player.direction)
             {
                 targetHeadRotation = (offset * Player.direction).ToRotation() * LOOK_STRENGTH;
@@ -58,10 +55,16 @@ public class PlayerHeadRotation : ModPlayer
             {
                 targetHeadRotation = 0f;
             }
-        }
 
-        // Smoothly interpolate to target rotation
-        float lerpSpeed = 0.15f; // Adjust this value to change how quickly head rotates
+            //todo: make changes to vanilla direction changing.
+            if (lookPosition.X > Player.Center.X)
+                Player.direction = 1;
+            else
+                Player.direction = -1;
+            
+        }
+       
+        float lerpSpeed = 0.15f;
         headRotation = MathHelper.Lerp(headRotation, targetHeadRotation, lerpSpeed);
     }
 
