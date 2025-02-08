@@ -185,7 +185,7 @@ public class DialogueBox : IInGameNotification
         var panelRectangle = Utils.CenteredRectangle(panelPosition, panelSize);
 
         var isHovering = panelRectangle.Contains(Main.MouseScreen.ToPoint());
-        DrawUtilities.DrawPanel(spriteBatch, panelRectangle, currentSpeakingNPC.DialogueColor * (isHovering ? 0.75f : 0.5f) * Opacity);
+        DrawUtils.DrawPanel(spriteBatch, panelRectangle, currentSpeakingNPC.DialogueColor * (isHovering ? 0.75f : 0.5f) * Opacity);
 
         if (isHovering) OnMouseOver();
     }

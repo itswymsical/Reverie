@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Reverie.Utilities;
+using System.Collections.Generic;
 
 namespace Reverie.Content.Projectiles.Lodestone;
 
@@ -152,9 +153,9 @@ public class LodestoneMagnetProj : ModProjectile // todo: add primitive drawing
     //    }
     //}
 
-    private void MagnetizeTiles(Player owner)
+    private void MagnetizeTiles(Player owner) // quite whimsical \(~.~)/
     {
-        var start = Projectile.Center;
+        var start = Projectile.Center - new Vector2(Projectile.width, Projectile.height) / 2;
         var end = Main.MouseWorld;
         var direction = Vector2.Normalize(end - start);
         var distance = Math.Min(Vector2.Distance(start, end), MAGNET_RANGE);
@@ -170,11 +171,11 @@ public class LodestoneMagnetProj : ModProjectile // todo: add primitive drawing
                 var checkPos = start + arcDirection * i;
                 var tileX = (int)(checkPos.X / 16f);
                 var tileY = (int)(checkPos.Y / 16f);
-
-                if (Main.tile[tileX, tileY].HasTile && Main.tileSpelunker[Main.tile[tileX, tileY].TileType]
-                    || Main.tile[tileX, tileY].TileType == TileID.Hellstone)
+                Tile tile = Main.tile[tileX, tileY];
+                if (tile.HasTile && Main.tileSpelunker[tile.TileType] 
+                    && (tile.TileType is not 82 or 83 or 84) || tile.TileType is TileID.Hellstone)
                 {
-                    if (miningTimer % MINING_SPEED == 0)
+                    if (miningTimer % MINING_SPEED is 0)
                     {
                         BreakTile(tileX, tileY, owner);
                     }
@@ -208,7 +209,7 @@ public class LodestoneMagnetProj : ModProjectile // todo: add primitive drawing
     {
 
         player.PickTile(x, y, 10);
-        if (Main.netMode == NetmodeID.MultiplayerClient)
+        if (Main.netMode is NetmodeID.MultiplayerClient)
         {
             NetMessage.SendData(MessageID.TileManipulation, -1, -1, null, 0, x, y);
         }
@@ -221,7 +222,7 @@ public class LodestoneMagnetProj : ModProjectile // todo: add primitive drawing
         for (var i = 0; i < Main.maxItems; i++)
         {
             var item = Main.item[i];
-            if (item.active && item.noGrabDelay == 0 && item.type != ItemID.None)
+            if (item.active && item.noGrabDelay is 0 && item.type is not ItemID.None && ItemUtils.IsAMetalItem(item))
             {
                 var distance = Vector2.Distance(item.Center, Projectile.Center);
                 if (distance <= ITEM_VACUUM_RANGE)
@@ -230,7 +231,6 @@ public class LodestoneMagnetProj : ModProjectile // todo: add primitive drawing
                     var directionToMagnet = Vector2.Normalize(Projectile.Center - item.Center);
                     var speed = MathHelper.Lerp(ITEM_VACUUM_SPEED, 1f, distance / ITEM_VACUUM_RANGE);
                     item.velocity = directionToMagnet * speed;
-
                     // Counteract gravity
                     item.velocity.Y -= 0.2f;
 

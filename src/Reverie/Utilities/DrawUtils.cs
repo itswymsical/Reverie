@@ -20,7 +20,7 @@ using static Reverie.Reverie;
 
 namespace Reverie.Utilities;
 
-internal static class DrawUtilities
+internal static class DrawUtils
 {
     public static Vector2 GetMiddleBetween(this Vector2 start, Vector2 end) => (start + end) / 2;
 

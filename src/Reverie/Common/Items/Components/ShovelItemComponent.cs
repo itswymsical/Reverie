@@ -33,22 +33,22 @@ public sealed class ShovelItemComponent : ItemComponent
         PrefixID.Nimble,
         PrefixID.Dull
     ];
-    
+
     /// <summary>
     ///     Gets or sets the shovel's range, in tiles.
     /// </summary>
     public int Range { get; set; } = 5;
-    
+
     /// <summary>
     ///     Gets or sets the shovel's power.
     /// </summary>
     public int Power { get; set; }
-    
+
     public override int ChoosePrefix(Item item, UnifiedRandom rand)
     {
         return Enabled ? rand.Next(Prefixes) : base.ChoosePrefix(item, rand);
     }
-    
+
     public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
     {
         base.ModifyTooltips(item, tooltips);
@@ -57,10 +57,10 @@ public sealed class ShovelItemComponent : ItemComponent
         {
             return;
         }
-        
+
         // TODO: Localize.
         var tooltip = new TooltipLine(Mod, TOOLTIP_NAME, "'stronger on soft tiles'");
-        
+
         tooltips.Add(tooltip);
 
         // TODO: Localize.
@@ -87,14 +87,19 @@ public sealed class ShovelItemComponent : ItemComponent
     }
     public override bool? UseItem(Item item, Player player)
     {
-        var distance = 16f * Range;
-
-        if (player.DistanceSQ(Main.MouseWorld) < distance * distance)
+        if (Enabled)
         {
-            
-            player.DigArea((int)Main.MouseWorld.X, (int)Main.MouseWorld.Y, Power);
-        }
+            var distance = 16f * Range;
 
-        return true;
+            if (player.DistanceSQ(Main.MouseWorld) < distance * distance)
+            {
+
+                player.DigArea((int)Main.MouseWorld.X, (int)Main.MouseWorld.Y, Power);
+            }
+            return true;
+        }
+        else
+            return base.UseItem(item, player);
+
     }
 }

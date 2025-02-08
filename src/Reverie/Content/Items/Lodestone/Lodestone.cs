@@ -1,4 +1,5 @@
-﻿using Reverie.Utilities;
+﻿using Reverie.Content.Tiles;
+using Reverie.Utilities;
 
 namespace Reverie.Content.Items.Lodestone;
 
@@ -15,39 +16,45 @@ public class Lodestone : ModItem
 
     public override void SetDefaults()
     {
+        base.SetDefaults();
+
+        Item.value = Item.sellPrice(silver: 2);
+
+        Item.DefaultToPlaceableTile(ModContent.TileType<LodestoneTile>());
+
         Item.rare = ItemRarityID.Blue;
-        Item.value = Item.sellPrice(silver: 10);
-        Item.width = Item.height = 28;
-        //Item.createTile = ModContent.TileType<LodestoneTile>();
-        Item.useTime = Item.useAnimation = 24;
-        Item.maxStack = 999;
-        Item.useStyle = ItemUseStyleID.Swing;
         Item.holdStyle = ItemHoldStyleID.HoldFront;
     }
 
     public override void HoldItem(Player player)
     {
-        MagnetizeItems_Held(player);
+        base.HoldItem(player);
+
+        MagnetizeItemsHeld(player);
     }
 
     public override void Update(ref float gravity, ref float maxFallSpeed)
     {
         base.Update(ref gravity, ref maxFallSpeed);
-        if (!Item.IsAir && Item.active)
+        if (Item.IsAir && !Item.active)
         {
-            MagnetizeItems_World();
+            return;
         }
+
+        MagnetizeItems_World();
     }
 
-    private void MagnetizeItems_Held(Player player)
+    private void MagnetizeItemsHeld(Player player)
     {
         (var range, var maxSpeed) = CalculateEnhancedValues();
+
         MagnetizeItems(player.Center, range, maxSpeed);
     }
 
     private void MagnetizeItems_World()
     {
         (var range, var maxSpeed) = CalculateEnhancedValues();
+
         MagnetizeItems(Item.Center, range, maxSpeed);
     }
 
@@ -56,6 +63,7 @@ public class Lodestone : ModItem
         for (var i = 0; i < Main.maxItems; i++)
         {
             var targetItem = Main.item[i];
+
             if (targetItem.active && !targetItem.beingGrabbed && targetItem.noGrabDelay == 0 &&
                 targetItem != Item && ItemUtils.IsAMetalItem(targetItem))
             {
@@ -71,7 +79,7 @@ public class Lodestone : ModItem
         }
     }
 
-    private (float range, float maxSpeed) CalculateEnhancedValues()
+    private(float range, float maxSpeed) CalculateEnhancedValues()
     {
         float stackMultiplier = Math.Min(Item.stack, 500) - 1;
 
