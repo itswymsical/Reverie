@@ -1,7 +1,7 @@
-Project Reverie is a content-based mod that introduces an adventure RPG format into Terraria's sandbox formula. By introducing a variety of Missions, Interactive NPCs, Mini-Boss hunts & subworlds, Reverie adds "Looter Shooter" elements into Terraria's formula.
+﻿Project Reverie is a content-based mod that introduces an adventure RPG format into Terraria's sandbox formula. By introducing a variety of Missions, Interactive NPCs, Mini-Boss hunts & subworlds, Reverie adds "Looter Shooter" elements into Terraria's formula.
 
 DEVELOPER TEAM
 --------------------------------
-Composer(s): Signiaa (wymsical)
-Lead Artist: ElectroManiac
-Contributing Members: HugeKraken
+Composer(s): wymsical
+Artist(s): ElectroManiac, Dominick, HHHHHHHHH HHH, Crystal_zone
+Contributing Members: HugeKraken, naka, grae

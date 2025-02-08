@@ -9,7 +9,7 @@ using ReLogic.Content.Sources;
 
 namespace Reverie.Core.IO.Sources;
 
-
+//todo: fix for compiling outside of the debugger.
 public sealed class RedirectContentSource(IContentSource source) : IContentSource
 {
     private readonly IContentSource _source = source;

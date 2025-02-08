@@ -35,7 +35,7 @@ public static class DialogueList
         };
     }
 
-    public static DialogueSequence GetDialogueById(DialogueID id) 
+    public static DialogueSequence GetDialogueById(DialogueID id)
     => dialogues.TryGetValue(id, out var dialogue) ? dialogue : null;
 
     public static IEnumerable<DialogueSequence> GetAllDialogues() 

@@ -13,14 +13,14 @@ namespace Reverie.Common.UI.Dialogue;
 public class DialogueBox : IInGameNotification
 {
     #region Constants and Fields
-    private const float AnimationDuration = 30f;
-    private const float PanelWidth = 420f;
+    private const float ANIMATION_DURATION = 30f;
+    private const float PANEL_WIDTH = 420f;
 
     private bool isRemoved;
     private float animationProgress;
 
     private int autoRemoveTimer;
-    private const int AutoRemoveDelay = 200; // read quick mf
+    private const int AUTO_REMOVE_DELAY = 200; // read quick mf
 
     private bool isLastDialogue;
     private Vector2 targetPosition;
@@ -31,17 +31,17 @@ public class DialogueBox : IInGameNotification
 
     private readonly Queue<DialogueEntry> currentSequence = new();
     private DialogueEntry currentDialogue;
-    public NPCData npcData;
+    public required NPCData npcData;
     private NPCData currentSpeakingNPC;
 
-    private static Texture2D arrowTexture;
-    private static Texture2D portraitFrameTexture;
+    private static readonly Texture2D ArrowTexture = ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/ArrowForward").Value;
+    private static readonly Texture2D PortraitFrameTexture = ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortraitFrame").Value;
     #endregion
 
     #region Properties
     public bool ShouldZoom { get; set; }
-    public bool ShouldBeRemoved => isRemoved && animationProgress >= AnimationDuration;
-    public float Opacity => isRemoved ? 1f - animationProgress / AnimationDuration : MathHelper.Clamp(animationProgress / AnimationDuration, 0f, 1f);
+    public bool ShouldBeRemoved => isRemoved && animationProgress >= ANIMATION_DURATION;
+    public float Opacity => isRemoved ? 1f - animationProgress / ANIMATION_DURATION : MathHelper.Clamp(animationProgress / ANIMATION_DURATION, 0f, 1f);
     public Color DefaultTextColor { get; init; } = Color.White;
     public Color IconColor { get; init; } = Color.White;
     public NPCPortrait CurrentPortrait { get; init; }
@@ -85,7 +85,6 @@ public class DialogueBox : IInGameNotification
     {
         if (Opacity <= 0f || Main.gameMenu) return;
 
-        LoadTextures();
         SetupPositions(bottomAnchorPosition);
 
         DrawPanel(spriteBatch);
@@ -122,9 +121,9 @@ public class DialogueBox : IInGameNotification
 
     private void UpdateAnimation()
     {
-        if (!isRemoved || animationProgress < AnimationDuration)
+        if (!isRemoved || animationProgress < ANIMATION_DURATION)
         {
-            animationProgress = Math.Min(animationProgress + 1f, AnimationDuration);
+            animationProgress = Math.Min(animationProgress + 1f, ANIMATION_DURATION);
         }
     }
 
@@ -146,7 +145,7 @@ public class DialogueBox : IInGameNotification
         {
             if (autoRemoveTimer == 0)
             {
-                autoRemoveTimer = AutoRemoveDelay;
+                autoRemoveTimer = AUTO_REMOVE_DELAY;
             }
         }
     }
@@ -167,12 +166,6 @@ public class DialogueBox : IInGameNotification
                 NextEntry();
             }
         }
-    }
-
-    private static void LoadTextures()
-    {
-        arrowTexture = ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/ArrowForward").Value;
-        portraitFrameTexture = ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortraitFrame").Value;
     }
 
     private void SetupPositions(Vector2 bottomAnchorPosition)
@@ -208,9 +201,9 @@ public class DialogueBox : IInGameNotification
         Vector2 iconSize = new(currentSpeakingNPC.Portrait.FrameWidth, currentSpeakingNPC.Portrait.FrameHeight);
         Vector2 iconPosition = new(panelRectangle.Left - iconSize.X - 28f, panelRectangle.Center.Y - 50f);
 
-        Vector2 frameSize = new(portraitFrameTexture.Width, portraitFrameTexture.Height);
+        Vector2 frameSize = new(PortraitFrameTexture.Width, PortraitFrameTexture.Height);
         var framePosition = iconPosition - (frameSize - iconSize) / 2;
-        spriteBatch.Draw(portraitFrameTexture, framePosition, null, IconColor * Opacity, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 0f);
+        spriteBatch.Draw(PortraitFrameTexture, framePosition, null, IconColor * Opacity, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 0f);
 
         var sourceRect = currentSpeakingNPC.Portrait.GetFrameRect(currentEmoteFrame);
         spriteBatch.Draw(currentSpeakingNPC.Portrait.Texture.Value, iconPosition, sourceRect, IconColor * Opacity, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 0f);
@@ -238,7 +231,7 @@ public class DialogueBox : IInGameNotification
 
         var textPosition = panelRectangle.TopLeft() + new Vector2(10f, 20f);
 
-        var wrappedText = WrapText(displayText, PanelWidth - 10f);
+        var wrappedText = WrapText(displayText, PANEL_WIDTH - 10f);
         for (var i = 0; i < wrappedText.Length; i++)
         {
             var linePosition = textPosition + new Vector2(0f, i * FontAssets.ItemStack.Value.LineSpacing);
@@ -258,12 +251,12 @@ public class DialogueBox : IInGameNotification
         var panelRectangle = Utils.CenteredRectangle(panelPosition, panelSize);
 
         var arrowScale = 0.75f;
-        var arrowPosition = panelRectangle.BottomRight() - new Vector2(arrowTexture.Width * arrowScale + 10, arrowTexture.Height * arrowScale + 10);
+        var arrowPosition = panelRectangle.BottomRight() - new Vector2(ArrowTexture.Width * arrowScale + 10, ArrowTexture.Height * arrowScale + 10);
 
         var yOffset = (float)Math.Sin(Main.GameUpdateCount * 0.1f) * 3f;
         arrowPosition.Y += yOffset;
 
-        spriteBatch.Draw(arrowTexture, arrowPosition, null, Color.White * Opacity, 0f, Vector2.Zero, arrowScale, SpriteEffects.None, 0f);
+        spriteBatch.Draw(ArrowTexture, arrowPosition, null, Color.White * Opacity, 0f, Vector2.Zero, arrowScale, SpriteEffects.None, 0f);
     }
 
     private void OnMouseOver()
@@ -286,7 +279,7 @@ public class DialogueBox : IInGameNotification
         {
             NextEntry();
         }
-        else //todo: fix last entry remaining indefinitely
+        else
         {
             isRemoved = true;
             isLastDialogue = true;
@@ -298,19 +291,19 @@ public class DialogueBox : IInGameNotification
     private Vector2 CalculatePanelSize()
     {
         var currentDialogueText = currentDialogue.GetText();
-        var displayText = currentDialogueText.Value.Substring(0, Math.Min(charIndex, currentDialogueText.Value.Length));
+        var displayText = currentDialogueText.Value[..Math.Min(charIndex, currentDialogueText.Value.Length)];
 
-        var wrappedText = WrapText(displayText, PanelWidth);
+        var wrappedText = WrapText(displayText, PANEL_WIDTH);
         var lineCount = wrappedText.Length;
         var textHeight = FontAssets.ItemStack.Value.MeasureString(displayText).Y * lineCount;
 
         var panelHeight = textHeight + new Vector2(35f, 25f).Y * 2.7f;
-        return new Vector2(PanelWidth + 18, panelHeight);
+        return new Vector2(PANEL_WIDTH + 18, panelHeight);
     }
 
     private Vector2 CalculatePanelPosition(Vector2 panelSize)
     {
-        var t = isRemoved ? animationProgress / AnimationDuration : 1f - animationProgress / AnimationDuration;
+        var t = isRemoved ? animationProgress / ANIMATION_DURATION : 1f - animationProgress / ANIMATION_DURATION;
         var currentPosition = Vector2.Lerp(targetPosition, startPosition, t);
         return currentPosition - new Vector2(0f, panelSize.Y * 0.4f);
     }
