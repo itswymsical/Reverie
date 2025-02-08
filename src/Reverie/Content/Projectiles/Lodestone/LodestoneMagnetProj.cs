@@ -1,9 +1,13 @@
-﻿using Reverie.Utilities;
+﻿using Reverie.Core.Graphics;
+using Reverie.Core.Interfaces;
+using Reverie.Utilities;
 using System.Collections.Generic;
+using Terraria.Graphics.Effects;
+using static Reverie.Reverie;
 
 namespace Reverie.Content.Projectiles.Lodestone;
 
-public class LodestoneMagnetProj : ModProjectile // todo: add primitive drawing
+public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
 {
     private const float MAGNET_RANGE = 200f;
     private const float ITEM_VACUUM_RANGE = 300f;
@@ -13,11 +17,11 @@ public class LodestoneMagnetProj : ModProjectile // todo: add primitive drawing
     private int miningTimer = 0;
     private readonly HashSet<int> magnetizedItems = [];
 
-    //private List<Vector2> cache;
-    //private Trail trail;
-    //private Trail trail2;
-    //private Color color = new(255, 255, 255);
-    //private readonly Vector2 Size = new(100, 50);
+    private List<Vector2> cache;
+    private Trail trail;
+    private Trail trail2;
+    private Color color = new(255, 255, 255);
+    private readonly Vector2 Size = new(100, 50);
     public override void SetDefaults()
     {
         Projectile.width = 26;
@@ -30,8 +34,8 @@ public class LodestoneMagnetProj : ModProjectile // todo: add primitive drawing
 
     public override void AI()
     {
-        //ManageCaches();
-        //ManageTrail();
+        ManageCaches();
+        ManageTrail();
         var owner = Main.player[Projectile.owner];
         if (!owner.active || owner.dead || !owner.channel)
         {
@@ -63,97 +67,97 @@ public class LodestoneMagnetProj : ModProjectile // todo: add primitive drawing
         miningTimer++;
     }
 
-    //private void ManageCaches()
-    //{
-    //    var player = Main.LocalPlayer;
-    //    var pos = Projectile.Center + player.DirectionTo(Projectile.Center) * (Size.Length() * Main.rand.NextFloat(0.5f, 1.1f)) + Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.0f, 4.0f);
+    private void ManageCaches()
+    {
+        var player = Main.LocalPlayer;
+        var pos = Projectile.Center + player.DirectionTo(Projectile.Center) * (Size.Length() * Main.rand.NextFloat(0.5f, 1.1f)) + Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.0f, 4.0f);
 
-    //    if (cache == null)
-    //    {
-    //        cache = [];
+        if (cache == null)
+        {
+            cache = [];
 
-    //        for (var i = 0; i < 15; i++)
-    //        {
-    //            cache.Add(pos);
-    //        }
-    //    }
+            for (var i = 0; i < 15; i++)
+            {
+                cache.Add(pos);
+            }
+        }
 
-    //    cache.Add(pos);
+        cache.Add(pos);
 
-    //    while (cache.Count > 15)
-    //    {
-    //        cache.RemoveAt(0);
-    //    }
-    //}
+        while (cache.Count > 15)
+        {
+            cache.RemoveAt(0);
+        }
+    }
 
-    //private void ManageTrail()
-    //{
-    //    var start = Projectile.Center;
-    //    var end = Main.MouseWorld;
-    //    var direction = Vector2.Normalize(end - start);
-    //    var distance = Math.Min(Vector2.Distance(start, end), MagnetRange); // Limit the distance to the magnet's max range
+    private void ManageTrail()
+    {
+        var start = Projectile.Center;
+        var end = Main.MouseWorld;
+        var direction = Vector2.Normalize(end - start);
+        var distance = Math.Min(Vector2.Distance(start, end), MAGNET_RANGE);
 
-    //    var trailSegments = 15;
-    //    var segmentLength = distance / trailSegments;
+        var trailSegments = 15;
+        var segmentLength = distance / trailSegments;
 
-    //    var trailWidth = MagnetRange * (float)Math.Tan(ArcAngle / 2) * 1.2f;
+        var trailWidth = MAGNET_RANGE * (float)Math.Tan(ARC_ANGLE / 2) * 1.2f;
 
-    //    trail ??= new Trail(Main.instance.GraphicsDevice, trailSegments, new RoundedTip(5), factor => factor * trailWidth, factor =>
-    //    {
-    //        if (factor.X >= 0.98f)
-    //            return Color.White * 0;
-    //        return new Color(color.R, color.G, color.B) * 0.03f;
-    //    });
+        trail ??= new Trail(Main.instance.GraphicsDevice, trailSegments, new RoundedTip(5), factor => factor * trailWidth, factor =>
+        {
+            if (factor.X >= 0.98f)
+                return Color.White * 0;
+            return new Color(color.R, color.G, color.B) * 0.03f;
+        });
 
-    //    trail2 ??= new Trail(Main.instance.GraphicsDevice, trailSegments, new RoundedTip(5), factor => factor * trailWidth, factor =>
-    //    {
-    //        if (factor.X >= 0.98f)
-    //            return Color.White * 0;
-    //        return new Color(color.R, color.G, color.B) * 0.03f;
-    //    });
+        trail2 ??= new Trail(Main.instance.GraphicsDevice, trailSegments, new RoundedTip(5), factor => factor * trailWidth, factor =>
+        {
+            if (factor.X >= 0.98f)
+                return Color.White * 0;
+            return new Color(color.R, color.G, color.B) * 0.03f;
+        });
 
-    //    var trailPositions = new Vector2[trailSegments];
-    //    for (var i = 0; i < trailSegments; i++)
-    //    {
-    //        var progress = (float)i / (trailSegments - 1);
-    //        trailPositions[i] = Vector2.Lerp(start, start + direction * distance, progress); // Calculate trail positions based on the limited distance
-    //    }
+        var trailPositions = new Vector2[trailSegments];
+        for (var i = 0; i < trailSegments; i++)
+        {
+            var progress = (float)i / (trailSegments - 1);
+            trailPositions[i] = Vector2.Lerp(start, start + direction * distance, progress);
+        }
 
-    //    trail.Positions = trailPositions;
-    //    trail2.Positions = trailPositions;
+        trail.Positions = trailPositions;
+        trail2.Positions = trailPositions;
 
-    //    trail.NextPosition = start + direction * distance; // Set the trail's end position to the limited distance
-    //    trail2.NextPosition = start + direction * distance;
-    //}
+        trail.NextPosition = start + direction * distance;
+        trail2.NextPosition = start + direction * distance;
+    }
 
-    //public void DrawPrimitives()
-    //{
-    //    var primitiveShader = Filters.Scene["LightningTrail"];
-    //    if (primitiveShader != null)
-    //    {
-    //        var effect = primitiveShader.GetShader().Shader;
-    //        if (effect != null)
-    //        {
-    //            var world = Matrix.CreateTranslation(-Main.screenPosition.ToVector3());
-    //            var view = Main.GameViewMatrix.TransformationMatrix;
-    //            var projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
+    public void DrawPrimitives()
+    {
+        var primitiveShader = Filters.Scene["LightningTrail"];
+        if (primitiveShader != null)
+        {
+            var effect = primitiveShader.GetShader().Shader;
+            if (effect != null)
+            {
+                var world = Matrix.CreateTranslation(-Main.screenPosition.ToVector3());
+                var view = Main.GameViewMatrix.TransformationMatrix;
+                var projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
 
-    //            effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.2f);
-    //            effect.Parameters["repeats"]?.SetValue(8f);
-    //            effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
-    //            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/VFX/WaterTrail").Value);
-    //            effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/VFX/Bloom").Value);
+                effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.2f);
+                effect.Parameters["repeats"]?.SetValue(8f);
+                effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
+                effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}WaterTrail").Value);
+                effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Bloom").Value);
 
-    //            trail?.Render(effect);
+                trail?.Render(effect);
 
-    //            effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/VFX/WaterTrail").Value);
+                effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}WaterTrail").Value);
 
-    //            trail2?.Render(effect);
-    //        }
-    //    }
-    //}
+                trail2?.Render(effect);
+            }
+        }
+    }
 
-    private void MagnetizeTiles(Player owner) // quite whimsical \(~.~)/
+    private void MagnetizeTiles(Player owner) // quite whimsical \(~.~)/ 
     {
         var start = Projectile.Center - new Vector2(Projectile.width, Projectile.height) / 2;
         var end = Main.MouseWorld;

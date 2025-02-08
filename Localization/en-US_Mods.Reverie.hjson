@@ -124,6 +124,49 @@ Items: {
 		DisplayName: Tungsten Shovel Item
 		Tooltip: ""
 	}
+
+	AcornLauncherItem: {
+		DisplayName: Acorn Launcher Item
+		Tooltip: ""
+	}
+
+	AlluviumOreItem: {
+		DisplayName: Alluvium Ore Item
+		Tooltip: ""
+	}
+
+	WoodgrassSeedsItem: {
+		DisplayName: Woodgrass Seeds Item
+		Tooltip: ""
+	}
+
+	CobblestoneItem: {
+		DisplayName: Cobblestone Item
+		Tooltip: ""
+	}
+
+	LoamItem: {
+		DisplayName: Loam Item
+		Tooltip: ""
+	}
+
+	Bramblebow: {
+		DisplayName: Bramblebow
+		Tooltip: ""
+	}
+
+	WardensArm: {
+		DisplayName: Wardens Arm
+		Tooltip: ""
+	}
 }
 
-Projectiles.LodestoneMagnetProj.DisplayName: Lodestone Magnet Proj
+Projectiles: {
+	LodestoneMagnetProj.DisplayName: Lodestone Magnet Proj
+	AcornLauncherProj.DisplayName: Acorn Launcher Proj
+	AcornProj.DisplayName: Acorn Proj
+	AcornShrapnel.DisplayName: Acorn Shrapnel
+	AlluvialBoulderProj.DisplayName: Alluvial Boulder Proj
+	BrambleArrowProj.DisplayName: Bramble Arrow Proj
+	WardensArmProj.DisplayName: Wardens Arm Proj
+}
