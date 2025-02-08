@@ -70,6 +70,21 @@ Items: {
 		Tooltip: ""
 	}
 
+	Lodestone: {
+		DisplayName: Lodestone
+		Tooltip: ""
+	}
+
+	LodestoneMagnet: {
+		DisplayName: Lodestone Magnet
+		Tooltip: ""
+	}
+
+	MagnetizedCoil: {
+		DisplayName: Magnetized Coil
+		Tooltip: ""
+	}
+
 	CopperShovelItem: {
 		DisplayName: Copper Shovel Item
 		Tooltip: ""
@@ -110,3 +125,5 @@ Items: {
 		Tooltip: ""
 	}
 }
+
+Projectiles.LodestoneMagnetProj.DisplayName: Lodestone Magnet Proj
