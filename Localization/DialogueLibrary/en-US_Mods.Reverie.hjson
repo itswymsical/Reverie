@@ -1,30 +1,65 @@
 DialogueLibrary: {
 	CrashLanding: {
+		Intro.Line1: What the H*#@?!?!
+		Cutscene.Line1: Hmm? What's that?
+
 		SettlingIn: {
+			Line1: Are you alright? That was quite the entrance.
+			Line2: Is crashing and exploding on people's property a custom where you come from?
+			Line3: I'm Laine. Nice to meet you.
+			Line4: Let's get settled in. I could use some help repairing the damage from your, uh...
+			Line5: ...arrival.
 		}
 
 		GatheringResources: {
+			Line1: While you're out there, could you gather some wood, stone, and potions?
+			Line2: I need to patch up the house, and those potions might come in handy later.
 		}
 
 		FixHouse: {
+			Line1: Thanks, this should be enough. You're a natural at this, huh?
+			Line2: Alright, i'll get to work on fixing up the house.
+			Line3: The wilderness can be dangerous, especially for newcomers.
+			Line4: You should craft some armor and a weapon to protect yourself.
+			Line5: That'll serve as our base of operations for now.
 		}
 
 		WildlifeWoes: {
+			Line1: We've got a lot of slimes prancing about lately.
+			Line2: Nothing to worry about, they're pretty easy to handle.
+			Line3: Clear them out, and we'll be able to explore the area more safely.
 		}
 
 		SlimeInfestation: {
+			Line1: Is it just me, or are there more slimes around than usual?
+			Line2: I've never seen them so active and aggressive before.
 		}
 
+		SlimeInfestation_Commentary.Line1: Gah! I can't take a step outside without being swarmed by these slimy menaces!
+
 		SlimeRain: {
+			Line1: You gotta be kidding me...
+			Line2: I've never seen anything like it... the slimes are raining from the sky!
 		}
 
 		SlimeRain_Commentary: {
+			Line1: Slimes falling from the sky? What's next, flying pigs?
+			// Reminder: Add a callback in the future to this line when a pigron is discovered.
+			
+			Line2: I thought I'd seen it all, but this takes the cake!
 		}
 
 		KS_Encounter: {
+			Line1: That's one big ass slime... Must be there king, or something.
+			Line2: I think you pissed it off by killing so many of it's servants.
+			Line3: Heh, didn't know that would cause this to happen. My bad.
 		}
 
 		KS_Victory: {
+			Line1: Well fought! The King Slime is no more.
+			Line2: I don't have a good feeling about the nature of the creature aggression.
+			Line3: They've been like this since...
+			Line4: Wait, don't tell me...
 		}
 	}
 
