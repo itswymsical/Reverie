@@ -70,6 +70,31 @@ Items: {
 		Tooltip: ""
 	}
 
+	BorealHewerItem: {
+		DisplayName: Boreal Hewer Item
+		Tooltip: ""
+	}
+
+	FlailstormItem: {
+		DisplayName: Flailstorm Item
+		Tooltip: ""
+	}
+
+	FrostbarkGreavesItem: {
+		DisplayName: Frostbark Greaves Item
+		Tooltip: ""
+	}
+
+	FrostbarkHauberkItem: {
+		DisplayName: Frostbark Hauberk Item
+		Tooltip: ""
+	}
+
+	FrostbarkHelmItem: {
+		DisplayName: Frostbark Helm Item
+		Tooltip: ""
+	}
+
 	Lodestone: {
 		DisplayName: Lodestone
 		Tooltip: ""
@@ -82,6 +107,11 @@ Items: {
 
 	MagnetizedCoil: {
 		DisplayName: Magnetized Coil
+		Tooltip: ""
+	}
+
+	SeedBagItem: {
+		DisplayName: Seed Bag Item
 		Tooltip: ""
 	}
 
@@ -162,7 +192,11 @@ Items: {
 }
 
 Projectiles: {
+	BirdProj.DisplayName: Bird Proj
+	BorealHewerProj.DisplayName: Boreal Hewer Proj
+	FlailstormProj.DisplayName: Flailstorm Proj
 	LodestoneMagnetProj.DisplayName: Lodestone Magnet Proj
+	SeedProj.DisplayName: Seed Proj
 	AcornLauncherProj.DisplayName: Acorn Launcher Proj
 	AcornProj.DisplayName: Acorn Proj
 	AcornShrapnel.DisplayName: Acorn Shrapnel

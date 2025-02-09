@@ -18,6 +18,7 @@
       <None Remove="Assets\Textures\Items\Sylvanwalde\PeculiarTwigItem.png" />
       <None Remove="Assets\Textures\Projectiles\Archaea\ShattertailShot.png" />
       <None Remove="Assets\Textures\Projectiles\Archaea\Tumbleweed.png" />
+      <None Remove="Assets\Textures\Projectiles\Frostbark\BorealHewerProj.png" />
       <None Remove="Assets\Textures\Tiles\Fungore\FungoreTrophyTile.png" />
       <None Remove="Assets\Textures\Tiles\LodestoneTile.png" />
     </ItemGroup>

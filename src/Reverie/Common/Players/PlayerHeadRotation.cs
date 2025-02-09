@@ -57,11 +57,13 @@ public class PlayerHeadRotation : ModPlayer
             }
 
             //todo: make changes to vanilla direction changing.
-            if (lookPosition.X > Player.Center.X)
-                Player.direction = 1;
-            else
-                Player.direction = -1;
-            
+            if (Player.velocity == Vector2.Zero)
+            {
+                if (lookPosition.X > Player.Center.X)
+                    Player.direction = 1;
+                else
+                    Player.direction = -1;
+            }      
         }
        
         float lerpSpeed = 0.15f;
