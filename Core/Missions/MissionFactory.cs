@@ -24,9 +24,9 @@ public class MissionFactory
                     [("Give Laine resources", 1)],
                     [("Obtain a Helmet", 1), ("Obtain a Chestplate", 1), ("Obtain Leggings", 1), ("Obtain better weapon", 1)],
                     [("Clear out slimes", 6)],
-                    [("Explore the Underground", 1), ("Loot items", 50)],
+                    [("Explore the Underground", 1), ("Loot items", 150)],
                     [("Clear out slimes, again", 12)],
-                    [("Resume glorius looting", 30)],
+                    [("Resume glorius looting", 100)],
                     [("Return to Laine", 1)],
                     [("Clear Slime Infestation", 50)],
                     [("Defeat the King Slime", 1)]

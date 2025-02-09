@@ -132,8 +132,12 @@ namespace Reverie.Core.Missions.MissionHandlers
 
                             if (item.legSlot != -1 && !item.vanity)
                                 Mission.UpdateProgress(2, item.stack);
+
+                            if (item.IsWeapon())
+                                Mission.UpdateProgress(3, item.stack);
                             break;
                         case 5:
+                            if (item.type is not ItemID.CopperCoin or ItemID.SilverCoin or ItemID.GoldCoin or ItemID.PlatinumCoin)
                             Mission.UpdateProgress(1, item.stack);
 
                             if (Mission.ObjectiveSets[Mission.CurrentSetIndex].Objectives[1].CurrentCount == 10)
@@ -142,6 +146,7 @@ namespace Reverie.Core.Missions.MissionHandlers
                             }
                             break;
                         case 7:
+                            if (item.type is not ItemID.CopperCoin or ItemID.SilverCoin or ItemID.GoldCoin or ItemID.PlatinumCoin)
                                 Mission.UpdateProgress(0, item.stack);
                             break;
                         default:

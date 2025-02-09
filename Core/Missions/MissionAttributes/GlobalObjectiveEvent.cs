@@ -64,9 +64,9 @@ public class ObjectiveEventNPC : GlobalNPC
 
         if (CrashLanding?.Progress == MissionProgress.Active)
         {
-            var rateWeakSlimes = 0.15f;
-            var rateStrongSlimes = 0.08f;
-            var rateRareSlimes = 0.01f;
+            var rateWeakSlimes = 0.1f;
+            var rateStrongSlimes = 0.04f;
+            var rateRareSlimes = 0.002f;
             var currentSet = CrashLanding.ObjectiveSets[CrashLanding.CurrentSetIndex];
             if (!currentSet.IsCompleted && CrashLanding.CurrentSetIndex < 1)
             {
@@ -85,14 +85,14 @@ public class ObjectiveEventNPC : GlobalNPC
             else if (CrashLanding.CurrentSetIndex >= 5 && Main.LocalPlayer.ZoneOverworldHeight)
             {
                 rateWeakSlimes = 0.17f;
-                rateStrongSlimes = 0.1f;
-                rateRareSlimes = 0.07f;
+                rateStrongSlimes = 0.09f;
+                rateRareSlimes = 0.008f;
             }
             else if (CrashLanding.CurrentSetIndex >= 7 && Main.LocalPlayer.ZoneOverworldHeight)
             {
                 rateWeakSlimes = 0.2f;
-                rateStrongSlimes = 0.14f;
-                rateRareSlimes = 0.1f;
+                rateStrongSlimes = 0.11f;
+                rateRareSlimes = 0.02f;
             }
         }
         else
@@ -105,19 +105,24 @@ public class ObjectiveEventNPC : GlobalNPC
         if (CrashLanding?.Progress == MissionProgress.Active && player.ZoneOverworldHeight)
         {
             var currentSet = CrashLanding.ObjectiveSets[CrashLanding.CurrentSetIndex];
+            if (CrashLanding.CurrentSetIndex >= 3)
+            {
+                spawnRate = 3;
+                maxSpawns = 8;
+            }
             if (CrashLanding.CurrentSetIndex >= 5)
             {
-                spawnRate = 10;
-                maxSpawns = 8;
+                spawnRate = 2;
+                maxSpawns = 9;
             }
             else if (CrashLanding.CurrentSetIndex >= 7)
             {
-                spawnRate = 14;
+                spawnRate = 4;
                 maxSpawns = 10;
             }
             else if (CrashLanding.CurrentSetIndex >= 9)
             {
-                spawnRate = 18;
+                spawnRate = 5;
                 maxSpawns = 15;
             }
         }
