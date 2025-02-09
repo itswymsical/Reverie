@@ -1,4 +1,6 @@
 ﻿using Reverie.Content.Dusts;
+using Reverie.Core.Cinematics;
+using System.Collections.Generic;
 
 namespace Reverie.Common.Players;
 
@@ -10,6 +12,36 @@ public class ReveriePlayer : ModPlayer
         {
             DrawSandHaze();
         }
+        if (!Cutscene.IsPlayerVisible)
+        {
+            Player.AddBuff(BuffID.Invisibility, 1, true);
+        }
+        if (Cutscene.NoFallDamage)
+        {
+            Player.noFallDmg = true;
+        }
+    }
+
+    public override void SetControls()
+    {
+        if (Cutscene.DisableMoment)
+        {
+            Player.controlLeft = false;
+            Player.controlRight = false;
+            Player.controlUp = false;
+            Player.controlDown = false;
+            Player.controlJump = false;
+            Player.controlHook = false;
+            Player.controlInv = false;
+            Player.controlUseItem = false;
+            Player.controlUseTile = false;
+        }
+    }
+    public override void ModifyStartingInventory(IReadOnlyDictionary<string, List<Item>> itemsByMod, bool mediumCoreDeath)
+    {
+        itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperShortsword);
+        itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperPickaxe);
+        itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperAxe);
     }
 
     private void DrawSandHaze()

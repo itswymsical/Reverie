@@ -5,3 +5,4 @@ global using global::System;
 global using global::Terraria;
 global using global::Terraria.ID;
 global using global::Terraria.ModLoader;
+global using static global::Reverie.Reverie;

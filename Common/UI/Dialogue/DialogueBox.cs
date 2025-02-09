@@ -34,8 +34,8 @@ public class DialogueBox : IInGameNotification
     public required NPCData npcData;
     private NPCData currentSpeakingNPC;
 
-    private static readonly Texture2D ArrowTexture = ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/ArrowForward").Value;
-    private static readonly Texture2D PortraitFrameTexture = ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortraitFrame").Value;
+    private Texture2D ArrowTexture = ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/ArrowForward").Value;
+    private Texture2D PortraitFrameTexture = ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortraitFrame").Value;
     #endregion
 
     #region Properties

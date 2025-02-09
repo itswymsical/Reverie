@@ -145,3 +145,36 @@ Projectiles: {
 	WardensArmProj.DisplayName: Wardens Arm
 	ExplosiveLanding.DisplayName: Explosive Landing
 }
+
+InfoDisplays.MissionObjectives.DisplayName: Mission Objectives
+
+Configs: {
+	ExperienceMeterConfig: {
+		DisplayName: Experience Meter Config
+		Headers.ExperienceMeterColors: Experience Meter Colors Header
+
+		BarColor: {
+			Label: ExperienceColors
+			Tooltip: Customize the RGB color of the Experience Meter
+		}
+	}
+
+	ColorSetting: {
+		Tooltip: ""
+
+		R: {
+			Label: R
+			Tooltip: ""
+		}
+
+		G: {
+			Label: G
+			Tooltip: ""
+		}
+
+		B: {
+			Label: B
+			Tooltip: ""
+		}
+	}
+}
