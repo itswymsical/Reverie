@@ -1,4 +1,4 @@
-DialogueLibrary: {
+﻿DialogueLibrary: {
 	CrashLanding: {
 		Intro.Line1: Mods.Reverie.DialogueLibrary.CrashLanding.Intro.Line1
 		Cutscene.Line1: Mods.Reverie.DialogueLibrary.CrashLanding.Cutscene.Line1
@@ -71,7 +71,7 @@ Items: {
 	}
 
 	BorealHewerItem: {
-		DisplayName: Boreal Hewer Item
+		DisplayName: Boreal Hewer
 		Tooltip: ""
 	}
 
