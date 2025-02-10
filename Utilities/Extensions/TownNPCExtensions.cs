@@ -1,4 +1,5 @@
-﻿using Reverie.Core.Dialogue;
+﻿using Reverie.Common.Systems;
+using Reverie.Core.Dialogue;
 
 namespace Reverie.Utilities.Extensions;
 
@@ -7,6 +8,21 @@ namespace Reverie.Utilities.Extensions;
 /// </summary>
 public static class TownNPCExtensions
 {
+    /// <summary>
+    /// Allows for the modification of <see cref="NPC"/> Chat buttons. Useful for modifying Town NPCs into World NPCs.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <returns></returns>
+    public static void HandleWorldNPCChat(this NPC npc, bool firstButton)
+    {
+        foreach (GlobalNPC globalNPC in npc.Globals)
+        {
+            if (globalNPC is IWorldNPCChat worldChat)
+            {
+                worldChat.OnChatButtonClicked(npc, firstButton);
+            }
+        }
+    }
     /// <summary>
     /// Makes a Town <see cref="NPC"/> perform rock, paper, scissors.
     /// </summary>

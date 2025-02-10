@@ -32,6 +32,10 @@ public static class DialogueList
 
             [DialogueID.CrashLanding_KS_Encounter] = DialogueBuilder.Build("CrashLanding", "KS_Encounter", 3),
             [DialogueID.CrashLanding_KS_Victory] = DialogueBuilder.Build("CrashLanding", "KS_Victory", 4),
+
+            [DialogueID.GuideCommands_Follow] = DialogueBuilder.Build("GuideCommands", "Follow", 1),
+            [DialogueID.GuideCommands_Stay] = DialogueBuilder.Build("GuideCommands", "Stay", 2),
+            [DialogueID.GuideCommands_Wander] = DialogueBuilder.Build("GuideCommands", "Wander", 2),
         };
     }
 

@@ -48,8 +48,13 @@ public class ObjectiveEventNPC : GlobalNPC
         ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Missions/MissionAvailable").Value;
 
     public override bool? CanChat(NPC npc)
-        => (npc.isLikeATownNPC || npc.townNPC) && !DialogueManager.Instance.IsAnyActive();
-
+    {
+        if ((npc.isLikeATownNPC || npc.townNPC) && !DialogueManager.Instance.IsAnyActive())
+        {
+            Main.LocalPlayer.CloseSign();
+        }
+        return base.CanChat(npc);
+    }
     public override void GetChat(NPC npc, ref string chat)
     {
         base.GetChat(npc, ref chat);

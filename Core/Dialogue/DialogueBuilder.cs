@@ -77,5 +77,9 @@ public enum DialogueID
     CrashLanding_SlimeRain,
     CrashLanding_SlimeRain_Commentary,
     CrashLanding_KS_Encounter,
-    CrashLanding_KS_Victory
+    CrashLanding_KS_Victory,
+
+    GuideCommands_Follow,
+    GuideCommands_Stay,
+    GuideCommands_Wander,
 }

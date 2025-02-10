@@ -1,16 +1,54 @@
-﻿using Reverie.Core.Dialogue;
+﻿using Humanizer;
+using Reverie.Core.Dialogue;
+using Reverie.Utilities.Extensions;
 using Terraria.Localization;
 
 namespace Reverie.Common.Systems
 {
-    public class ReverieModSystem : ModSystem
+    public class ReverieSystem : ModSystem
     {
         public override void Load()
         {
+            On_Main.DrawInterface_36_Cursor += Main_DrawInterface_36_Cursor;
             NPCDataManager.Initialize();
             Reverie.Instance.Logger.Info("NPCDataManager initialized...");
         }
-        public static ReverieModSystem Instance => ModContent.GetInstance<ReverieModSystem>();
+
+        public static ReverieSystem Instance => ModContent.GetInstance<ReverieSystem>();
+
+        private void Main_DrawInterface_36_Cursor(On_Main.orig_DrawInterface_36_Cursor orig)
+        {
+            orig();
+
+            if (Main.LocalPlayer.talkNPC >= 0)
+            {
+                NPC npc = Main.npc[Main.LocalPlayer.talkNPC];
+                if (npc.active && npc.ModNPC == null)
+                {
+                    bool firstButtonClicked = false;
+                    bool secondButtonClicked = false;
+
+                    Rectangle shopButtonRectangle = new Rectangle(500, 560, 100, 30);
+                    if (Main.mouseLeft && Main.mouseLeftRelease)
+                    {
+                        if (shopButtonRectangle.Contains(Main.mouseX, Main.mouseY))
+                        {
+                            firstButtonClicked = true;
+                        }
+                        Rectangle chatButtonRectangle = new Rectangle(610, 560, 100, 30);
+                        if (chatButtonRectangle.Contains(Main.mouseX, Main.mouseY))
+                        {
+                            secondButtonClicked = true;
+                        }
+                    }
+
+                    if (firstButtonClicked || secondButtonClicked)
+                    {
+                        npc.HandleWorldNPCChat(firstButtonClicked);
+                    }
+                }
+            }
+        }
 
         public override void AddRecipeGroups()
         {

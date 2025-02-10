@@ -9,180 +9,224 @@ public abstract class FighterNPCActor : ModNPC
 
     public override void AI()
     {
-        if (NPC.direction == 0)
-            NPC.direction = 1;
-
-        bool canJump = NPC.velocity.X == 0f && !NPC.justHit;
-        bool isStuck = NPC.ai[1] >= MaxStuckTime;
-        bool lookingAtTarget = NPC.velocity.Y == 0f && Math.Sign(NPC.velocity.X) == NPC.direction;
-
-        HandleStuckState(isStuck, lookingAtTarget);
-        UpdateMovement();
-        HandleCollision(canJump);
+        GenericFighterAI();
     }
 
-    private void HandleStuckState(bool isStuck, bool lookingAtTarget)
+    public void GenericFighterAI(float maxSpeed = 1.5f, int maxAllowedStuckTime = 60, float jumpHeightModifier = 1f)
     {
-        if (NPC.position.X == NPC.oldPosition.X || isStuck || !lookingAtTarget)
-            NPC.ai[1]++;
-        else if (Math.Abs(NPC.velocity.X) > 0.9f && NPC.ai[1] > 0f)
-            NPC.ai[1]--;
 
-        if (NPC.ai[1] > MaxStuckTime * 5 || NPC.justHit)
+        bool canJump = false;
+        bool isStuck = NPC.ai[1] >= maxAllowedStuckTime;
+
+        if (NPC.velocity.X == 0f && !NPC.justHit)
+        {
+            canJump = true;
+        }
+
+        bool lookingAtTarget = true;
+
+        if (NPC.velocity.Y == 0f && Math.Sign(NPC.velocity.X) != NPC.direction)
+        {
+            lookingAtTarget = false;
+        }
+
+        if (NPC.position.X == NPC.oldPosition.X || isStuck || !lookingAtTarget)
+        {
+            NPC.ai[1]++;
+        }
+        else if (Math.Abs(NPC.velocity.X) > 0.9f && NPC.ai[1] > 0f)
+        {
+            NPC.ai[1]--;
+        }
+
+        if (NPC.ai[1] > maxAllowedStuckTime * 5 || NPC.justHit)
+        {
             NPC.ai[1] = 0f;
+        }
 
         if (isStuck)
         {
-            if (NPC.ai[1] == MaxStuckTime)
-                NPC.netUpdate = true;
-
-            if (NPC.velocity.X == 0f && NPC.velocity.Y == 0f)
+            // First update being stuck.
+            if (NPC.ai[1] == maxAllowedStuckTime)
             {
-                if (++NPC.ai[0] >= 2f)
+                NPC.netUpdate = true;
+            }
+
+            if (NPC.velocity.X == 0f)
+            {
+                if (NPC.velocity.Y == 0f)
                 {
-                    NPC.ai[0] = 0f;
-                    NPC.direction *= -1;
-                    NPC.spriteDirection = NPC.direction;
+                    if (++NPC.ai[0] >= 2f)
+                    {
+                        NPC.ai[0] = 0f;
+                        NPC.direction *= -1;
+                        NPC.spriteDirection = NPC.direction;
+                    }
                 }
             }
             else
+            {
                 NPC.ai[0] = 0f;
+            }
+            if (NPC.direction == 0)
+            {
+                NPC.direction = 1;
+            }
         }
-        else if (NPC.ai[1] < MaxStuckTime)
+        else if (NPC.ai[1] < maxAllowedStuckTime)
+        {
             NPC.TargetClosest();
-    }
+        }
 
-    private void UpdateMovement()
-    {
-        if (Math.Abs(NPC.velocity.X) > MaxSpeed)
+        if (NPC.velocity.X < -maxSpeed || NPC.velocity.X > maxSpeed)
         {
             if (NPC.velocity.Y == 0f)
+            {
                 NPC.velocity *= 0.8f;
+            }
         }
         else
         {
-            if (NPC.velocity.X < MaxSpeed && NPC.direction == 1)
+            if (NPC.velocity.X < maxSpeed && NPC.direction == 1)
+            {
                 NPC.velocity.X += 0.07f;
-            if (NPC.velocity.X > -MaxSpeed && NPC.direction == -1)
+            }
+            if (NPC.velocity.X > -maxSpeed && NPC.direction == -1)
+            {
                 NPC.velocity.X -= 0.07f;
+            }
+            NPC.velocity.X = MathHelper.Clamp(NPC.velocity.X, -maxSpeed, maxSpeed);
+        }
 
-            NPC.velocity.X = MathHelper.Clamp(NPC.velocity.X, -MaxSpeed, MaxSpeed);
+        bool collisionBottom = false;
+        if (NPC.velocity.Y == 0f)
+        {
+            int tileY = (int)(NPC.position.Y + NPC.height + 7f) / 16;
+            int minTileX = (int)(NPC.position.X / 16);
+            int maxTileX = (int)(NPC.position.X + NPC.width) / 16;
+
+            for (int tileX = minTileX; tileX <= maxTileX; tileX++)
+            {
+                if (Main.tile[tileX, tileY] == null)
+                {
+                    return;
+                }
+                if (Main.tile[tileX, tileY].HasUnactuatedTile && Main.tileSolid[Main.tile[tileX, tileY].TileType])
+                {
+                    collisionBottom = true;
+                    break;
+                }
+            }
+        }
+
+        if (NPC.velocity.Y >= 0f)
+        {
+            SlopedCollision(NPC);
+        }
+
+        if (collisionBottom)
+        {
+           HandleJump(NPC, canJump, jumpHeightModifier);
         }
     }
 
-    private void HandleCollision(bool canJump)
+    private static void SlopedCollision(NPC npc)
     {
-        if (NPC.velocity.Y >= 0f)
-            HandleSlopedCollision();
+        int velocityDirection = Math.Sign(npc.velocity.X);
+        Vector2 targetPosition = npc.position + new Vector2(npc.velocity.X, 0);
 
-        if (CheckBottomCollision())
-            HandleJump(canJump);
-    }
+        int tileX = (int)((targetPosition.X + (npc.width / 2) + ((npc.width / 2 + 1) * velocityDirection)) / 16f);
+        int tileY = (int)((targetPosition.Y + npc.height - 1f) / 16f);
 
-    private void HandleSlopedCollision()
-    {
-        int velocityDirection = Math.Sign(NPC.velocity.X);
-        Vector2 targetPosition = NPC.position + new Vector2(NPC.velocity.X, 0);
-        int tileX = (int)((targetPosition.X + (NPC.width / 2) + ((NPC.width / 2 + 1) * velocityDirection)) / 16f);
-        int tileY = (int)((targetPosition.Y + NPC.height - 1f) / 16f);
+        Tile tile1 = Framing.GetTileSafely(tileX, tileY);
+        Tile tile2 = Framing.GetTileSafely(tileX, tileY - 1);
+        Tile tile3 = Framing.GetTileSafely(tileX, tileY - 2);
+        Tile tile4 = Framing.GetTileSafely(tileX, tileY - 3);
+        Tile tile5 = Framing.GetTileSafely(tileX, tileY - 4);
+        Tile tile6 = Framing.GetTileSafely(tileX - velocityDirection, tileY - 3);
 
-        var tiles = new[]
-        {
-           Framing.GetTileSafely(tileX, tileY),     // tile1
-           Framing.GetTileSafely(tileX, tileY - 1), // tile2
-           Framing.GetTileSafely(tileX, tileY - 2), // tile3
-           Framing.GetTileSafely(tileX, tileY - 3), // tile4
-           Framing.GetTileSafely(tileX, tileY - 4), // tile5
-           Framing.GetTileSafely(tileX - velocityDirection, tileY - 3) // tile6
-       };
-
-        if (tileX * 16 < targetPosition.X + NPC.width && tileX * 16 + 16 > targetPosition.X &&
-            ((tiles[0].HasUnactuatedTile && !tiles[0].TopSlope && !tiles[1].TopSlope && Main.tileSolid[tiles[0].TileType] && !Main.tileSolidTop[tiles[0].TileType]) ||
-            (tiles[1].IsHalfBlock && tiles[1].HasUnactuatedTile)) && (!tiles[1].HasUnactuatedTile || !Main.tileSolid[tiles[1].TileType] || Main.tileSolidTop[tiles[1].TileType] ||
-            (tiles[1].IsHalfBlock &&
-            (!tiles[4].HasUnactuatedTile || !Main.tileSolid[tiles[4].TileType] || Main.tileSolidTop[tiles[4].TileType]))) &&
-            (!tiles[2].HasUnactuatedTile || !Main.tileSolid[tiles[2].TileType] || Main.tileSolidTop[tiles[2].TileType]) &&
-            (!tiles[3].HasUnactuatedTile || !Main.tileSolid[tiles[3].TileType] || Main.tileSolidTop[tiles[3].TileType]) &&
-            (!tiles[5].HasUnactuatedTile || !Main.tileSolid[tiles[5].TileType]))
+        if (tileX * 16 < targetPosition.X + npc.width && tileX * 16 + 16 > targetPosition.X &&
+            ((tile1.HasUnactuatedTile && !tile1.TopSlope && !tile2.TopSlope && Main.tileSolid[tile1.TileType] && !Main.tileSolidTop[tile1.TileType]) ||
+            (tile2.IsHalfBlock && tile2.HasUnactuatedTile)) && (!tile2.HasUnactuatedTile || !Main.tileSolid[tile2.TileType] || Main.tileSolidTop[tile2.TileType] ||
+            (tile2.IsHalfBlock &&
+            (!tile5.HasUnactuatedTile || !Main.tileSolid[tile5.TileType] || Main.tileSolidTop[tile5.TileType]))) &&
+            (!tile3.HasUnactuatedTile || !Main.tileSolid[tile3.TileType] || Main.tileSolidTop[tile3.TileType]) &&
+            (!tile4.HasUnactuatedTile || !Main.tileSolid[tile4.TileType] || Main.tileSolidTop[tile4.TileType]) &&
+            (!tile6.HasUnactuatedTile || !Main.tileSolid[tile6.TileType]))
         {
             float tileYPosition = tileY * 16;
-            if (tiles[0].IsHalfBlock)
-                tileYPosition += 8f;
-            if (tiles[1].IsHalfBlock)
-                tileYPosition -= 8f;
-
-            if (tileYPosition < targetPosition.Y + NPC.height)
+            if (Main.tile[tileX, tileY].IsHalfBlock)
             {
-                float targetYPosition = targetPosition.Y + NPC.height - tileYPosition;
+                tileYPosition += 8f;
+            }
+            if (Main.tile[tileX, tileY - 1].IsHalfBlock)
+            {
+                tileYPosition -= 8f;
+            }
+
+            if (tileYPosition < targetPosition.Y + npc.height)
+            {
+                float targetYPosition = targetPosition.Y + npc.height - tileYPosition;
                 if (targetYPosition <= 16.1f)
                 {
-                    NPC.gfxOffY += NPC.position.Y + NPC.height - tileYPosition;
-                    NPC.position.Y = tileYPosition - NPC.height;
-                    NPC.stepSpeed = targetYPosition < 9f ? 1f : 2f;
+                    npc.gfxOffY += npc.position.Y + npc.height - tileYPosition;
+                    npc.position.Y = tileYPosition - npc.height;
+
+                    if (targetYPosition < 9f)
+                    {
+                        npc.stepSpeed = 1f;
+                    }
+                    else
+                    {
+                        npc.stepSpeed = 2f;
+                    }
                 }
             }
         }
     }
 
-    private bool CheckBottomCollision()
+    private static void HandleJump(NPC npc, bool canJump, float jumpHeightModifier)
     {
-        if (NPC.velocity.Y != 0f) return false;
+        int tileX = (int)((npc.Center.X + 15 * npc.direction) / 16f);
+        int tileY = (int)((npc.position.Y + npc.height - 15f) / 16f);
 
-        int tileY = (int)(NPC.position.Y + NPC.height + 7f) / 16;
-        int minTileX = (int)(NPC.position.X / 16);
-        int maxTileX = (int)(NPC.position.X + NPC.width) / 16;
+        Tile tile1 = Framing.GetTileSafely(tileX, tileY);
+        Tile tile2 = Framing.GetTileSafely(tileX, tileY - 1);
+        Tile tile3 = Framing.GetTileSafely(tileX, tileY + 1);
+        Tile tile4 = Framing.GetTileSafely(tileX + npc.direction, tileY + 1);
 
-        for (int tileX = minTileX; tileX <= maxTileX; tileX++)
+        tile3.IsHalfBlock = true;
+
+        if (npc.spriteDirection == Math.Sign(npc.velocity.X))
         {
-            var tile = Main.tile[tileX, tileY];
-            if (tile == null) return false;
-            if (tile.HasUnactuatedTile && Main.tileSolid[tile.TileType])
-                return true;
-        }
-        return false;
-    }
-
-    private void HandleJump(bool canJump)
-    {
-        int tileX = (int)((NPC.Center.X + 15 * NPC.direction) / 16f);
-        int tileY = (int)((NPC.position.Y + NPC.height - 15f) / 16f);
-
-        var tiles = new[]
-        {
-           Framing.GetTileSafely(tileX, tileY),     // tile1
-           Framing.GetTileSafely(tileX, tileY - 1), // tile2
-           Framing.GetTileSafely(tileX, tileY + 1), // tile3
-           Framing.GetTileSafely(tileX + NPC.direction, tileY + 1) // tile4
-       };
-
-        tiles[2].IsHalfBlock = true;
-
-        if (NPC.spriteDirection == Math.Sign(NPC.velocity.X))
-        {
-            if (tiles[1].HasUnactuatedTile && Main.tileSolid[tiles[1].TileType])
+            if (tile2.HasUnactuatedTile && Main.tileSolid[tile2.TileType])
             {
-                NPC.netUpdate = true;
-                NPC.velocity.Y = -6f;
+                npc.netUpdate = true;
+                npc.velocity.Y = -6f;
             }
-            else if (NPC.position.Y + NPC.height - (tileY * 16) > 20f && tiles[0].HasUnactuatedTile && !tiles[0].TopSlope && Main.tileSolid[tiles[0].TileType])
+            else if (npc.position.Y + npc.height - (tileY * 16) > 20f && tile1.HasUnactuatedTile && !tile1.TopSlope && Main.tileSolid[tile1.TileType])
             {
-                NPC.netUpdate = true;
-                NPC.velocity.Y = -5f;
+                npc.netUpdate = true;
+                npc.velocity.Y = -5f;
             }
-            else if (NPC.directionY < 0 &&
-                (!tiles[2].HasUnactuatedTile || !Main.tileSolid[tiles[2].TileType]) &&
-                (!tiles[3].HasUnactuatedTile || !Main.tileSolid[tiles[3].TileType]))
+            else if (npc.directionY < 0 &&
+                (!tile3.HasUnactuatedTile || !Main.tileSolid[tile3.TileType]) &&
+                (!tile4.HasUnactuatedTile || !Main.tileSolid[tile4.TileType]))
             {
-                NPC.netUpdate = true;
-                NPC.velocity.Y = -8f;
-                NPC.velocity.X *= 1.5f;
+                npc.netUpdate = true;
+                npc.velocity.Y = -8f;
+                npc.velocity.X *= 1.5f;
             }
 
-            if (NPC.velocity.Y == 0f && canJump && NPC.ai[1] == 1f)
-                NPC.velocity.Y = -5f;
+            if (npc.velocity.Y == 0f && canJump && npc.ai[1] == 1f)
+            {
+                npc.velocity.Y = -5f;
+            }
 
-            if (NPC.velocity.Y < 0)
-                NPC.velocity.Y *= JumpHeightModifier;
+            if (npc.velocity.Y < 0)
+            {
+                npc.velocity.Y *= jumpHeightModifier;
+            }
         }
     }
 }

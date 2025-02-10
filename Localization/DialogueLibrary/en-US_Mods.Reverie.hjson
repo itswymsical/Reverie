@@ -114,4 +114,18 @@ DialogueLibrary: {
 			Line3: They may hold the key to unlocking the secrets of Reverie and why your here.
 		}
 	}
+
+	GuideCommands: {
+		Follow.Line1: You know what, i think i'll just follow you around for a bit. I'll show you the ropes.
+
+		Stay: {
+			Line1: No? not a deal?
+			Line2: okay, okay. I'll stay here.
+		}
+
+		Wander: {
+			Line1: On second thought, maybe i'll just wander around for a bit. You know, explore the area.
+			Line2: I'll leave you to the slaying.
+		}
+	}
 }
