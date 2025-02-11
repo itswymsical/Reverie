@@ -1,5 +1,6 @@
 ﻿using Reverie.Common.Systems;
 using Reverie.Utilities;
+using Terraria.Audio;
 
 namespace Reverie.Common.NPCs;
 
@@ -34,7 +35,7 @@ public class KingSlimeGlobal : GlobalNPC
     // Constants
     private const float JUMP_DURATION = 380f;
     private const float SHOOT_DURATION = 540f;
-    private const float STROLL_SPEED = .25f;
+    private const float STROLL_SPEED = .65f;
     private const float IDLE_DURATION = 120f;
 
     // Animation constants
@@ -169,7 +170,7 @@ public class KingSlimeGlobal : GlobalNPC
         UpdateVisualEffects(npc);
     }
 
-    private static void HandleStrolling(NPC npc)
+    private void HandleStrolling(NPC npc)
     {
         if (npc.target < 0 || npc.target == 255 || Main.player[npc.target].dead)
             npc.TargetClosest();
@@ -196,6 +197,15 @@ public class KingSlimeGlobal : GlobalNPC
                 npc.velocity.X -= 0.03f;
             }
             npc.velocity.X = MathHelper.Clamp(npc.velocity.X, -STROLL_SPEED, STROLL_SPEED);
+            HandleSlimes(npc);
+        }
+    }
+
+    private void HandleSlimes(NPC npc)
+    {
+        if (stateTimer % 60f == 0)
+        {
+            NPC.NewNPC(default, (int)npc.Center.X, (int)npc.position.Y, NPCID.BlueSlime);
         }
     }
 
@@ -319,6 +329,16 @@ public class KingSlimeGlobal : GlobalNPC
 
         if (npc.velocity.Y == 0f)
         {
+            if (!npc.localAI[1].Equals(1f))
+            {
+                npc.localAI[1] = 1f;
+                SoundEngine.PlaySound(new SoundStyle(
+                $"{SFX_DIRECTORY}SlimeSlamCharge")
+                {
+                    PitchVariance = 0.2f
+                }, npc.Center);
+            }
+
             npc.direction = npc.spriteDirection = npc.Center.X < Main.player[npc.target].Center.X ? 1 : -1;
 
             npc.velocity.Y = -14f;
@@ -335,6 +355,7 @@ public class KingSlimeGlobal : GlobalNPC
         }
         else // In air
         {
+            npc.localAI[1] = 0f;
             float maxSpeed = 3f;
             if ((npc.direction == 1 && npc.velocity.X < maxSpeed) ||
                 (npc.direction == -1 && npc.velocity.X > -maxSpeed))
@@ -386,6 +407,11 @@ public class KingSlimeGlobal : GlobalNPC
             {
                 CameraSystem.shake = 15;
                 npc.localAI[0] = 1f;
+                SoundEngine.PlaySound(new SoundStyle(
+                $"{SFX_DIRECTORY}SlimeSlam")
+                {
+                    PitchVariance = 0.2f
+                }, npc.Center);
 
                 for (int i = 0; i < 30; i++)
                 {
