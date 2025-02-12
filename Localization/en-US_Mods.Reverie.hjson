@@ -144,6 +144,7 @@ Projectiles: {
 	BrambleArrowProj.DisplayName: Bramble Arrow
 	WardensArmProj.DisplayName: Wardens Arm
 	ExplosiveLanding.DisplayName: Explosive Landing
+	SlimeSprayProj.DisplayName: Slime Spray Proj
 }
 
 InfoDisplays.MissionObjectives.DisplayName: Mission Objectives
@@ -175,6 +176,102 @@ Configs: {
 		B: {
 			Label: B
 			Tooltip: ""
+		}
+	}
+
+	GraphicsConfig: {
+		DisplayName: Graphics Config
+
+		ScreenshakeMult: {
+			Label: Screenshake
+			Tooltip: Modifies the intensity of screen shake effects
+		}
+
+		LightingPollRate: {
+			Label: Lighting Buffer Poll Rate
+			Tooltip:
+				'''
+				Changes how often the lighting buffer polls for data. 
+				Higher values increase performance but make lighting update slower on some objects. 
+				Lower values result in smoother moving light but may hurt performance.
+				'''
+		}
+
+		ParticlesActive: {
+			Label: Extra Particles
+			Tooltip:
+				'''
+				Enables/Disables special particles. 
+				Disable this if you have performance issues.
+				'''
+		}
+
+		HighQualityLighting: {
+			Label: High quality lit textures
+			Tooltip:
+				'''
+				Enables/Disables fancy lighting on large textures. 
+				Disable this if you have performance issues.
+				'''
+		}
+
+		ReflectionConfig: {
+			Label: Background Reflections
+			Tooltip:
+				'''
+				Configures what is rendered for background reflections. 
+				Disable this if you have performance issues.
+				'''
+		}
+	}
+
+	ReflectionSubConfig: {
+		Tooltip: ""
+
+		ReflectionsOn: {
+			Label: Background Reflections
+			Tooltip:
+				'''
+				This will Enable/Disable the background reflections system entirely. 
+				If this is off, the other settings in this block are ignored. 
+				Disable this if you have performance issues.
+				'''
+		}
+
+		PlayerReflectionsOn: {
+			Label: Reflect Players
+			Tooltip:
+				'''
+				This will Enable/Disable reflecting Players.
+				 low performance impact.
+				'''
+		}
+
+		NpcReflectionsOn: {
+			Label: Reflect NPCs
+			Tooltip:
+				'''
+				This will Enable/Disable reflecting NPCs.
+				 low performance impact.
+				'''
+		}
+
+		ProjReflectionsOn: {
+			Label: Reflect Projectiles
+			Tooltip:
+				'''
+				This will Enable/Disable reflecting Projectiles.
+				 high performance impact.
+				'''
+		}
+
+		DustReflectionsOn: {
+			Label: Reflect Particles
+			Tooltip:
+				'''
+				This will Enable/Disable reflecting Particles, gores and dusts.
+				 high performance impact.
+				'''
 		}
 	}
 }
