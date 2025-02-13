@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions.MissionAttributes;
 using Reverie.Utilities;
+using Terraria.Audio;
+using Terraria;
 
 namespace Reverie.Core.Missions.MissionHandlers
 {
-    [MissionHandler(MissionID.CrashLanding)]
-    public class CrashLanding : ObjectiveHandler
+    [MissionHandler(MissionID.AFallingStar)]
+    public class AFallingStar : ObjectiveHandler
     {
-        public CrashLanding(Mission mission) : base(mission)
-            => Instance.Logger.Info("[Crash Landing] Mission handler constructed");
+        public AFallingStar(Mission mission) : base(mission)
+            => Instance.Logger.Info("[A Falling Star] Mission handler constructed");
 
         private readonly List<Item> starterItems =
         [
@@ -54,6 +56,24 @@ namespace Reverie.Core.Missions.MissionHandlers
                             break;
                         case 9:
                             DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_KS_Encounter, true);
+                            if (!NPC.AnyNPCs(NPCID.KingSlime))
+                            {
+                                if (Main.LocalPlayer.whoAmI == Main.myPlayer)
+                                {
+                                    SoundEngine.PlaySound(SoundID.Roar, Main.LocalPlayer.position);
+
+                                    int type = NPCID.KingSlime;
+
+                                    if (Main.netMode != NetmodeID.MultiplayerClient)
+                                    {
+                                        NPC.SpawnOnPlayer(Main.LocalPlayer.whoAmI, type);
+                                    }
+                                    else
+                                    {
+                                        NetMessage.SendData(MessageID.SpawnBossUseLicenseStartEvent, number: Main.LocalPlayer.whoAmI, number2: type);
+                                    }
+                                }
+                            }
                             break;
                         case 10:
                             DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_KS_Victory, true);
@@ -196,6 +216,7 @@ namespace Reverie.Core.Missions.MissionHandlers
                 }
             }
         }
+
         public override void OnBiomeEnter(Player player, BiomeType biome)
         {
             lock (handlerLock)

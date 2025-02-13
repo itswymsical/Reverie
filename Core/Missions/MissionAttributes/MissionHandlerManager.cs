@@ -8,7 +8,7 @@ namespace Reverie.Core.Missions.MissionAttributes;
 
 public class MissionHandlerManager
 {
-    private readonly object handlerLock = new object();
+    private readonly object handlerLock = new();
     private readonly Dictionary<int, ObjectiveHandler> handlers = [];
     private static MissionHandlerManager instance;
     public static MissionHandlerManager Instance => instance ??= new MissionHandlerManager();
@@ -61,13 +61,16 @@ public class MissionHandlerManager
         }
     }
 
-    private IEnumerable<ObjectiveHandler> GetActiveHandlers()
+    private IEnumerable<ObjectiveHandler> ActiveHandlers
     {
-        lock (handlerLock)
+        get
         {
-            return handlers.Values
-                .Where(h => h.Mission.Progress == MissionProgress.Active)
-                .ToList();
+            lock (handlerLock)
+            {
+                return handlers.Values
+                    .Where(h => h.Mission.Progress == MissionProgress.Active)
+                    .ToList();
+            }
         }
     }
 
@@ -96,7 +99,7 @@ public class MissionHandlerManager
         {
             try
             {
-                foreach (var handler in GetActiveHandlers())
+                foreach (var handler in ActiveHandlers)
                 {
                     handler.OnItemCreated(item, context);
                 }
@@ -114,7 +117,7 @@ public class MissionHandlerManager
         {
             try
             {
-                foreach (var handler in GetActiveHandlers())
+                foreach (var handler in ActiveHandlers)
                 {
                     handler.OnItemPickup(item);
                 }
@@ -132,7 +135,7 @@ public class MissionHandlerManager
         {
             try
             {
-                foreach (var handler in GetActiveHandlers())
+                foreach (var handler in ActiveHandlers)
                 {
                     handler.OnNPCKill(npc);
                 }
@@ -150,7 +153,7 @@ public class MissionHandlerManager
         {
             try
             {
-                foreach (var handler in GetActiveHandlers())
+                foreach (var handler in ActiveHandlers)
                 {
                     handler.OnNPCChat(npc);
                 }
@@ -168,7 +171,7 @@ public class MissionHandlerManager
         {
             try
             {
-                foreach (var handler in GetActiveHandlers())
+                foreach (var handler in ActiveHandlers)
                 {
                     handler.OnNPCSpawn(npc);
                 }
@@ -186,7 +189,7 @@ public class MissionHandlerManager
         {
             try
             {
-                foreach (var handler in GetActiveHandlers())
+                foreach (var handler in ActiveHandlers)
                 {
                     handler.OnNPCLoot(npc);
                 }
@@ -204,7 +207,7 @@ public class MissionHandlerManager
         {
             try
             {
-                var activeHandlers = GetActiveHandlers().ToList();
+                var activeHandlers = ActiveHandlers.ToList();
                 ModContent.GetInstance<Reverie>().Logger.Debug($"Processing NPC hit with {activeHandlers.Count} active handlers");
 
                 foreach (var handler in activeHandlers)
@@ -225,7 +228,7 @@ public class MissionHandlerManager
         {
             try
             {
-                foreach (var handler in GetActiveHandlers())
+                foreach (var handler in ActiveHandlers)
                 {
                     handler.OnBiomeEnter(player, biome);
                     ModContent.GetInstance<Reverie>().Logger.Error($"OnBiomeEnter: {biome}");

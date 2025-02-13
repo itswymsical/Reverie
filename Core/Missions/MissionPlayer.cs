@@ -25,16 +25,16 @@ public partial class MissionPlayer : ModPlayer
     private readonly HashSet<int> dirtyMissions = [];
     public override void OnEnterWorld()
     {
-        var CrashLanding = GetMission(MissionID.CrashLanding);
+        var AFallingStar = GetMission(MissionID.AFallingStar);
         var player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
 
-        if (CrashLanding != null &&
-            CrashLanding.State != MissionAvailability.Completed &&
-            CrashLanding.Progress != MissionProgress.Active)
+        if (AFallingStar != null &&
+            AFallingStar.State != MissionAvailability.Completed &&
+            AFallingStar.Progress != MissionProgress.Active)
         {
             CutsceneSystem.PlayCutscene(new FallingStarCutscene());
-            UnlockMission(MissionID.CrashLanding);
-            StartMission(MissionID.CrashLanding);
+            UnlockMission(MissionID.AFallingStar);
+            StartMission(MissionID.AFallingStar);
         }
     }
 

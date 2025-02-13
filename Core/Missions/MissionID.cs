@@ -2,6 +2,6 @@
 {
     public static class MissionID
     {
-        public const int CrashLanding = 1;
+        public const int AFallingStar = 1;
     }
 }

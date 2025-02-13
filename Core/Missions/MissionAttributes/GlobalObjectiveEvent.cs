@@ -5,6 +5,7 @@ using Terraria.DataStructures;
 using Reverie.Core.Dialogue;
 using Reverie.Utilities.Extensions;
 using static Reverie.Core.Missions.MissionPlayer;
+using Reverie.Core.Missions.MissionHandlers;
 
 namespace Reverie.Core.Missions.MissionAttributes;
 
@@ -18,25 +19,9 @@ public class ObjectiveEventItem : GlobalItem
 
     public override bool OnPickup(Item item, Player player)
     {
-        MissionHandlerManager.Instance.OnItemPickup(item);
+        // Try to update mission progress for newly picked up items
+        MissionProgressHelper.TryUpdateProgressForItem(item, player);
         return base.OnPickup(item, player);
-    }
-    public override void UpdateInventory(Item item, Player player)
-    {
-        var missionPlayer = player.GetModPlayer<MissionPlayer>();
-
-        foreach (var mission in missionPlayer.GetActiveMissions())
-        {
-            var currentSet = mission.ObjectiveSets[mission.CurrentSetIndex];
-
-            if (item.stack > 0 && !currentSet.IsCompleted && !currentSet.HasCheckedInitialInventory)
-            {
-                MissionHandlerManager.Instance.OnItemPickup(item);
-
-                currentSet.HasCheckedInitialInventory = true;
-            }
-        }
-        base.UpdateInventory(item, player);
     }
 }
 
@@ -60,19 +45,19 @@ public class ObjectiveEventNPC : GlobalNPC
     public override void EditSpawnPool(IDictionary<int, float> pool, NPCSpawnInfo spawnInfo)
     {
         var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        Mission CrashLanding = mPlayer.GetMission(MissionID.CrashLanding);
+        Mission AFallingStar = mPlayer.GetMission(MissionID.AFallingStar);
 
-        if (CrashLanding?.Progress == MissionProgress.Active)
+        if (AFallingStar?.Progress == MissionProgress.Active)
         {
             var rateWeakSlimes = 0.1f;
             var rateStrongSlimes = 0.04f;
             var rateRareSlimes = 0.002f;
-            var currentSet = CrashLanding.ObjectiveSets[CrashLanding.CurrentSetIndex];
-            if (!currentSet.IsCompleted && CrashLanding.CurrentSetIndex < 1)
+            var currentSet = AFallingStar.ObjectiveSets[AFallingStar.CurrentSetIndex];
+            if (!currentSet.IsCompleted && AFallingStar.CurrentSetIndex < 1)
             {
                 pool.Clear();
             }
-            if (CrashLanding.CurrentSetIndex >= 2 && Main.LocalPlayer.ZoneOverworldHeight)
+            if (AFallingStar.CurrentSetIndex >= 2 && Main.LocalPlayer.ZoneOverworldHeight)
             {
                 pool.Add(NPCID.GreenSlime, rateWeakSlimes);
                 pool.Add(NPCID.BlueSlime, rateWeakSlimes);
@@ -82,13 +67,13 @@ public class ObjectiveEventNPC : GlobalNPC
                 pool.Add(NPCID.Pinky, rateRareSlimes);
                 pool.Add(NPCID.MotherSlime, rateRareSlimes);
             }
-            else if (CrashLanding.CurrentSetIndex >= 5 && Main.LocalPlayer.ZoneOverworldHeight)
+            else if (AFallingStar.CurrentSetIndex >= 5 && Main.LocalPlayer.ZoneOverworldHeight)
             {
                 rateWeakSlimes = 0.17f;
                 rateStrongSlimes = 0.09f;
                 rateRareSlimes = 0.008f;
             }
-            else if (CrashLanding.CurrentSetIndex >= 7 && Main.LocalPlayer.ZoneOverworldHeight)
+            else if (AFallingStar.CurrentSetIndex >= 7 && Main.LocalPlayer.ZoneOverworldHeight)
             {
                 rateWeakSlimes = 0.2f;
                 rateStrongSlimes = 0.11f;
@@ -101,26 +86,26 @@ public class ObjectiveEventNPC : GlobalNPC
     public override void EditSpawnRate(Player player, ref int spawnRate, ref int maxSpawns)
     {
         var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        Mission CrashLanding = mPlayer.GetMission(MissionID.CrashLanding);
-        if (CrashLanding?.Progress == MissionProgress.Active && player.ZoneOverworldHeight)
+        Mission AFallingStar = mPlayer.GetMission(MissionID.AFallingStar);
+        if (AFallingStar?.Progress == MissionProgress.Active && player.ZoneOverworldHeight)
         {
-            var currentSet = CrashLanding.ObjectiveSets[CrashLanding.CurrentSetIndex];
-            if (CrashLanding.CurrentSetIndex >= 3)
+            var currentSet = AFallingStar.ObjectiveSets[AFallingStar.CurrentSetIndex];
+            if (AFallingStar.CurrentSetIndex >= 3)
             {
                 spawnRate = 3;
                 maxSpawns = 8;
             }
-            if (CrashLanding.CurrentSetIndex >= 5)
+            if (AFallingStar.CurrentSetIndex >= 5)
             {
                 spawnRate = 2;
                 maxSpawns = 9;
             }
-            else if (CrashLanding.CurrentSetIndex >= 7)
+            else if (AFallingStar.CurrentSetIndex >= 7)
             {
                 spawnRate = 4;
                 maxSpawns = 10;
             }
-            else if (CrashLanding.CurrentSetIndex >= 9)
+            else if (AFallingStar.CurrentSetIndex >= 9)
             {
                 spawnRate = 5;
                 maxSpawns = 15;

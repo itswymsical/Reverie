@@ -13,9 +13,9 @@ public class MissionFactory
         missionData = new Dictionary<int, Func<Mission>>
         {
 
-            {MissionID.CrashLanding, () => new Mission(
-                MissionID.CrashLanding,
-                "Falling Star",
+            {MissionID.AFallingStar, () => new Mission(
+                MissionID.AFallingStar,
+                "A Falling Star",
                 "'Well, that's one way to make an appearance...'" +
                 "\nBegin your journey in Terraria, discovering knowledge and power...",
                 [
