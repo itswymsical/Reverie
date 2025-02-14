@@ -63,11 +63,11 @@ public class ObjectiveEventNPC : GlobalNPC
             var rateStrongSlimes = 0.04f;
             var rateRareSlimes = 0.002f;
             var currentSet = AFallingStar.ObjectiveIndex[AFallingStar.CurObjectiveIndex];
-            if (!currentSet.IsCompleted && AFallingStar.CurObjectiveIndex < 1)
+            if (!currentSet.IsCompleted && AFallingStar.CurObjectiveIndex < 2)
             {
                 pool.Clear();
             }
-            if (AFallingStar.CurObjectiveIndex >= 2 && Main.LocalPlayer.ZoneOverworldHeight)
+            if (AFallingStar.CurObjectiveIndex >= 3 && Main.LocalPlayer.ZoneOverworldHeight)
             {
                 pool.Add(NPCID.GreenSlime, rateWeakSlimes);
                 pool.Add(NPCID.BlueSlime, rateWeakSlimes);
@@ -77,13 +77,14 @@ public class ObjectiveEventNPC : GlobalNPC
                 pool.Add(NPCID.Pinky, rateRareSlimes);
                 pool.Add(NPCID.MotherSlime, rateRareSlimes);
             }
-            else if (AFallingStar.CurObjectiveIndex >= 5 && Main.LocalPlayer.ZoneOverworldHeight)
+            else if (AFallingStar.CurObjectiveIndex >= 6 && Main.LocalPlayer.ZoneOverworldHeight)
             {
                 rateWeakSlimes = 0.17f;
                 rateStrongSlimes = 0.09f;
                 rateRareSlimes = 0.008f;
             }
-            else if (AFallingStar.CurObjectiveIndex >= 7 && Main.LocalPlayer.ZoneOverworldHeight)
+            else if (AFallingStar.CurObjectiveIndex >= 9 && AFallingStar.CurObjectiveIndex <= 10 
+                && Main.LocalPlayer.ZoneOverworldHeight)
             {
                 rateWeakSlimes = 0.2f;
                 rateStrongSlimes = 0.11f;

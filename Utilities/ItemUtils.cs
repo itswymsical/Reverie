@@ -40,6 +40,9 @@ public static class ItemUtils
     public static bool IsWeapon(this Item item) => (item.DamageType == DamageClass.Magic
         || item.DamageType == DamageClass.Summon || item.DamageType == DamageClass.Melee
         || item.DamageType == DamageClass.Throwing);
+    public static bool IsOre(this Item item) 
+        => item.Name.Contains("Ore") || item.Name.EndsWith("ium") 
+        || item.Name.EndsWith("ite") || item.Name.EndsWith("yte");
 
     public static bool IsWood(this Item item)
     {

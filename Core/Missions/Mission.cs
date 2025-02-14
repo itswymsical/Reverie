@@ -75,15 +75,15 @@ namespace Reverie.Core.Missions
             InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(this));
         }
 
-        public bool UpdateProgress(int objectiveIndex, int amount = 1)
+        public bool UpdateProgress(int objective, int amount = 1)
         {
             if (Progress != MissionProgress.Active)
                 return false;
 
             var currentSet = ObjectiveIndex[CurObjectiveIndex];
-            if (objectiveIndex >= 0 && objectiveIndex < currentSet.Objectives.Count)
+            if (objective >= 0 && objective < currentSet.Objectives.Count)
             {
-                var obj = currentSet.Objectives[objectiveIndex];
+                var obj = currentSet.Objectives[objective];
                 if (!obj.IsCompleted || amount < 0)
                 {
                     bool wasCompleted = obj.UpdateProgress(amount);
@@ -94,8 +94,8 @@ namespace Reverie.Core.Missions
 
                     if (wasCompleted && amount > 0)
                     {
-                        OnObjectiveComplete(objectiveIndex);
-                        MissionHandlerManager.Instance.OnObjectiveComplete(this, objectiveIndex);
+                        OnObjectiveComplete(objective);
+                        MissionHandlerManager.Instance.OnObjectiveComplete(this, objective);
                         SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ObjectiveComplete") with{ Volume = 0.75f }, Main.LocalPlayer.position);
                     }
 

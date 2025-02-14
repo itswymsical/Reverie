@@ -12,12 +12,12 @@ namespace Reverie.Core.Missions.MissionHandlers
     [MissionHandler(MissionID.AFallingStar)]
     public class AFallingStar : ObjectiveHandler
     {
-        public AFallingStar(Mission mission) : base(mission)
-            => Instance.Logger.Info("[A Falling Star] Mission handler constructed");
+        public AFallingStar(Mission mission) : base(mission) => Instance.Logger.Info("[A Falling Star] Objective handler constructed");
+        public Player player = Main.LocalPlayer;
 
         private readonly List<Item> starterItems =
         [
-            new Item(ItemID.CopperShortsword),
+            new Item(ItemID.CopperBroadsword),
             new Item(ItemID.CopperPickaxe),
             new Item(ItemID.CopperAxe)
         ];
@@ -33,19 +33,18 @@ namespace Reverie.Core.Missions.MissionHandlers
                     {
                         case 0:
                             foreach (var item in starterItems)
-                                Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), item.type, item.stack);
+                                player.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), item.type, item.stack);
                             break;
 
-                        case 2:
-                            ObjectiveHelper.RetrieveItemsFromPlayer(Main.LocalPlayer, ItemID.StoneBlock, Mission.ObjectiveIndex[1].Objectives[0].RequiredCount);
-                            ObjectiveHelper.RetrieveItemsFromPlayer(Main.LocalPlayer, ItemID.Wood, Mission.ObjectiveIndex[1].Objectives[1].RequiredCount);
+                        case 1:
+                            ObjectiveHelper.RetrieveItemsFromPlayer(player, ItemID.StoneBlock, Mission.ObjectiveIndex[1].Objectives[0].RequiredCount);
+                            ObjectiveHelper.RetrieveItemsFromPlayer(player, ItemID.Wood, Mission.ObjectiveIndex[1].Objectives[1].RequiredCount);
                             DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_FixHouse, true);
                             break;
-                        case 3:
-                            if (Mission.ObjectiveIndex[Mission.CurObjectiveIndex].Objectives[3].IsCompleted)
-                            {
+                        case 2:
+                            if (Mission.ObjectiveIndex[Mission.CurObjectiveIndex].Objectives[0].IsCompleted 
+                                && Mission.ObjectiveIndex[Mission.CurObjectiveIndex].Objectives[1].IsCompleted)
                                 DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_WildlifeWoes, true);
-                            }
                             break;
                         case 4:
                             DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation, true);
@@ -104,7 +103,7 @@ namespace Reverie.Core.Missions.MissionHandlers
                             if (item.buffTime > 0 || item.potion || item.useStyle is ItemUseStyleID.DrinkLiquid)
                                 Mission.UpdateProgress(2, item.stack);
                             break;
-                        case 3:
+                        case 2:
                             if (item.headSlot != -1 && !item.vanity)
                                 Mission.UpdateProgress(0, item.stack);
 
@@ -146,7 +145,7 @@ namespace Reverie.Core.Missions.MissionHandlers
                             if (item.buffTime > 0 || item.potion || item.useStyle is ItemUseStyleID.DrinkLiquid)
                                 Mission.UpdateProgress(2, item.stack);
                             break;
-                        case 3:
+                        case 2:
                             if (item.headSlot != -1 && !item.vanity)
                                 Mission.UpdateProgress(0, item.stack);
 
@@ -158,6 +157,14 @@ namespace Reverie.Core.Missions.MissionHandlers
 
                             if (item.IsWeapon())
                                 Mission.UpdateProgress(3, item.stack);
+                            break;
+                        case 3:
+                            if (item.accessory)
+                                Mission.UpdateProgress(0, item.stack);
+                            if (item.IsOre())
+                                Mission.UpdateProgress(1, item.stack);
+                            if (item.Name.Contains("Bar"))
+                                Mission.UpdateProgress(2, item.stack);
                             break;
                         case 5:
                             if (!item.IsCurrency && (item.accessory || item.IsWeapon() || item.IsMiningTool() || item.value > 0 || item.rare > ItemRarityID.White))
@@ -259,8 +266,13 @@ namespace Reverie.Core.Missions.MissionHandlers
                             DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_GatheringResources, true);
                             Mission.UpdateProgress(0);
                             break;
-                        case 2:
-                            Mission.UpdateProgress(0);
+                        case 1:
+                            if (Mission.ObjectiveIndex[1].Objectives[0].IsCompleted 
+                                && Mission.ObjectiveIndex[1].Objectives[1].IsCompleted)
+                            {
+                                Mission.UpdateProgress(2);
+                            }
+                        
                             break;
                         default:
                             break;
