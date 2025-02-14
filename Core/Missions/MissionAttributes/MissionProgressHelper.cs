@@ -26,7 +26,7 @@ public static class MissionProgressHelper
 
         foreach (var mission in missionPlayer.GetActiveMissions())
         {
-            var currentSet = mission.ObjectiveSets[mission.CurrentSetIndex];
+            var currentSet = mission.ObjectiveIndex[mission.CurObjectiveIndex];
 
             if (item.stack > 0 && !currentSet.IsCompleted)
             {

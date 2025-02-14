@@ -43,7 +43,7 @@ public partial class MissionPlayer : ModPlayer
 
             var container = mission.ToState();
 
-            ModContent.GetInstance<Reverie>().Logger.Debug($"Mission {mission.Name} progress updated: Set {mission.CurrentSetIndex}");
+            ModContent.GetInstance<Reverie>().Logger.Debug($"Mission {mission.Name} progress updated: Set {mission.CurObjectiveIndex}");
         }
         catch (Exception ex)
         {
@@ -128,8 +128,8 @@ public partial class MissionPlayer : ModPlayer
                         ["Progress"] = (int)mission.Progress,
                         ["State"] = (int)mission.State,
                         ["Unlocked"] = mission.Unlocked,
-                        ["CurrentSetIndex"] = mission.CurrentSetIndex,
-                        ["ObjectiveSets"] = SerializeObjectiveSets(mission.ObjectiveSets)
+                        ["CurObjectiveIndex"] = mission.CurObjectiveIndex,
+                        ["ObjectiveIndex"] = SerializeObjectiveIndex(mission.ObjectiveIndex)
                     }
                 };
                 activeMissionData.Add(MissionAvailability);
@@ -146,8 +146,8 @@ public partial class MissionPlayer : ModPlayer
                         ["Progress"] = (int)mission.Progress,
                         ["State"] = (int)mission.State,
                         ["Unlocked"] = mission.Unlocked,
-                        ["CurrentSetIndex"] = mission.CurrentSetIndex,
-                        ["ObjectiveSets"] = SerializeObjectiveSets(mission.ObjectiveSets)
+                        ["CurObjectiveIndex"] = mission.CurObjectiveIndex,
+                        ["ObjectiveIndex"] = SerializeObjectiveIndex(mission.ObjectiveIndex)
                     }
                 };
                 activeMissionData.Add(MissionAvailability);
@@ -174,10 +174,10 @@ public partial class MissionPlayer : ModPlayer
         }
     }
 
-    private List<TagCompound> SerializeObjectiveSets(List<ObjectiveSet> objectiveSets)
+    private List<TagCompound> SerializeObjectiveIndex(List<ObjectiveSet> ObjectiveIndex)
     {
         var serializedSets = new List<TagCompound>();
-        foreach (var set in objectiveSets)
+        foreach (var set in ObjectiveIndex)
         {
             using var ms = new MemoryStream();
             using var writer = new BinaryWriter(ms);
@@ -260,10 +260,10 @@ public partial class MissionPlayer : ModPlayer
             mission.Progress = (MissionProgress)stateTag.GetInt("Progress");
             mission.State = (MissionAvailability)stateTag.GetInt("State");
             mission.Unlocked = stateTag.GetBool("Unlocked");
-            mission.CurrentSetIndex = stateTag.GetInt("CurrentSetIndex");
+            mission.CurObjectiveIndex = stateTag.GetInt("CurObjectiveIndex");
 
-            var serializedSets = stateTag.GetList<TagCompound>("ObjectiveSets");
-            LoadObjectiveSets(mission, serializedSets);
+            var serializedSets = stateTag.GetList<TagCompound>("ObjectiveIndex");
+            LoadObjectiveIndex(mission, serializedSets);
 
             missionDict[missionId] = mission;
         }
@@ -273,14 +273,14 @@ public partial class MissionPlayer : ModPlayer
         }
     }
 
-    private void LoadObjectiveSets(Mission mission, IList<TagCompound> serializedSets)
+    private void LoadObjectiveIndex(Mission mission, IList<TagCompound> serializedSets)
     {
-        for (var i = 0; i < Math.Min(serializedSets.Count, mission.ObjectiveSets.Count); i++)
+        for (var i = 0; i < Math.Min(serializedSets.Count, mission.ObjectiveIndex.Count); i++)
         {
             var setData = serializedSets[i].GetByteArray("SetData");
             using var ms = new MemoryStream(setData);
             using var reader = new BinaryReader(ms);
-            mission.ObjectiveSets[i].ReadData(reader);
+            mission.ObjectiveIndex[i].ReadData(reader);
         }
     }
     #endregion

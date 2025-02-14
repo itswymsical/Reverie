@@ -33,7 +33,7 @@ namespace Reverie.Common.UI.MissionUI
             {
                 display.AppendLine($"{mission.Name}");
 
-                var currentSet = mission.ObjectiveSets[mission.CurrentSetIndex];
+                var currentSet = mission.ObjectiveIndex[mission.CurObjectiveIndex];
                 foreach (var objective in currentSet.Objectives)
                 {
                     string status = objective.IsCompleted ? CHECKED_CHECKBOX : EMPTY_CHECKBOX;

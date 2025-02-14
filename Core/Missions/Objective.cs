@@ -58,7 +58,7 @@ public class Objective(string description, int requiredCount = 1)
     }
 }
 
-public class ObjectiveSetState
+public class ObjectiveIndextate
 {
     public List<ObjectiveState> Objectives { get; set; } = [];
 
@@ -70,11 +70,11 @@ public class ObjectiveSetState
         };
     }
 
-    public static ObjectiveSetState Deserialize(TagCompound tag)
+    public static ObjectiveIndextate Deserialize(TagCompound tag)
     {
         try
         {
-            return new ObjectiveSetState
+            return new ObjectiveIndextate
             {
                 Objectives = tag.GetList<TagCompound>("Objectives")
                     .Select(t => ObjectiveState.Deserialize(t))
@@ -84,7 +84,7 @@ public class ObjectiveSetState
         }
         catch
         {
-            return new ObjectiveSetState();
+            return new ObjectiveIndextate();
         }
     }
 }

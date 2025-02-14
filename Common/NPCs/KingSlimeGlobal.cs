@@ -46,6 +46,7 @@ public class KingSlimeGlobal : GlobalNPC
     {
         Main.npcFrameCount[Main.npc[NPCID.KingSlime].type] = 5;
     }
+
     public override void SetDefaults(NPC npc)
     {
         if (npc.type != NPCID.KingSlime) return;
@@ -67,7 +68,6 @@ public class KingSlimeGlobal : GlobalNPC
         npc.DeathSound = new SoundStyle($"{SFX_DIRECTORY}KingSlimeDeath") with { PitchVariance = 0.2f };
     }
     
-
     public override void AI(NPC npc)
     {
         if (npc.type != NPCID.KingSlime) return;
@@ -123,7 +123,7 @@ public class KingSlimeGlobal : GlobalNPC
             case KingSlimeState.Idle:
                 if (stateTimer >= IDLE_DURATION)
                 {
-                    if (healthPercentage <= PHASE_2_THRESHOLD)
+                    if (healthPercentage <= PHASE_2_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) <= 9)
                     {
                         consecutiveSlams = 0;
                         ChangeState(KingSlimeState.PrepareSlamAttack);
@@ -136,7 +136,7 @@ public class KingSlimeGlobal : GlobalNPC
             case KingSlimeState.Shooting:
                 if (stateTimer >= SHOOT_DURATION)
                 {
-                    if (healthPercentage <= PHASE_2_THRESHOLD)
+                    if (healthPercentage <= PHASE_2_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) <= 9)
                     {
                         consecutiveSlams = 0;
                         ChangeState(KingSlimeState.PrepareSlamAttack);
@@ -244,20 +244,24 @@ public class KingSlimeGlobal : GlobalNPC
 
     private void HandleSlimes(NPC npc)
     {
-        for (int slimes = 0; slimes < 3; slimes++)
+        if (NPC.CountNPCS(NPCAIStyleID.Slime) <= 9)
         {
-            NPC slime = Main.npc[NPC.NewNPC(default, (int)npc.Center.X + ((slimes * 33) * npc.direction), (int)npc.Center.Y, NPCID.BlueSlime)];
-            slime.active = true;
-            slime.life = 30;
-            slime.lifeMax = 30;
-            slime.defense = 0;
-            slime.velocity = npc.velocity;
-            for (int i = 0; i < 30; i++)
+            for (int slimes = 0; slimes < 3; slimes++)
             {
-                Vector2 dustVel = Vector2.One.RotatedBy(MathHelper.ToRadians(i * 12)) * 8f;
-                int dust = Dust.NewDust(slime.Center, 0, 0, DustID.t_Slime, dustVel.X, dustVel.Y, newColor: new Color(78, 136, 255, 150));
-                Main.dust[dust].noGravity = true;
-                Main.dust[dust].scale = 1.4f;
+                NPC slime = Main.npc[NPC.NewNPC(default, (int)npc.Center.X + ((slimes * 33) * npc.direction), (int)npc.Center.Y, NPCID.BlueSlime)];
+                slime.active = true;
+                slime.life = 30;
+                slime.lifeMax = 30;
+                slime.timeLeft = 2400;
+                slime.defense = 0;
+                slime.velocity = npc.velocity;
+                for (int i = 0; i < 30; i++)
+                {
+                    Vector2 dustVel = Vector2.One.RotatedBy(MathHelper.ToRadians(i * 12)) * 8f;
+                    int dust = Dust.NewDust(slime.Center, 0, 0, DustID.t_Slime, dustVel.X, dustVel.Y, newColor: new Color(78, 136, 255, 150));
+                    Main.dust[dust].noGravity = true;
+                    Main.dust[dust].scale = 1.4f;
+                }
             }
         }
     }

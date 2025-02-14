@@ -1,4 +1,5 @@
-﻿using Reverie.Core.Interfaces;
+﻿using Reverie.Common.Players;
+using Reverie.Core.Interfaces;
 
 using System.Collections.Generic;
 using System.IO;
@@ -133,7 +134,7 @@ public sealed partial class Reverie : Mod
                 if (playerID >= 0 && playerID < Main.maxPlayers)
                 {
                     Player player = Main.player[playerID];
-                    //ExperiencePlayer.AddExperience(player, experience);
+                    ExperiencePlayer.AddExperience(player, experience);
                     CombatText.NewText(player.Hitbox, Color.LightGoldenrodYellow, $"+{experience} Exp", true);
                 }
                 break;

@@ -43,13 +43,13 @@ namespace Reverie.Core.Missions
     /// in sequence. When all objective sets are completed, the mission is marked as complete
     /// and rewards are distributed to the player.
     /// </remarks>
-    public class Mission(int id, string name, string description, List<List<(string, int)>> objectiveSets,
+    public class Mission(int id, string name, string description, List<List<(string, int)>> ObjectiveIndex,
         List<Item> rewards, bool isMainline, int npc, int nextMissionID = -1, int xpReward = 0)
     {
         public int ID { get; set; } = id;
         public string Name { get; private set; } = name;
         public string Description { get; private set; } = description;
-        public List<ObjectiveSet> ObjectiveSets { get; protected set; } = objectiveSets.Select(set =>
+        public List<ObjectiveSet> ObjectiveIndex { get; protected set; } = ObjectiveIndex.Select(set =>
                 new ObjectiveSet(set.Select(o =>
                     new Objective(o.Item1, o.Item2)).ToList())).ToList();
         public List<Item> Rewards { get; private set; } = rewards;
@@ -62,7 +62,7 @@ namespace Reverie.Core.Missions
         public MissionProgress Progress { get; set; } = MissionProgress.Inactive;
         public MissionAvailability State { get; set; } = MissionAvailability.Locked;
         public bool Unlocked { get; set; } = false;
-        public int CurrentSetIndex { get; set; } = 0;
+        public int CurObjectiveIndex { get; set; } = 0;
         private bool isDirty = false;
 
         public virtual void OnObjectiveComplete(int objectiveIndex) { }
@@ -80,7 +80,7 @@ namespace Reverie.Core.Missions
             if (Progress != MissionProgress.Active)
                 return false;
 
-            var currentSet = ObjectiveSets[CurrentSetIndex];
+            var currentSet = ObjectiveIndex[CurObjectiveIndex];
             if (objectiveIndex >= 0 && objectiveIndex < currentSet.Objectives.Count)
             {
                 var obj = currentSet.Objectives[objectiveIndex];
@@ -101,12 +101,12 @@ namespace Reverie.Core.Missions
 
                     if (currentSet.IsCompleted)
                     {
-                        if (CurrentSetIndex < ObjectiveSets.Count - 1)
+                        if (CurObjectiveIndex < ObjectiveIndex.Count - 1)
                         {
-                            CurrentSetIndex++;
+                            CurObjectiveIndex++;
                             return true;
                         }
-                        if (ObjectiveSets.All(set => set.IsCompleted))
+                        if (ObjectiveIndex.All(set => set.IsCompleted))
                         {
                             Complete();
                             return true;
@@ -120,8 +120,8 @@ namespace Reverie.Core.Missions
         public void Reset()
         {
             Progress = MissionProgress.Inactive;
-            CurrentSetIndex = 0;
-            foreach (var set in ObjectiveSets)
+            CurObjectiveIndex = 0;
+            foreach (var set in ObjectiveIndex)
             {
                 set.Reset();
             }
@@ -129,7 +129,7 @@ namespace Reverie.Core.Missions
 
         public void Complete()
         {
-            if (Progress == MissionProgress.Active && ObjectiveSets.All(set => set.IsCompleted))
+            if (Progress == MissionProgress.Active && ObjectiveIndex.All(set => set.IsCompleted))
             {
                 Progress = MissionProgress.Completed;
                 State = MissionAvailability.Completed;
@@ -168,11 +168,11 @@ namespace Reverie.Core.Missions
                 writer.Write((int)Progress);
                 writer.Write((int)State);
                 writer.Write(Unlocked);
-                writer.Write(CurrentSetIndex);
+                writer.Write(CurObjectiveIndex);
 
                 // Write objective sets
-                writer.Write(ObjectiveSets.Count);
-                foreach (var set in ObjectiveSets)
+                writer.Write(ObjectiveIndex.Count);
+                foreach (var set in ObjectiveIndex)
                 {
                     set.WriteData(writer);
                 }
@@ -188,13 +188,13 @@ namespace Reverie.Core.Missions
             Progress = (MissionProgress)reader.ReadInt32();
             State = (MissionAvailability)reader.ReadInt32();
             Unlocked = reader.ReadBoolean();
-            CurrentSetIndex = reader.ReadInt32();
+            CurObjectiveIndex = reader.ReadInt32();
 
             // Read objective sets
             int setCount = reader.ReadInt32();
             for (int i = 0; i < setCount; i++)
             {
-                ObjectiveSets[i].ReadData(reader);
+                ObjectiveIndex[i].ReadData(reader);
             }
         }
     }
@@ -218,8 +218,8 @@ namespace Reverie.Core.Missions
         public MissionProgress Progress { get; set; }
         public MissionAvailability State { get; set; }
         public bool Unlocked { get; set; }
-        public int CurrentSetIndex { get; set; }
-        public List<ObjectiveSetState> ObjectiveSets { get; set; } = [];
+        public int CurObjectiveIndex { get; set; }
+        public List<ObjectiveIndextate> ObjectiveIndex { get; set; } = [];
         public int NextMissionID { get; set; }
 
         public TagCompound Serialize()
@@ -230,8 +230,8 @@ namespace Reverie.Core.Missions
                 ["Progress"] = (int)Progress,
                 ["State"] = (int)State,
                 ["Unlocked"] = Unlocked,
-                ["CurrentSetIndex"] = CurrentSetIndex,
-                ["ObjectiveSets"] = ObjectiveSets.Select(set => set.Serialize()).ToList(),
+                ["CurObjectiveIndex"] = CurObjectiveIndex,
+                ["ObjectiveIndex"] = ObjectiveIndex.Select(set => set.Serialize()).ToList(),
                 ["NextMissionID"] = NextMissionID
             };
         }
@@ -246,9 +246,9 @@ namespace Reverie.Core.Missions
                     Progress = (MissionProgress)tag.GetInt("Progress"),
                     State = (MissionAvailability)tag.GetInt("State"),
                     Unlocked = tag.GetBool("Unlocked"),
-                    CurrentSetIndex = tag.GetInt("CurrentSetIndex"),
-                    ObjectiveSets = tag.GetList<TagCompound>("ObjectiveSets")
-                        .Select(t => ObjectiveSetState.Deserialize(t))
+                    CurObjectiveIndex = tag.GetInt("CurObjectiveIndex"),
+                    ObjectiveIndex = tag.GetList<TagCompound>("ObjectiveIndex")
+                        .Select(t => ObjectiveIndextate.Deserialize(t))
                         .ToList(),
                     NextMissionID = tag.GetInt("NextMissionID")
                 };

@@ -29,7 +29,7 @@ namespace Reverie.Core.Missions.MissionHandlers
             {
                 try
                 {
-                    switch (Mission.CurrentSetIndex)
+                    switch (Mission.CurObjectiveIndex)
                     {
                         case 0:
                             foreach (var item in starterItems)
@@ -37,10 +37,12 @@ namespace Reverie.Core.Missions.MissionHandlers
                             break;
 
                         case 2:
+                            ObjectiveHelper.RetrieveItemsFromPlayer(Main.LocalPlayer, ItemID.StoneBlock, Mission.ObjectiveIndex[1].Objectives[0].RequiredCount);
+                            ObjectiveHelper.RetrieveItemsFromPlayer(Main.LocalPlayer, ItemID.Wood, Mission.ObjectiveIndex[1].Objectives[1].RequiredCount);
                             DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_FixHouse, true);
                             break;
                         case 3:
-                            if (Mission.ObjectiveSets[Mission.CurrentSetIndex].Objectives[3].IsCompleted)
+                            if (Mission.ObjectiveIndex[Mission.CurObjectiveIndex].Objectives[3].IsCompleted)
                             {
                                 DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_WildlifeWoes, true);
                             }
@@ -96,7 +98,7 @@ namespace Reverie.Core.Missions.MissionHandlers
             {
                 try
                 {
-                    switch (Mission.CurrentSetIndex)
+                    switch (Mission.CurObjectiveIndex)
                     {
                         case 1:
                             if (item.buffTime > 0 || item.potion || item.useStyle is ItemUseStyleID.DrinkLiquid)
@@ -132,7 +134,7 @@ namespace Reverie.Core.Missions.MissionHandlers
             {
                 try
                 {
-                    switch (Mission.CurrentSetIndex)
+                    switch (Mission.CurObjectiveIndex)
                     {
                         case 1:
                             if (item.type == ItemID.StoneBlock)
@@ -161,7 +163,7 @@ namespace Reverie.Core.Missions.MissionHandlers
                             if (!item.IsCurrency && (item.accessory || item.IsWeapon() || item.IsMiningTool() || item.value > 0 || item.rare > ItemRarityID.White))
                             Mission.UpdateProgress(1, item.stack);
 
-                            if (Mission.ObjectiveSets[Mission.CurrentSetIndex].Objectives[1].CurrentCount == 10)
+                            if (Mission.ObjectiveIndex[Mission.CurObjectiveIndex].Objectives[1].CurrentCount == 10)
                             {
                                 DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation);
                             }
@@ -187,7 +189,7 @@ namespace Reverie.Core.Missions.MissionHandlers
             {
                 try
                 {
-                    switch (Mission.CurrentSetIndex)
+                    switch (Mission.CurObjectiveIndex)
                     {
                         case 4:
                             if (npc.type == NPCAIStyleID.Slime)
@@ -200,7 +202,7 @@ namespace Reverie.Core.Missions.MissionHandlers
                         case 9:
                             if (npc.type == NPCAIStyleID.Slime)
                                 Mission.UpdateProgress(0);
-                            if (Mission.ObjectiveSets[Mission.CurrentSetIndex].Objectives[0].CurrentCount == 20)
+                            if (Mission.ObjectiveIndex[Mission.CurObjectiveIndex].Objectives[0].CurrentCount == 20)
                                 DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeRain_Commentary, false);
                             break;
                         case 10:
@@ -224,7 +226,7 @@ namespace Reverie.Core.Missions.MissionHandlers
             {
                 try
                 {
-                    switch (Mission.CurrentSetIndex)
+                    switch (Mission.CurObjectiveIndex)
                     {
                         case 5:
                             if (biome == BiomeType.Underground)
@@ -251,7 +253,7 @@ namespace Reverie.Core.Missions.MissionHandlers
             {
                 try
                 {
-                    switch (Mission.CurrentSetIndex)
+                    switch (Mission.CurObjectiveIndex)
                     {
                         case 0:
                             DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_GatheringResources, true);
