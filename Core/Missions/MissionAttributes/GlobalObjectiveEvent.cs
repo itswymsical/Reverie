@@ -19,9 +19,19 @@ public class ObjectiveEventItem : GlobalItem
 
     public override bool OnPickup(Item item, Player player)
     {
-        // Try to update mission progress for newly picked up items
         MissionProgressHelper.TryUpdateProgressForItem(item, player);
         return base.OnPickup(item, player);
+    }
+
+    public override void UpdateEquip(Item item, Player player)
+    {
+        base.UpdateEquip(item, player);
+        MissionProgressHelper.TryUpdateProgressForItem(item, player);
+    }
+    public override void UpdateInventory(Item item, Player player)
+    {
+        MissionProgressHelper.TryUpdateProgressForItem(item, player);
+        base.UpdateInventory(item, player);
     }
 }
 

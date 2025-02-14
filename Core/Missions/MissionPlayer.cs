@@ -10,11 +10,13 @@ using System.Linq;
 using Terraria.ModLoader.IO;
 
 namespace Reverie.Core.Missions;
-// located in core for better access
-// todo: refactor this for better readability
+
+// located in core for namespace convenience.
 public partial class MissionPlayer : ModPlayer
 {
 
+    // todo: refactor this for better readability.
+    #region Properties & Fields
     public readonly Dictionary<int, Mission> missionDict = [];
 
     public readonly Dictionary<int, List<int>> npcMissionsDict = [];
@@ -22,22 +24,12 @@ public partial class MissionPlayer : ModPlayer
     private readonly HashSet<int> notifiedMissions = [];
 
     private readonly MissionFactory missionFactory = new();
+
     private readonly HashSet<int> dirtyMissions = [];
-    public override void OnEnterWorld()
-    {
-        var AFallingStar = GetMission(MissionID.AFallingStar);
-        var player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
+    private int check = 0;
+    #endregion
 
-        if (AFallingStar != null &&
-            AFallingStar.State != MissionAvailability.Completed &&
-            AFallingStar.Progress != MissionProgress.Active)
-        {
-            CutsceneSystem.PlayCutscene(new FallingStarCutscene());
-            UnlockMission(MissionID.AFallingStar);
-            StartMission(MissionID.AFallingStar);
-        }
-    }
-
+    #region Mission Logic
     public void NotifyMissionUpdate(Mission mission)
     {
         if (mission == null) return;
@@ -86,6 +78,34 @@ public partial class MissionPlayer : ModPlayer
         return false;
     }
 
+    private void ResetToCleanState()
+    {
+        missionDict.Clear();
+        npcMissionsDict.Clear();
+        notifiedMissions.Clear();
+        MissionHandlerManager.Instance.Reset();
+    }
+
+    public void DebugMissionState()
+    {
+        foreach (var mission in missionDict.Values)
+        {
+            Main.NewText($"Mission: {mission.Name}");
+            Main.NewText($"  State: {mission.State}");
+            Main.NewText($"  Progress: {mission.Progress}");
+            Main.NewText($"  NextMissionID: {mission.NextMissionID}");
+        }
+    }
+
+    public override void ResetEffects()
+    {
+        base.ResetEffects();
+
+        notifiedMissions.Clear();
+    }
+    #endregion
+
+    #region Serialization
     public override void SaveData(TagCompound tag)
     {
         try
@@ -263,15 +283,9 @@ public partial class MissionPlayer : ModPlayer
             mission.ObjectiveSets[i].ReadData(reader);
         }
     }
+    #endregion
 
-    private void ResetToCleanState()
-    {
-        missionDict.Clear();
-        npcMissionsDict.Clear();
-        notifiedMissions.Clear();
-        MissionHandlerManager.Instance.Reset();
-    }
-
+    #region Mission Access
     public Mission GetMission(int missionId)
     {
         if (!missionDict.TryGetValue(missionId, out var mission))
@@ -294,16 +308,6 @@ public partial class MissionPlayer : ModPlayer
         }
     }
 
-    public void DebugMissionAvailabilitys()
-    {
-        foreach (var mission in missionDict.Values)
-        {
-            Main.NewText($"Mission: {mission.Name}");
-            Main.NewText($"  State: {mission.State}");
-            Main.NewText($"  Progress: {mission.Progress}");
-            Main.NewText($"  NextMissionID: {mission.NextMissionID}");
-        }
-    }
     public void StartNextMission(Mission completedMission)
     {
         var nextMissionID = completedMission.NextMissionID;
@@ -334,7 +338,6 @@ public partial class MissionPlayer : ModPlayer
         }
     }
 
-    // Add sync to other state-changing methods
     public void StartMission(int missionId)
     {
         var mission = GetMission(missionId);
@@ -378,6 +381,30 @@ public partial class MissionPlayer : ModPlayer
     public IEnumerable<Mission> GetCompletedMissions()
         => missionDict.Values.Where
         (m => m.Progress == MissionProgress.Completed);
+    #endregion
+
+    #region NPC Mission Logic    
+    public void AssignMissionToNPC(int npcType, int missionId)
+    {
+        if (!npcMissionsDict.TryGetValue(npcType, out var missionIds))
+        {
+            missionIds = [];
+            npcMissionsDict[npcType] = missionIds;
+        }
+
+        if (!missionIds.Contains(missionId))
+        {
+            missionIds.Add(missionId);
+        }
+    }
+
+    public void RemoveMissionFromNPC(int npcType, int missionId)
+    {
+        if (npcMissionsDict.TryGetValue(npcType, out var missionIds))
+        {
+            missionIds.Remove(missionId);
+        }
+    }
 
     public static bool NPCHasAvailableMission(MissionPlayer missionPlayer, int npcType)
     {
@@ -416,30 +443,10 @@ public partial class MissionPlayer : ModPlayer
         }
         return false;
     }
+    #endregion
 
-    public void AssignMissionToNPC(int npcType, int missionId)
-    {
-        if (!npcMissionsDict.TryGetValue(npcType, out var missionIds))
-        {
-            missionIds = [];
-            npcMissionsDict[npcType] = missionIds;
-        }
+    #region Objective Tracking & Mission Handlers
 
-        if (!missionIds.Contains(missionId))
-        {
-            missionIds.Add(missionId);
-        }
-    }
-
-    public void RemoveMissionFromNPC(int npcType, int missionId)
-    {
-        if (npcMissionsDict.TryGetValue(npcType, out var missionIds))
-        {
-            missionIds.Remove(missionId);
-        }
-    }
-
-    private int check = 0;
     public override void PostUpdate()
     {
         if (dirtyMissions.Count > 0)
@@ -460,6 +467,21 @@ public partial class MissionPlayer : ModPlayer
         }
     }
 
+    public override void OnEnterWorld()
+    {
+        var AFallingStar = GetMission(MissionID.AFallingStar);
+        var player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
+
+        if (AFallingStar != null &&
+            AFallingStar.State != MissionAvailability.Completed &&
+            AFallingStar.Progress != MissionProgress.Active)
+        {
+            CutsceneSystem.PlayCutscene(new FallingStarCutscene());
+            UnlockMission(MissionID.AFallingStar);
+            StartMission(MissionID.AFallingStar);
+        }
+    }
+
     public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
     {
         base.OnHitNPC(target, hit, damageDone);
@@ -467,10 +489,5 @@ public partial class MissionPlayer : ModPlayer
         MissionHandlerManager.Instance.OnNPCHit(target, damageDone);
     }
 
-    public override void ResetEffects()
-    {
-        base.ResetEffects();
-
-        notifiedMissions.Clear();
-    }
+    #endregion
 }
