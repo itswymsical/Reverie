@@ -3,6 +3,7 @@
 // See LICENSE.md for details.
 //https://github.com/Mirsario/TerrariaOverhaul/blob/dev/Common/EntityEffects/PlayerHeadRotation.cs
 
+using Reverie.Core.Dialogue;
 using Terraria.DataStructures;
 
 namespace Reverie.Common.Players;
@@ -38,7 +39,7 @@ public class PlayerHeadRotation : ModPlayer
     {
         const float LOOK_STRENGTH = 0.55f;
 
-        if (Player.sleeping.isSleeping)
+        if (Player.sleeping.isSleeping || DialogueManager.Instance.IsAnyActive())
         {
             targetHeadRotation = 0f;
         }
