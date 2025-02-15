@@ -1,7 +1,6 @@
 ﻿using Reverie.Common.Players;
 using Reverie.Common.Systems;
 using Reverie.Core.Cinematics.Cutscenes;
-using Reverie.Core.Missions.MissionAttributes;
 using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
 using System.Collections.Generic;

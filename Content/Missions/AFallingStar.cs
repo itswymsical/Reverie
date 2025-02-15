@@ -1,13 +1,16 @@
 ﻿using Terraria.DataStructures;
-using System.Collections.Generic;
-using Reverie.Core.Dialogue;
-using Reverie.Utilities;
 using Terraria.Audio;
 
+using System.Collections.Generic;
+using System.Linq;
 
-namespace Reverie.Core.Missions.MissionHandlers;
+using Reverie.Utilities;
+using Reverie.Core.Dialogue;
+using Reverie.Core.Missions;
 
-public class AFallingStarMission : Mission
+namespace Reverie.Content.Missions;
+
+public class AFallingStar : Mission
 {
     private readonly List<Item> starterItems =
     [
@@ -16,7 +19,7 @@ public class AFallingStarMission : Mission
         new Item(ItemID.CopperAxe)
     ];
 
-    public AFallingStarMission() : base(
+    public AFallingStar() : base(
     MissionID.AFallingStar,
       "A Falling Star",
       "'Well, that's one way to make an appearance...'" +
@@ -43,79 +46,82 @@ public class AFallingStarMission : Mission
         ModContent.GetInstance<Reverie>().Logger.Info("[A Falling Star] Mission constructed");
     }
 
-    public override void OnObjectiveComplete(int objectiveIndex)
+    protected override void HandleObjectiveSetComplete(int setIndex, ObjectiveSet set)
     {
-
-        lock (handlerLock)
+        try
         {
-            try
+            switch (setIndex)
             {
-                switch (CurObjectiveIndex)
-                {
-                    case 0:
-                        foreach (var item in starterItems)
-                            player.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), item.type, item.stack);
-                        break;
+                case 1:
+                    MissionUtils.RetrieveItemsFromPlayer(player, ItemID.StoneBlock, set.Objectives[0].RequiredCount);
+                    MissionUtils.RetrieveItemsFromPlayer(player, ItemID.Wood, set.Objectives[1].RequiredCount);
+                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_FixHouse, true);
+                    break;
 
-                    case 1:
-                        DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_FixHouse, true);
-                        break;
+                case 2: // Equipment set
+                    if (set.Objectives.All(o => o.IsCompleted))
+                        DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_WildlifeWoes, true);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error in HandleObjectiveSetComplete: {ex.Message}");
+        }
+    }
 
-                    case 2:
-                        if (ObjectiveIndex[CurObjectiveIndex].Objectives[0].IsCompleted 
-                            && ObjectiveIndex[CurObjectiveIndex].Objectives[1].IsCompleted)
-                            DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_WildlifeWoes, true);
-                        break;
-
-                    case 3:
-                        DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_WildlifeWoes);
-                        break;
-                    case 4:
-                        DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation, true);
-                        break;
-                    case 5:
-                        DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation_Commentary, false);
-                        break;
-
-                    case 7:
-                        Main.StartSlimeRain(true);
-                        DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeRain);
-                        break;
-
-                    case 9:
-                        DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_KS_Encounter, true);
-                        if (!NPC.AnyNPCs(NPCID.KingSlime))
+    protected override void HandleObjectiveComplete(int objectiveIndex)
+    {
+        try
+        {
+            switch (CurObjectiveIndex)
+            {
+                case 0:
+                    foreach (var item in starterItems)
+                        player.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), item.type, item.stack);
+                    break;
+                case 3:
+                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_WildlifeWoes);
+                    break;
+                case 4:
+                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation, true);
+                    break;
+                case 5:
+                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation_Commentary, false);
+                    break;
+                case 7:
+                    Main.StartSlimeRain(true);
+                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeRain);
+                    break;
+                case 9:
+                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_KS_Encounter, true);
+                    if (!NPC.AnyNPCs(NPCID.KingSlime))
+                    {
+                        if (Main.LocalPlayer.whoAmI == Main.myPlayer)
                         {
-                            if (Main.LocalPlayer.whoAmI == Main.myPlayer)
+                            SoundEngine.PlaySound(SoundID.Roar, Main.LocalPlayer.position);
+
+                            int type = NPCID.KingSlime;
+
+                            if (Main.netMode != NetmodeID.MultiplayerClient)
                             {
-                                SoundEngine.PlaySound(SoundID.Roar, Main.LocalPlayer.position);
-
-                                int type = NPCID.KingSlime;
-
-                                if (Main.netMode != NetmodeID.MultiplayerClient)
-                                {
-                                    NPC.SpawnOnPlayer(Main.LocalPlayer.whoAmI, type);
-                                }
-                                else
-                                {
-                                    NetMessage.SendData(MessageID.SpawnBossUseLicenseStartEvent, number: Main.LocalPlayer.whoAmI, number2: type);
-                                }
+                                NPC.SpawnOnPlayer(Main.LocalPlayer.whoAmI, type);
+                            }
+                            else
+                            {
+                                NetMessage.SendData(MessageID.SpawnBossUseLicenseStartEvent, number: Main.LocalPlayer.whoAmI, number2: type);
                             }
                         }
-                        break;
-
-                    case 10:
-                        DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_KS_Victory, true);
-                        break;
-
-                    default:
-                        break;
-                }
+                    }
+                    break;
+                case 10:
+                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_KS_Victory, true);
+                    break;
             }
-            catch (Exception ex)
-            {
-                Instance.Logger.Error($"Error in OnObjectiveComplete: {ex.Message}");
-            }
+        }
+        catch (Exception ex)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error in HandleObjectiveComplete: {ex.Message}");
         }
     }
 
@@ -198,7 +204,7 @@ public class AFallingStarMission : Mission
                         break;
                     case 5:
                         if (!item.IsCurrency && (item.accessory || item.IsWeapon() || item.IsMiningTool() || item.value > 0 || item.rare > ItemRarityID.White))
-                        UpdateProgress(1, item.stack);
+                            UpdateProgress(1, item.stack);
 
                         if (ObjectiveIndex[CurObjectiveIndex].Objectives[1].CurrentCount == 10)
                         {
@@ -297,12 +303,12 @@ public class AFallingStarMission : Mission
                         UpdateProgress(0);
                         break;
                     case 1:
-                        if (ObjectiveIndex[1].Objectives[0].IsCompleted 
+                        if (ObjectiveIndex[1].Objectives[0].IsCompleted
                             && ObjectiveIndex[1].Objectives[1].IsCompleted)
                         {
                             UpdateProgress(2);
                         }
-                    
+
                         break;
                     default:
                         break;

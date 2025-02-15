@@ -1,6 +1,5 @@
 ﻿using Reverie.Common.Players;
 using Reverie.Common.UI.Missions;
-using Reverie.Core.Missions.MissionAttributes;
 using Reverie.Utilities;
 using System.Collections.Generic;
 using System.IO;
@@ -12,6 +11,10 @@ using Terraria.UI;
 
 namespace Reverie.Core.Missions
 {
+    public static class MissionID
+    {
+        public const int AFallingStar = 1;
+    }
     public enum MissionProgress
     {
         Inactive,
@@ -80,13 +83,28 @@ namespace Reverie.Core.Missions
         #endregion
 
         #region Virtual Event Handlers
-        public virtual void OnObjectiveComplete(int objectiveIndex)
+        public void OnObjectiveComplete(int objectiveIndex)
         {
             lock (handlerLock)
             {
                 try
                 {
-                    ModContent.GetInstance<Reverie>().Logger.Debug($"Objective {objectiveIndex} completed in mission {Name}");
+                    // Check if specific objective completed
+                    var currentSet = ObjectiveIndex[CurObjectiveIndex];
+                    var objective = currentSet.Objectives[objectiveIndex];
+
+                    if (objective.IsCompleted)
+                    {
+                        HandleSpecificObjectiveComplete(CurObjectiveIndex, objectiveIndex, objective);
+                    }
+
+                    // Check if current set is completed
+                    if (currentSet.IsCompleted)
+                    {
+                        HandleObjectiveSetComplete(CurObjectiveIndex, currentSet);
+                    }
+
+                    // Call the main handler
                     HandleObjectiveComplete(objectiveIndex);
                 }
                 catch (Exception ex)
@@ -96,6 +114,9 @@ namespace Reverie.Core.Missions
             }
         }
 
+        // Virtual methods for derived classes to override
+        protected virtual void HandleSpecificObjectiveComplete(int setIndex, int objectiveIndex, Objective objective) { }
+        protected virtual void HandleObjectiveSetComplete(int setIndex, ObjectiveSet set) { }
         protected virtual void HandleObjectiveComplete(int objectiveIndex) { }
 
         public virtual void OnItemPickup(Item item)
