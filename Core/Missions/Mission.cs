@@ -1,9 +1,10 @@
 ﻿using Reverie.Common.Players;
 using Reverie.Common.UI.Missions;
-using Reverie.Core.Missions.MissionAttributes;
+using Reverie.Utilities;
+
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+
 using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.ModLoader.IO;
@@ -11,6 +12,10 @@ using Terraria.UI;
 
 namespace Reverie.Core.Missions
 {
+    public static class MissionID
+    {
+        public const int AFallingStar = 1;
+    }
     public enum MissionProgress
     {
         Inactive,
@@ -26,55 +31,235 @@ namespace Reverie.Core.Missions
     }
 
     /// <summary>
-    /// Represents a mission within the Reverie mod, managing both mission definition and state.
+    /// Represents a mission, managing mission definition, state, and objective event handling.
     /// A mission consists of a series of objectives organized into sets that the player must complete,
     /// along with associated rewards, progression logic, and completion tracking.
     /// </summary>
     /// <remarks>
-    /// Key features:
-    /// - Manages mission progress and availability states
-    /// - Handles objective completion and progression
-    /// - Tracks rewards and experience points
-    /// - Supports mainline (story) and side missions
-    /// - Handles mission chaining through NextMissionID
-    /// - Provides serialization support for save/load operations
-    /// 
-    /// Mission progression occurs through objective sets, where each set must be completed
-    /// in sequence. When all objective sets are completed, the mission is marked as complete
+    /// Mission progression occurs through objective indexes, where each index must be completed
+    /// in sequence. When all objective indexes are completed, the mission is marked as complete
     /// and rewards are distributed to the player.
     /// </remarks>
-    public class Mission(int id, string name, string description, List<List<(string, int)>> ObjectiveIndex,
-        List<Item> rewards, bool isMainline, int npc, int nextMissionID = -1, int xpReward = 0)
+    public abstract class Mission
     {
-        public int ID { get; set; } = id;
-        public string Name { get; private set; } = name;
-        public string Description { get; private set; } = description;
-        public List<ObjectiveSet> ObjectiveIndex { get; protected set; } = ObjectiveIndex.Select(set =>
-                new ObjectiveSet(set.Select(o =>
-                    new Objective(o.Item1, o.Item2)).ToList())).ToList();
-        public List<Item> Rewards { get; private set; } = rewards;
-        public bool IsMainline { get; } = isMainline;
-        public int Commissioner { get; set; } = npc;
-        public int XPReward { get; private set; } = xpReward;
-        public int NextMissionID { get; private set; } = nextMissionID;
+        #region Fields
+        protected readonly object handlerLock = new();
+        protected Player player = Main.LocalPlayer;
+        protected bool isDirty = false;
+        #endregion
 
-        // Original Mission properties
+        #region Properties
+        public int ID { get; set; }
+        public string Name { get; private set; }
+        public string Description { get; private set; }
+        public List<ObjectiveSet> ObjectiveIndex { get; protected set; }
+        public List<Item> Rewards { get; private set; }
+        public bool IsMainline { get; }
+        public int Commissioner { get; set; }
+        public int XPReward { get; private set; }
+        public int NextMissionID { get; private set; }
         public MissionProgress Progress { get; set; } = MissionProgress.Inactive;
         public MissionAvailability State { get; set; } = MissionAvailability.Locked;
         public bool Unlocked { get; set; } = false;
         public int CurObjectiveIndex { get; set; } = 0;
-        private bool isDirty = false;
+        public bool IsDirty => isDirty;
+        #endregion
 
-        public virtual void OnObjectiveComplete(int objectiveIndex) { }
-
-        public virtual void OnMissionComplete(bool rewards = true)
+        #region Initialization
+        protected Mission(int id, string name, string description, List<List<(string, int)>> objectiveSetData,
+            List<Item> rewards, bool isMainline, int npc, int nextMissionID = -1, int xpReward = 0)
         {
-            if (rewards)
-                GiveRewards();
+            ID = id;
+            Name = name;
+            Description = description;
+            ObjectiveIndex = objectiveSetData.Select(set =>
+                new ObjectiveSet(set.Select(o =>
+                    new Objective(o.Item1, o.Item2)).ToList())).ToList();
+            Rewards = rewards;
+            IsMainline = isMainline;
+            Commissioner = npc;
+            XPReward = xpReward;
+            NextMissionID = nextMissionID;
+        }
+        #endregion
 
-            InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(this));
+        #region Virtual Event Handlers
+        public void OnObjectiveComplete(int objectiveIndex)
+        {
+            lock (handlerLock)
+            {
+                try
+                {
+                    // Check if specific objective completed
+                    var currentSet = ObjectiveIndex[CurObjectiveIndex];
+                    var objective = currentSet.Objectives[objectiveIndex];
+
+                    if (objective.IsCompleted)
+                    {
+                        HandleSpecificObjectiveComplete(CurObjectiveIndex, objectiveIndex, objective);
+                    }
+
+                    // Check if current set is completed
+                    if (currentSet.IsCompleted)
+                    {
+                        HandleObjectiveSetComplete(CurObjectiveIndex, currentSet);
+                    }
+
+                    // Call the main handler
+                    HandleObjectiveComplete(objectiveIndex);
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnObjectiveComplete for mission {Name}: {ex.Message}");
+                }
+            }
         }
 
+        // Virtual methods for derived classes to override
+        protected virtual void HandleSpecificObjectiveComplete(int setIndex, int objectiveIndex, Objective objective) { }
+        protected virtual void HandleObjectiveSetComplete(int setIndex, ObjectiveSet set) { }
+        protected virtual void HandleObjectiveComplete(int objectiveIndex) { }
+
+        public virtual void OnItemObtained(Item item)
+        {
+            lock (handlerLock)
+            {
+                try
+                {
+                    HandleItemObtained(item);
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnItemObtained for mission {Name}: {ex.Message}");
+                }
+            }
+        }
+
+        protected virtual void HandleItemObtained(Item item) { }
+
+        public virtual void OnItemCreated(Item item, ItemCreationContext context)
+        {
+            lock (handlerLock)
+            {
+                try
+                {
+                    HandleItemCreated(item, context);
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnItemCreated for mission {Name}: {ex.Message}");
+                }
+            }
+        }
+
+        protected virtual void HandleItemCreated(Item item, ItemCreationContext context) { }
+
+        public virtual void OnNPCKill(NPC npc)
+        {
+            lock (handlerLock)
+            {
+                try
+                {
+                    HandleNPCKill(npc);
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCKill for mission {Name}: {ex.Message}");
+                }
+            }
+        }
+
+        protected virtual void HandleNPCKill(NPC npc) { }
+
+        public virtual void OnNPCChat(NPC npc)
+        {
+            lock (handlerLock)
+            {
+                try
+                {
+                    HandleNPCChat(npc);
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCChat for mission {Name}: {ex.Message}");
+                }
+            }
+        }
+
+        protected virtual void HandleNPCChat(NPC npc) { }
+
+        public virtual void OnNPCSpawn(NPC npc)
+        {
+            lock (handlerLock)
+            {
+                try
+                {
+                    HandleNPCSpawn(npc);
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCSpawn for mission {Name}: {ex.Message}");
+                }
+            }
+        }
+
+        protected virtual void HandleNPCSpawn(NPC npc) { }
+
+        public virtual void OnNPCLoot(NPC npc)
+        {
+            lock (handlerLock)
+            {
+                try
+                {
+                    HandleNPCLoot(npc);
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCLoot for mission {Name}: {ex.Message}");
+                }
+            }
+        }
+
+        protected virtual void HandleNPCLoot(NPC npc) { }
+
+        public virtual void OnNPCHit(NPC npc, int damage)
+        {
+            lock (handlerLock)
+            {
+                try
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Debug($"NPC Hit detected in mission {Name}: Type={npc.type}, Damage={damage}");
+                    HandleNPCHit(npc, damage);
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCHit for mission {Name}: {ex.Message}");
+                }
+            }
+        }
+
+        protected virtual void HandleNPCHit(NPC npc, int damage) { }
+
+        public virtual void OnBiomeEnter(Player player, BiomeType biome)
+        {
+            lock (handlerLock)
+            {
+                try
+                {
+                    HandleBiomeEnter(player, biome);
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnBiomeEnter for mission {Name}: {ex.Message}");
+                }
+            }
+        }
+
+        protected virtual void HandleBiomeEnter(Player player, BiomeType biome) { }
+
+        #endregion
+
+        #region Core Mission Logic
         public bool UpdateProgress(int objective, int amount = 1)
         {
             if (Progress != MissionProgress.Active)
@@ -88,15 +273,13 @@ namespace Reverie.Core.Missions
                 {
                     bool wasCompleted = obj.UpdateProgress(amount);
 
-                    // Notify MissionPlayer of the update
                     var player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
                     player.NotifyMissionUpdate(this);
 
                     if (wasCompleted && amount > 0)
                     {
                         OnObjectiveComplete(objective);
-                        MissionHandlerManager.Instance.OnObjectiveComplete(this, objective);
-                        SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ObjectiveComplete") with{ Volume = 0.75f }, Main.LocalPlayer.position);
+                        SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ObjectiveComplete") with { Volume = 0.75f }, Main.LocalPlayer.position);
                     }
 
                     if (currentSet.IsCompleted)
@@ -141,9 +324,16 @@ namespace Reverie.Core.Missions
             }
         }
 
-        public bool IsDirty => isDirty;
-        public void ClearDirtyFlag() => isDirty = false;
+        public virtual void OnMissionComplete(bool giveRewards = true)
+        {
+            if (giveRewards)
+                GiveRewards();
 
+            InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(this));
+        }
+        #endregion
+
+        #region Helper Methods
         private void GiveRewards()
         {
             foreach (Item reward in Rewards)
@@ -159,44 +349,8 @@ namespace Reverie.Core.Missions
             }
         }
 
-        public byte[] SerializeState()
-        {
-            using MemoryStream ms = new();
-            using (BinaryWriter writer = new(ms))
-            {
-                writer.Write(ID);
-                writer.Write((int)Progress);
-                writer.Write((int)State);
-                writer.Write(Unlocked);
-                writer.Write(CurObjectiveIndex);
-
-                // Write objective sets
-                writer.Write(ObjectiveIndex.Count);
-                foreach (var set in ObjectiveIndex)
-                {
-                    set.WriteData(writer);
-                }
-            }
-            return ms.ToArray();
-        }
-
-        public void DeserializeState(byte[] data)
-        {
-            using MemoryStream ms = new(data);
-            using BinaryReader reader = new(ms);
-            ID = reader.ReadInt32();
-            Progress = (MissionProgress)reader.ReadInt32();
-            State = (MissionAvailability)reader.ReadInt32();
-            Unlocked = reader.ReadBoolean();
-            CurObjectiveIndex = reader.ReadInt32();
-
-            // Read objective sets
-            int setCount = reader.ReadInt32();
-            for (int i = 0; i < setCount; i++)
-            {
-                ObjectiveIndex[i].ReadData(reader);
-            }
-        }
+        public void ClearDirtyFlag() => isDirty = false;
+        #endregion
     }
 
     /// <summary>
@@ -219,7 +373,7 @@ namespace Reverie.Core.Missions
         public MissionAvailability State { get; set; }
         public bool Unlocked { get; set; }
         public int CurObjectiveIndex { get; set; }
-        public List<ObjectiveIndextate> ObjectiveIndex { get; set; } = [];
+        public List<ObjectiveIndexState> ObjectiveIndex { get; set; } = [];
         public int NextMissionID { get; set; }
 
         public TagCompound Serialize()
@@ -248,7 +402,7 @@ namespace Reverie.Core.Missions
                     Unlocked = tag.GetBool("Unlocked"),
                     CurObjectiveIndex = tag.GetInt("CurObjectiveIndex"),
                     ObjectiveIndex = tag.GetList<TagCompound>("ObjectiveIndex")
-                        .Select(t => ObjectiveIndextate.Deserialize(t))
+                        .Select(t => ObjectiveIndexState.Deserialize(t))
                         .ToList(),
                     NextMissionID = tag.GetInt("NextMissionID")
                 };

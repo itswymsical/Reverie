@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
 using Terraria.ModLoader.IO;
 
 namespace Reverie.Core.Missions;
@@ -58,7 +59,7 @@ public class Objective(string description, int requiredCount = 1)
     }
 }
 
-public class ObjectiveIndextate
+public class ObjectiveIndexState
 {
     public List<ObjectiveState> Objectives { get; set; } = [];
 
@@ -70,11 +71,11 @@ public class ObjectiveIndextate
         };
     }
 
-    public static ObjectiveIndextate Deserialize(TagCompound tag)
+    public static ObjectiveIndexState Deserialize(TagCompound tag)
     {
         try
         {
-            return new ObjectiveIndextate
+            return new ObjectiveIndexState
             {
                 Objectives = tag.GetList<TagCompound>("Objectives")
                     .Select(t => ObjectiveState.Deserialize(t))
@@ -84,7 +85,7 @@ public class ObjectiveIndextate
         }
         catch
         {
-            return new ObjectiveIndextate();
+            return new ObjectiveIndexState();
         }
     }
 }

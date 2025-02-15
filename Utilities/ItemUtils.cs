@@ -17,7 +17,10 @@ public static class ItemUtils
         return head.type == ModContent.ItemType<TModHead>() && body.type == ModContent.ItemType<TModBody>() && legs.type == ModContent.ItemType<TModLegs>();
     }
 
-    public static bool IsMiningTool(this Item item) => item.pick > 0 || item.TryEnable(out ShovelItemComponent component);
+    public static bool IsMiningTool(this Item item)
+    {
+        return item.pick > 0 || item.Name.Contains("Shovel");
+    }
 
     private static readonly HashSet<string> MetalKeywords =
     [
