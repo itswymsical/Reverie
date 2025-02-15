@@ -12,22 +12,14 @@ namespace Reverie.Content.Missions;
 
 public class AFallingStar : Mission
 {
-    private readonly List<Item> starterItems =
-    [
-        new Item(ItemID.CopperBroadsword),
-        new Item(ItemID.CopperPickaxe),
-        new Item(ItemID.CopperAxe)
-    ];
-
-    public AFallingStar() : base(
-    MissionID.AFallingStar,
+    public AFallingStar() : base(MissionID.AFallingStar,
       "A Falling Star",
       "'Well, that's one way to make an appearance...'" +
       "\nBegin your journey in Terraria, discovering knowledge and power...",
       [
           [("Talk to Laine", 1)],
           [("Collect Stone", 25), ("Collect Wood", 50), ("Give Laine resources", 1)],
-          [("Obtain a Helmet", 1), ("Obtain a Chestplate", 1), ("Obtain Leggings", 1), ("Obtain better weapon", 1)],
+          [("Obtain a Helmet", 1), ("Obtain a Chestplate", 1), ("Obtain Leggings", 1), ("Obtain better Pickaxe/Shovel", 1)],
           [("Discover Accessories", 3), ("Mine 30 Ore", 30),("Obtain 15 bars of metal", 15)],
           [("Clear out slimes", 6)],
           [("Explore the Underground", 1), ("Loot items", 150)],
@@ -46,6 +38,13 @@ public class AFallingStar : Mission
         ModContent.GetInstance<Reverie>().Logger.Info("[A Falling Star] Mission constructed");
     }
 
+    private readonly List<Item> starterItems =
+    [
+            new Item(ItemID.WoodenSword),
+            new Item(ItemID.CopperPickaxe),
+            new Item(ItemID.CopperAxe)
+    ];
+
     protected override void HandleObjectiveSetComplete(int setIndex, ObjectiveSet set)
     {
         try
@@ -53,8 +52,6 @@ public class AFallingStar : Mission
             switch (setIndex)
             {
                 case 1:
-                    MissionUtils.RetrieveItemsFromPlayer(player, ItemID.StoneBlock, set.Objectives[0].RequiredCount);
-                    MissionUtils.RetrieveItemsFromPlayer(player, ItemID.Wood, set.Objectives[1].RequiredCount);
                     DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_FixHouse, true);
                     break;
 
@@ -81,7 +78,7 @@ public class AFallingStar : Mission
                         player.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), item.type, item.stack);
                     break;
                 case 3:
-                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_WildlifeWoes);
+                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation);
                     break;
                 case 4:
                     DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation, true);
@@ -124,46 +121,21 @@ public class AFallingStar : Mission
             ModContent.GetInstance<Reverie>().Logger.Error($"Error in HandleObjectiveComplete: {ex.Message}");
         }
     }
-
-    public override void OnItemCreated(Item item, ItemCreationContext context)
+    protected override void HandleSpecificObjectiveComplete(int setIndex, int objectiveIndex, Objective objective)
     {
-        lock (handlerLock)
+        try
         {
-            try
+            if (setIndex is 1 && objectiveIndex is 1)
             {
-                switch (CurObjectiveIndex)
-                {
-                    case 1:
-                        if (item.buffTime > 0 || item.potion || item.useStyle is ItemUseStyleID.DrinkLiquid)
-                            UpdateProgress(2, item.stack);
-                        break;
-
-                    case 2:
-                        if (item.headSlot != -1 && !item.vanity)
-                            UpdateProgress(0, item.stack);
-
-                        if (item.bodySlot != -1 && !item.vanity)
-                            UpdateProgress(1, item.stack);
-
-                        if (item.legSlot != -1 && !item.vanity)
-                            UpdateProgress(2, item.stack);
-
-                        if (item.IsWeapon())
-                            UpdateProgress(3, item.stack);
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Instance.Logger.Error($"Error in OnItemCreated: {ex.Message}");
+                DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation, true);
             }
         }
+        catch (Exception ex)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error in HandleObjectiveSetComplete: {ex.Message}");
+        }
     }
-
-    public override void OnItemPickup(Item item)
+    public override void OnItemObtained(Item item)
     {
         lock (handlerLock)
         {
@@ -174,45 +146,36 @@ public class AFallingStar : Mission
                     case 1:
                         if (item.type == ItemID.StoneBlock)
                             UpdateProgress(0, item.stack);
-
                         if (item.type == ItemID.Wood)
                             UpdateProgress(1, item.stack);
-
-                        if (item.buffTime > 0 || item.potion || item.useStyle is ItemUseStyleID.DrinkLiquid)
-                            UpdateProgress(2, item.stack);
                         break;
                     case 2:
                         if (item.headSlot != -1 && !item.vanity)
                             UpdateProgress(0, item.stack);
-
                         if (item.bodySlot != -1 && !item.vanity)
                             UpdateProgress(1, item.stack);
-
                         if (item.legSlot != -1 && !item.vanity)
                             UpdateProgress(2, item.stack);
-
-                        if (item.IsWeapon())
-                            UpdateProgress(3, item.stack);
+                        if (item.IsMiningTool())
+                            UpdateProgress(3);
                         break;
                     case 3:
                         if (item.accessory)
                             UpdateProgress(0, item.stack);
                         if (item.IsOre())
                             UpdateProgress(1, item.stack);
-                        if (item.Name.Contains("Bar"))
+                        if (item.Name.EndsWith("Bar"))
                             UpdateProgress(2, item.stack);
                         break;
                     case 5:
-                        if (!item.IsCurrency && (item.accessory || item.IsWeapon() || item.IsMiningTool() || item.value > 0 || item.rare > ItemRarityID.White))
+                        if ((item.accessory || item.IsWeapon() || item.IsMiningTool() || item.value > 0) && !item.IsCurrency && item.rare >= ItemRarityID.Blue)
                             UpdateProgress(1, item.stack);
 
                         if (ObjectiveIndex[CurObjectiveIndex].Objectives[1].CurrentCount == 10)
-                        {
-                            DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation);
-                        }
+                            DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation);               
                         break;
                     case 7:
-                        if (!item.IsCurrency && (item.accessory || item.IsWeapon() || item.IsMiningTool() || item.value > 0 || item.rare > ItemRarityID.White))
+                        if ((item.accessory || item.IsWeapon() || item.IsMiningTool() || item.value > 0) && !item.IsCurrency && item.rare >= ItemRarityID.Blue)
                             UpdateProgress(0, item.stack);
                         break;
                     default:

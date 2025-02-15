@@ -1,9 +1,10 @@
 ﻿using Reverie.Common.Players;
 using Reverie.Common.UI.Missions;
 using Reverie.Utilities;
+
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+
 using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.ModLoader.IO;
@@ -119,22 +120,22 @@ namespace Reverie.Core.Missions
         protected virtual void HandleObjectiveSetComplete(int setIndex, ObjectiveSet set) { }
         protected virtual void HandleObjectiveComplete(int objectiveIndex) { }
 
-        public virtual void OnItemPickup(Item item)
+        public virtual void OnItemObtained(Item item)
         {
             lock (handlerLock)
             {
                 try
                 {
-                    HandleItemPickup(item);
+                    HandleItemObtained(item);
                 }
                 catch (Exception ex)
                 {
-                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnItemPickup for mission {Name}: {ex.Message}");
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnItemObtained for mission {Name}: {ex.Message}");
                 }
             }
         }
 
-        protected virtual void HandleItemPickup(Item item) { }
+        protected virtual void HandleItemObtained(Item item) { }
 
         public virtual void OnItemCreated(Item item, ItemCreationContext context)
         {

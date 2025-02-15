@@ -32,15 +32,13 @@ public static class MissionUtils
 
             if (item.stack > 0 && !currentSet.IsCompleted)
             {
-                // Let the mission handler process the item
-                MissionManager.Instance.OnItemPickup(item);
+                MissionManager.Instance.OnItemObtained(item);
                 progressUpdated = true;
             }
         }
 
         if (progressUpdated)
         {
-            // Mark the item as having contributed to prevent duplicate progress
             MissionItemComponent.MarkAsContributed(item);
         }
 

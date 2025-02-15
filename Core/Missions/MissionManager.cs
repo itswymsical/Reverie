@@ -101,7 +101,7 @@ public class MissionManager
         }
     }
 
-    public void OnItemPickup(Item item)
+    public void OnItemObtained(Item item)
     {
         lock (managerLock)
         {
@@ -109,12 +109,12 @@ public class MissionManager
             {
                 foreach (var mission in ActiveMissions)
                 {
-                    mission.OnItemPickup(item);
+                    mission.OnItemObtained(item);
                 }
             }
             catch (Exception ex)
             {
-                ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnItemPickup: {ex.Message}");
+                ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnItemObtained: {ex.Message}");
             }
         }
     }

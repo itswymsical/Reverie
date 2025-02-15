@@ -3,9 +3,10 @@
 using Terraria.DataStructures;
 
 using Reverie.Core.Dialogue;
+
+using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
 using static Reverie.Core.Missions.MissionPlayer;
-using Reverie.Utilities;
 
 namespace Reverie.Core.Missions;
 
