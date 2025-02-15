@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Import tModLoader mod properties -->
+	<Import Project="..\tModLoader.targets" />
+
+	<!-- General -->
+	<PropertyGroup>
+		
+	</PropertyGroup>
+	<ItemGroup>
+	  <AdditionalFiles Remove="Content\NPCs\**" />
+	  <Compile Remove="Content\NPCs\**" />
+	  <EmbeddedResource Remove="Content\NPCs\**" />
+	  <None Remove="Content\NPCs\**" />
+	</ItemGroup>
+
+	<!-- References -->
+	<ItemGroup>
+        <PackageReference Include="tModLoader.CodeAssist" Version="0.1.5" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="StructureHelper">
+	    <HintPath>lib\StructureHelper.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+
+</Project>

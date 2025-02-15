@@ -1,97 +1,33 @@
-DialogueLibrary: {
-	CrashLanding: {
-		Intro.Line1: Mods.Reverie.DialogueLibrary.CrashLanding.Intro.Line1
-		Cutscene.Line1: Mods.Reverie.DialogueLibrary.CrashLanding.Cutscene.Line1
-
-		SettlingIn: {
-			Line1: Mods.Reverie.DialogueLibrary.CrashLanding.SettlingIn.Line1
-			Line2: Mods.Reverie.DialogueLibrary.CrashLanding.SettlingIn.Line2
-			Line3: Mods.Reverie.DialogueLibrary.CrashLanding.SettlingIn.Line3
-			Line4: Mods.Reverie.DialogueLibrary.CrashLanding.SettlingIn.Line4
-			Line5: Mods.Reverie.DialogueLibrary.CrashLanding.SettlingIn.Line5
-		}
-
-		GatheringResources: {
-			Line1: Mods.Reverie.DialogueLibrary.CrashLanding.GatheringResources.Line1
-			Line2: Mods.Reverie.DialogueLibrary.CrashLanding.GatheringResources.Line2
-		}
-
-		FixHouse: {
-			Line1: Mods.Reverie.DialogueLibrary.CrashLanding.FixHouse.Line1
-			Line2: Mods.Reverie.DialogueLibrary.CrashLanding.FixHouse.Line2
-			Line3: Mods.Reverie.DialogueLibrary.CrashLanding.FixHouse.Line3
-			Line4: Mods.Reverie.DialogueLibrary.CrashLanding.FixHouse.Line4
-			Line5: Mods.Reverie.DialogueLibrary.CrashLanding.FixHouse.Line5
-		}
-
-		WildlifeWoes: {
-			Line1: Mods.Reverie.DialogueLibrary.CrashLanding.WildlifeWoes.Line1
-			Line2: Mods.Reverie.DialogueLibrary.CrashLanding.WildlifeWoes.Line2
-			Line3: Mods.Reverie.DialogueLibrary.CrashLanding.WildlifeWoes.Line3
-		}
-
-		SlimeInfestation: {
-			Line1: Mods.Reverie.DialogueLibrary.CrashLanding.SlimeInfestation.Line1
-			Line2: Mods.Reverie.DialogueLibrary.CrashLanding.SlimeInfestation.Line2
-		}
-
-		SlimeInfestation_Commentary.Line1: Mods.Reverie.DialogueLibrary.CrashLanding.SlimeInfestation_Commentary.Line1
-
-		SlimeRain: {
-			Line1: Mods.Reverie.DialogueLibrary.CrashLanding.SlimeRain.Line1
-			Line2: Mods.Reverie.DialogueLibrary.CrashLanding.SlimeRain.Line2
-		}
-
-		SlimeRain_Commentary: {
-			Line1: Mods.Reverie.DialogueLibrary.CrashLanding.SlimeRain_Commentary.Line1
-			Line2: Mods.Reverie.DialogueLibrary.CrashLanding.SlimeRain_Commentary.Line2
-		}
-
-		KS_Encounter: {
-			Line1: Mods.Reverie.DialogueLibrary.CrashLanding.KS_Encounter.Line1
-			Line2: Mods.Reverie.DialogueLibrary.CrashLanding.KS_Encounter.Line2
-			Line3: Mods.Reverie.DialogueLibrary.CrashLanding.KS_Encounter.Line3
-		}
-
-		KS_Victory: {
-			Line1: Mods.Reverie.DialogueLibrary.CrashLanding.KS_Victory.Line1
-			Line2: Mods.Reverie.DialogueLibrary.CrashLanding.KS_Victory.Line2
-			Line3: Mods.Reverie.DialogueLibrary.CrashLanding.KS_Victory.Line3
-			Line4: Mods.Reverie.DialogueLibrary.CrashLanding.KS_Victory.Line4
-		}
-	}
-}
-
 UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Items: {
 	DialogueTest: {
-		DisplayName: Dialogue Test
+		DisplayName: Dialogue Player
 		Tooltip: ""
 	}
 
 	BorealHewerItem: {
-		DisplayName: Boreal Hewer Item
+		DisplayName: Boreal Hewer
 		Tooltip: ""
 	}
 
 	FlailstormItem: {
-		DisplayName: Flailstorm Item
+		DisplayName: Flailstorm
 		Tooltip: ""
 	}
 
 	FrostbarkGreavesItem: {
-		DisplayName: Frostbark Greaves Item
+		DisplayName: Frostbark Greaves
 		Tooltip: ""
 	}
 
 	FrostbarkHauberkItem: {
-		DisplayName: Frostbark Hauberk Item
+		DisplayName: Frostbark Hauberk
 		Tooltip: ""
 	}
 
 	FrostbarkHelmItem: {
-		DisplayName: Frostbark Helm Item
+		DisplayName: Frostbark Helm
 		Tooltip: ""
 	}
 
@@ -102,7 +38,7 @@ Items: {
 
 	LodestoneMagnet: {
 		DisplayName: Lodestone Magnet
-		Tooltip: ""
+		Tooltip: Point and hold the magnet at a chunk of ore to vacuum it towards you.
 	}
 
 	MagnetizedCoil: {
@@ -111,96 +47,233 @@ Items: {
 	}
 
 	SeedBagItem: {
-		DisplayName: Seed Bag Item
-		Tooltip: ""
+		DisplayName: Seed Bag
+		Tooltip:
+			'''
+			Tosses a bunch of seeds that stick to enemies and tiles.
+			A flock of birds will appear and voraciously consume the seeds.
+			'''
 	}
 
 	CopperShovelItem: {
-		DisplayName: Copper Shovel Item
+		DisplayName: Copper Shovel
 		Tooltip: ""
 	}
 
 	GoldShovelItem: {
-		DisplayName: Gold Shovel Item
+		DisplayName: Gold Shovel
 		Tooltip: ""
 	}
 
 	IronShovelItem: {
-		DisplayName: Iron Shovel Item
+		DisplayName: Iron Shovel
 		Tooltip: ""
 	}
 
 	LeadShovelItem: {
-		DisplayName: Lead Shovel Item
+		DisplayName: Lead Shovel
 		Tooltip: ""
 	}
 
 	PlatinumShovelItem: {
-		DisplayName: Platinum Shovel Item
+		DisplayName: Platinum Shovel
 		Tooltip: ""
 	}
 
 	SilverShovelItem: {
-		DisplayName: Silver Shovel Item
+		DisplayName: Silver Shovel
 		Tooltip: ""
 	}
 
 	TinShovelItem: {
-		DisplayName: Tin Shovel Item
+		DisplayName: Tin Shovel
 		Tooltip: ""
 	}
 
 	TungstenShovelItem: {
-		DisplayName: Tungsten Shovel Item
+		DisplayName: Tungsten Shovel
 		Tooltip: ""
 	}
 
 	AcornLauncherItem: {
-		DisplayName: Acorn Launcher Item
-		Tooltip: ""
+		DisplayName: Acorn Launcher
+		Tooltip: Charges up and fires acorns at high velocity
 	}
 
 	AlluviumOreItem: {
-		DisplayName: Alluvium Ore Item
+		DisplayName: Alluvium Ore
 		Tooltip: ""
 	}
 
 	WoodgrassSeedsItem: {
-		DisplayName: Woodgrass Seeds Item
+		DisplayName: Woodgrass Seeds
 		Tooltip: ""
 	}
 
 	CobblestoneItem: {
-		DisplayName: Cobblestone Item
+		DisplayName: Cobblestone
 		Tooltip: ""
 	}
 
 	LoamItem: {
-		DisplayName: Loam Item
+		DisplayName: Loam
 		Tooltip: ""
 	}
 
 	Bramblebow: {
 		DisplayName: Bramblebow
-		Tooltip: ""
+		Tooltip: Converts Wooden Arrows into Bramble Arrows, that stick and pierce enemies
 	}
 
 	WardensArm: {
-		DisplayName: Wardens Arm
-		Tooltip: ""
+		DisplayName: Warden's Arm
+		Tooltip: Conjures a Warden Arm that tosses high-velocity boulders at enemies.
 	}
 }
 
 Projectiles: {
-	BirdProj.DisplayName: Bird Proj
-	BorealHewerProj.DisplayName: Boreal Hewer Proj
-	FlailstormProj.DisplayName: Flailstorm Proj
-	LodestoneMagnetProj.DisplayName: Lodestone Magnet Proj
-	SeedProj.DisplayName: Seed Proj
-	AcornLauncherProj.DisplayName: Acorn Launcher Proj
-	AcornProj.DisplayName: Acorn Proj
+	BirdProj.DisplayName: Bird
+	BorealHewerProj.DisplayName: Boreal Hewer
+	FlailstormProj.DisplayName: Flailstorm
+	LodestoneMagnetProj.DisplayName: Lodestone Magnet
+	SeedProj.DisplayName: Seed
+	AcornLauncherProj.DisplayName: Acorn Launcher
+	AcornProj.DisplayName: Acorn
 	AcornShrapnel.DisplayName: Acorn Shrapnel
-	AlluvialBoulderProj.DisplayName: Alluvial Boulder Proj
-	BrambleArrowProj.DisplayName: Bramble Arrow Proj
-	WardensArmProj.DisplayName: Wardens Arm Proj
+	AlluvialBoulderProj.DisplayName: Alluvial Boulder
+	BrambleArrowProj.DisplayName: Bramble Arrow
+	WardensArmProj.DisplayName: Wardens Arm
+	ExplosiveLanding.DisplayName: Explosive Landing
+	SlimeSprayProj.DisplayName: Slime Spray Proj
 }
+
+InfoDisplays.MissionObjectives.DisplayName: Mission Objectives
+
+Configs: {
+	ExperienceMeterConfig: {
+		DisplayName: Experience Meter Config
+		Headers.ExperienceMeterColors: Experience Meter Colors Header
+
+		BarColor: {
+			Label: ExperienceColors
+			Tooltip: Customize the RGB color of the Experience Meter
+		}
+	}
+
+	ColorSetting: {
+		Tooltip: ""
+
+		R: {
+			Label: R
+			Tooltip: ""
+		}
+
+		G: {
+			Label: G
+			Tooltip: ""
+		}
+
+		B: {
+			Label: B
+			Tooltip: ""
+		}
+	}
+
+	GraphicsConfig: {
+		DisplayName: Graphics Config
+
+		ScreenshakeMult: {
+			Label: Screenshake
+			Tooltip: Modifies the intensity of screen shake effects
+		}
+
+		LightingPollRate: {
+			Label: Lighting Buffer Poll Rate
+			Tooltip:
+				'''
+				Changes how often the lighting buffer polls for data. 
+				Higher values increase performance but make lighting update slower on some objects. 
+				Lower values result in smoother moving light but may hurt performance.
+				'''
+		}
+
+		ParticlesActive: {
+			Label: Extra Particles
+			Tooltip:
+				'''
+				Enables/Disables special particles. 
+				Disable this if you have performance issues.
+				'''
+		}
+
+		HighQualityLighting: {
+			Label: High quality lit textures
+			Tooltip:
+				'''
+				Enables/Disables fancy lighting on large textures. 
+				Disable this if you have performance issues.
+				'''
+		}
+
+		ReflectionConfig: {
+			Label: Background Reflections
+			Tooltip:
+				'''
+				Configures what is rendered for background reflections. 
+				Disable this if you have performance issues.
+				'''
+		}
+	}
+
+	ReflectionSubConfig: {
+		Tooltip: ""
+
+		ReflectionsOn: {
+			Label: Background Reflections
+			Tooltip:
+				'''
+				This will Enable/Disable the background reflections system entirely. 
+				If this is off, the other settings in this block are ignored. 
+				Disable this if you have performance issues.
+				'''
+		}
+
+		PlayerReflectionsOn: {
+			Label: Reflect Players
+			Tooltip:
+				'''
+				This will Enable/Disable reflecting Players.
+				 low performance impact.
+				'''
+		}
+
+		NpcReflectionsOn: {
+			Label: Reflect NPCs
+			Tooltip:
+				'''
+				This will Enable/Disable reflecting NPCs.
+				 low performance impact.
+				'''
+		}
+
+		ProjReflectionsOn: {
+			Label: Reflect Projectiles
+			Tooltip:
+				'''
+				This will Enable/Disable reflecting Projectiles.
+				 high performance impact.
+				'''
+		}
+
+		DustReflectionsOn: {
+			Label: Reflect Particles
+			Tooltip:
+				'''
+				This will Enable/Disable reflecting Particles, gores and dusts.
+				 high performance impact.
+				'''
+		}
+	}
+}
+
+NPCs.KingSlime.DisplayName: King Slime

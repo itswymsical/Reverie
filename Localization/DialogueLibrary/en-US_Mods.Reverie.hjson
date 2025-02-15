@@ -1,6 +1,6 @@
-DialogueLibrary: {
+﻿DialogueLibrary: {
 	CrashLanding: {
-		Intro.Line1: What the H*#@?!?!
+		Intro.Line1: What the H***?!?!
 		Cutscene.Line1: Hmm? What's that?
 
 		SettlingIn: {
@@ -16,18 +16,18 @@ DialogueLibrary: {
 			Line2: I need to patch up the house, and those potions might come in handy later.
 		}
 
-		FixHouse: {
-			Line1: Thanks, this should be enough. You're a natural at this, huh?
-			Line2: Alright, i'll get to work on fixing up the house.
-			Line3: The wilderness can be dangerous, especially for newcomers.
-			Line4: You should craft some armor and a weapon to protect yourself.
-			Line5: That'll serve as our base of operations for now.
-		}
-
 		WildlifeWoes: {
 			Line1: We've got a lot of slimes prancing about lately.
 			Line2: Nothing to worry about, they're pretty easy to handle.
 			Line3: Clear them out, and we'll be able to explore the area more safely.
+		}
+
+		FixHouse: {
+			Line1: Thanks, this should be enough. You're a natural at this, huh?
+			Line2: Alright, i'll get to work on fixing up the house.
+			Line3: You should craft some armor and a weapon to protect yourself.
+			Line4: The wilderness can be dangerous, especially for newcomers.
+			Line5: That'll serve as our base of operations for now.
 		}
 
 		SlimeInfestation: {
