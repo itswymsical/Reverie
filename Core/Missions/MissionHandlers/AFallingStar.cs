@@ -1,25 +1,47 @@
 ﻿using Terraria.DataStructures;
 using System.Collections.Generic;
 using Reverie.Core.Dialogue;
-using Reverie.Core.Missions.MissionAttributes;
 using Reverie.Utilities;
 using Terraria.Audio;
 
 
 namespace Reverie.Core.Missions.MissionHandlers;
 
-[MissionHandler(MissionID.AFallingStar)]
-public class AFallingStar : ObjectiveHandler
+public class AFallingStarMission : Mission
 {
-    public AFallingStar(Mission mission) : base(mission) => Instance.Logger.Info("[A Falling Star] Objective handler constructed");
-    public Player player = Main.LocalPlayer;
-
     private readonly List<Item> starterItems =
     [
         new Item(ItemID.CopperBroadsword),
         new Item(ItemID.CopperPickaxe),
         new Item(ItemID.CopperAxe)
     ];
+
+    public AFallingStarMission() : base(
+    MissionID.AFallingStar,
+      "A Falling Star",
+      "'Well, that's one way to make an appearance...'" +
+      "\nBegin your journey in Terraria, discovering knowledge and power...",
+      [
+          [("Talk to Laine", 1)],
+          [("Collect Stone", 25), ("Collect Wood", 50), ("Give Laine resources", 1)],
+          [("Obtain a Helmet", 1), ("Obtain a Chestplate", 1), ("Obtain Leggings", 1), ("Obtain better weapon", 1)],
+          [("Discover Accessories", 3), ("Mine 30 Ore", 30),("Obtain 15 bars of metal", 15)],
+          [("Clear out slimes", 6)],
+          [("Explore the Underground", 1), ("Loot items", 150)],
+          [("Clear out slimes, again", 12)],
+          [("Resume glorius looting", 100)],
+          [("Return to Laine", 1)],
+          [("Clear Slime Infestation", 50)],
+          [("Defeat the King Slime", 1)]
+      ],
+
+      [new Item(ItemID.MagicMirror), new Item(ItemID.GoldCoin, Main.rand.Next(3, 4))],
+      isMainline: true,
+      NPCID.Guide,
+      xpReward: 80)
+    {
+        ModContent.GetInstance<Reverie>().Logger.Info("[A Falling Star] Mission constructed");
+    }
 
     public override void OnObjectiveComplete(int objectiveIndex)
     {
@@ -28,7 +50,7 @@ public class AFallingStar : ObjectiveHandler
         {
             try
             {
-                switch (Mission.CurObjectiveIndex)
+                switch (CurObjectiveIndex)
                 {
                     case 0:
                         foreach (var item in starterItems)
@@ -36,14 +58,12 @@ public class AFallingStar : ObjectiveHandler
                         break;
 
                     case 1:
-                        ObjectiveHelper.RetrieveItemsFromPlayer(player, ItemID.StoneBlock, Mission.ObjectiveIndex[1].Objectives[0].RequiredCount);
-                        ObjectiveHelper.RetrieveItemsFromPlayer(player, ItemID.Wood, Mission.ObjectiveIndex[1].Objectives[1].RequiredCount);
                         DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_FixHouse, true);
                         break;
 
                     case 2:
-                        if (Mission.ObjectiveIndex[Mission.CurObjectiveIndex].Objectives[0].IsCompleted 
-                            && Mission.ObjectiveIndex[Mission.CurObjectiveIndex].Objectives[1].IsCompleted)
+                        if (ObjectiveIndex[CurObjectiveIndex].Objectives[0].IsCompleted 
+                            && ObjectiveIndex[CurObjectiveIndex].Objectives[1].IsCompleted)
                             DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_WildlifeWoes, true);
                         break;
 
@@ -105,25 +125,25 @@ public class AFallingStar : ObjectiveHandler
         {
             try
             {
-                switch (Mission.CurObjectiveIndex)
+                switch (CurObjectiveIndex)
                 {
                     case 1:
                         if (item.buffTime > 0 || item.potion || item.useStyle is ItemUseStyleID.DrinkLiquid)
-                            Mission.UpdateProgress(2, item.stack);
+                            UpdateProgress(2, item.stack);
                         break;
 
                     case 2:
                         if (item.headSlot != -1 && !item.vanity)
-                            Mission.UpdateProgress(0, item.stack);
+                            UpdateProgress(0, item.stack);
 
                         if (item.bodySlot != -1 && !item.vanity)
-                            Mission.UpdateProgress(1, item.stack);
+                            UpdateProgress(1, item.stack);
 
                         if (item.legSlot != -1 && !item.vanity)
-                            Mission.UpdateProgress(2, item.stack);
+                            UpdateProgress(2, item.stack);
 
                         if (item.IsWeapon())
-                            Mission.UpdateProgress(3, item.stack);
+                            UpdateProgress(3, item.stack);
                         break;
 
                     default:
@@ -143,51 +163,51 @@ public class AFallingStar : ObjectiveHandler
         {
             try
             {
-                switch (Mission.CurObjectiveIndex)
+                switch (CurObjectiveIndex)
                 {
                     case 1:
                         if (item.type == ItemID.StoneBlock)
-                            Mission.UpdateProgress(0, item.stack);
+                            UpdateProgress(0, item.stack);
 
                         if (item.type == ItemID.Wood)
-                            Mission.UpdateProgress(1, item.stack);
+                            UpdateProgress(1, item.stack);
 
                         if (item.buffTime > 0 || item.potion || item.useStyle is ItemUseStyleID.DrinkLiquid)
-                            Mission.UpdateProgress(2, item.stack);
+                            UpdateProgress(2, item.stack);
                         break;
                     case 2:
                         if (item.headSlot != -1 && !item.vanity)
-                            Mission.UpdateProgress(0, item.stack);
+                            UpdateProgress(0, item.stack);
 
                         if (item.bodySlot != -1 && !item.vanity)
-                            Mission.UpdateProgress(1, item.stack);
+                            UpdateProgress(1, item.stack);
 
                         if (item.legSlot != -1 && !item.vanity)
-                            Mission.UpdateProgress(2, item.stack);
+                            UpdateProgress(2, item.stack);
 
                         if (item.IsWeapon())
-                            Mission.UpdateProgress(3, item.stack);
+                            UpdateProgress(3, item.stack);
                         break;
                     case 3:
                         if (item.accessory)
-                            Mission.UpdateProgress(0, item.stack);
+                            UpdateProgress(0, item.stack);
                         if (item.IsOre())
-                            Mission.UpdateProgress(1, item.stack);
+                            UpdateProgress(1, item.stack);
                         if (item.Name.Contains("Bar"))
-                            Mission.UpdateProgress(2, item.stack);
+                            UpdateProgress(2, item.stack);
                         break;
                     case 5:
                         if (!item.IsCurrency && (item.accessory || item.IsWeapon() || item.IsMiningTool() || item.value > 0 || item.rare > ItemRarityID.White))
-                        Mission.UpdateProgress(1, item.stack);
+                        UpdateProgress(1, item.stack);
 
-                        if (Mission.ObjectiveIndex[Mission.CurObjectiveIndex].Objectives[1].CurrentCount == 10)
+                        if (ObjectiveIndex[CurObjectiveIndex].Objectives[1].CurrentCount == 10)
                         {
                             DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation);
                         }
                         break;
                     case 7:
                         if (!item.IsCurrency && (item.accessory || item.IsWeapon() || item.IsMiningTool() || item.value > 0 || item.rare > ItemRarityID.White))
-                            Mission.UpdateProgress(0, item.stack);
+                            UpdateProgress(0, item.stack);
                         break;
                     default:
                         break;
@@ -206,25 +226,25 @@ public class AFallingStar : ObjectiveHandler
         {
             try
             {
-                switch (Mission.CurObjectiveIndex)
+                switch (CurObjectiveIndex)
                 {
                     case 4:
                         if (npc.type == NPCAIStyleID.Slime)
-                            Mission.UpdateProgress(0);
+                            UpdateProgress(0);
                         break;
                     case 6:
                         if (npc.type == NPCAIStyleID.Slime)
-                            Mission.UpdateProgress(0);
+                            UpdateProgress(0);
                         break;
                     case 9:
                         if (npc.type == NPCAIStyleID.Slime)
-                            Mission.UpdateProgress(0);
-                        if (Mission.ObjectiveIndex[Mission.CurObjectiveIndex].Objectives[0].CurrentCount == 20)
+                            UpdateProgress(0);
+                        if (ObjectiveIndex[CurObjectiveIndex].Objectives[0].CurrentCount == 20)
                             DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeRain_Commentary, false);
                         break;
                     case 10:
                         if (npc.type == NPCID.KingSlime)
-                            Mission.UpdateProgress(0);
+                            UpdateProgress(0);
                         break;
                     default:
                         break;
@@ -243,15 +263,15 @@ public class AFallingStar : ObjectiveHandler
         {
             try
             {
-                switch (Mission.CurObjectiveIndex)
+                switch (CurObjectiveIndex)
                 {
                     case 5:
                         if (biome == BiomeType.Underground)
-                            Mission.UpdateProgress(0);
+                            UpdateProgress(0);
                         break;
                     case 8:
                         if (biome == BiomeType.Forest)
-                            Mission.UpdateProgress(0);
+                            UpdateProgress(0);
                         break;
                     default:
                         break;
@@ -270,17 +290,17 @@ public class AFallingStar : ObjectiveHandler
         {
             try
             {
-                switch (Mission.CurObjectiveIndex)
+                switch (CurObjectiveIndex)
                 {
                     case 0:
                         DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_GatheringResources, true);
-                        Mission.UpdateProgress(0);
+                        UpdateProgress(0);
                         break;
                     case 1:
-                        if (Mission.ObjectiveIndex[1].Objectives[0].IsCompleted 
-                            && Mission.ObjectiveIndex[1].Objectives[1].IsCompleted)
+                        if (ObjectiveIndex[1].Objectives[0].IsCompleted 
+                            && ObjectiveIndex[1].Objectives[1].IsCompleted)
                         {
-                            Mission.UpdateProgress(2);
+                            UpdateProgress(2);
                         }
                     
                         break;

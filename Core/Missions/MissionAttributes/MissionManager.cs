@@ -1,74 +1,63 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Terraria.DataStructures;
 using Reverie.Utilities;
 
 namespace Reverie.Core.Missions.MissionAttributes;
 
-public class MissionHandlerManager
+public class MissionManager
 {
-    private readonly object handlerLock = new();
-    private readonly Dictionary<int, ObjectiveHandler> handlers = [];
-    private static MissionHandlerManager instance;
-    public static MissionHandlerManager Instance => instance ??= new MissionHandlerManager();
+    private readonly object managerLock = new();
+    private readonly Dictionary<int, Mission> activeMissions = [];
+    private static MissionManager instance;
+    public static MissionManager Instance => instance ??= new MissionManager();
 
-    public void RegisterMissionHandler(Mission mission)
+    public void RegisterMission(Mission mission)
     {
         if (mission == null)
             return;
 
-        lock (handlerLock)
+        lock (managerLock)
         {
             try
             {
-                ModContent.GetInstance<Reverie>().Logger.Debug($"Handler count before registration: {handlers.Count}");
+                ModContent.GetInstance<Reverie>().Logger.Debug($"Active mission count before registration: {activeMissions.Count}");
 
-                if (handlers.ContainsKey(mission.ID))
+                if (activeMissions.ContainsKey(mission.ID))
                 {
-                    ModContent.GetInstance<Reverie>().Logger.Debug($"Handler already exists for mission {mission.ID}");
+                    ModContent.GetInstance<Reverie>().Logger.Debug($"Mission already registered: {mission.ID}");
                     return;
                 }
 
-                var handlerType = Assembly.GetExecutingAssembly()
-                    .GetTypes()
-                    .FirstOrDefault(t =>
-                        t.GetCustomAttribute<MissionHandlerAttribute>()?.MissionID == mission.ID);
-
-                if (handlerType != null)
-                {
-                    var handler = (ObjectiveHandler)Activator.CreateInstance(handlerType, mission);
-                    handlers[mission.ID] = handler;
-                    ModContent.GetInstance<Reverie>().Logger.Info($"Registered handler for mission {mission.Name}");
-                }
-                ModContent.GetInstance<Reverie>().Logger.Debug($"Handler count after registration: {handlers.Count}");
-                ModContent.GetInstance<Reverie>().Logger.Debug($"Current handlers: {string.Join(", ", handlers.Keys)}");
-
+                activeMissions[mission.ID] = mission;
+                ModContent.GetInstance<Reverie>().Logger.Info($"Registered mission: {mission.Name}");
+                ModContent.GetInstance<Reverie>().Logger.Debug($"Active mission count after registration: {activeMissions.Count}");
+                ModContent.GetInstance<Reverie>().Logger.Debug($"Current active missions: {string.Join(", ", activeMissions.Keys)}");
             }
             catch (Exception ex)
             {
-                ModContent.GetInstance<Reverie>().Logger.Error($"Failed to register handler: {ex.Message}");
+                ModContent.GetInstance<Reverie>().Logger.Error($"Failed to register mission: {ex.Message}");
             }
         }
     }
 
     public void Reset()
     {
-        lock (handlerLock)
+        lock (managerLock)
         {
-            handlers.Clear();
-            ModContent.GetInstance<Reverie>().Logger.Info("All mission handlers reset");
+            activeMissions.Clear();
+            ModContent.GetInstance<Reverie>().Logger.Info("All active missions reset");
         }
     }
 
-    private IEnumerable<ObjectiveHandler> ActiveHandlers
+    private IEnumerable<Mission> ActiveMissions
     {
         get
         {
-            lock (handlerLock)
+            lock (managerLock)
             {
-                return handlers.Values
-                    .Where(h => h.Mission.Progress == MissionProgress.Active)
+                return activeMissions.Values
+                    .Where(m => m.Progress == MissionProgress.Active)
                     .ToList();
             }
         }
@@ -76,13 +65,13 @@ public class MissionHandlerManager
 
     public void OnObjectiveComplete(Mission mission, int objectiveIndex)
     {
-        lock (handlerLock)
+        lock (managerLock)
         {
             try
             {
-                if (handlers.TryGetValue(mission.ID, out var handler))
+                if (activeMissions.TryGetValue(mission.ID, out var activeMission))
                 {
-                    handler.OnObjectiveComplete(objectiveIndex);
+                    activeMission.OnObjectiveComplete(objectiveIndex);
                 }
             }
             catch (Exception ex)
@@ -95,13 +84,13 @@ public class MissionHandlerManager
     #region Event Handlers
     public void OnItemCreated(Item item, ItemCreationContext context)
     {
-        lock (handlerLock)
+        lock (managerLock)
         {
             try
             {
-                foreach (var handler in ActiveHandlers)
+                foreach (var mission in ActiveMissions)
                 {
-                    handler.OnItemCreated(item, context);
+                    mission.OnItemCreated(item, context);
                 }
             }
             catch (Exception ex)
@@ -113,13 +102,13 @@ public class MissionHandlerManager
 
     public void OnItemPickup(Item item)
     {
-        lock (handlerLock)
+        lock (managerLock)
         {
             try
             {
-                foreach (var handler in ActiveHandlers)
+                foreach (var mission in ActiveMissions)
                 {
-                    handler.OnItemPickup(item);
+                    mission.OnItemPickup(item);
                 }
             }
             catch (Exception ex)
@@ -131,13 +120,13 @@ public class MissionHandlerManager
 
     public void OnNPCKill(NPC npc)
     {
-        lock (handlerLock)
+        lock (managerLock)
         {
             try
             {
-                foreach (var handler in ActiveHandlers)
+                foreach (var mission in ActiveMissions)
                 {
-                    handler.OnNPCKill(npc);
+                    mission.OnNPCKill(npc);
                 }
             }
             catch (Exception ex)
@@ -149,13 +138,13 @@ public class MissionHandlerManager
 
     public void OnNPCChat(NPC npc)
     {
-        lock (handlerLock)
+        lock (managerLock)
         {
             try
             {
-                foreach (var handler in ActiveHandlers)
+                foreach (var mission in ActiveMissions)
                 {
-                    handler.OnNPCChat(npc);
+                    mission.OnNPCChat(npc);
                 }
             }
             catch (Exception ex)
@@ -167,13 +156,13 @@ public class MissionHandlerManager
 
     public void OnNPCSpawn(NPC npc)
     {
-        lock (handlerLock)
+        lock (managerLock)
         {
             try
             {
-                foreach (var handler in ActiveHandlers)
+                foreach (var mission in ActiveMissions)
                 {
-                    handler.OnNPCSpawn(npc);
+                    mission.OnNPCSpawn(npc);
                 }
             }
             catch (Exception ex)
@@ -185,13 +174,13 @@ public class MissionHandlerManager
 
     public void OnNPCLoot(NPC npc)
     {
-        lock (handlerLock)
+        lock (managerLock)
         {
             try
             {
-                foreach (var handler in ActiveHandlers)
+                foreach (var mission in ActiveMissions)
                 {
-                    handler.OnNPCLoot(npc);
+                    mission.OnNPCLoot(npc);
                 }
             }
             catch (Exception ex)
@@ -203,16 +192,16 @@ public class MissionHandlerManager
 
     public void OnNPCHit(NPC npc, int damage)
     {
-        lock (handlerLock)
+        lock (managerLock)
         {
             try
             {
-                var activeHandlers = ActiveHandlers.ToList();
-                ModContent.GetInstance<Reverie>().Logger.Debug($"Processing NPC hit with {activeHandlers.Count} active handlers");
+                var missions = ActiveMissions.ToList();
+                ModContent.GetInstance<Reverie>().Logger.Debug($"Processing NPC hit with {missions.Count} active missions");
 
-                foreach (var handler in activeHandlers)
+                foreach (var mission in missions)
                 {
-                    handler.OnNPCHit(npc, damage);
+                    mission.OnNPCHit(npc, damage);
                 }
             }
             catch (Exception ex)
@@ -224,14 +213,14 @@ public class MissionHandlerManager
 
     public void OnBiomeEnter(Player player, BiomeType biome)
     {
-        lock (handlerLock)
+        lock (managerLock)
         {
             try
             {
-                foreach (var handler in ActiveHandlers)
+                foreach (var mission in ActiveMissions)
                 {
-                    handler.OnBiomeEnter(player, biome);
-                    ModContent.GetInstance<Reverie>().Logger.Error($"OnBiomeEnter: {biome}");
+                    mission.OnBiomeEnter(player, biome);
+                    ModContent.GetInstance<Reverie>().Logger.Debug($"OnBiomeEnter: {biome}");
                 }
             }
             catch (Exception ex)

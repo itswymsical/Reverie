@@ -14,7 +14,7 @@ public static class MissionExtensions
             Unlocked = mission.Unlocked,
             CurObjectiveIndex = mission.CurObjectiveIndex,
             ObjectiveIndex = mission.ObjectiveIndex
-                .Select(set => new ObjectiveIndextate
+                .Select(set => new ObjectiveIndexState
                 {
                     Objectives = set.Objectives
                         .Select(obj => new ObjectiveState

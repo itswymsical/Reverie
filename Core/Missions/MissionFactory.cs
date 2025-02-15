@@ -1,54 +1,118 @@
-﻿using System.Collections.Generic;
+﻿using Reverie.Core.Missions.MissionHandlers;
+using System.Collections.Generic;
 
 namespace Reverie.Core.Missions;
 public static class MissionID
 {
     public const int AFallingStar = 1;
 }
-public class MissionFactory
+public class MissionFactory : ModSystem
 {
-    private Dictionary<int, Func<Mission>> missionData;
-    public static MissionFactory Instance => ModContent.GetInstance<MissionFactory>();
-    public MissionFactory() => InitializeMissionData();
+    private readonly Dictionary<int, Type> missionTypes = new();
+    private readonly Dictionary<int, Mission> missionCache = new();
+    private static MissionFactory instance;
 
-    private void InitializeMissionData()
+    public static MissionFactory Instance
     {
-        missionData = new Dictionary<int, Func<Mission>>
+        get
         {
+            if (instance == null)
+            {
+                instance = ModContent.GetInstance<MissionFactory>();
+                if (instance == null)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error("Failed to get MissionFactory instance!");
+                }
+            }
+            return instance;
+        }
+    }
 
-            {MissionID.AFallingStar, () => new Mission(
-                MissionID.AFallingStar,
-                "A Falling Star",
-                "'Well, that's one way to make an appearance...'" +
-                "\nBegin your journey in Terraria, discovering knowledge and power...",
-                [
-                    [("Talk to Laine", 1)],
-                    [("Collect Stone", 25), ("Collect Wood", 50), ("Give Laine resources", 1)],
-                    [("Obtain a Helmet", 1), ("Obtain a Chestplate", 1), ("Obtain Leggings", 1), ("Obtain better weapon", 1)],
-                    [("Discover Accessories", 3), ("Mine 30 Ore", 30),("Obtain 15 bars of metal", 15)],
-                    [("Clear out slimes", 6)],
-                    [("Explore the Underground", 1), ("Loot items", 150)],
-                    [("Clear out slimes, again", 12)],
-                    [("Resume glorius looting", 100)],
-                    [("Return to Laine", 1)],
-                    [("Clear Slime Infestation", 50)],
-                    [("Defeat the King Slime", 1)]
-                ],
+    public override void Load()
+    {
+        instance = this;
+        RegisterMissionTypes();
+        ModContent.GetInstance<Reverie>().Logger.Info("MissionFactory loaded and initialized");
+    }
 
-                [new Item(ItemID.MagicMirror), new Item(ItemID.GoldCoin, Main.rand.Next(3, 4))],
-                isMainline: true,
-                NPCID.Guide,
-                xpReward: 80
-            )},
-        };
+    public override void OnWorldLoad()
+    {
+        // Clear cache when loading a world to ensure fresh mission instances
+        missionCache.Clear();
+        ModContent.GetInstance<Reverie>().Logger.Info("MissionFactory cache cleared for world load");
+    }
+
+    public override void Unload()
+    {
+        missionTypes.Clear();
+        missionCache.Clear();
+        instance = null;
+    }
+
+    private void RegisterMissionTypes()
+    {
+        try
+        {
+            ModContent.GetInstance<Reverie>().Logger.Info("Registering mission types...");
+
+            // Register each mission type with its ID
+            missionTypes[MissionID.AFallingStar] = typeof(AFallingStarMission);
+
+            ModContent.GetInstance<Reverie>().Logger.Info($"Registered {missionTypes.Count} mission types");
+
+            // Log registered missions for debugging
+            foreach (var (id, type) in missionTypes)
+            {
+                ModContent.GetInstance<Reverie>().Logger.Debug($"Registered mission type: {id} -> {type.Name}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error registering mission types: {ex}");
+        }
     }
 
     public Mission GetMissionData(int missionId)
     {
-        if (missionData.TryGetValue(missionId, out var missionDataFactory))
+        try
         {
-            return missionDataFactory();
+            // Check cache first
+            if (missionCache.TryGetValue(missionId, out var cachedMission))
+            {
+                return cachedMission;
+            }
+
+            // Create new instance if type is registered
+            if (missionTypes.TryGetValue(missionId, out var missionType))
+            {
+                ModContent.GetInstance<Reverie>().Logger.Debug($"Creating new instance of mission type: {missionType.Name}");
+                var mission = (Mission)Activator.CreateInstance(missionType);
+                missionCache[missionId] = mission;
+                return mission;
+            }
+
+            ModContent.GetInstance<Reverie>().Logger.Warn($"No mission type registered for ID: {missionId}");
+            return null;
         }
-        return null;
+        catch (Exception ex)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error creating mission instance: {ex}");
+            return null;
+        }
+    }
+
+    public void LoadMissionState(int missionId, MissionDataContainer state)
+    {
+        var mission = GetMissionData(missionId);
+        if (mission != null)
+        {
+            mission.LoadState(state);
+            missionCache[missionId] = mission;
+        }
+    }
+
+    public void Reset()
+    {
+        missionCache.Clear();
     }
 }

@@ -5,7 +5,6 @@ using Terraria.DataStructures;
 using Reverie.Core.Dialogue;
 using Reverie.Utilities.Extensions;
 using static Reverie.Core.Missions.MissionPlayer;
-using Reverie.Core.Missions.MissionHandlers;
 
 namespace Reverie.Core.Missions.MissionAttributes;
 
@@ -13,24 +12,24 @@ public class ObjectiveEventItem : GlobalItem
 {
     public override void OnCreated(Item item, ItemCreationContext context)
     {
-        MissionHandlerManager.Instance.OnItemCreated(item, context);
+        MissionManager.Instance.OnItemCreated(item, context);
         base.OnCreated(item, context);
     }
 
     public override bool OnPickup(Item item, Player player)
     {
-        MissionProgressHelper.TryUpdateProgressForItem(item, player);
+        MissionHelper.TryUpdateProgressForItem(item, player);
         return base.OnPickup(item, player);
     }
 
     public override void UpdateEquip(Item item, Player player)
     {
         base.UpdateEquip(item, player);
-        MissionProgressHelper.TryUpdateProgressForItem(item, player);
+        MissionHelper.TryUpdateProgressForItem(item, player);
     }
     public override void UpdateInventory(Item item, Player player)
     {
-        MissionProgressHelper.TryUpdateProgressForItem(item, player);
+        MissionHelper.TryUpdateProgressForItem(item, player);
         base.UpdateInventory(item, player);
     }
 }
@@ -49,7 +48,7 @@ public class ObjectiveEventNPC : GlobalNPC
     {
         base.GetChat(npc, ref chat);
 
-        MissionHandlerManager.Instance.OnNPCChat(npc);
+        MissionManager.Instance.OnNPCChat(npc);
     }
 
     public override void EditSpawnPool(IDictionary<int, float> pool, NPCSpawnInfo spawnInfo)
@@ -99,6 +98,7 @@ public class ObjectiveEventNPC : GlobalNPC
         else
             base.EditSpawnPool(pool, spawnInfo);
     }
+
     public override void EditSpawnRate(Player player, ref int spawnRate, ref int maxSpawns)
     {
         var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
@@ -132,6 +132,7 @@ public class ObjectiveEventNPC : GlobalNPC
         else
             base.EditSpawnRate(player, ref spawnRate, ref maxSpawns);
     }
+
     public override void AI(NPC npc)
     {
         base.AI(npc);
@@ -143,7 +144,7 @@ public class ObjectiveEventNPC : GlobalNPC
     {
         base.OnKill(npc);
         if (!npc.immortal)
-            MissionHandlerManager.Instance.OnNPCKill(npc);
+            MissionManager.Instance.OnNPCKill(npc);
     }
 
     public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
