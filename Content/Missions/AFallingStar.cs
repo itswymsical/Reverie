@@ -9,18 +9,21 @@ using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 
 namespace Reverie.Content.Missions;
-
+/// <summary>
+/// Represents the initial story mission where the player crash lands and confronts King Slime.
+/// Guides the player through basic game mechanics and introduces the Reverie storyline.
+/// </summary>
 public class AFallingStar : Mission
 {
-    public AFallingStar() : base(MissionID.AFallingStar,
+    public AFallingStar() : base(MissionID.A_FALLING_STAR,
       "A Falling Star",
       "'Well, that's one way to make an appearance...'" +
       "\nBegin your journey in Terraria, discovering knowledge and power...",
       [
-          [("Talk to Laine", 1)],
-          [("Collect Stone", 25), ("Collect Wood", 50), ("Give Laine resources", 1)],
-          [("Obtain a Helmet", 1), ("Obtain a Chestplate", 1), ("Obtain Leggings", 1), ("Obtain better Pickaxe/Shovel", 1)],
+          [("Talk to Guide", 1)],
+          [("Collect Stone", 25), ("Collect Wood", 50), ("Give Guide resources", 1)],
           [("Discover Accessories", 3), ("Mine 30 Ore", 30),("Obtain 15 bars of metal", 15)],
+          [("Obtain a Helmet", 1), ("Obtain a Chestplate", 1), ("Obtain Leggings", 1), ("Obtain better Pickaxe/Shovel", 1)],
           [("Clear out slimes", 6)],
           [("Explore the Underground", 1), ("Loot items", 150)],
           [("Clear out slimes, again", 12)],
@@ -38,26 +41,69 @@ public class AFallingStar : Mission
         ModContent.GetInstance<Reverie>().Logger.Info("[A Falling Star] Mission constructed");
     }
 
+    private const int LOOT_NOTIFICATION_THRESHOLD = 10;
+    private const int SLIME_COMMENTARY_THRESHOLD = 20;
     private readonly List<Item> starterItems =
     [
-            new Item(ItemID.WoodenSword),
-            new Item(ItemID.CopperPickaxe),
-            new Item(ItemID.CopperAxe)
+        new Item(ItemID.WoodenSword),
+        new Item(ItemID.CopperPickaxe),
+        new Item(ItemID.CopperAxe)
     ];
 
+    internal enum AFallingStarObjective
+    {
+        TalkToLaine = 0,
+        GatherResources = 1,
+        ExploreAndGather = 2,
+        ObtainEquipment = 3,
+        ClearInitialSlimes = 4,
+        ExploreUnderground = 5,
+        ClearSecondSlimes = 6,
+        ContinueLooting = 7,
+        ReturnToLaine = 8,
+        ClearInfestation = 9,
+        DefeatKingSlime = 10
+    }
+
+    public override void WhileActive()
+    {
+        base.WhileActive();
+
+        if (CurObjectiveIndex < (int)AFallingStarObjective.ClearInfestation)
+        {
+            Main.slimeRain = false;
+            Main.slimeRainTime = 0;
+            Main.dayTime = true;
+        }
+
+        if (CurObjectiveIndex == (int)AFallingStarObjective.ClearInfestation)
+        {
+            if (!Main.slimeRain)
+            {
+                Main.StartSlimeRain();
+            }
+        }
+        Main.bloodMoon = false;
+    }
+
+    #region Completion Handlers
     protected override void HandleObjectiveSetComplete(int setIndex, ObjectiveSet set)
     {
         try
         {
-            switch (setIndex)
-            {
-                case 1:
-                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_FixHouse, true);
-                    break;
+            var objective = (AFallingStarObjective)setIndex;
+            if (!set.Objectives.All(o => o.IsCompleted)) return;
 
-                case 2: // Equipment set
-                    if (set.Objectives.All(o => o.IsCompleted))
-                        DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_WildlifeWoes, true);
+            switch (objective)
+            {
+                case AFallingStarObjective.GatherResources:
+                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_GiveGuideResources, true);
+                    break;
+                case AFallingStarObjective.ObtainEquipment:
+                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_WildlifeWoes, true);
+                    break;
+                case AFallingStarObjective.ClearInitialSlimes:
+                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation, true);
                     break;
             }
         }
@@ -71,47 +117,25 @@ public class AFallingStar : Mission
     {
         try
         {
-            switch (CurObjectiveIndex)
+            var objective = (AFallingStarObjective)CurObjectiveIndex;
+            switch (objective)
             {
-                case 0:
-                    foreach (var item in starterItems)
-                        player.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), item.type, item.stack);
+                case AFallingStarObjective.TalkToLaine:
+                    GiveStarterItems();
                     break;
-                case 3:
-                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation);
-                    break;
-                case 4:
+                case AFallingStarObjective.ClearInitialSlimes:
                     DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation, true);
                     break;
-                case 5:
+                case AFallingStarObjective.ExploreUnderground:
                     DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation_Commentary, false);
                     break;
-                case 7:
-                    Main.StartSlimeRain(true);
-                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeRain);
+                case AFallingStarObjective.ContinueLooting:
+                    StartSlimeRainEvent();
                     break;
-                case 9:
-                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_KS_Encounter, true);
-                    if (!NPC.AnyNPCs(NPCID.KingSlime))
-                    {
-                        if (Main.LocalPlayer.whoAmI == Main.myPlayer)
-                        {
-                            SoundEngine.PlaySound(SoundID.Roar, Main.LocalPlayer.position);
-
-                            int type = NPCID.KingSlime;
-
-                            if (Main.netMode != NetmodeID.MultiplayerClient)
-                            {
-                                NPC.SpawnOnPlayer(Main.LocalPlayer.whoAmI, type);
-                            }
-                            else
-                            {
-                                NetMessage.SendData(MessageID.SpawnBossUseLicenseStartEvent, number: Main.LocalPlayer.whoAmI, number2: type);
-                            }
-                        }
-                    }
+                case AFallingStarObjective.ClearInfestation:
+                    StartKingSlimeEncounter();
                     break;
-                case 10:
+                case AFallingStarObjective.DefeatKingSlime:
                     DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_KS_Victory, true);
                     break;
             }
@@ -121,64 +145,32 @@ public class AFallingStar : Mission
             ModContent.GetInstance<Reverie>().Logger.Error($"Error in HandleObjectiveComplete: {ex.Message}");
         }
     }
-    protected override void HandleSpecificObjectiveComplete(int setIndex, int objectiveIndex, Objective objective)
-    {
-        try
-        {
-            if (setIndex is 1 && objectiveIndex is 1)
-            {
-                DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation, true);
-            }
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in HandleObjectiveSetComplete: {ex.Message}");
-        }
-    }
+    #endregion
+
+    #region Event Handlers
     public override void OnItemObtained(Item item)
     {
         lock (handlerLock)
         {
             try
             {
-                switch (CurObjectiveIndex)
+                var objective = (AFallingStarObjective)CurObjectiveIndex;
+                switch (objective)
                 {
-                    case 1:
-                        if (item.type == ItemID.StoneBlock)
-                            UpdateProgress(0, item.stack);
-                        if (item.type == ItemID.Wood)
-                            UpdateProgress(1, item.stack);
+                    case AFallingStarObjective.GatherResources:
+                        HandleResourceGathering(item);
                         break;
-                    case 2:
-                        if (item.headSlot != -1 && !item.vanity)
-                            UpdateProgress(0, item.stack);
-                        if (item.bodySlot != -1 && !item.vanity)
-                            UpdateProgress(1, item.stack);
-                        if (item.legSlot != -1 && !item.vanity)
-                            UpdateProgress(2, item.stack);
-                        if (item.IsMiningTool())
-                            UpdateProgress(3);
+                    case AFallingStarObjective.ObtainEquipment:
+                        HandleEquipmentCollection(item);
                         break;
-                    case 3:
-                        if (item.accessory)
-                            UpdateProgress(0, item.stack);
-                        if (item.IsOre())
-                            UpdateProgress(1, item.stack);
-                        if (item.Name.EndsWith("Bar"))
-                            UpdateProgress(2, item.stack);
+                    case AFallingStarObjective.ExploreAndGather:
+                        HandleExplorationGathering(item);
                         break;
-                    case 5:
-                        if ((item.accessory || item.IsWeapon() || item.IsMiningTool() || item.value > 0) && !item.IsCurrency && item.rare >= ItemRarityID.Blue)
-                            UpdateProgress(1, item.stack);
-
-                        if (ObjectiveIndex[CurObjectiveIndex].Objectives[1].CurrentCount == 10)
-                            DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation);               
+                    case AFallingStarObjective.ExploreUnderground:
+                        HandleUndergroundLoot(item);
                         break;
-                    case 7:
-                        if ((item.accessory || item.IsWeapon() || item.IsMiningTool() || item.value > 0) && !item.IsCurrency && item.rare >= ItemRarityID.Blue)
-                            UpdateProgress(0, item.stack);
-                        break;
-                    default:
+                    case AFallingStarObjective.ContinueLooting:
+                        HandleContinuedLooting(item);
                         break;
                 }
             }
@@ -195,27 +187,20 @@ public class AFallingStar : Mission
         {
             try
             {
-                switch (CurObjectiveIndex)
+                var objective = (AFallingStarObjective)CurObjectiveIndex;
+                switch (objective)
                 {
-                    case 4:
+                    case AFallingStarObjective.ClearInitialSlimes:
+                    case AFallingStarObjective.ClearSecondSlimes:
                         if (npc.type == NPCAIStyleID.Slime)
                             UpdateProgress(0);
                         break;
-                    case 6:
-                        if (npc.type == NPCAIStyleID.Slime)
-                            UpdateProgress(0);
+                    case AFallingStarObjective.ClearInfestation:
+                        HandleSlimeInfestation(npc);
                         break;
-                    case 9:
-                        if (npc.type == NPCAIStyleID.Slime)
-                            UpdateProgress(0);
-                        if (ObjectiveIndex[CurObjectiveIndex].Objectives[0].CurrentCount == 20)
-                            DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeRain_Commentary, false);
-                        break;
-                    case 10:
+                    case AFallingStarObjective.DefeatKingSlime:
                         if (npc.type == NPCID.KingSlime)
                             UpdateProgress(0);
-                        break;
-                    default:
                         break;
                 }
             }
@@ -232,23 +217,22 @@ public class AFallingStar : Mission
         {
             try
             {
-                switch (CurObjectiveIndex)
+                var objective = (AFallingStarObjective)CurObjectiveIndex;
+                switch (objective)
                 {
-                    case 5:
+                    case AFallingStarObjective.ExploreUnderground:
                         if (biome == BiomeType.Underground)
                             UpdateProgress(0);
                         break;
-                    case 8:
+                    case AFallingStarObjective.ReturnToLaine:
                         if (biome == BiomeType.Forest)
                             UpdateProgress(0);
-                        break;
-                    default:
                         break;
                 }
             }
             catch (Exception ex)
             {
-                Instance.Logger.Error($"Error in OnNPCChat: {ex.Message}");
+                Instance.Logger.Error($"Error in OnBiomeEnter: {ex.Message}");
             }
         }
     }
@@ -259,21 +243,19 @@ public class AFallingStar : Mission
         {
             try
             {
-                switch (CurObjectiveIndex)
+                var objective = (AFallingStarObjective)CurObjectiveIndex;
+                switch (objective)
                 {
-                    case 0:
+                    case AFallingStarObjective.TalkToLaine:
                         DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_GatheringResources, true);
                         UpdateProgress(0);
                         break;
-                    case 1:
-                        if (ObjectiveIndex[1].Objectives[0].IsCompleted
-                            && ObjectiveIndex[1].Objectives[1].IsCompleted)
+                    case AFallingStarObjective.GatherResources:
+                        if (ObjectiveIndex[1].Objectives[0].IsCompleted &&
+                            ObjectiveIndex[1].Objectives[1].IsCompleted)
                         {
                             UpdateProgress(2);
                         }
-
-                        break;
-                    default:
                         break;
                 }
             }
@@ -283,4 +265,115 @@ public class AFallingStar : Mission
             }
         }
     }
+    #endregion
+
+    #region Helper Methods
+    private void GiveStarterItems()
+    {
+        foreach (var item in starterItems)
+        {
+            player.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), item.type, item.stack);
+        }
+    }
+
+    private void StartSlimeRainEvent()
+    {
+        Main.StartSlimeRain(true);
+        DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeRain);
+    }
+
+    private void StartKingSlimeEncounter()
+    {
+        DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_KS_Encounter, true);
+        SpawnKingSlime();
+    }
+
+    private void SpawnKingSlime()
+    {
+        if (!NPC.AnyNPCs(NPCID.KingSlime) && Main.LocalPlayer.whoAmI == Main.myPlayer)
+        {
+            SoundEngine.PlaySound(SoundID.Roar, Main.LocalPlayer.position);
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                NPC.SpawnOnPlayer(Main.LocalPlayer.whoAmI, NPCID.KingSlime);
+            }
+            else
+            {
+                NetMessage.SendData(MessageID.SpawnBossUseLicenseStartEvent,
+                    number: Main.LocalPlayer.whoAmI,
+                    number2: NPCID.KingSlime);
+            }
+        }
+    }
+
+    private void HandleResourceGathering(Item item)
+    {
+        if (item.type == ItemID.StoneBlock)
+            UpdateProgress(0, item.stack);
+        if (item.type == ItemID.Wood)
+            UpdateProgress(1, item.stack);
+    }
+
+    private void HandleEquipmentCollection(Item item)
+    {
+        if (item.headSlot != -1 && !item.vanity)
+            UpdateProgress(0, item.stack);
+        if (item.bodySlot != -1 && !item.vanity)
+            UpdateProgress(1, item.stack);
+        if (item.legSlot != -1 && !item.vanity)
+            UpdateProgress(2, item.stack);
+        if (item.IsMiningTool())
+            UpdateProgress(3);
+    }
+
+    private void HandleExplorationGathering(Item item)
+    {
+        if (item.accessory)
+            UpdateProgress(0, item.stack);
+        if (item.IsOre())
+            UpdateProgress(1, item.stack);
+        if (item.Name.EndsWith("Bar"))
+            UpdateProgress(2, item.stack);
+    }
+
+    private void HandleUndergroundLoot(Item item)
+    {
+        if (IsValuableLoot(item))
+        {
+            UpdateProgress(1, item.stack);
+            if (ObjectiveIndex[CurObjectiveIndex].Objectives[1].CurrentCount == LOOT_NOTIFICATION_THRESHOLD)
+            {
+                DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation);
+            }
+        }
+    }
+
+    private void HandleContinuedLooting(Item item)
+    {
+        if (IsValuableLoot(item))
+        {
+            UpdateProgress(0, item.stack);
+        }
+    }
+
+    private bool IsValuableLoot(Item item)
+    {
+        return (item.accessory || item.IsWeapon() || item.IsMiningTool() || item.value > 0)
+            && !item.IsCurrency
+            && item.rare >= ItemRarityID.Blue;
+    }
+
+    private void HandleSlimeInfestation(NPC npc)
+    {
+        if (npc.type == NPCAIStyleID.Slime)
+        {
+            UpdateProgress(0);
+            if (ObjectiveIndex[CurObjectiveIndex].Objectives[0].CurrentCount == SLIME_COMMENTARY_THRESHOLD)
+            {
+                DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData,
+                    DialogueID.CrashLanding_SlimeRain_Commentary, false);
+            }
+        }
+    }
+    #endregion
 }

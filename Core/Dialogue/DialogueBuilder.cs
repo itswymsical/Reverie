@@ -63,19 +63,3 @@ public class DialogueSequence(IEnumerable<DialogueEntry> entries, int? musicId =
     public IReadOnlyList<DialogueEntry> Entries { get; } = new List<DialogueEntry>(entries);
     public int? MusicID { get; } = musicId;
 }
-
-public enum DialogueID
-{
-    CrashLanding_Cutscene,
-    CrashLanding_Intro,
-    CrashLanding_SettlingIn,
-    CrashLanding_GatheringResources,
-    CrashLanding_FixHouse,
-    CrashLanding_WildlifeWoes,
-    CrashLanding_SlimeInfestation,
-    CrashLanding_SlimeInfestation_Commentary,
-    CrashLanding_SlimeRain,
-    CrashLanding_SlimeRain_Commentary,
-    CrashLanding_KS_Encounter,
-    CrashLanding_KS_Victory
-}

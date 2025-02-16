@@ -1,4 +1,4 @@
-﻿DialogueLibrary: {
+DialogueLibrary: {
 	CrashLanding: {
 		Intro.Line1: What the H***?!?!
 		Cutscene.Line1: Hmm? What's that?
@@ -6,14 +6,22 @@
 		SettlingIn: {
 			Line1: Are you alright? That was quite the entrance.
 			Line2: Is crashing and exploding on people's property a custom where you come from?
-			Line3: I'm Laine. Nice to meet you.
-			Line4: Let's get settled in. I could use some help repairing the damage from your, uh...
+			Line3: Nice to meet ya.
+			Line4: Let's get settled in; I could use some help repairing the damage from your, uh...
 			Line5: ...arrival.
 		}
 
 		GatheringResources: {
-			Line1: While you're out there, could you gather some wood, stone, and potions?
-			Line2: I need to patch up the house, and those potions might come in handy later.
+			Line1: While you're out there, could you gather some wood and stone?
+			Line2: I need to patch up the house, and you should familiarize yourself.
+		}
+
+		GiveGuideResources: {
+			Line1: Thanks, this should be enough. You're a natural at this, huh?
+			Line2: Alright, i'll get to work on fixing up the house.
+			Line3: You should craft some armor and a weapon to protect yourself.
+			Line4: The wilderness can be dangerous, especially for newcomers.
+			Line5: That'll serve as our base of operations for now.
 		}
 
 		WildlifeWoes: {
@@ -22,20 +30,15 @@
 			Line3: Clear them out, and we'll be able to explore the area more safely.
 		}
 
-		FixHouse: {
-			Line1: Thanks, this should be enough. You're a natural at this, huh?
-			Line2: Alright, i'll get to work on fixing up the house.
-			Line3: You should craft some armor and a weapon to protect yourself.
-			Line4: The wilderness can be dangerous, especially for newcomers.
-			Line5: That'll serve as our base of operations for now.
-		}
-
 		SlimeInfestation: {
 			Line1: Is it just me, or are there more slimes around than usual?
-			Line2: I've never seen them so active and aggressive before.
+			Line2: Also, I've never seen them so aggressive before...
 		}
 
-		SlimeInfestation_Commentary.Line1: Gah! I can't take a step outside without being swarmed by these slimy menaces!
+		SlimeInfestation_Commentary: {
+			Line1: Gah! I can't take a step outside without being swarmed by these slimy menaces!
+			Line2: Could you help a guy out?
+		}
 
 		SlimeRain: {
 			Line1: You gotta be kidding me...

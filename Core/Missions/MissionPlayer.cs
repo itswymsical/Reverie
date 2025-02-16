@@ -507,7 +507,7 @@ public partial class MissionPlayer : ModPlayer
 
     public override void OnEnterWorld()
     {
-        var AFallingStar = GetMission(MissionID.AFallingStar);
+        var AFallingStar = GetMission(MissionID.A_FALLING_STAR);
         var player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
 
         if (AFallingStar != null &&
@@ -515,8 +515,8 @@ public partial class MissionPlayer : ModPlayer
             AFallingStar.Progress != MissionProgress.Active)
         {
             CutsceneSystem.PlayCutscene(new FallingStarCutscene());
-            UnlockMission(MissionID.AFallingStar);
-            StartMission(MissionID.AFallingStar);
+            UnlockMission(MissionID.A_FALLING_STAR);
+            StartMission(MissionID.A_FALLING_STAR);
         }
     }
 

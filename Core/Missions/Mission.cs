@@ -14,7 +14,7 @@ namespace Reverie.Core.Missions
 {
     public static class MissionID
     {
-        public const int AFallingStar = 1;
+        public const int A_FALLING_STAR = 1;
     }
     public enum MissionProgress
     {
@@ -330,6 +330,15 @@ namespace Reverie.Core.Missions
                 GiveRewards();
 
             InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(this));
+        }
+
+        /// <summary>
+        /// Called every game update tick while the mission is active.
+        /// Override this in derived classes to implement mission-specific behaviors.
+        /// </summary>
+        public virtual void WhileActive()
+        {
+            if (Progress != MissionProgress.Active && State != MissionAvailability.Unlocked) return;
         }
         #endregion
 

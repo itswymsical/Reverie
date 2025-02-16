@@ -20,12 +20,31 @@ public class CameraSystem : ModSystem
     /// <param name="easePan"> Changes the easing function for the motion from primary to secondary target if applicable. Default is Vector2.Lerp </param>
     public static void DoPanAnimation(int duration, Vector2 target, Vector2 secondaryTarget = default, Func<Vector2, Vector2, float, Vector2> easeIn = null, Func<Vector2, Vector2, float, Vector2> easeOut = null, Func<Vector2, Vector2, float, Vector2> easePan = null)
     {
+        panModifier.UseOffsetOrigin = false;
         panModifier.TotalDuration = duration;
         panModifier.PrimaryTarget = target;
         panModifier.SecondaryTarget = secondaryTarget;
 
         panModifier.EaseInFunction = easeIn ?? Vector2.SmoothStep;
         panModifier.EaseOutFunction = easeOut ?? Vector2.SmoothStep;
+        panModifier.PanFunction = easePan ?? Vector2.Lerp;
+    }
+
+    /// <summary>
+    /// Sets up a panning animation for the screen from a custom starting position.
+    /// </summary>
+    /// <param name="duration"> How long the animation should last </param>
+    /// <param name="origin"> The starting position for the camera pan </param>
+    /// <param name="target"> Where the camera should pan to </param>
+    /// <param name="easePan"> Changes the easing function for the motion from origin to target. Default is Vector2.Lerp </param>
+    public static void DoPanAnimationOffset(int duration, Vector2 origin, Vector2 target, Func<Vector2, Vector2, float, Vector2> easePan = null)
+    {
+        panModifier.UseOffsetOrigin = true;
+        panModifier.TotalDuration = duration;
+        panModifier.PrimaryTarget = origin;
+        panModifier.SecondaryTarget = target;
+
+        // For custom origin pans, we only need the pan function since we're not involving the player position
         panModifier.PanFunction = easePan ?? Vector2.Lerp;
     }
 

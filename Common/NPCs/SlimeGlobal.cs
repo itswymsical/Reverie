@@ -1,4 +1,6 @@
-﻿using Terraria.Audio;
+﻿using Reverie.Core.Missions;
+using Terraria;
+using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.GameContent.ItemDropRules;
 
@@ -45,24 +47,48 @@ namespace Reverie.Common.NPCs
         public override void AI(NPC npc)
         {
             if (npc.type != NPCAIStyleID.Slime) return;
+            var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
 
-            UpdateState(npc);
+            var AFallingStar = mPlayer.GetMission(MissionID.A_FALLING_STAR);
+
+            if (AFallingStar?.Progress == MissionProgress.Active)
+            {
+                var currentSet = AFallingStar.ObjectiveIndex[AFallingStar.CurObjectiveIndex];
+                if (AFallingStar.CurObjectiveIndex >= 3)
+                {
+                    UpdateState(npc);
+                }          
+            }
+            else if (npc.life < npc.lifeMax * .44f)
+            {
+                UpdateState(npc, postFallingStar: true);
+            }
+
             HandleSquishScale(npc);
         }
 
-        private void UpdateState(NPC npc)
+        private void UpdateState(NPC npc, bool postFallingStar = false)
         {
             stateTimer++;
             switch (currentState)
             {
 
                 case SlimeState.Idle:
-                    if (stateTimer > 540f)
+                    if (!postFallingStar)
+                    {
+                        if (stateTimer > 540f)
+                        {
+                            npc.aiStyle = -1;
+                            currentState = SlimeState.PrepareSlamAttack;
+                            HandleSlamSetup(npc);
+                            stateTimer = 0;
+                        }
+                    }
+                    else
                     {
                         npc.aiStyle = -1;
                         currentState = SlimeState.PrepareSlamAttack;
                         HandleSlamSetup(npc);
-                        stateTimer = 0;
                     }
                     break;
 

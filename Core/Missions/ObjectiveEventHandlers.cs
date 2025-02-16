@@ -56,12 +56,10 @@ public class ObjectiveEventNPC : GlobalNPC
     public override void EditSpawnPool(IDictionary<int, float> pool, NPCSpawnInfo spawnInfo)
     {
         var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        var AFallingStar = mPlayer.GetMission(MissionID.AFallingStar);
+        var AFallingStar = mPlayer.GetMission(MissionID.A_FALLING_STAR);
 
         if (AFallingStar?.Progress == MissionProgress.Active)
         {
-            var rateWeakSlimes = 0.1f;
-            var rateStrongSlimes = 0.04f;
             var rateRareSlimes = 0.002f;
 
             var currentSet = AFallingStar.ObjectiveIndex[AFallingStar.CurObjectiveIndex];
@@ -73,26 +71,18 @@ public class ObjectiveEventNPC : GlobalNPC
             {
                 if (AFallingStar.CurObjectiveIndex >= 3 && Main.LocalPlayer.ZoneOverworldHeight)
                 {
-                    pool.Add(NPCID.GreenSlime, rateWeakSlimes);
-                    pool.Add(NPCID.BlueSlime, rateWeakSlimes);
-                    pool.Add(NPCID.PurpleSlime, rateStrongSlimes);
                     pool.Add(NPCID.RedSlime, rateRareSlimes);
                     pool.Add(NPCID.YellowSlime, rateRareSlimes);
                     pool.Add(NPCID.Pinky, rateRareSlimes);
-                    pool.Add(NPCID.MotherSlime, rateRareSlimes);
 
                 }
                 else if (AFallingStar.CurObjectiveIndex >= 6 && Main.LocalPlayer.ZoneOverworldHeight)
                 {
-                    rateWeakSlimes = 0.17f;
-                    rateStrongSlimes = 0.09f;
                     rateRareSlimes = 0.008f;
                 }
                 else if (AFallingStar.CurObjectiveIndex >= 9 && AFallingStar.CurObjectiveIndex <= 10
                     && Main.LocalPlayer.ZoneOverworldHeight)
                 {
-                    rateWeakSlimes = 0.2f;
-                    rateStrongSlimes = 0.11f;
                     rateRareSlimes = 0.02f;
                 }
             }
@@ -105,7 +95,7 @@ public class ObjectiveEventNPC : GlobalNPC
     {
         var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
 
-        var AFallingStar = mPlayer.GetMission(MissionID.AFallingStar);
+        var AFallingStar = mPlayer.GetMission(MissionID.A_FALLING_STAR);
 
         if (AFallingStar?.Progress == MissionProgress.Active && player.ZoneOverworldHeight)
         {
@@ -113,22 +103,17 @@ public class ObjectiveEventNPC : GlobalNPC
             if (AFallingStar.CurObjectiveIndex >= 3)
             {
                 spawnRate = 3;
-                maxSpawns = 8;
+                maxSpawns = 7;
             }
             if (AFallingStar.CurObjectiveIndex >= 5)
             {
                 spawnRate = 2;
                 maxSpawns = 9;
             }
-            else if (AFallingStar.CurObjectiveIndex >= 7)
-            {
-                spawnRate = 4;
-                maxSpawns = 10;
-            }
             else if (AFallingStar.CurObjectiveIndex >= 9)
             {
-                spawnRate = 5;
-                maxSpawns = 15;
+                spawnRate = 3;
+                maxSpawns = 14;
             }
         }
         else
