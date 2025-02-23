@@ -59,7 +59,7 @@ namespace Reverie.Core.Missions
         public int XPReward { get; private set; }
         public int NextMissionID { get; private set; }
         public MissionProgress Progress { get; set; } = MissionProgress.Inactive;
-        public MissionAvailability State { get; set; } = MissionAvailability.Locked;
+        public MissionAvailability Availability { get; set; } = MissionAvailability.Locked;
         public bool Unlocked { get; set; } = false;
         public int CurObjectiveIndex { get; set; } = 0;
         public bool IsDirty => isDirty;
@@ -315,7 +315,7 @@ namespace Reverie.Core.Missions
             if (Progress == MissionProgress.Active && ObjectiveIndex.All(set => set.IsCompleted))
             {
                 Progress = MissionProgress.Completed;
-                State = MissionAvailability.Completed;
+                Availability = MissionAvailability.Completed;
                 isDirty = true;
                 OnMissionComplete();
 
@@ -338,7 +338,7 @@ namespace Reverie.Core.Missions
         /// </summary>
         public virtual void WhileActive()
         {
-            if (Progress != MissionProgress.Active && State != MissionAvailability.Unlocked) return;
+            if (Progress != MissionProgress.Active && Availability != MissionAvailability.Unlocked) return;
         }
         #endregion
 
@@ -379,7 +379,7 @@ namespace Reverie.Core.Missions
     {
         public int ID { get; set; }
         public MissionProgress Progress { get; set; }
-        public MissionAvailability State { get; set; }
+        public MissionAvailability Availability { get; set; }
         public bool Unlocked { get; set; }
         public int CurObjectiveIndex { get; set; }
         public List<ObjectiveIndexState> ObjectiveIndex { get; set; } = [];
@@ -391,7 +391,7 @@ namespace Reverie.Core.Missions
             {
                 ["ID"] = ID,
                 ["Progress"] = (int)Progress,
-                ["State"] = (int)State,
+                ["Availability"] = (int)Availability,
                 ["Unlocked"] = Unlocked,
                 ["CurObjectiveIndex"] = CurObjectiveIndex,
                 ["ObjectiveIndex"] = ObjectiveIndex.Select(set => set.Serialize()).ToList(),
@@ -407,7 +407,7 @@ namespace Reverie.Core.Missions
                 {
                     ID = tag.GetInt("ID"),
                     Progress = (MissionProgress)tag.GetInt("Progress"),
-                    State = (MissionAvailability)tag.GetInt("State"),
+                    Availability = (MissionAvailability)tag.GetInt("Availability"),
                     Unlocked = tag.GetBool("Unlocked"),
                     CurObjectiveIndex = tag.GetInt("CurObjectiveIndex"),
                     ObjectiveIndex = tag.GetList<TagCompound>("ObjectiveIndex")

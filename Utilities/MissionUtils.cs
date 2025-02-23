@@ -25,6 +25,7 @@ public static class MissionUtils
 
         var missionPlayer = player.GetModPlayer<MissionPlayer>();
         var progressUpdated = false;
+        var currentStack = 0;
 
         foreach (var mission in missionPlayer.GetActiveMissions())
         {
@@ -72,7 +73,7 @@ public static class MissionUtils
         {
             ID = mission.ID,
             Progress = mission.Progress,
-            State = mission.State,
+            Availability = mission.Availability,
             Unlocked = mission.Unlocked,
             CurObjectiveIndex = mission.CurObjectiveIndex,
             ObjectiveIndex = mission.ObjectiveIndex
@@ -96,7 +97,7 @@ public static class MissionUtils
         if (state == null) return;
 
         mission.Progress = state.Progress;
-        mission.State = state.State;
+        mission.Availability = state.Availability;
         mission.Unlocked = state.Unlocked;
         mission.CurObjectiveIndex = state.CurObjectiveIndex;
 
