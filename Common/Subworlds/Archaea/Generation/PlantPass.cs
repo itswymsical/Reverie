@@ -1,4 +1,6 @@
-﻿using SubworldLibrary;
+﻿using StructureHelper;
+using SubworldLibrary;
+using Terraria.DataStructures;
 using Terraria.IO;
 using Terraria.WorldBuilding;
 
@@ -28,6 +30,7 @@ public class PlantPass : GenPass
     #endregion
 
     #region Initialization
+    // Constructor
     public PlantPass() : base("[Archaea] Plants", 77f)
     {
         _config = new PlantConfiguration();
@@ -102,33 +105,59 @@ public class PlantPass : GenPass
         }
     }
 
+    private bool HasAtLeastOneEmptyNeighbor(int x, int y)
+    {
+        // Check the 4 adjacent tiles (left, right, up, down)
+        // A neighbor is considered "empty" if it doesn't have a solid block
+
+        // Check left
+        if (IsWithinSafeBounds(x - 1, y) &&
+            (!Main.tile[x - 1, y].HasTile || Main.tile[x - 1, y].BlockType != BlockType.Solid))
+            return true;
+
+        // Check right
+        if (IsWithinSafeBounds(x + 1, y) &&
+            (!Main.tile[x + 1, y].HasTile || Main.tile[x + 1, y].BlockType != BlockType.Solid))
+            return true;
+
+        // Check up
+        if (IsWithinSafeBounds(x, y - 1) &&
+            (!Main.tile[x, y - 1].HasTile || Main.tile[x, y - 1].BlockType != BlockType.Solid))
+            return true;
+
+        // Check down
+        if (IsWithinSafeBounds(x, y + 1) &&
+            (!Main.tile[x, y + 1].HasTile || Main.tile[x, y + 1].BlockType != BlockType.Solid))
+            return true;
+
+        return false;
+    }
     private void PlaceCactus(int x, int y)
     {
-        // Ensure we're within safe bounds for the subworld
         if (!IsWithinSafeBounds(x, y))
             return;
 
-        // Try to place initial cactus
         try
         {
-            WorldGen.GrowCactus(x, y);
+            int maxAttempts = 3;
+            int successfulPlacements = 0;
+            int maxSuccessfulPlacements = 1;
 
-            // Generate cluster
-            for (int attempt = 0; attempt < _config.CactusClusterAttempts; attempt++)
+            for (int attempt = 0; attempt < maxAttempts && successfulPlacements < maxSuccessfulPlacements; attempt++)
             {
-                int clusterX = x + WorldGen.genRand.Next(
-                    -(SAFE_DISTANCE - 1),
-                    SAFE_DISTANCE
-                );
+                int clusterX = x + WorldGen.genRand.Next(-2, 3);
+                int clusterY = y + WorldGen.genRand.Next(-1, 2);
 
-                int clusterY = y + WorldGen.genRand.Next(
-                    -(SAFE_DISTANCE - 1),
-                    SAFE_DISTANCE
-                );
+                // Check if the spot is suitable and has at least one empty neighbor
+                if (!IsWithinSafeBounds(clusterX, clusterY) ||
+                    !IsSuitablePlantingSpot(clusterX, clusterY) ||
+                    !HasAtLeastOneEmptyNeighbor(clusterX, clusterY))
+                    continue;
 
-                if (IsWithinSafeBounds(clusterX, clusterY))
+                if (Generator.GenerateMultistructureRandom("Structures/Saguaros_3x11", new Point16(clusterX + 1, clusterY - 11), Instance))
                 {
-                    WorldGen.GrowCactus(clusterX, clusterY);
+                    successfulPlacements++;
+                    _failCount = WorldGen.genRand.Next(20, 40);
                 }
             }
         }

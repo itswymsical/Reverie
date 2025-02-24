@@ -136,8 +136,8 @@ Items: {
 	}
 
 	PrimordialSandItem: {
-		DisplayName: Primordial Sand Item
-		Tooltip: ""
+		DisplayName: Primordial Sand
+		Tooltip: "'From an ancient time, where the horizons where ethereal...'"
 	}
 }
 

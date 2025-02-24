@@ -20,11 +20,13 @@ public class ArchaeaSubworld : Otherworld
     public override List<GenPass> Tasks =>
     [
         new DesertPass(),
+        new PlantPass(),
         new RubblePass(),
-        //new CavernPass("[Archaea] Caverns", 250f),
+        new CavePass("[Archaea] Caverns", 250f),
         //new EmberiteCavernsPass("Shelledrake Nest", 250f),
-        new SmoothPass("[Reverie] Smooth World", 89f),
-        new PlantPass()
+
+        new SmoothPass("[Reverie] Smooth World", 89f)
+
     ];
 
     public override void SetStaticDefaults()
@@ -34,7 +36,6 @@ public class ArchaeaSubworld : Otherworld
     }
     public override void Update()
     {
-        Main.time++;
         ManageGameConditions();
     }
     private void ManageGameConditions()

@@ -12,7 +12,7 @@ public class DesertConfiguration
     public float DuneFrequency { get; set; } = 0.05f;
     public int BaseHeightOffset { get; set; } = 10;
     public int DuneHeightVariation { get; set; } = 35;
-    public int HardenedSandDepth { get; set; } = 12;
+    public int HardenedSandDepth { get; set; } = (int)(Main.maxTilesY / 1.6f);
 }
 
 public class DesertPass : GenPass
