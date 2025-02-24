@@ -134,6 +134,11 @@ Items: {
 		DisplayName: Archaea Translocator
 		Tooltip: ""
 	}
+
+	PrimordialSandItem: {
+		DisplayName: Primordial Sand Item
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
@@ -150,6 +155,8 @@ Projectiles: {
 	WardensArmProj.DisplayName: Wardens Arm
 	ExplosiveLanding.DisplayName: Explosive Landing
 	SlimeSprayProj.DisplayName: Slime Spray Proj
+	PrimordialSandBallFallingProjectile.DisplayName: Primordial Sand Ball Falling Projectile
+	PrimordialSandBallGunProjectile.DisplayName: Primordial Sand Ball Gun Projectile
 }
 
 InfoDisplays.MissionObjectives.DisplayName: Mission Objectives

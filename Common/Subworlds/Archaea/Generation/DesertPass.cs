@@ -28,7 +28,7 @@ public class DesertPass : GenPass
     #endregion
 
     #region Initialization
-    public DesertPass(string name, float loadWeight) : base(name, loadWeight)
+    public DesertPass() : base("[Archaea] Desert", 247.43f)
     {
         _config = new DesertConfiguration();
     }

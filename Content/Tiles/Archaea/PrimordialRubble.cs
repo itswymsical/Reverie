@@ -21,7 +21,7 @@ public abstract class PrimordialRubble1x1Base : ModTile
         TileObjectData.newTile.DrawYOffset = 2;
         TileObjectData.addTile(Type);
 
-        AddMapEntry(new Color(152, 171, 198));
+        AddMapEntry(Color.Brown);
     }
 }
 public abstract class PrimordialRubble2x1Base : ModTile
@@ -41,7 +41,7 @@ public abstract class PrimordialRubble2x1Base : ModTile
 
         TileObjectData.addTile(Type);
 
-        AddMapEntry(new Color(152, 171, 198));
+        AddMapEntry(Color.Brown);
     }
 }
 public abstract class PrimordialRubble3x2Base : ModTile
@@ -60,7 +60,7 @@ public abstract class PrimordialRubble3x2Base : ModTile
         TileObjectData.newTile.DrawYOffset = 2;
         TileObjectData.addTile(Type);
 
-        AddMapEntry(new Color(152, 171, 198));
+        AddMapEntry(Color.Brown);
     }
 }
 

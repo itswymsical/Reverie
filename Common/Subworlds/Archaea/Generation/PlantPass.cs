@@ -28,7 +28,7 @@ public class PlantPass : GenPass
     #endregion
 
     #region Initialization
-    public PlantPass(string name, float loadWeight) : base(name, loadWeight)
+    public PlantPass() : base("[Archaea] Plants", 77f)
     {
         _config = new PlantConfiguration();
         _failCount = 0;

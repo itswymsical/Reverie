@@ -5,6 +5,7 @@ namespace Reverie.Content.Projectiles.Archaea;
 
 public abstract class PrimordialSandBallProjectile : ModProjectile
 {
+    public override string Texture => "Reverie/Assets/Textures/Projectiles/Archaea/PrimordialSandBallProjectile";
     public override void SetStaticDefaults()
     {
         ProjectileID.Sets.FallingBlockDoesNotFallThroughPlatforms[Type] = true;
@@ -14,6 +15,7 @@ public abstract class PrimordialSandBallProjectile : ModProjectile
 
 public class PrimordialSandBallFallingProjectile : PrimordialSandBallProjectile
 {
+    public override string Texture => "Reverie/Assets/Textures/Projectiles/Archaea/PrimordialSandBallProjectile";
     public override void SetStaticDefaults()
     {
         base.SetStaticDefaults();
@@ -28,6 +30,7 @@ public class PrimordialSandBallFallingProjectile : PrimordialSandBallProjectile
 
 public class PrimordialSandBallGunProjectile : PrimordialSandBallProjectile
 {
+    public override string Texture => "Reverie/Assets/Textures/Projectiles/Archaea/PrimordialSandBallProjectile";
     public override void SetStaticDefaults()
     {
         base.SetStaticDefaults();
