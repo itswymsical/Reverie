@@ -129,6 +129,11 @@ Items: {
 		DisplayName: Warden's Arm
 		Tooltip: Conjures a Warden Arm that tosses high-velocity boulders at enemies.
 	}
+
+	ArchaeaTranslocator: {
+		DisplayName: Archaea Translocator
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
