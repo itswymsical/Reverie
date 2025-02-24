@@ -1,4 +1,6 @@
-﻿namespace Reverie.Content.Tiles.Archaea;
+﻿using Reverie.Content.Projectiles.Archaea;
+
+namespace Reverie.Content.Tiles.Archaea;
 
 public class PrimordialSandTile : ModTile
 {
@@ -15,7 +17,7 @@ public class PrimordialSandTile : ModTile
         TileID.Sets.CanBeDugByShovel[Type] = true;
         TileID.Sets.Falling[Type] = true;
         TileID.Sets.Suffocate[Type] = true;
-        //TileID.Sets.FallingBlockProjectile[Type] = new TileID.Sets.FallingBlockProjectileInfo(ModContent.ProjectileType<ExampleSandBallFallingProjectile>(), 10);
+        TileID.Sets.FallingBlockProjectile[Type] = new TileID.Sets.FallingBlockProjectileInfo(ModContent.ProjectileType<PrimordialSandBallFallingProjectile>(), 10);
 
         TileID.Sets.CanBeClearedDuringOreRunner[Type] = true;
         TileID.Sets.GeneralPlacementTiles[Type] = false;
