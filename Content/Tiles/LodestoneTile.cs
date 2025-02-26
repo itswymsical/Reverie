@@ -6,7 +6,7 @@ public class LodestoneTile : ModTile
     {
         Main.tileSolid[Type] = true;
         Main.tileMergeDirt[Type] = true;
-        Main.tileMerge[Type][TileID.Stone] = true;
+        Main.tileMerge[TileID.Stone][Type] = true;
         Main.tileBlockLight[Type] = true;
         DustType = DustID.Tin;
         MineResist = 2f;
