@@ -18,14 +18,13 @@ public class ArchaeaSubworld : Otherworld
     public override bool NoPlayerSaving => true; // for debugging purposes
 
     public override List<GenPass> Tasks =>
-    [
+    [        
+        //new EmberiteCavernsPass("Shelledrake Nest", 250f),
+
         new DesertPass(),
         new PlantPass(),
         new RubblePass(),
-        new CavePass("[Archaea] Caverns", 250f),
-        //new EmberiteCavernsPass("Shelledrake Nest", 250f),
-
-        new SmoothPass("[Reverie] Smooth World", 89f)
+        new SmoothPass()
 
     ];
 

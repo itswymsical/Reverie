@@ -62,7 +62,14 @@ public class DesertPass : GenPass
     {
         progress.Message = "Generating Desert Terrain";
         Initialize();
+
+        progress.Set(0.0f);
         GenerateTerrain();
+        progress.Set(0.8f);
+
+        progress.Message = "Adding Details";
+        GenerateSandPatches();
+        progress.Set(1.0f);
     }
 
     private void GenerateTerrain()
@@ -105,13 +112,83 @@ public class DesertPass : GenPass
     {
         var tile = Main.tile[x, y];
         tile.HasTile = true;
-        if (y >= Main.UnderworldLayer - _config.HardenedSandDepth)
+
+        // Calculate transition zone - create a blend area where both tile types can appear
+        int transitionStart = Main.UnderworldLayer - _config.HardenedSandDepth;
+        int transitionDepth = 40; // Controls how wide the blending area is
+
+        if (y >= transitionStart + transitionDepth)
         {
+            // Deep area - always hardened sand
             tile.TileType = TileID.HardenedSand;
+        }
+        else if (y < transitionStart)
+        {
+            // Upper area - always primordial sand
+            tile.TileType = (ushort)ModContent.TileType<PrimordialSandTile>();
         }
         else
         {
-            tile.TileType = (ushort)ModContent.TileType<PrimordialSandTile>();
+            // Transition zone - use noise and distance to create dithering effect
+            float depthRatio = (float)(y - transitionStart) / transitionDepth;
+            float noise = _duneNoise.GetNoise(x * 0.8f, y * 0.8f) * 0.5f + 0.5f;
+
+            if (noise < depthRatio)
+            {
+                tile.TileType = TileID.HardenedSand;
+            }
+            else
+            {
+                tile.TileType = (ushort)ModContent.TileType<PrimordialSandTile>();
+            }
+        }
+    }
+    private void GenerateSandPatches()
+    {
+        // Get the transition depth area boundaries
+        int transitionStart = Main.UnderworldLayer - _config.HardenedSandDepth;
+        int transitionDepth = 40;
+
+        // Number of patches scales with world size
+        int patchCount = (int)(Main.maxTilesX * 0.2f);
+
+        for (int i = 0; i < patchCount; i++)
+        {
+            // Randomize position within the lower half of the transition zone
+            int x = GenBase._random.Next(10, Main.maxTilesX - 10);
+            int y = GenBase._random.Next(
+                transitionStart + transitionDepth / 2,
+                transitionStart + transitionDepth
+            );
+
+            // Create small pockets of hardened sand that extend upward
+            if (Main.tile[x, y].TileType == (ushort)ModContent.TileType<PrimordialSandTile>())
+            {
+                WorldGen.TileRunner(
+                    x, y,
+                    GenBase._random.Next(5, 15),     // Size of the patch
+                    GenBase._random.Next(10, 30),    // Steps the runner takes
+                    TileID.HardenedSand,             // New tile type
+                    true                             // Add tile (not remove)
+                );
+            }
+
+            // Create small pockets of primordial sand that extend downward
+            y = GenBase._random.Next(
+                transitionStart,
+                transitionStart + transitionDepth / 2
+            );
+
+            if (Main.tile[x, y].TileType == TileID.HardenedSand)
+            {
+                WorldGen.TileRunner(
+                    x, y,
+                    GenBase._random.Next(5, 15),     // Size of the patch
+                    GenBase._random.Next(10, 30),    // Steps the runner takes
+                    (ushort)ModContent.TileType<PrimordialSandTile>(), // New tile type
+                    true                             // Add tile (not remove)
+                );
+            }
         }
     }
     #endregion

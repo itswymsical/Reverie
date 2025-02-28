@@ -1,11 +1,14 @@
 ﻿// Code by: grae
+using Reverie.Common.Subworlds.Archaea.Generation;
 using Terraria.IO;
 using Terraria.WorldBuilding;
 
 namespace Reverie.Common.WorldGeneration;
 
-public class SmoothPass(string name, float loadWeight) : GenPass(name, loadWeight)
+public class SmoothPass: GenPass
 {
+    public SmoothPass() : base("[Reverie] World Smoothing", 247.43f) { }
+
     protected override void ApplyPass(GenerationProgress progress, GameConfiguration configuration)
     {
         progress.Message = "Smoothing the World";
