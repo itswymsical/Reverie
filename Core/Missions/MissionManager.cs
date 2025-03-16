@@ -284,14 +284,13 @@ public class MissionFactory : ModSystem
 
             // Register each mission type with its ID
             missionTypes[MissionID.A_FALLING_STAR] = typeof(AFallingStar);
+            //missionTypes[MissionID.FUNGAL_FRACAS] = typeof(FungalFracas);
 
             ModContent.GetInstance<Reverie>().Logger.Info($"Registered {missionTypes.Count} mission types");
 
-            // Log registered missions for debugging
             foreach (var (id, type) in missionTypes)
-            {
                 ModContent.GetInstance<Reverie>().Logger.Debug($"Registered mission type: {id} -> {type.Name}");
-            }
+            
         }
         catch (Exception ex)
         {

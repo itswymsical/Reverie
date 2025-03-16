@@ -15,6 +15,7 @@ namespace Reverie.Core.Missions
     public static class MissionID
     {
         public const int A_FALLING_STAR = 1;
+        public const int FUNGAL_FRACAS = 2;
     }
     public enum MissionProgress
     {
