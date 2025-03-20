@@ -7,12 +7,6 @@
 	<PropertyGroup>
 		
 	</PropertyGroup>
-	<ItemGroup>
-	  <AdditionalFiles Remove="Content\NPCs\**" />
-	  <Compile Remove="Content\NPCs\**" />
-	  <EmbeddedResource Remove="Content\NPCs\**" />
-	  <None Remove="Content\NPCs\**" />
-	</ItemGroup>
 
 	<!-- References -->
 	<ItemGroup>

@@ -276,4 +276,8 @@ Configs: {
 	}
 }
 
-NPCs.KingSlime.DisplayName: King Slime
+NPCs: {
+	KingSlime.DisplayName: King Slime
+	WardenArm.DisplayName: Warden Arm
+	WoodenWarden.DisplayName: Wooden Warden
+}
