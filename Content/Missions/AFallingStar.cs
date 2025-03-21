@@ -74,6 +74,7 @@ public class AFallingStar : Mission
             Main.slimeRain = false;
             Main.slimeRainTime = 0;
             Main.dayTime = true;
+            Main.time = 18000; 
         }
 
         if (CurObjectiveIndex == (int)Objectives.ClearInfestation)
@@ -358,9 +359,8 @@ public class AFallingStar : Mission
 
     private bool IsValuableLoot(Item item)
     {
-        return (item.accessory || item.IsWeapon() || item.IsMiningTool() || item.value > 0)
-            && !item.IsCurrency
-            && item.rare >= ItemRarityID.Blue;
+        return (item.rare >= ItemRarityID.Blue || item.accessory || item.IsWeapon() || item.IsMiningTool() || item.value > Item.sellPrice(silver: 5))
+            && !item.IsCurrency;
     }
 
     private void HandleSlimeInfestation(NPC npc)

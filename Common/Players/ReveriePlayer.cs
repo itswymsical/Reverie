@@ -1,5 +1,8 @@
-﻿using Reverie.Content.Dusts;
+﻿using Reverie.Common.Subworlds.Archaea;
+using Reverie.Content.Dusts;
+using Reverie.Content.Tiles.Archaea;
 using Reverie.Core.Cinematics;
+using SubworldLibrary;
 using System.Collections.Generic;
 
 namespace Reverie.Common.Players;
@@ -8,18 +11,15 @@ public class ReveriePlayer : ModPlayer
 {
     public override void PostUpdate()
     {
-        if (Main.LocalPlayer.ZoneDesert)
-        {
-            DrawSandHaze();
-        }
+        if (Main.LocalPlayer.ZoneDesert || SubworldSystem.IsActive<ArchaeaSubworld>())
+                DrawSandHaze();
+        
         if (!Cutscene.IsPlayerVisible)
-        {
             Player.AddBuff(BuffID.Invisibility, 1, true);
-        }
+        
         if (Cutscene.NoFallDamage)
-        {
             Player.noFallDmg = true;
-        }
+        
     }
 
     public override void SetControls()
@@ -43,30 +43,55 @@ public class ReveriePlayer : ModPlayer
         itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperPickaxe);
         itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperAxe);
     }
+    
+    private const int SAND_HAZE_RANGE_X = 55;
+    private const int SAND_HAZE_RANGE_Y = 30;
+    private const int DUST_SPAWN_CHANCE = 95;
+    private const int DUST_SIZE = 5;
+    private const float WIND_VELOCITY_FACTOR = 5.6f;
+    private const float SANDSTORM_UPWARD_VELOCITY = 0.07f;
+
+    private bool IsSandTile(Tile tile) => tile.HasTile && (
+        tile.TileType == TileID.Sand ||
+        tile.TileType == ModContent.TileType<PrimordialSandTile>()
+    );
+
+    private bool HasAirAbove(int x, int y) =>
+        !Main.tile[x, y - 1].HasTile &&
+        !Main.tile[x, y - 2].HasTile;
 
     private void DrawSandHaze()
     {
-        for (int k = (int)Math.Floor(Player.position.X / 16) - 55; k < (int)Math.Floor(Player.position.X / 16) + 55; k++)
+        int startX = (int)(Player.position.X / 16) - SAND_HAZE_RANGE_X;
+        int endX = (int)(Player.position.X / 16) + SAND_HAZE_RANGE_X;
+        int startY = (int)(Player.position.Y / 16) - SAND_HAZE_RANGE_Y;
+        int endY = (int)(Player.position.Y / 16) + SAND_HAZE_RANGE_Y;
+
+        for (int x = startX; x < endX; x++)
         {
-            for (int i = (int)Math.Floor(Player.position.Y / 16) - 30; i < (int)Math.Floor(Player.position.Y / 16) + 30; i++)
+            for (int y = startY; y < endY; y++)
             {
-                if (!Main.tile[k, i - 1].HasTile
-                    && !Main.tile[k, i - 2].HasTile
-                    && Main.tile[k, i].HasTile
-                    && Main.tile[k, i].TileType == TileID.Sand
-                    && Main.tile[k, i].TileType == TileID.Sand)
+                if (x < 0 || x >= Main.maxTilesX || y < 2 || y >= Main.maxTilesY)
+                    continue;
+
+                if (IsSandTile(Main.tile[x, y]) && HasAirAbove(x, y) && Main.rand.NextBool(DUST_SPAWN_CHANCE))
                 {
-                    if (Main.rand.Next(0, 95) == 2)
-                    {
-                        int Index = Dust.NewDust(new Vector2((k - 2) * 16, (i - 1) * 16), 5, 5, ModContent.DustType<SandHazeDust>());
-
-                        Main.dust[Index].velocity.X -= Main.windSpeedCurrent / 5.6f;
-
-                        if (Player.ZoneSandstorm)
-                            Main.dust[Index].velocity.Y += 0.07f;                        
-                    }
+                    SpawnSandDust(x, y);
                 }
             }
+        }
+    }
+
+    private void SpawnSandDust(int tileX, int tileY)
+    {
+        Vector2 dustPosition = new((tileX - 2) * 16, (tileY - 1) * 16);
+        int dustIndex = Dust.NewDust(dustPosition, DUST_SIZE, DUST_SIZE, ModContent.DustType<SandHazeDust>());
+
+        Main.dust[dustIndex].velocity.X -= Main.windSpeedCurrent / WIND_VELOCITY_FACTOR;
+
+        if (Player.ZoneSandstorm)
+        {
+            Main.dust[dustIndex].velocity.Y += SANDSTORM_UPWARD_VELOCITY;
         }
     }
 }

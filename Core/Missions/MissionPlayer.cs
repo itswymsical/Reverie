@@ -1,11 +1,14 @@
 ﻿using Reverie.Common.Players;
 using Reverie.Common.Systems;
 using Reverie.Core.Cinematics.Cutscenes;
+
 using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
+
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
 using Terraria.ModLoader.IO;
 
 namespace Reverie.Core.Missions;
@@ -13,8 +16,6 @@ namespace Reverie.Core.Missions;
 // located in core for namespace convenience.
 public partial class MissionPlayer : ModPlayer
 {
-
-    // todo: refactor this for better readability.
     #region Properties & Fields
     public readonly Dictionary<int, Mission> missionDict = [];
 
@@ -88,7 +89,7 @@ public partial class MissionPlayer : ModPlayer
         foreach (var mission in missionDict.Values)
         {
             Main.NewText($"Mission: {mission.Name}");
-            Main.NewText($"  State: {mission.State}");
+            Main.NewText($"  State: {mission.Availability}");
             Main.NewText($"  Progress: {mission.Progress}");
             Main.NewText($"  NextMissionID: {mission.NextMissionID}");
         }
@@ -103,6 +104,7 @@ public partial class MissionPlayer : ModPlayer
     #endregion
 
     #region Serialization
+
     public override void SaveData(TagCompound tag)
     {
         try
@@ -123,10 +125,10 @@ public partial class MissionPlayer : ModPlayer
                     ["State"] = new TagCompound
                     {
                         ["Progress"] = (int)mission.Progress,
-                        ["State"] = (int)mission.State,
+                        ["Availability"] = (int)mission.Availability,
                         ["Unlocked"] = mission.Unlocked,
                         ["CurObjectiveIndex"] = mission.CurObjectiveIndex,
-                        ["ObjectiveIndex"] = SerializeObjectiveIndex(mission.ObjectiveIndex)
+                        ["ObjectiveIndex"] = SerializeObjectives(mission.ObjectiveIndex)
                     }
                 };
                 activeMissionData.Add(MissionAvailability);
@@ -141,10 +143,10 @@ public partial class MissionPlayer : ModPlayer
                     ["State"] = new TagCompound
                     {
                         ["Progress"] = (int)mission.Progress,
-                        ["State"] = (int)mission.State,
+                        ["Availability"] = (int)mission.Availability,
                         ["Unlocked"] = mission.Unlocked,
                         ["CurObjectiveIndex"] = mission.CurObjectiveIndex,
-                        ["ObjectiveIndex"] = SerializeObjectiveIndex(mission.ObjectiveIndex)
+                        ["ObjectiveIndex"] = SerializeObjectives(mission.ObjectiveIndex)
                     }
                 };
                 activeMissionData.Add(MissionAvailability);
@@ -167,55 +169,6 @@ public partial class MissionPlayer : ModPlayer
             ModContent.GetInstance<Reverie>().Logger.Error($"Failed to save mission data: {ex}");
         }
     }
-
-    private List<TagCompound> SerializeObjectiveIndex(List<ObjectiveSet> ObjectiveIndex)
-    {
-        var serializedSets = new List<TagCompound>();
-        foreach (var set in ObjectiveIndex)
-        {
-            using var ms = new MemoryStream();
-            using var writer = new BinaryWriter(ms);
-            set.WriteData(writer);
-            serializedSets.Add(new TagCompound
-            {
-                ["SetData"] = ms.ToArray()
-            });
-        }
-        return serializedSets;
-    }
-
-    private List<ObjectiveIndexState> DeserializeObjectiveStates(IList<TagCompound> serializedSets)
-    {
-        var objectiveStates = new List<ObjectiveIndexState>();
-
-        foreach (var setTag in serializedSets)
-        {
-            var setData = setTag.GetByteArray("SetData");
-            using var ms = new MemoryStream(setData);
-            using var reader = new BinaryReader(ms);
-
-            var objectiveSet = new ObjectiveIndexState();
-            int count = reader.ReadInt32();
-            bool hasCheckedInventory = reader.ReadBoolean();
-
-            for (int i = 0; i < count; i++)
-            {
-                var objective = new ObjectiveState
-                {
-                    Description = reader.ReadString(),
-                    IsCompleted = reader.ReadBoolean(),
-                    RequiredCount = reader.ReadInt32(),
-                    CurrentCount = reader.ReadInt32()
-                };
-                objectiveSet.Objectives.Add(objective);
-            }
-
-            objectiveStates.Add(objectiveSet);
-        }
-
-        return objectiveStates;
-    }
-
     public override void LoadData(TagCompound tag)
     {
         try
@@ -259,15 +212,51 @@ public partial class MissionPlayer : ModPlayer
         }
     }
 
-    private void LoadCompletedMission(int missionId)
+    private static List<TagCompound> SerializeObjectives(List<ObjectiveSet> ObjectiveIndex)
     {
-        var mission = GetMission(missionId);
-        if (mission != null)
+        var serializedSets = new List<TagCompound>();
+        foreach (var set in ObjectiveIndex)
         {
-            mission.Progress = MissionProgress.Completed;
-            mission.State = MissionAvailability.Completed;
-            missionDict[missionId] = mission;
+            using var ms = new MemoryStream();
+            using var writer = new BinaryWriter(ms);
+            set.WriteData(writer);
+            serializedSets.Add(new TagCompound
+            {
+                ["SetData"] = ms.ToArray()
+            });
         }
+        return serializedSets;
+    }
+    private static List<ObjectiveIndexState> DeserializeObjectives(IList<TagCompound> serializedSets)
+    {
+        var objectiveStates = new List<ObjectiveIndexState>();
+
+        foreach (var setTag in serializedSets)
+        {
+            var setData = setTag.GetByteArray("SetData");
+            using var ms = new MemoryStream(setData);
+            using var reader = new BinaryReader(ms);
+
+            var objectiveSet = new ObjectiveIndexState();
+            int count = reader.ReadInt32();
+            bool hasCheckedInventory = reader.ReadBoolean();
+
+            for (int i = 0; i < count; i++)
+            {
+                var objective = new ObjectiveState
+                {
+                    Description = reader.ReadString(),
+                    IsCompleted = reader.ReadBoolean(),
+                    RequiredCount = reader.ReadInt32(),
+                    CurrentCount = reader.ReadInt32()
+                };
+                objectiveSet.Objectives.Add(objective);
+            }
+
+            objectiveStates.Add(objectiveSet);
+        }
+
+        return objectiveStates;
     }
 
     private void LoadActiveMission(TagCompound missionTag)
@@ -282,10 +271,10 @@ public partial class MissionPlayer : ModPlayer
             {
                 ID = missionId,
                 Progress = (MissionProgress)stateTag.GetInt("Progress"),
-                State = (MissionAvailability)stateTag.GetInt("State"),
+                Availability = (MissionAvailability)stateTag.GetInt("Availability"),
                 Unlocked = stateTag.GetBool("Unlocked"),
                 CurObjectiveIndex = stateTag.GetInt("CurObjectiveIndex"),
-                ObjectiveIndex = DeserializeObjectiveStates(stateTag.GetList<TagCompound>("ObjectiveIndex"))
+                ObjectiveIndex = DeserializeObjectives(stateTag.GetList<TagCompound>("ObjectiveIndex"))
             };
 
             // Get or create mission instance and load state
@@ -307,14 +296,14 @@ public partial class MissionPlayer : ModPlayer
             ModContent.GetInstance<Reverie>().Logger.Error($"Failed to load active mission: {ex.Message}");
         }
     }
-    private void LoadObjectiveIndex(Mission mission, IList<TagCompound> serializedSets)
+    private void LoadCompletedMission(int missionId)
     {
-        for (var i = 0; i < Math.Min(serializedSets.Count, mission.ObjectiveIndex.Count); i++)
+        var mission = GetMission(missionId);
+        if (mission != null)
         {
-            var setData = serializedSets[i].GetByteArray("SetData");
-            using var ms = new MemoryStream(setData);
-            using var reader = new BinaryReader(ms);
-            mission.ObjectiveIndex[i].ReadData(reader);
+            mission.Progress = MissionProgress.Completed;
+            mission.Availability = MissionAvailability.Completed;
+            missionDict[missionId] = mission;
         }
     }
     #endregion
@@ -342,7 +331,7 @@ public partial class MissionPlayer : ModPlayer
         if (missionDict.TryGetValue(missionId, out var mission))
         {
             mission.Reset();
-            mission.State = MissionAvailability.Unlocked;
+            mission.Availability = MissionAvailability.Unlocked;
         }
     }
 
@@ -357,7 +346,7 @@ public partial class MissionPlayer : ModPlayer
                 if (nextMission.Progress != MissionProgress.Completed &&
                     nextMission.Progress != MissionProgress.Active)
                 {
-                    nextMission.State = MissionAvailability.Unlocked;
+                    nextMission.Availability = MissionAvailability.Unlocked;
                     nextMission.Progress = MissionProgress.Active;
                     StartMission(nextMissionID);
                     Main.NewText($"New mission available: {nextMission.Name}", Color.Yellow);
@@ -392,7 +381,7 @@ public partial class MissionPlayer : ModPlayer
         var mission = GetMission(missionId);
         if (mission != null)
         {
-            mission.State = MissionAvailability.Unlocked;
+            mission.Availability = MissionAvailability.Unlocked;
             mission.Progress = MissionProgress.Inactive;
             mission.Unlocked = true;
             SyncMissionState(mission);
@@ -401,7 +390,7 @@ public partial class MissionPlayer : ModPlayer
 
     public IEnumerable<Mission> GetAvailableMissions()
         => missionDict.Values.Where
-        (m => m.State == MissionAvailability.Unlocked && m.Progress == MissionProgress.Inactive);
+        (m => m.Availability == MissionAvailability.Unlocked && m.Progress == MissionProgress.Inactive);
 
     public IEnumerable<Mission> GetActiveMissions()
     {
@@ -451,7 +440,7 @@ public partial class MissionPlayer : ModPlayer
             foreach (var missionId in missionIds)
             {
                 var mission = missionPlayer.GetMission(missionId);
-                if (mission != null && mission.State == MissionAvailability.Unlocked && mission.Progress != MissionProgress.Completed)
+                if (mission != null && mission.Availability == MissionAvailability.Unlocked && mission.Progress != MissionProgress.Completed)
                 {
                     return true;
                 }
@@ -467,7 +456,7 @@ public partial class MissionPlayer : ModPlayer
             foreach (var missionId in missionIds)
             {
                 var mission = GetMission(missionId);
-                if (mission != null && mission.State == MissionAvailability.Unlocked && mission.Progress == MissionProgress.Inactive)
+                if (mission != null && mission.Availability == MissionAvailability.Unlocked && mission.Progress == MissionProgress.Inactive)
                 {
                     if (!mission.IsMainline)
                     {
@@ -511,7 +500,7 @@ public partial class MissionPlayer : ModPlayer
         var player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
 
         if (AFallingStar != null &&
-            AFallingStar.State != MissionAvailability.Completed &&
+            AFallingStar.Availability != MissionAvailability.Completed &&
             AFallingStar.Progress != MissionProgress.Active)
         {
             CutsceneSystem.PlayCutscene(new FallingStarCutscene());

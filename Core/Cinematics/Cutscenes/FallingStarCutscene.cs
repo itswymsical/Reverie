@@ -1,10 +1,12 @@
 ﻿using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+
 using Terraria.Audio;
+
 using Reverie.Core.Dialogue;
 using Reverie.Common.Systems;
 using Reverie.Content.Projectiles;
-using System.Collections.Generic;
 
 namespace Reverie.Core.Cinematics.Cutscenes;
 
@@ -68,10 +70,10 @@ public class FallingStarCutscene : Cutscene
 
     private static readonly CreditEntry[] LeftColumnCredits =
     {
-        new() { Label = "Written By:", Value = "wysmical, ElectroManiac", ScreenWidthPercent = 0.25f },
-        new() { Label = "Composer:", Value = "wysmical", ScreenWidthPercent = 0.25f },
+        new() { Label = "Written By:", Value = "wymsical, ElectroManiac", ScreenWidthPercent = 0.25f },
+        new() { Label = "Composer:", Value = "wymsical", ScreenWidthPercent = 0.25f },
         new() { Label = "Lead Artist:", Value = "ElectroManiac", ScreenWidthPercent = 0.25f },
-        new() { Label = "Programmers:", Value = "wysmical, naka", ScreenWidthPercent = 0.25f }
+        new() { Label = "Programmers:", Value = "wymsical, naka", ScreenWidthPercent = 0.25f }
     };
 
     private static readonly CreditEntry[] RightColumnCredits =

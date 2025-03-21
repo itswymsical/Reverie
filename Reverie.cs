@@ -60,8 +60,6 @@ public sealed partial class Reverie : Mod
         {
             Filters.Scene["ScreenRipple"] = new Filter(new ScreenShaderData("FilterMiniTower").UseImage("Images/Misc/Perlin").UseImage("Images/Misc/noise").UseImage("Images/Misc/Perlin").UseImage("Images/Misc/noise"), EffectPriority.VeryHigh);
             Filters.Scene["ScreenRipple"].Load();
-
-            //Filters.Scene["EmberiteCavernsScreenShader"] = new Filter((new ScreenShaderData("FilterHeatDistortion")).UseColor(0.4f, 0.2f, 0.1f).UseSecondaryColor(0.2f, 0.15f, 0f).UseImage("Images/Misc/noise", 0, null).UseOpacity(0.149f).UseImageScale(new Vector2(3f, 0.75f), 0), EffectPriority.High);
         }
 
         loadCache = [];
@@ -106,6 +104,7 @@ public sealed partial class Reverie : Mod
         }
     }
 
+    [Obsolete]
     public override void AddRecipes()
     {
 
@@ -116,7 +115,6 @@ public sealed partial class Reverie : Mod
             .AddTile(TileID.IceMachine)
             .Register();
     }
-
     public enum MessageType : byte
     {
         AddExperience,
