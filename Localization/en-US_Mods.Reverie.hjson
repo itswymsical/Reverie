@@ -134,6 +134,21 @@ Items: {
 		DisplayName: Essence Pledge
 		Tooltip: ""
 	}
+
+	PrimordialSandItem: {
+		DisplayName: Primordial Sand Item
+		Tooltip: ""
+	}
+
+	ArchaeaTranslocator: {
+		DisplayName: Archaea Translocator
+		Tooltip: ""
+	}
+
+	SylvanwaldeTranslocator: {
+		DisplayName: Sylvanwalde Translocator
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
@@ -150,6 +165,8 @@ Projectiles: {
 	WardensArmProj.DisplayName: Wardens Arm
 	ExplosiveLanding.DisplayName: Explosive Landing
 	SlimeSprayProj.DisplayName: Slime Spray Proj
+	PrimordialSandBallFallingProjectile.DisplayName: Primordial Sand Ball Falling Projectile
+	PrimordialSandBallGunProjectile.DisplayName: Primordial Sand Ball Gun Projectile
 }
 
 InfoDisplays.MissionObjectives.DisplayName: Mission Objectives
@@ -285,4 +302,41 @@ NPCs: {
 	KingSlime.DisplayName: King Slime
 	WardenArm.DisplayName: Warden Arm
 	WoodenWarden.DisplayName: Wooden Warden
+}
+
+Biomes: {
+	ArchaeaDesertBiome: {
+		DisplayName: Archaea Desert Biome
+		TownNPCDialogueName: the Archaea Desert Biome
+	}
+
+	EmberiteCavernsBiome: {
+		DisplayName: Emberite Caverns Biome
+		TownNPCDialogueName: the Emberite Caverns Biome
+	}
+
+	SylvanOverworldBiome: {
+		DisplayName: Sylvan Overworld Biome
+		TownNPCDialogueName: the Sylvan Overworld Biome
+	}
+
+	LowerCanopyBiome: {
+		DisplayName: Lower Canopy Biome
+		TownNPCDialogueName: the Lower Canopy Biome
+	}
+
+	WoodlandCanopyBiome: {
+		DisplayName: Woodland Canopy Biome
+		TownNPCDialogueName: the Woodland Canopy Biome
+	}
+
+	SylvanOverworldDayBiome: {
+		DisplayName: Sylvan Overworld Day Biome
+		TownNPCDialogueName: the Sylvan Overworld Day Biome
+	}
+
+	SylvanOverworldNightBiome: {
+		DisplayName: Sylvan Overworld Night Biome
+		TownNPCDialogueName: the Sylvan Overworld Night Biome
+	}
 }

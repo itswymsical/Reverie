@@ -1,4 +1,6 @@
-﻿namespace Reverie.Content.Items.Sylvanwalde;
+﻿using Reverie.Content.Tiles.Sylvanwalde;
+
+namespace Reverie.Content.Items.Sylvanwalde;
 
 public class LoamItem : ModItem
 {
@@ -6,8 +8,8 @@ public class LoamItem : ModItem
     {
         base.SetDefaults();
 
-        //Item.DefaultToPlaceableTile(ModContent.TileType<LoamTile>());
-
+        Item.DefaultToPlaceableTile(ModContent.TileType<LoamTile>());
+        Item.maxStack = 999;
         Item.rare = ItemRarityID.Blue;
     }
 }

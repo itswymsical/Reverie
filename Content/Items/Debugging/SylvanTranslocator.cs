@@ -1,10 +1,10 @@
-﻿using Reverie.Common.Subworlds.Archaea;
+﻿using Reverie.Common.Subworlds.Sylvanwalde;
 using SubworldLibrary;
 
 
 namespace Reverie.Content.Items.Debugging;
 
-public class ArchaeaTranslocator : ModItem
+public class SylvanwaldeTranslocator : ModItem
 {
     public override string Texture => "Terraria/Images/UI/Bestiary/Icon_Locked";
     public override void SetDefaults()
@@ -16,7 +16,7 @@ public class ArchaeaTranslocator : ModItem
     }
     public override bool CanUseItem(Player player)
     {
-        if (SubworldSystem.IsActive<ArchaeaSub>())
+        if (SubworldSystem.IsActive<SylvanSub>())
             return false;
 
         return base.CanUseItem(player);
@@ -24,7 +24,7 @@ public class ArchaeaTranslocator : ModItem
     public override bool? UseItem(Player player)
     {
         if (Main.myPlayer == player.whoAmI)
-            SubworldSystem.Enter<ArchaeaSub>();
+            SubworldSystem.Enter<SylvanSub>();
 
         return true;
     }

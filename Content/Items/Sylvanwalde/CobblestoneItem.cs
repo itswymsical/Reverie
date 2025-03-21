@@ -1,4 +1,6 @@
-﻿namespace Reverie.Content.Items.Sylvanwalde;
+﻿using Reverie.Content.Tiles.Sylvanwalde;
+
+namespace Reverie.Content.Items.Sylvanwalde;
 
 public class CobblestoneItem : ModItem
 {
@@ -6,8 +8,8 @@ public class CobblestoneItem : ModItem
     {
         base.SetDefaults();
 
-        //Item.DefaultToPlaceableTile(ModContent.TileType<CobblestoneTile>());
-
+        Item.DefaultToPlaceableTile(ModContent.TileType<CobblestoneTile>());
+        Item.maxStack = 999;
         Item.rare = ItemRarityID.Blue;
     }
 }

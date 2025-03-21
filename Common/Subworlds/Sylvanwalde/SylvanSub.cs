@@ -1,31 +1,34 @@
 ﻿using Reverie.Common.Subworlds.Archaea.Generation;
+using Reverie.Common.Subworlds.Sylvanwalde.Generation;
+using Reverie.Common.Subworlds.Sylvanwalde.Generation.WoodlandCanopy;
 using Reverie.Common.WorldGeneration;
-
 using SubworldLibrary;
 using System.Collections.Generic;
 
 using Terraria.GameContent;
 using Terraria.WorldBuilding;
 
-namespace Reverie.Common.Subworlds.Archaea;
+namespace Reverie.Common.Subworlds.Sylvanwalde;
 
-public class ArchaeaSub : Otherworld
+public class SylvanSub : Otherworld
 {
-    public override int Width => 3600;
-    public override int Height => 1700;
+    public override int Width => 4200;
+    public override int Height => 1680;
     public override bool ShouldSave => false; // for debugging purposes
     public override bool NormalUpdates => true;
     public override bool NoPlayerSaving => true; // for debugging purposes
 
     public override List<GenPass> Tasks =>
-    [        
-        //new EmberiteCavernsPass("Shelledrake Nest", 250f),
+    [
+        new SylvanTerrainPass(),
 
-        new DesertPass(),
-        new PlantPass(),
-        new RubblePass(),
-        new SmoothPass()
-
+        //new CanopyPass(),
+        //new ReverieTreePass(),
+        //new CanopyFoliagePass(),
+        //new ShrinePass(),
+        new SylvanGrassPass(),
+        new SylvanPlantPass(),
+        new SmoothPass(),
     ];
 
     public override void SetStaticDefaults()
@@ -40,22 +43,6 @@ public class ArchaeaSub : Otherworld
     private void ManageGameConditions()
     {
         var player = Main.LocalPlayer;
-        if (player.ZoneForest || player.ZoneSkyHeight || player.ZonePurity)
-            player.ZoneDesert = true;
-        
-
-        if (player.ZoneRockLayerHeight)
-            player.ZoneUndergroundDesert = true;
-        
-        if (Main.raining)
-        {
-            Main.StopRain();
-            Main.raining = false;
-            Main.slimeRain = false;
-        }
-
-        if (Main.slimeRain)
-            Main.slimeRain = false; 
 
         Main.townNPCCanSpawn[default] = false;
     }

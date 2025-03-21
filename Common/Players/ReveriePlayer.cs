@@ -1,9 +1,12 @@
 ﻿using Reverie.Common.Subworlds.Archaea;
+using Reverie.Common.Subworlds.Sylvanwalde;
+using Reverie.Content.Biomes.Sylvanwalde;
 using Reverie.Content.Dusts;
 using Reverie.Content.Tiles.Archaea;
 using Reverie.Core.Cinematics;
 using SubworldLibrary;
 using System.Collections.Generic;
+using Terraria;
 
 namespace Reverie.Common.Players;
 
@@ -11,7 +14,7 @@ public class ReveriePlayer : ModPlayer
 {
     public override void PostUpdate()
     {
-        if (Main.LocalPlayer.ZoneDesert || SubworldSystem.IsActive<ArchaeaSubworld>())
+        if (Main.LocalPlayer.ZoneDesert || SubworldSystem.IsActive<ArchaeaSub>())
                 DrawSandHaze();
         
         if (!Cutscene.IsPlayerVisible)
@@ -19,7 +22,6 @@ public class ReveriePlayer : ModPlayer
         
         if (Cutscene.NoFallDamage)
             Player.noFallDmg = true;
-        
     }
 
     public override void SetControls()

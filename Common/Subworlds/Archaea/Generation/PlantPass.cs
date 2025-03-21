@@ -9,7 +9,7 @@ namespace Reverie.Common.Subworlds.Archaea.Generation;
 public class PlantConfiguration
 {
     public float CactusSpawnChance { get; set; } = 0.125f;
-    public float PalmTreeSpawnChance { get; set; } = 0.045f;
+    public float TreeSpawnChance { get; set; } = 0.045f;
     public Vector2 FailRangeMinMax { get; set; } = new(5, 10);
     public int CactusClusterAttempts { get; set; } = 150;
     public Vector2 ClusterXOffset { get; set; } = new(-1, 2);
@@ -37,7 +37,7 @@ public class PlantPass : GenPass
         _failCount = 0;
 
         // Get dimensions from the current subworld
-        var subworld = SubworldSystem.Current as ArchaeaSubworld;
+        var subworld = SubworldSystem.Current as ArchaeaSub;
         _maxWidth = subworld?.Width ?? Main.maxTilesX;
         _maxHeight = subworld?.Height ?? Main.maxTilesY;
     }
@@ -69,7 +69,7 @@ public class PlantPass : GenPass
         if (WorldGen.genRand.NextFloat() < _config.CactusSpawnChance)
             TryPlacePlantAtSurface(x, PlantType.Cactus);
 
-        if (WorldGen.genRand.NextFloat() < _config.PalmTreeSpawnChance)
+        if (WorldGen.genRand.NextFloat() < _config.TreeSpawnChance)
             TryPlacePlantAtSurface(x, PlantType.PalmTree);
     }
     #endregion
