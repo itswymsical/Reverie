@@ -460,7 +460,7 @@ public partial class MissionPlayer : ModPlayer
                 {
                     if (!mission.IsMainline)
                     {
-                        var npcName = Lang.GetNPCNameValue(mission.Commissioner);
+                        var npcName = Lang.GetNPCNameValue(mission.Employer);
                         Main.NewText($"{npcName} has a job opportunity!", Color.Yellow);
                         notifiedMissions.Add(missionId);
                     }

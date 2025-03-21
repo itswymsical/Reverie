@@ -21,11 +21,11 @@ public class AFallingStar : Mission
       "\nBegin your journey in Terraria, discovering knowledge and power...",
       [
           [("Talk to Guide", 1)],
-          [("Collect Stone", 25), ("Collect Wood", 50), ("Give Guide resources", 1)],
-          [("Discover Accessories", 3), ("Mine 30 Ore", 30),("Obtain 15 bars of metal", 15)],
-          [("Obtain a Helmet", 1), ("Obtain a Chestplate", 1), ("Obtain Leggings", 1), ("Obtain better Pickaxe/Shovel", 1)],
-          [("Clear out slimes", 6)],
-          [("Explore the Underground", 1), ("Loot items", 150)],
+          [ ("Collect Wood", 30), ("Collect Stone", 10), ("Give Guide resources", 1)],
+          [("Harvest Ore", 30),("Smelt Bars", 15), ("Discover Accessories", 2)],
+          [("Obtain Helmet", 1), ("Obtain a Chestplate", 1), ("Obtain Leggings", 1), ("Obtain greater Pickaxe", 1)],
+          [("Clear Slimes", 6)],
+          [("Explore the Underground", 1), ("Loot items", 20)],
           [("Clear out slimes, again", 12)],
           [("Resume glorius looting", 100)],
           [("Return to Laine", 1)],
@@ -310,9 +310,9 @@ public class AFallingStar : Mission
     private void HandleResourceGathering(Item item)
     {
         if (item.type == ItemID.StoneBlock)
-            UpdateProgress(0, item.stack);
-        if (item.type == ItemID.Wood)
             UpdateProgress(1, item.stack);
+        if (item.type == ItemID.Wood)
+            UpdateProgress(0, item.stack);
     }
 
     private void HandleEquipmentCollection(Item item)
@@ -359,8 +359,11 @@ public class AFallingStar : Mission
 
     private bool IsValuableLoot(Item item)
     {
-        return (item.rare >= ItemRarityID.Blue || item.accessory || item.IsWeapon() || item.IsMiningTool() || item.value > Item.sellPrice(silver: 5))
-            && !item.IsCurrency;
+        return (item.rare >= ItemRarityID.Blue 
+            || item.accessory 
+            || item.damage > 0 || item.pick > 0 || item.axe > 0 || item.hammer > 0
+            || item.value >= Item.buyPrice(silver: 1))
+            || item.type != ItemID.CopperCoin;
     }
 
     private void HandleSlimeInfestation(NPC npc)

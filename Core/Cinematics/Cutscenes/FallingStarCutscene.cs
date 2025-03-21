@@ -7,6 +7,7 @@ using Terraria.Audio;
 using Reverie.Core.Dialogue;
 using Reverie.Common.Systems;
 using Reverie.Content.Projectiles;
+using Terraria.GameContent;
 
 namespace Reverie.Core.Cinematics.Cutscenes;
 
@@ -64,24 +65,24 @@ public class FallingStarCutscene : Cutscene
         public static readonly Vector2 GUIDE_OFFSET = new(-185, 0);
         public static readonly Vector2 PLAYER_START_OFFSET = new(-150, -Main.screenHeight * 1.3f);
         public static readonly Vector2 LOGO_POSITION = new(Main.screenWidth / 2f, Main.screenHeight * 0.1f);
-        public static readonly Vector2 LEFT_CREDITS_POSITION = new(Main.screenWidth * 0.25f, Main.screenHeight * 0.4f);
-        public static readonly Vector2 RIGHT_CREDITS_POSITION = new(Main.screenWidth * 0.75f, Main.screenHeight * 0.4f);
+        public static readonly Vector2 LEFT_CREDITS_POSITION = new(Main.screenWidth * 0.125f, Main.screenHeight * 0.4f);
+        public static readonly Vector2 RIGHT_CREDITS_POSITION = new(Main.screenWidth * 0.65f, Main.screenHeight * 0.4f);
     }
 
     private static readonly CreditEntry[] LeftColumnCredits =
     {
-        new() { Label = "Written By:", Value = "wymsical, ElectroManiac", ScreenWidthPercent = 0.25f },
-        new() { Label = "Composer:", Value = "wymsical", ScreenWidthPercent = 0.25f },
-        new() { Label = "Lead Artist:", Value = "ElectroManiac", ScreenWidthPercent = 0.25f },
-        new() { Label = "Programmers:", Value = "wymsical, naka", ScreenWidthPercent = 0.25f }
+        new() { Label = "Written By:", Value = "wymsical, ElectroManiac", ScreenWidthPercent = 0.125f },
+        new() { Label = "Composers:", Value = "wymsical", ScreenWidthPercent = 0.125f },
+        new() { Label = "Lead Artist:", Value = "ElectroManiac", ScreenWidthPercent = 0.125f },
+        new() { Label = "Programmers:", Value = "wymsical, naka", ScreenWidthPercent = 0.125f }
     };
 
     private static readonly CreditEntry[] RightColumnCredits =
     {
-        new() { Label = "Artists:", Value = ".sweetberries, Crystal_zone,", ScreenWidthPercent = 0.75f },
-        new() { Label = "", Value = "Dominick, RAWTHORN", ScreenWidthPercent = 0.75f },
-        new() { Label = "Special Thanks:", Value = "HugeKraken, naka,", ScreenWidthPercent = 0.75f },
-        new() { Label = "", Value = "grae", ScreenWidthPercent = 0.75f }
+        new() { Label = "Artists:", Value = ".sweetberries, Crystal_zone,", ScreenWidthPercent = 0.65f },
+        new() { Label = "", Value = "Dominick, RAWTHORN", ScreenWidthPercent = 0.65f },
+        new() { Label = "Special Thanks:", Value = "HugeKraken, naka,", ScreenWidthPercent = 0.65f },
+        new() { Label = "", Value = "grae", ScreenWidthPercent = 0.65f }
     };
     #endregion
 
@@ -119,7 +120,7 @@ public class FallingStarCutscene : Cutscene
             [CutscenePhase.PlayerDescent] = new PhaseData
             {
                 Duration = Timings.DESCENT_DURATION,
-                Handler = HandlePlayerDescent,
+                Handler = HandleFalling,
                 OnComplete = () => TransitionToPhase(CutscenePhase.Impact)
             },
             [CutscenePhase.Impact] = new PhaseData
@@ -218,7 +219,7 @@ public class FallingStarCutscene : Cutscene
         }
     }
 
-    private void HandlePlayerDescent(float phaseTime)
+    private void HandleFalling(float phaseTime)
     {
         var descentProgress = phaseTime / Timings.DESCENT_DURATION;
         HandleDescentMovement(descentProgress);
@@ -446,7 +447,7 @@ public class FallingStarCutscene : Cutscene
     {
         if (_logoAlpha <= 0f) return;
 
-        Texture2D logoTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/Logo").Value;
+        Texture2D logoTexture = TextureAssets.Logo.Value;
         Vector2 logoOrigin = new Vector2(logoTexture.Width / 2f, logoTexture.Height / 2f);
 
         spriteBatch.Draw(

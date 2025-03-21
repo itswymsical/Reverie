@@ -56,8 +56,8 @@ namespace Reverie.Core.Missions
         public List<ObjectiveSet> ObjectiveIndex { get; protected set; }
         public List<Item> Rewards { get; private set; }
         public bool IsMainline { get; }
-        public int Commissioner { get; set; }
-        public int XPReward { get; private set; }
+        public int Employer { get; set; }
+        public int Experience { get; private set; }
         public int NextMissionID { get; private set; }
         public MissionProgress Progress { get; set; } = MissionProgress.Inactive;
         public MissionAvailability Availability { get; set; } = MissionAvailability.Locked;
@@ -78,8 +78,8 @@ namespace Reverie.Core.Missions
                     new Objective(o.Item1, o.Item2)).ToList())).ToList();
             Rewards = rewards;
             IsMainline = isMainline;
-            Commissioner = npc;
-            XPReward = xpReward;
+            Employer = npc;
+            Experience = xpReward;
             NextMissionID = nextMissionID;
         }
         #endregion
@@ -350,11 +350,11 @@ namespace Reverie.Core.Missions
             {
                 Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), reward.type, reward.stack);
             }
-            if (XPReward > 0)
+            if (Experience > 0)
             {
-                ExperiencePlayer.AddExperience(Main.LocalPlayer, XPReward);
+                ExperiencePlayer.AddExperience(Main.LocalPlayer, Experience);
                 Main.NewText($"{Main.LocalPlayer.name} " +
-                    $"Gained [c/73d5ff:{XPReward} Exp.] " +
+                    $"Gained [c/73d5ff:{Experience} Exp.] " +
                     $"from completing [c/73d5ff:{Name}]!", Color.White);
             }
         }
