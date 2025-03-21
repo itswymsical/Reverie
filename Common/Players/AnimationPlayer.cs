@@ -19,6 +19,7 @@ public class AnimationPlayer : ModPlayer
     private AnimationState currentState = AnimationState.Idle;
     private float startTime;
     private bool needsReset = false;
+    private float lastGameUpdateCount = 0f; // Track the last update count
 
     private float defaultBodyRotation;
     private Vector2 defaultBodyPosition;
@@ -41,11 +42,15 @@ public class AnimationPlayer : ModPlayer
     public override void Initialize()
     {
         startTime = Main.GameUpdateCount / 60f;
+        lastGameUpdateCount = Main.GameUpdateCount;
         SaveDefaultPositions();
+       
     }
 
     private void UpdateAnimationState()
     {
+        //if (Player.pulley) //stop animations or make a rope animation
+        //    return;
 
         if (Player.IsMoving())
         {
@@ -58,12 +63,20 @@ public class AnimationPlayer : ModPlayer
         needsReset = true;
     }
 
-    public override void PostUpdate() => UpdateAnimationState();
+    public override void PostUpdate()
+    {
+        // Only update animation state if the game isn't paused
+        if (!Main.gamePaused)
+        {
+            UpdateAnimationState();
+            lastGameUpdateCount = Main.GameUpdateCount;
+        }
+    }
+
     public override void DrawEffects(PlayerDrawSet drawInfo, ref float r, ref float g, ref float b, ref float a, ref bool fullBright)
     {
         if (!drawInfo.drawPlayer.IsUsingItem())
         {
-
             if (!drawInfo.drawPlayer.HeldItem.IsWeapon())
             {
                 drawInfo.drawPlayer.DrawItemInFrontHand(ref drawInfo);
@@ -75,13 +88,11 @@ public class AnimationPlayer : ModPlayer
     {
         if (!drawInfo.drawPlayer.IsUsingItem())
         {
-
             if (drawInfo.drawPlayer.HeldItem.IsWeapon())
             {
                 drawInfo.drawPlayer.DrawItemBehindPlayer(ref drawInfo);
             }
         }
-
 
         if (drawInfo.drawPlayer.IsJumping() && !drawInfo.drawPlayer.IsUsingItem())
             drawInfo.drawPlayer.bodyFrame.Y = 0 * 56;
@@ -90,6 +101,13 @@ public class AnimationPlayer : ModPlayer
 
         if (!Main.gameMenu && !Player.sleeping.isSleeping)
         {
+            // If the game is paused, reset positions to avoid drifting
+            if (Main.gamePaused)
+            {
+                ResetPositions(ref drawInfo);
+                return;
+            }
+
             if (needsReset)
             {
                 ResetPositions(ref drawInfo);
@@ -126,7 +144,8 @@ public class AnimationPlayer : ModPlayer
         float speed = 4.5f;
         float armAmplitude = 0.1f;
 
-        float currentTime = Main.GameUpdateCount / 60f;
+        // Use lastGameUpdateCount when the game is paused to freeze the animation
+        float currentTime = Main.gamePaused ? lastGameUpdateCount / 60f : Main.GameUpdateCount / 60f;
         float animationTime = currentTime - startTime;
         float cycle = (float)Math.Sin(animationTime * speed) * Player.direction;
 
@@ -145,7 +164,8 @@ public class AnimationPlayer : ModPlayer
         float speed = 4.5f;
         float headAmplitude = 0.1f;
 
-        float currentTime = Main.GameUpdateCount / 60f;
+        // Use lastGameUpdateCount when the game is paused to freeze the animation
+        float currentTime = Main.gamePaused ? lastGameUpdateCount / 60f : Main.GameUpdateCount / 60f;
         float animationTime = currentTime - Main.GameUpdateCount / 60f;
         float cycle = (float)Math.Sin(animationTime * speed);
         float headPosition = cycle * headAmplitude * 6.2f;

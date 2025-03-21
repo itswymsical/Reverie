@@ -118,6 +118,7 @@ public sealed partial class Reverie : Mod
     public enum MessageType : byte
     {
         AddExperience,
+        ClassStatPlayerSync
     }
 
     public override void HandlePacket(BinaryReader reader, int whoAmI)
@@ -134,6 +135,34 @@ public sealed partial class Reverie : Mod
                     Player player = Main.player[playerID];
                     ExperiencePlayer.AddExperience(player, experience);
                     CombatText.NewText(player.Hitbox, Color.LightGoldenrodYellow, $"+{experience} Exp", true);
+                }
+                break;
+
+            case MessageType.ClassStatPlayerSync:
+                byte playerId = reader.ReadByte();
+                if (Main.netMode == NetmodeID.Server)
+                {
+                    // If we're the server, forward to all clients except the one who sent it
+                    ModPacket packet = GetPacket();
+                    packet.Write((byte)MessageType.ClassStatPlayerSync);
+                    packet.Write(playerId);
+
+                    // Write all the data from the original packet
+                    packet.Write(reader.ReadByte());  // ClassType
+                    packet.Write(reader.ReadInt32()); // levelHealthBonus
+                    packet.Write(reader.ReadInt32()); // levelDefenseBonus
+                    packet.Write(reader.ReadSingle()); // levelDamageBonus
+                    packet.Write(reader.ReadSingle()); // levelCritBonus
+                    packet.Write(reader.ReadSingle()); // levelMoveSpeedBonus
+
+                    packet.Send(-1, whoAmI);
+                }
+                else
+                {
+                    // If we're a client, synchronize the player
+                    Player player = Main.player[playerId];
+                    ClassStatPlayer modPlayer = player.GetModPlayer<ClassStatPlayer>();
+                    modPlayer.ReceivePlayerSync(reader);
                 }
                 break;
 

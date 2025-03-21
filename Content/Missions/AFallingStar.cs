@@ -50,7 +50,7 @@ public class AFallingStar : Mission
         new Item(ItemID.CopperAxe)
     ];
 
-    internal enum AFallingStarObjective
+    internal enum Objectives
     {
         TalkToLaine = 0,
         GatherResources = 1,
@@ -69,7 +69,7 @@ public class AFallingStar : Mission
     {
         base.WhileActive();
 
-        if (CurObjectiveIndex < (int)AFallingStarObjective.ClearInfestation)
+        if (CurObjectiveIndex < (int)Objectives.ClearInfestation)
         {
             Main.slimeRain = false;
             Main.slimeRainTime = 0;
@@ -77,7 +77,7 @@ public class AFallingStar : Mission
             Main.time = 18000; 
         }
 
-        if (CurObjectiveIndex == (int)AFallingStarObjective.ClearInfestation)
+        if (CurObjectiveIndex == (int)Objectives.ClearInfestation)
         {
             if (!Main.slimeRain)
             {
@@ -92,18 +92,18 @@ public class AFallingStar : Mission
     {
         try
         {
-            var objective = (AFallingStarObjective)setIndex;
+            var objective = (Objectives)setIndex;
             if (!set.Objectives.All(o => o.IsCompleted)) return;
 
             switch (objective)
             {
-                case AFallingStarObjective.GatherResources:
+                case Objectives.GatherResources:
                     DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_GiveGuideResources, true);
                     break;
-                case AFallingStarObjective.ObtainEquipment:
+                case Objectives.ObtainEquipment:
                     DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_WildlifeWoes, true);
                     break;
-                case AFallingStarObjective.ClearInitialSlimes:
+                case Objectives.ClearInitialSlimes:
                     DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation, true);
                     break;
             }
@@ -118,25 +118,25 @@ public class AFallingStar : Mission
     {
         try
         {
-            var objective = (AFallingStarObjective)CurObjectiveIndex;
+            var objective = (Objectives)CurObjectiveIndex;
             switch (objective)
             {
-                case AFallingStarObjective.TalkToLaine:
+                case Objectives.TalkToLaine:
                     GiveStarterItems();
                     break;
-                case AFallingStarObjective.ClearInitialSlimes:
+                case Objectives.ClearInitialSlimes:
                     DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation, true);
                     break;
-                case AFallingStarObjective.ExploreUnderground:
+                case Objectives.ExploreUnderground:
                     DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation_Commentary, false);
                     break;
-                case AFallingStarObjective.ContinueLooting:
+                case Objectives.ContinueLooting:
                     StartSlimeRainEvent();
                     break;
-                case AFallingStarObjective.ClearInfestation:
+                case Objectives.ClearInfestation:
                     StartKingSlimeEncounter();
                     break;
-                case AFallingStarObjective.DefeatKingSlime:
+                case Objectives.DefeatKingSlime:
                     DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_KS_Victory, true);
                     break;
             }
@@ -155,22 +155,22 @@ public class AFallingStar : Mission
         {
             try
             {
-                var objective = (AFallingStarObjective)CurObjectiveIndex;
+                var objective = (Objectives)CurObjectiveIndex;
                 switch (objective)
                 {
-                    case AFallingStarObjective.GatherResources:
+                    case Objectives.GatherResources:
                         HandleResourceGathering(item);
                         break;
-                    case AFallingStarObjective.ObtainEquipment:
+                    case Objectives.ObtainEquipment:
                         HandleEquipmentCollection(item);
                         break;
-                    case AFallingStarObjective.ExploreAndGather:
+                    case Objectives.ExploreAndGather:
                         HandleExplorationGathering(item);
                         break;
-                    case AFallingStarObjective.ExploreUnderground:
+                    case Objectives.ExploreUnderground:
                         HandleUndergroundLoot(item);
                         break;
-                    case AFallingStarObjective.ContinueLooting:
+                    case Objectives.ContinueLooting:
                         HandleContinuedLooting(item);
                         break;
                 }
@@ -188,18 +188,18 @@ public class AFallingStar : Mission
         {
             try
             {
-                var objective = (AFallingStarObjective)CurObjectiveIndex;
+                var objective = (Objectives)CurObjectiveIndex;
                 switch (objective)
                 {
-                    case AFallingStarObjective.ClearInitialSlimes:
-                    case AFallingStarObjective.ClearSecondSlimes:
+                    case Objectives.ClearInitialSlimes:
+                    case Objectives.ClearSecondSlimes:
                         if (npc.type == NPCAIStyleID.Slime)
                             UpdateProgress(0);
                         break;
-                    case AFallingStarObjective.ClearInfestation:
+                    case Objectives.ClearInfestation:
                         HandleSlimeInfestation(npc);
                         break;
-                    case AFallingStarObjective.DefeatKingSlime:
+                    case Objectives.DefeatKingSlime:
                         if (npc.type == NPCID.KingSlime)
                             UpdateProgress(0);
                         break;
@@ -218,14 +218,14 @@ public class AFallingStar : Mission
         {
             try
             {
-                var objective = (AFallingStarObjective)CurObjectiveIndex;
+                var objective = (Objectives)CurObjectiveIndex;
                 switch (objective)
                 {
-                    case AFallingStarObjective.ExploreUnderground:
+                    case Objectives.ExploreUnderground:
                         if (biome == BiomeType.Underground)
                             UpdateProgress(0);
                         break;
-                    case AFallingStarObjective.ReturnToLaine:
+                    case Objectives.ReturnToLaine:
                         if (biome == BiomeType.Forest)
                             UpdateProgress(0);
                         break;
@@ -244,14 +244,14 @@ public class AFallingStar : Mission
         {
             try
             {
-                var objective = (AFallingStarObjective)CurObjectiveIndex;
+                var objective = (Objectives)CurObjectiveIndex;
                 switch (objective)
                 {
-                    case AFallingStarObjective.TalkToLaine:
+                    case Objectives.TalkToLaine:
                         DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_GatheringResources, true);
                         UpdateProgress(0);
                         break;
-                    case AFallingStarObjective.GatherResources:
+                    case Objectives.GatherResources:
                         if (ObjectiveIndex[1].Objectives[0].IsCompleted &&
                             ObjectiveIndex[1].Objectives[1].IsCompleted)
                         {

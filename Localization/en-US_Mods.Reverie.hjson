@@ -130,14 +130,9 @@ Items: {
 		Tooltip: Conjures a Warden Arm that tosses high-velocity boulders at enemies.
 	}
 
-	ArchaeaTranslocator: {
-		DisplayName: Archaea Translocator
+	EssencePledge: {
+		DisplayName: Essence Pledge
 		Tooltip: ""
-	}
-
-	PrimordialSandItem: {
-		DisplayName: Primordial Sand
-		Tooltip: "'From an ancient time, where the horizons where ethereal...'"
 	}
 }
 
@@ -155,8 +150,6 @@ Projectiles: {
 	WardensArmProj.DisplayName: Wardens Arm
 	ExplosiveLanding.DisplayName: Explosive Landing
 	SlimeSprayProj.DisplayName: Slime Spray Proj
-	PrimordialSandBallFallingProjectile.DisplayName: Primordial Sand Ball Falling Projectile
-	PrimordialSandBallGunProjectile.DisplayName: Primordial Sand Ball Gun Projectile
 }
 
 InfoDisplays.MissionObjectives.DisplayName: Mission Objectives
@@ -288,4 +281,8 @@ Configs: {
 	}
 }
 
-NPCs.KingSlime.DisplayName: King Slime
+NPCs: {
+	KingSlime.DisplayName: King Slime
+	WardenArm.DisplayName: Warden Arm
+	WoodenWarden.DisplayName: Wooden Warden
+}
