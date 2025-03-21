@@ -7,27 +7,27 @@ namespace Reverie.Common.Players;
 
 public class ExperiencePlayer : ModPlayer
 {
-    public int experienceLevel;
+    public int playerLevel;
     public int experienceValue;
     public int skillPoints;
 
     public override void Initialize()
     {
-        experienceLevel = 1;
+        playerLevel = 1;
         experienceValue = 0;
         skillPoints = 0;
     }
 
     public override void SaveData(TagCompound tag)
     {
-        tag["experienceLevel"] = experienceLevel;
+        tag["experienceLevel"] = playerLevel;
         tag["experienceValue"] = experienceValue;
         tag["skillPoints"] = skillPoints;
     }
 
     public override void LoadData(TagCompound tag)
     {
-        if (tag.ContainsKey("experienceLevel")) experienceLevel = tag.GetInt("experienceLevel");
+        if (tag.ContainsKey("experienceLevel")) playerLevel = tag.GetInt("experienceLevel");
         
         if (tag.ContainsKey("experienceValue")) experienceValue = tag.GetInt("experienceValue");
         
@@ -37,22 +37,22 @@ public class ExperiencePlayer : ModPlayer
     public static void AddExperience(Player player, int value)
     {
         ExperiencePlayer modPlayer = player.GetModPlayer<ExperiencePlayer>();
-        if (modPlayer.experienceLevel <= 99)
+        if (modPlayer.playerLevel <= 99)
         {
             modPlayer.experienceValue += value;
 
-            while (modPlayer.experienceValue >= GetNextExperienceThreshold(modPlayer.experienceLevel))
+            while (modPlayer.experienceValue >= GetNextExperienceThreshold(modPlayer.playerLevel))
             {
-                modPlayer.experienceValue -= GetNextExperienceThreshold(modPlayer.experienceLevel);
-                modPlayer.experienceLevel++;
+                modPlayer.experienceValue -= GetNextExperienceThreshold(modPlayer.playerLevel);
+                modPlayer.playerLevel++;
                 modPlayer.skillPoints++;
 
                 SoundEngine.PlaySound(SoundID.AchievementComplete, player.position);
 
                 if (Main.netMode != NetmodeID.MultiplayerClient)
-                    InGameNotificationsTracker.AddNotification(new LevelNotification());                   
+                    InGameNotificationsTracker.AddNotification(new LevelUpNotification());                   
                 else
-                    Main.NewText($"{player.name} Reached Level {modPlayer.experienceLevel} " + $"[i:{ItemID.FallenStar}], Skill Points: {modPlayer.skillPoints}");
+                    Main.NewText($"{player.name} Reached Level {modPlayer.playerLevel} " + $"[i:{ItemID.FallenStar}], Skill Points: {modPlayer.skillPoints}");
             }
         }
         else return;        

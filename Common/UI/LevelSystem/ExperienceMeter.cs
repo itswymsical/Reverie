@@ -53,7 +53,7 @@ internal class ExperienceMeter : UIState
         base.DrawSelf(spriteBatch);
         var modPlayer = Main.LocalPlayer.GetModPlayer<ExperiencePlayer>();
         var config = ModContent.GetInstance<ExperienceMeterConfig>();
-        var xpPercentage = (float)modPlayer.experienceValue / ExperiencePlayer.GetNextExperienceThreshold(modPlayer.experienceLevel);
+        var xpPercentage = (float)modPlayer.experienceValue / ExperiencePlayer.GetNextExperienceThreshold(modPlayer.playerLevel);
         xpPercentage = MathHelper.Clamp(xpPercentage, 0f, 1f);
 
         var hitbox = barFrame.GetInnerDimensions().ToRectangle();
@@ -84,8 +84,8 @@ internal class ExperienceMeter : UIState
     public override void Update(GameTime gameTime)
     {
         var modPlayer = Main.LocalPlayer.GetModPlayer<ExperiencePlayer>();
-        text.SetText($"Experience: {modPlayer.experienceValue} / {ExperiencePlayer.GetNextExperienceThreshold(modPlayer.experienceLevel)}", 0.6f, false);
-        level.SetText($"{modPlayer.experienceLevel}", 0.8f, false);
+        text.SetText($"Experience: {modPlayer.experienceValue} / {ExperiencePlayer.GetNextExperienceThreshold(modPlayer.playerLevel)}", 0.6f, false);
+        level.SetText($"{modPlayer.playerLevel}", 0.8f, false);
 
         base.Update(gameTime);
     }

@@ -66,7 +66,7 @@ namespace Reverie.Common.NPCs
 
                     var modPlayer = player.GetModPlayer<ExperiencePlayer>();
 
-                    if (player.active && !player.dead && modPlayer.experienceLevel <= 99)
+                    if (player.active && !player.dead && modPlayer.playerLevel <= 99)
                     {
                         var damageRatio = (float)damageDealt / totalDamage;
                         var experiencePoints = (int)(npc.lifeMax * damageRatio / 8);
