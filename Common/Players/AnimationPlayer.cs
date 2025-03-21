@@ -183,7 +183,7 @@ public class AnimationPlayer : ModPlayer
 
         drawInfo.drawPlayer.bodyRotation = rotVelX;
         drawInfo.drawPlayer.legRotation = rotVelX * 0.75f;
-        drawInfo.hidesBottomSkin = true;
+        //drawInfo.hidesBottomSkin = true;
 
         drawInfo.drawPlayer.legPosition = new Vector2(drawInfo.drawPlayer.legPosition.X - offset, -0.65f);
     }

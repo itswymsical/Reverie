@@ -32,7 +32,7 @@ namespace Reverie.Common.Subworlds.Sylvanwalde.Generation.WoodlandCanopy
 
                 if (WorldGenUtils.GenerateCanopyShape(x, y, canopyX, canopyY, canopyRadiusH, canopyRadiusV, 0.04f, canopyRadiusH / 4, 100, 15))
                 {
-                    Generator.GenerateStructure("Structures/CanopyShrine", new Point16(x, y), Instance);
+                    StructureHelper.Generator.GenerateStructure("Structures/CanopyShrine", new Point16(x, y), Instance);
                 }
                 else
                 {

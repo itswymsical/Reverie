@@ -108,7 +108,7 @@ namespace Reverie.Common.Subworlds.Sylvanwalde.Generation.WoodlandCanopy
             if (WorldGenUtils.GenerateCanopyShape(houseX, houseY, canopyX, canopyY, width: canopyRadiusH, height: canopyRadiusV,
                 curveFrequency: 0.04f, curveAmplitude: canopyRadiusH / 4, thornWidth: 100, thornHeight: 15))
             {
-                Generator.GenerateStructure("Structures/StumpyHouse", new Point16(houseX, houseY), Instance);
+                 Generator.GenerateStructure("Structures/StumpyHouse", new Point16(houseX, houseY), Instance);
 
                 var houseWidth = 31;
                 var houseHeight = 32;

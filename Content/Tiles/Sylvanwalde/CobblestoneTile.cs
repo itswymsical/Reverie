@@ -12,14 +12,14 @@ public class CobblestoneTile : ModTile
         
         Main.tileMerge[TileID.Mud][Type] = true;
         Main.tileMerge[Type][ModContent.TileType<LoamTile>()] = true;
-        
+        Main.tileMerge[ModContent.TileType<LoamTile>()][Type] = true;
         TileID.Sets.NeedsGrassFramingDirt[ModContent.TileType<LoamTile>()] = Type;
 
         DustType = DustID.Stone;
         MineResist = 1.25f;
         HitSound = SoundID.Tink;
 
-        AddMapEntry(new Color(101, 76, 109));
+        AddMapEntry(new Color(90, 91, 97));
     }
     
     public override void NumDust(int i, int j, bool fail, ref int num)

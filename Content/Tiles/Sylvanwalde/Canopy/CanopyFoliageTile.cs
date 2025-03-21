@@ -19,7 +19,8 @@ public class CanopyFoliageTile : ModTile
 
         TileObjectData.newTile.AnchorValidTiles =
         [
-            ModContent.TileType<WoodgrassTile>()
+            ModContent.TileType<WoodgrassTile>(),
+            ModContent.TileType<LoamGrassTile>()
         ];
 
         TileObjectData.newTile.LavaDeath = true;

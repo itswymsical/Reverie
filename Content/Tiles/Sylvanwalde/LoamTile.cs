@@ -12,13 +12,16 @@ public class LoamTile : ModTile
         Main.tileMergeDirt[Type] = true;
         
         Main.tileMerge[TileID.Mud][Type] = true;
+
         Main.tileMerge[Type][ModContent.TileType<LoamGrassTile>()] = true;
-        
+        Main.tileMerge[Type][ModContent.TileType<CobblestoneTile>()] = true;
+
+        TileID.Sets.NeedsGrassFraming[ModContent.TileType<LoamGrassTile>()] = true;
         DustType = DustID.Mud;
         MineResist = 1.05f;
         HitSound = SoundID.Dig;
 
-        AddMapEntry(new Color(132, 114, 97));
+        AddMapEntry(new Color(94, 64, 53));
     }
 
     public override void NumDust(int i, int j, bool fail, ref int num)

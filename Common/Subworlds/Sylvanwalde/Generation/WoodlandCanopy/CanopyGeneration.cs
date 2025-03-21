@@ -8,7 +8,7 @@ namespace Reverie.Common.Subworlds.Sylvanwalde.Generation.WoodlandCanopy
     {
         public static int trunkX;
 
-        public static int spawnX = Main.maxTilesX / 2 + Main.maxTilesX / 86;
+        public static int spawnX = Main.maxTilesX / 2 + Main.maxTilesX / 128;
         public static int spawnY = (int)Main.worldSurface;
 
         public static int trunkBottom = spawnY - 10 + (int)Main.worldSurface / 2;

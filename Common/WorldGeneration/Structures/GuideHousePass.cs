@@ -94,7 +94,7 @@ public class GuideHousePass(string name, float loadWeight) : GenPass(name, loadW
     private static void PlaceGuideShelter(int x, int y)
     {
         var structureX = x - STRUCTURE_WIDTH / 2;
-        Generator.GenerateStructure("Structures/LainesHouse", new Point16(structureX, y), Reverie.Instance);
+         Generator.GenerateStructure("Structures/LainesHouse", new Point16(structureX, y), Reverie.Instance);
 
         Main.spawnTileX = structureX + SPAWN_OFFSET_X;
         Main.spawnTileY = y + SPAWN_OFFSET_Y;

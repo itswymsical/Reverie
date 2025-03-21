@@ -1,11 +1,13 @@
 ﻿using Reverie.Common.Subworlds.Archaea.Generation;
 using Reverie.Common.Subworlds.Sylvanwalde.Generation;
+using Reverie.Common.Subworlds.Sylvanwalde.Generation.DruidsGarden;
 using Reverie.Common.Subworlds.Sylvanwalde.Generation.WoodlandCanopy;
 using Reverie.Common.WorldGeneration;
 using SubworldLibrary;
 using System.Collections.Generic;
 
 using Terraria.GameContent;
+using Terraria.GameContent.Biomes;
 using Terraria.WorldBuilding;
 
 namespace Reverie.Common.Subworlds.Sylvanwalde;
@@ -16,19 +18,18 @@ public class SylvanSub : Otherworld
     public override int Height => 1680;
     public override bool ShouldSave => false; // for debugging purposes
     public override bool NormalUpdates => true;
-    public override bool NoPlayerSaving => true; // for debugging purposes
+    public override bool NoPlayerSaving => false; // for debugging purposes
 
     public override List<GenPass> Tasks =>
     [
         new SylvanTerrainPass(),
-
-        //new CanopyPass(),
-        //new ReverieTreePass(),
-        //new CanopyFoliagePass(),
-        //new ShrinePass(),
-        new SylvanGrassPass(),
-        new SylvanPlantPass(),
         new SmoothPass(),
+
+        new SylvanFoliagePass(),
+        new DGCavePass(),
+        new SylvanCavesPass(),
+        new SmoothPass(),
+
     ];
 
     public override void SetStaticDefaults()

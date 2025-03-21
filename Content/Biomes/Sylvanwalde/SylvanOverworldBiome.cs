@@ -12,7 +12,7 @@ public class SylvanOverworldBiome : ModBiome
 
     // Simple inline ternary operator for music selection
     public override int Music => Main.dayTime && !Main.raining ?
-        MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}SylvanwaldeDay") :
+        MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}SylvanwaldeNight") : //needs new day theme
         (Main.raining && Main.dayTime ?
             MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}SylvanwaldeRain") :
             MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}SylvanwaldeNight"));
