@@ -50,8 +50,8 @@ public class FallingStarCutscene : Cutscene
 
         public static class Credits
         {
-            public const float LOGO_FADE_IN_DURATION = 2f;
-            public const float LOGO_HOLD_DURATION = 4f;
+            public const float LOGO_FADE_IN_DURATION = 4f;
+            public const float LOGO_HOLD_DURATION = 2f;
             public const float LOGO_FADE_OUT_DURATION = 2f;
             public const float TEXT_FADE_IN_DURATION = 2f;
             public const float TEXT_HOLD_DURATION = 12f;
@@ -65,8 +65,8 @@ public class FallingStarCutscene : Cutscene
         public static readonly Vector2 GUIDE_OFFSET = new(-185, 0);
         public static readonly Vector2 PLAYER_START_OFFSET = new(-150, -Main.screenHeight * 1.3f);
         public static readonly Vector2 LOGO_POSITION = new(Main.screenWidth / 2f, Main.screenHeight * 0.1f);
-        public static readonly Vector2 LEFT_CREDITS_POSITION = new(Main.screenWidth * 0.125f, Main.screenHeight * 0.4f);
-        public static readonly Vector2 RIGHT_CREDITS_POSITION = new(Main.screenWidth * 0.65f, Main.screenHeight * 0.4f);
+        public static readonly Vector2 LEFT_CREDITS_POSITION = new(Main.screenWidth * 0.12f, Main.screenHeight * 0.4f);
+        public static readonly Vector2 RIGHT_CREDITS_POSITION = new(Main.screenWidth * 0.55f, Main.screenHeight * 0.4f);
     }
 
     private static readonly CreditEntry[] LeftColumnCredits =

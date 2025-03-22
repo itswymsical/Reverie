@@ -21,7 +21,7 @@ public class AFallingStar : Mission
       "\nBegin your journey in Terraria, discovering knowledge and power...",
       [
           [("Talk to Guide", 1)],
-          [ ("Collect Wood", 30), ("Collect Stone", 10), ("Give Guide resources", 1)],
+          [("Collect Wood", 30), ("Collect Stone", 10), ("Give Guide resources", 1)],
           [("Harvest Ore", 30),("Smelt Bars", 15), ("Discover Accessories", 2)],
           [("Obtain Helmet", 1), ("Obtain a Chestplate", 1), ("Obtain Leggings", 1), ("Obtain greater Pickaxe", 1)],
           [("Clear Slimes", 6)],

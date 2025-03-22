@@ -33,7 +33,7 @@ namespace Reverie.Common.Subworlds.Sylvanwalde.Generation.WoodlandCanopy
                             // Calculate the position to place the structure
                             var treePos = y - structureHeight + 20; // Adjust this offset as needed
                             var structureX = x - 58; // Center the structure horizontally
-                             Generator.GenerateStructure("Structures/ReverieTreeStruct", new Point16(structureX, treePos), Instance);
+                             Generator.GenerateStructure("Structures/ReverieTree", new Point16(structureX, treePos), Instance);
                             GrowTrunkChasm(x);
                             return;
                         }
