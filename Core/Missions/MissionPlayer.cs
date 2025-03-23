@@ -496,17 +496,17 @@ public partial class MissionPlayer : ModPlayer
 
     public override void OnEnterWorld()
     {
-        var AFallingStar = GetMission(MissionID.A_FALLING_STAR);
-        var player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
+        //var AFallingStar = GetMission(MissionID.A_FALLING_STAR);
+        //var player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
 
-        if (AFallingStar != null &&
-            AFallingStar.Availability != MissionAvailability.Completed &&
-            AFallingStar.Progress != MissionProgress.Active)
-        {
-            CutsceneSystem.PlayCutscene(new FallingStarCutscene());
-            UnlockMission(MissionID.A_FALLING_STAR);
-            StartMission(MissionID.A_FALLING_STAR);
-        }
+        //if (AFallingStar != null &&
+        //    AFallingStar.Availability != MissionAvailability.Completed &&
+        //    AFallingStar.Progress != MissionProgress.Active)
+        //{
+        //    CutsceneSystem.PlayCutscene(new FallingStarCutscene());
+        //    UnlockMission(MissionID.A_FALLING_STAR);
+        //    StartMission(MissionID.A_FALLING_STAR);
+        //}
     }
 
     public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)

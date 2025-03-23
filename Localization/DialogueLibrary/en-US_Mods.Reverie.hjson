@@ -117,4 +117,23 @@ DialogueLibrary: {
 			Line3: They may hold the key to unlocking the secrets of Reverie and why your here.
 		}
 	}
+
+	Chronicle_01: {
+		Chapter1: {
+			Line1: I, Laine L., record these words as testimony to what I have witnessed. The veil between worlds grows thin.
+			Line2: Dreams bleed into waking hours, and I can no longer distinguish between vision and reality.
+			Line3: They call it Reverie—this force of unity that flows through all things like currents in an endless sea.
+			Line4: I've felt it pulse beneath my fingertips when touching ancient stone, heard it whisper through leaves in forgotten groves.
+			Line5: It is creation itself, the binding thread that connects all consciousness.
+			Line6: But where light casts, shadow follows. The oppositional force—Apathia—grows stronger.
+			Line7: It is not merely absence or void, but active resistance. A severing. A willful rejection of connection.
+			Line8: I've seen them—the Assailants—moving through our world like oil through water, never truly mixing with what surrounds them.
+			Line9: They bear markings like living circuits carved into flesh, and their eyes reflect nothing.
+			Line10: They are harbingers of something vast and hungry that waits beyond our perception.
+			Line11: Their master dwells in the sunken depths where pressure should crush any living thing.
+			Line12: Yet he endures, a being of immense will who once sought to unite the disparate world of a distant ocean kingdom.
+			Line13: His vision perverted by ancient texts, he now seeks not to elevate but to dissolve—to return all consciousness to the primordial soup from which it emerged.
+			Line14: I am not the hero destined to face him. I merely record what approaches. The hero will come from beyond, trailing light like a falling star.
+		}
+	}
 }

@@ -14,7 +14,8 @@ public enum DialogueID
     CrashLanding_SlimeRain,
     CrashLanding_SlimeRain_Commentary,
     CrashLanding_KS_Encounter,
-    CrashLanding_KS_Victory
+    CrashLanding_KS_Victory,
+    ChronicleI_Chapter1,
 }
 public static class DialogueList
 {
@@ -28,14 +29,18 @@ public static class DialogueList
         var builder = new DialogueBuilder();
         dialogues = new Dictionary<DialogueID, DialogueSequence>
         {
+            [DialogueID.ChronicleI_Chapter1] = DialogueBuilder.Build("Chronicle_01", "Chapter1", 14),
+
             [DialogueID.CrashLanding_Intro] = DialogueBuilder.Build("CrashLanding", "Intro", 1, 
             modifications: [
                 (line: 1, delay: 1, emote: 0),
             ]),
+
             [DialogueID.CrashLanding_Cutscene] = DialogueBuilder.Build("CrashLanding", "Cutscene", 1,
             modifications: [
                 (line: 1, delay: 1, emote: 0),
             ]),
+
             [DialogueID.CrashLanding_SettlingIn] = DialogueBuilder.Build("CrashLanding", "SettlingIn", 5),
 
             [DialogueID.CrashLanding_GatheringResources] = DialogueBuilder.Build("CrashLanding", "GatheringResources", 2),

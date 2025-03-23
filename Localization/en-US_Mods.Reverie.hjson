@@ -149,6 +149,11 @@ Items: {
 		DisplayName: Sylvanwalde Translocator
 		Tooltip: ""
 	}
+
+	ChronicleI: {
+		DisplayName: Chronicle I
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
