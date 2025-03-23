@@ -2,11 +2,10 @@
 using SubworldLibrary;
 
 
-namespace Reverie.Content.Items.Debugging;
+namespace Reverie.Content.Items;
 
-public class ArchaeaTranslocator : ModItem
+public class BustedTranslocator : ModItem
 {
-    public override string Texture => "Terraria/Images/UI/Bestiary/Icon_Locked";
     public override void SetDefaults()
     {
         Item.useTime = Item.useAnimation = 20;

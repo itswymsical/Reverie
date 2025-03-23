@@ -154,6 +154,11 @@ Items: {
 		DisplayName: Chronicle I
 		Tooltip: ""
 	}
+
+	BustedTranslocator: {
+		DisplayName: Busted Translocator
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
