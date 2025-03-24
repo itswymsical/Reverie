@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Terraria.Audio;
 
 using Reverie.Core.Dialogue;
-using Reverie.Common.Systems;
 using Reverie.Content.Projectiles;
 using Terraria.GameContent;
+using Reverie.Common.Systems.Camera;
 
 namespace Reverie.Core.Cinematics.Cutscenes;
 

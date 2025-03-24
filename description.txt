@@ -1,9 +1,7 @@
-﻿Reverie is an Open-World RPG Sandbox; it introduces a large storyline, channeled through a mainline mission/quest system, complimented by side missions, new gameplay mechanics such as Leveling, Skill Trees, Cutscences & Dialogue, etc.
-
-The story of Reverie revolves around the Hero, who mysteriously crash-lands into the house of Laine, the Guide. Laine quickly realizes that the Hero's arrival is connected to an ancient power known as Reverie, which is wielded by chosen heroes and linked to the world's forgotten history.
+﻿[c/73d5ff:Reverie] is a mod that aims to create an open-world RPG experience to Terraria. Reverie introduces a mission system, where objectives are navigated through exploration/interaction, new "Distant Worlds", that act as full dimensions with their own ecosystems.
 
 DEVELOPER TEAM
 --------------------------------
 Composer(s): wymsical
-Artist(s): ElectroManiac, Dominick, HHHHHHHHH HHH, Crystal_zone
-Contributing Members: HugeKraken, naka, grae
+Artist(s): ElectroManiac, RAWTHORNE, Dominick
+Contributing Members: HugeKraken, naka, grae, HHHHHHHHH HHH, Crystal_zone

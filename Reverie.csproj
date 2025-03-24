@@ -20,5 +20,10 @@
 	    <HintPath>..\ReverieMod\Utilities\SubworldLibrary.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Common\Configs\" />
+	  <Folder Include="Common\Projectiles\" />
+	  <Folder Include="Content\NPCs\" />
+	</ItemGroup>
 
 </Project>

@@ -3,14 +3,14 @@ using Terraria.Localization;
 
 namespace Reverie.Common.Systems
 {
-    public class ReverieModSystem : ModSystem
+    public class ReverieSystem : ModSystem
     {
         public override void Load()
         {
             NPCDataManager.Initialize();
             Reverie.Instance.Logger.Info("NPCDataManager initialized...");
         }
-        public static ReverieModSystem Instance => ModContent.GetInstance<ReverieModSystem>();
+        public static ReverieSystem Instance => ModContent.GetInstance<ReverieSystem>();
 
         public override void AddRecipeGroups()
         {
