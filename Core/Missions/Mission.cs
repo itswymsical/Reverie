@@ -352,7 +352,7 @@ namespace Reverie.Core.Missions
             }
             if (Experience > 0)
             {
-                ExperiencePlayer.AddExperience(Main.LocalPlayer, Experience);
+                //ExperiencePlayer.AddExperience(Main.LocalPlayer, Experience);
                 Main.NewText($"{Main.LocalPlayer.name} " +
                     $"Gained [c/73d5ff:{Experience} Exp.] " +
                     $"from completing [c/73d5ff:{Name}]!", Color.White);

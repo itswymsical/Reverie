@@ -362,8 +362,8 @@ public class FallingStarCutscene : Cutscene
 
     private void TriggerImpactEffects()
     {
-        Projectile.NewProjectile(null, Main.LocalPlayer.Center, Vector2.Zero,
-            ModContent.ProjectileType<ExplosiveLanding>(), 0, 0f, Main.myPlayer);
+        //Projectile.NewProjectile(null, Main.LocalPlayer.Center, Vector2.Zero,
+        //    ModContent.ProjectileType<ExplosiveLanding>(), 0, 0f, Main.myPlayer);
         FadeColor = Color.White;
         FadeAlpha = 1f;
         CameraSystem.shake = 30;

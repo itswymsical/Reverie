@@ -1,5 +1,4 @@
 ﻿using Reverie.Common.Subworlds.Archaea.Generation;
-using Reverie.Common.WorldGeneration;
 
 using SubworldLibrary;
 using System.Collections.Generic;
@@ -24,7 +23,7 @@ public class ArchaeaSub : Otherworld
         new DesertPass(),
         new PlantPass(),
         new RubblePass(),
-        new SmoothPass()
+        //new SmoothPass()
 
     ];
 

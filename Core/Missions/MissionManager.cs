@@ -283,7 +283,7 @@ public class MissionFactory : ModSystem
             ModContent.GetInstance<Reverie>().Logger.Info("Registering mission types...");
 
             // Register each mission type with its ID
-            missionTypes[MissionID.A_FALLING_STAR] = typeof(AFallingStar);
+            //missionTypes[MissionID.A_FALLING_STAR] = typeof(AFallingStar);
             //missionTypes[MissionID.FUNGAL_FRACAS] = typeof(FungalFracas);
 
             ModContent.GetInstance<Reverie>().Logger.Info($"Registered {missionTypes.Count} mission types");

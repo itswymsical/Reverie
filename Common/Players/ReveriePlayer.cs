@@ -1,6 +1,4 @@
 ﻿using Reverie.Common.Subworlds.Archaea;
-using Reverie.Common.Subworlds.Sylvanwalde;
-using Reverie.Content.Biomes.Sylvanwalde;
 using Reverie.Content.Dusts;
 using Reverie.Content.Tiles.Archaea;
 using Reverie.Core.Cinematics;
