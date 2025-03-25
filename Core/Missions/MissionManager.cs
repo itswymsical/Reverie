@@ -6,7 +6,7 @@ using Reverie.Content.Missions;
 
 namespace Reverie.Core.Missions;
 
-public class MissionManager
+public partial class MissionManager
 {
     private readonly object managerLock = new();
     private readonly Dictionary<int, Mission> activeMissions = [];
@@ -283,8 +283,9 @@ public class MissionFactory : ModSystem
             ModContent.GetInstance<Reverie>().Logger.Info("Registering mission types...");
 
             // Register each mission type with its ID
-            //missionTypes[MissionID.A_FALLING_STAR] = typeof(AFallingStar);
-            //missionTypes[MissionID.FUNGAL_FRACAS] = typeof(FungalFracas);
+            //missionTypes[MissionID.A_FALLING_STAR] = typeof();
+            missionTypes[MissionID.BUILD_VALID_HOUSE] = typeof(HousingMission);
+           
 
             ModContent.GetInstance<Reverie>().Logger.Info($"Registered {missionTypes.Count} mission types");
 

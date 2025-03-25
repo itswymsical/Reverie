@@ -16,6 +16,7 @@ namespace Reverie.Core.Missions
     {
         public const int A_FALLING_STAR = 1;
         public const int FUNGAL_FRACAS = 2;
+        public const int BUILD_VALID_HOUSE = 3;
     }
     public enum MissionProgress
     {
@@ -117,6 +118,7 @@ namespace Reverie.Core.Missions
         }
 
         // Virtual methods for derived classes to override
+        public virtual void OnValidHousingFound() { }
         protected virtual void HandleSpecificObjectiveComplete(int setIndex, int objectiveIndex, Objective objective) { }
         protected virtual void HandleObjectiveSetComplete(int setIndex, ObjectiveSet set) { }
         protected virtual void HandleObjectiveComplete(int objectiveIndex) { }

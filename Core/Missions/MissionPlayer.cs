@@ -476,6 +476,10 @@ public partial class MissionPlayer : ModPlayer
 
     public override void PostUpdate()
     {
+        base.PostUpdate();
+
+        MissionManager.Instance.OnUpdate();
+
         if (dirtyMissions.Count > 0)
         {
             dirtyMissions.Clear();
@@ -496,17 +500,17 @@ public partial class MissionPlayer : ModPlayer
 
     public override void OnEnterWorld()
     {
-        //var AFallingStar = GetMission(MissionID.A_FALLING_STAR);
-        //var player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
+        var AFallingStar = GetMission(MissionID.BUILD_VALID_HOUSE);
+        var player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
 
-        //if (AFallingStar != null &&
-        //    AFallingStar.Availability != MissionAvailability.Completed &&
-        //    AFallingStar.Progress != MissionProgress.Active)
-        //{
-        //    CutsceneSystem.PlayCutscene(new FallingStarCutscene());
-        //    UnlockMission(MissionID.A_FALLING_STAR);
-        //    StartMission(MissionID.A_FALLING_STAR);
-        //}
+        if (AFallingStar != null &&
+            AFallingStar.Availability != MissionAvailability.Completed &&
+            AFallingStar.Progress != MissionProgress.Active)
+        {
+            //CutsceneSystem.PlayCutscene(new FallingStarCutscene());
+            UnlockMission(MissionID.BUILD_VALID_HOUSE);
+            StartMission(MissionID.BUILD_VALID_HOUSE);
+        }
     }
 
     public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
