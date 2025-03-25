@@ -136,4 +136,11 @@ DialogueLibrary: {
 			Line14: I am not the hero destined to face him. I merely record what approaches. The hero will come from beyond, trailing light like a falling star.
 		}
 	}
+
+	TamerTestMission: {
+		Chapter1: {
+			Line1: I appreciate you taking the time to pick up this job.
+			Line2: I need about 5 bunnies, bring me them and ill have your reward.
+		}
+	}
 }

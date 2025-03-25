@@ -1,4 +1,4 @@
-UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Items: {
 	DialogueTest: {
@@ -136,7 +136,7 @@ Items: {
 	}
 
 	PrimordialSandItem: {
-		DisplayName: Primordial Sand Item
+		DisplayName: Primordial Sand
 		Tooltip: ""
 	}
 
@@ -151,13 +151,13 @@ Items: {
 	}
 
 	ChronicleI: {
-		DisplayName: Chronicle I
-		Tooltip: ""
+		DisplayName: Archiver Chronicle #01
+		Tooltip: "'Laine L.'"
 	}
 
 	BustedTranslocator: {
 		DisplayName: Busted Translocator
-		Tooltip: ""
+		Tooltip: "'Use at your own descretion'"
 	}
 }
 
@@ -312,6 +312,21 @@ NPCs: {
 	KingSlime.DisplayName: King Slime
 	WardenArm.DisplayName: Warden Arm
 	WoodenWarden.DisplayName: Wooden Warden
+
+	Tamer: {
+		DisplayName: Tamer
+
+		TownNPCMood: {
+			Content: I am content.
+			NoHome: I hate not having a home.
+			FarFromHome: I am too far from home.
+			LoveSpace: I love having so much space.
+			DislikeCrowded: I dislike how crowded I am.
+			HateCrowded: I hate how crowded I am.
+			LikeNPC_Princess: I like {NPCName}.
+			Princess_LovesNPC: I like {NPCName}.
+		}
+	}
 }
 
 Biomes: {

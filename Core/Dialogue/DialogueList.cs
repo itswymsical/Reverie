@@ -16,6 +16,7 @@ public enum DialogueID
     CrashLanding_KS_Encounter,
     CrashLanding_KS_Victory,
     ChronicleI_Chapter1,
+    TamerTestMission,
 }
 public static class DialogueList
 {
@@ -30,6 +31,8 @@ public static class DialogueList
         dialogues = new Dictionary<DialogueID, DialogueSequence>
         {
             [DialogueID.ChronicleI_Chapter1] = DialogueBuilder.Build("Chronicle_01", "Chapter1", 14),
+
+            [DialogueID.TamerTestMission] = DialogueBuilder.Build("TamerTestMission", "Chapter1", 2),
 
             [DialogueID.CrashLanding_Intro] = DialogueBuilder.Build("CrashLanding", "Intro", 1, 
             modifications: [

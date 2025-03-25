@@ -1,8 +1,6 @@
-﻿using Reverie.Common.Players;
-using Reverie.Core.Interfaces;
+﻿using Reverie.Core.Interfaces;
 
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 using Terraria.Graphics.Effects;

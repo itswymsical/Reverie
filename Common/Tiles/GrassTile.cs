@@ -12,7 +12,7 @@ public abstract class GrassTile : ModTile
     /// <summary>
     /// Chance for the grass to spread in a random update. Lower values mean higher chance.
     /// </summary>
-    public virtual int spreadRate => 2;
+    public virtual int spreadChance => 2;
 
     /// <summary>
     /// Whether plants can grow on this grass.
@@ -44,7 +44,7 @@ public abstract class GrassTile : ModTile
 
     public override void RandomUpdate(int i, int j)
     {
-        if (!Main.rand.NextBool(spreadRate)) return;
+        if (!Main.rand.NextBool(spreadChance)) return;
 
         int[] directions = { -1, 1 };
         foreach (int xDir in directions)

@@ -1,5 +1,5 @@
 ﻿using Reverie.Core.Dialogue;
-using Terraria.UI.Chat;
+using Terraria.GameContent;
 
 namespace Reverie.Content.Items
 {
@@ -14,29 +14,65 @@ namespace Reverie.Content.Items
             Item.useStyle = ItemUseStyleID.HoldUp;
         }
 
-        // Calamity Mod, currently placeholder
         public override bool PreDrawTooltipLine(DrawableTooltipLine line, ref int yOffset)
         {
             if (line.Name == "ItemName" && line.Mod == "Terraria")
             {
-                Color rarityColor = line.OverrideColor ?? line.Color;
+                Color rarityColor = line.OverrideColor.GetValueOrDefault(line.Color);
                 Vector2 basePosition = new Vector2(line.X, line.Y);
 
-                float backInterpolant = (float)Math.Pow(Main.GlobalTimeWrappedHourly * 0.81f % 1f, 1.5f);
-                Vector2 backScale = line.BaseScale * MathHelper.Lerp(1f, 1.2f, backInterpolant);
-                Color backColor = Color.Lerp(rarityColor, Color.Gold, backInterpolant) * (float)Math.Pow(1f - backInterpolant, 0.46f);
-                Vector2 backPosition = basePosition - new Vector2(1f, 0.1f) * backInterpolant * 10f;
+                float time = Main.GlobalTimeWrappedHourly * 3f;
+                float amplitude = 2.73f;
 
                 Main.spriteBatch.End();
                 Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, null, null, null, null, Main.UIScaleMatrix);
 
-                for (int i = 0; i < 2; i++)
-                    ChatManager.DrawColorCodedStringWithShadow(Main.spriteBatch, line.Font, line.Text, backPosition, backColor, line.Rotation, line.Origin, backScale, line.MaxWidth, line.Spread);
+                string text = line.Text;
+                float posX = basePosition.X;
+
+                for (int i = 0; i < text.Length; i++)
+                {
+                    float sineOffset = (float)Math.Sin(time + i * 0.5f) * amplitude;
+                    Vector2 charPos = new Vector2(posX, basePosition.Y + sineOffset);
+
+                    string charStr = text[i].ToString();
+                    Vector2 textSize = FontAssets.MouseText.Value.MeasureString(charStr);
+                    float charWidth = textSize.X * line.BaseScale.X;
+
+                    Color glowColor = Color.Lerp(rarityColor, Color.Gray, (float)Math.Sin(time + i * 0.2f) * 0.5f + 0.5f);
+
+                    Utils.DrawBorderString(
+                        Main.spriteBatch,
+                        charStr,
+                        charPos,
+                        glowColor,
+                        line.BaseScale.X * 1.1f);
+
+                    posX += charWidth;
+                }
 
                 Main.spriteBatch.End();
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, null, null, null, Main.UIScaleMatrix);
 
-                ChatManager.DrawColorCodedStringWithShadow(Main.spriteBatch, line.Font, line.Text, basePosition, rarityColor, line.Rotation, line.Origin, line.BaseScale, line.MaxWidth, line.Spread);
+                posX = basePosition.X;
+                for (int i = 0; i < text.Length; i++)
+                {
+                    float sineOffset = (float)Math.Sin(time + i * 0.5f) * amplitude;
+                    Vector2 charPos = new Vector2(posX, basePosition.Y + sineOffset);
+
+                    string charStr = text[i].ToString();
+                    Vector2 textSize = FontAssets.MouseText.Value.MeasureString(charStr);
+                    float charWidth = textSize.X * line.BaseScale.X;
+
+                    Utils.DrawBorderString(
+                        Main.spriteBatch,
+                        charStr,
+                        charPos,
+                        rarityColor,
+                        line.BaseScale.X);
+
+                    posX += charWidth;
+                }
 
                 return false;
             }
@@ -50,6 +86,7 @@ namespace Reverie.Content.Items
 
             return base.CanUseItem(player);
         }
+
         public override bool? UseItem(Player player)
         {
             if (Main.myPlayer == player.whoAmI)

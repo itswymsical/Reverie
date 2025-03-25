@@ -14,10 +14,10 @@ public class DialogueTest : ModItem
     }
     public override bool CanUseItem(Player player)
     {
-        if (DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SettlingIn, true))
-            return false;
+        if (!DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SettlingIn, true))
+            return true;
 
-        return base.CanUseItem(player);
+        return false;
     }
     public override bool? UseItem(Player player)
     {
