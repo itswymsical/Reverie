@@ -1,6 +1,4 @@
 ﻿using Reverie.Common.Players;
-using Reverie.Common.Systems;
-using Reverie.Core.Cinematics.Cutscenes;
 
 using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
@@ -13,7 +11,6 @@ using Terraria.ModLoader.IO;
 
 namespace Reverie.Core.Missions;
 
-// located in core for namespace convenience.
 public partial class MissionPlayer : ModPlayer
 {
     #region Properties & Fields
