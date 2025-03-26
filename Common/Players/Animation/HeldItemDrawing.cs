@@ -1,5 +1,7 @@
 ﻿using Reverie.Core.Animation;
+
 using System.Collections.Generic;
+
 using Terraria.DataStructures;
 using Terraria.GameContent;
 
@@ -31,23 +33,20 @@ public partial class AnimationPlayer
         var gWidth = itemTexture.Width;
         var gHeight = itemTexture.Height;
 
-        // Check for animations
         Rectangle? sourceRect = null;
         if (heldItem.ModItem != null && Main.itemAnimations[heldItem.type] != null)
         {
             var frameCount = Main.itemAnimations[heldItem.type].FrameCount;
             var frameCounter = Main.itemAnimations[heldItem.type].TicksPerFrame * 2;
 
-            // Calculate animation frame directly
             var animationFrame = (int)(Main.GameUpdateCount / frameCounter) % frameCount;
 
-            // Set source rectangle
             gHeight /= frameCount;
             sourceRect = new Rectangle(0, gHeight * animationFrame, gWidth, gHeight);
         }
 
         var position = player.MountedCenter - Main.screenPosition;
-        position.Y += 6;
+        position += new Vector2((player.HeldItem.width / 3.6f) * player.direction, player.HeldItem.height / 2);
 
         var lighting = Lighting.GetColor(
             (int)(player.Center.X / 16f),
@@ -60,7 +59,6 @@ public partial class AnimationPlayer
         if (player.direction < 0) spriteEffects = SpriteEffects.FlipHorizontally;
         if (player.gravDir < 0)
         {
-            
             spriteEffects |= SpriteEffects.FlipVertically;
         }
 
@@ -81,82 +79,9 @@ public partial class AnimationPlayer
         var larger = Math.Max(itemWidth, itemHeight);
         var lesser = Math.Min(itemWidth, itemHeight);
 
-        // Always use animation-based positioning if available
-        if (currentAnimation != null)
-        {
-            var currentState = currentAnimation.GetStateAtTime(animationTime);
+        var segmentStates = GetCombinedJointStates();
 
-            if (currentState.TryGetValue(SegmentType.LeftArm, out var leftArm))
-            {
-                var rotation = leftArm.Rotation;
-
-                if (player.direction == -1)
-                    rotation = -rotation;
-
-                rotation += 0.3f * player.direction;
-
-                data.rotation = rotation;
-
-                // Position weapon relative to hand position
-                Vector2 handOffset = new Vector2(12 * player.direction, -8);
-
-                // Adjust offset based on arm rotation to maintain consistent positioning
-                handOffset = Vector2.Transform(
-                    handOffset,
-                    Matrix.CreateRotationZ(leftArm.Rotation * player.direction)
-                );
-
-                data.position += handOffset;
-            }
-
-            // If left arm isn't animated, we can use this as fallback
-            else if (currentState.TryGetValue(SegmentType.RightArm, out var rightArm))
-            {
-                var rotation = rightArm.Rotation;
-                if (player.direction == -1)
-                    rotation = -rotation;
-
-                rotation += 0.3f * player.direction;
-                data.rotation = rotation;
-
-                Vector2 handOffset = new Vector2(12 * player.direction, -8);
-                handOffset = Vector2.Transform(
-                    handOffset,
-                    Matrix.CreateRotationZ(rightArm.Rotation * player.direction)
-                );
-
-                data.position += handOffset;
-            }
-
-            // If neither arm is animated
-            else if (currentState.TryGetValue(SegmentType.Body, out var bodyState))
-            {
-                var rotation = bodyState.Rotation;
-                if (player.direction == -1)
-                    rotation = -rotation;
-
-                rotation += 0.32f * player.direction;
-                data.rotation = rotation;
-
-                data.position.X += 10 * player.direction;
-                data.position.Y -= -14 * player.gravDir;
-
-                if (player.velocity.X != 0)
-                {
-                    ApplyWalkCycleFromAnimation(ref data, player, currentState);
-                }
-            }
-            else
-            {
-                // Default positioning if no relevant joints are animated
-                //ApplyFrontWeaponPositioning(ref data, player, larger, lesser);
-            }
-        }
-        else
-        {
-            // No animation, use default positioning
-            //ApplyFrontWeaponPositioning(ref data, player, larger, lesser);
-        }
+        PositionWeaponBasedOnAnimations(ref data, player, segmentStates);
 
         drawInfo.DrawDataCache.Add(data);
 
@@ -166,13 +91,162 @@ public partial class AnimationPlayer
         }
     }
 
+    /// <summary>
+    /// Gets the combined joint states from all active animations, accounting for blending
+    /// </summary>
+    private Dictionary<SegmentType, SegmentState> GetCombinedJointStates()
+    {
+        var result = new Dictionary<SegmentType, SegmentState>();
+
+        var layerOrder = new List<AnimationLayer>
+        {
+            AnimationLayer.Base,
+            AnimationLayer.LowerBody,
+            AnimationLayer.UpperBody,
+            AnimationLayer.Head,
+            AnimationLayer.Arms,
+            AnimationLayer.Override
+        };
+
+        var layerSegmentMap = new Dictionary<AnimationLayer, HashSet<SegmentType>>
+        {
+            [AnimationLayer.Base] = new HashSet<SegmentType>
+            {
+                SegmentType.Head, SegmentType.Body, SegmentType.Legs,
+                SegmentType.LeftArm, SegmentType.RightArm
+            },
+            [AnimationLayer.LowerBody] = new HashSet<SegmentType> { SegmentType.Legs },
+            [AnimationLayer.UpperBody] = new HashSet<SegmentType> { SegmentType.Body },
+            [AnimationLayer.Arms] = new HashSet<SegmentType> { SegmentType.LeftArm, SegmentType.RightArm },
+            [AnimationLayer.Head] = new HashSet<SegmentType> { SegmentType.Head },
+            [AnimationLayer.Override] = new HashSet<SegmentType>
+            {
+                SegmentType.Head, SegmentType.Body, SegmentType.Legs,
+                SegmentType.LeftArm, SegmentType.RightArm
+            }
+        };
+
+        foreach (var pair in defaultJointStates)
+        {
+            result[pair.Key] = pair.Value.Clone();
+        }
+
+        foreach (var layer in layerOrder)
+        {
+            if (!activeAnimations.TryGetValue(layer, out var activeAnim))
+                continue;
+
+            float time = activeAnim.Time;
+            if (activeAnim.Animation.Looping)
+            {
+                time %= activeAnim.Animation.Duration;
+            }
+            else if (time > activeAnim.Animation.Duration)
+            {
+                time = activeAnim.Animation.Duration;
+            }
+
+            var layerState = activeAnim.Animation.GetStateAtTime(time);
+
+            if (layerSegmentMap.TryGetValue(layer, out var affectedSegments))
+            {
+                foreach (var segment in affectedSegments)
+                {
+                    if (layerState.TryGetValue(segment, out var segmentState))
+                    {
+                        if (result.TryGetValue(segment, out var currentState) && activeAnim.BlendFactor < 1f)
+                        {
+                            result[segment] = SegmentState.Lerp(currentState, segmentState, activeAnim.BlendFactor);
+                        }
+                        else
+                        {
+                            result[segment] = segmentState.Clone();
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Positions the weapon based on current animation states
+    /// </summary>
+    private void PositionWeaponBasedOnAnimations(ref DrawData data, Player player, Dictionary<SegmentType, SegmentState> jointStates)
+    {
+        // Position weapon based on arm animations first if available
+        if (jointStates.TryGetValue(SegmentType.LeftArm, out var leftArm))
+        {
+            var rotation = leftArm.Rotation;
+            if (player.direction == -1)
+                rotation = -rotation;
+
+
+            rotation += 0.7f * player.direction;
+
+            data.rotation = rotation;
+
+            Vector2 handOffset = new Vector2(12 * player.direction, -8);
+
+            // Adjust offset based on arm rotation to maintain consistent positioning
+            handOffset = Vector2.Transform(
+                handOffset,
+                Matrix.CreateRotationZ(leftArm.Rotation * player.direction)
+            );
+
+            data.position += handOffset;
+        }
+        // If left arm isn't animated, we can use right arm as fallback
+        else if (jointStates.TryGetValue(SegmentType.RightArm, out var rightArm))
+        {
+            var rotation = rightArm.Rotation;
+            if (player.direction == -1)
+                rotation = -rotation;
+
+            rotation += 0.3f * player.direction;
+            data.rotation = rotation;
+
+            Vector2 handOffset = new Vector2(12 * player.direction, -8);
+            handOffset = Vector2.Transform(
+                handOffset,
+                Matrix.CreateRotationZ(rightArm.Rotation * player.direction)
+            );
+
+            data.position += handOffset;
+        }
+        // If neither arm is animated, use body positioning
+        else if (jointStates.TryGetValue(SegmentType.Body, out var bodyState))
+        {
+            var rotation = bodyState.Rotation;
+            if (player.direction == -1)
+                rotation = -rotation;
+
+            rotation += 0.32f * player.direction;
+            data.rotation = rotation;
+
+            data.position.X += 10 * player.direction;
+            data.position.Y -= -14 * player.gravDir;
+
+            // Apply walk cycle adjustments
+            if (player.velocity.X != 0)
+            {
+                ApplyWalkCycleFromAnimation(ref data, player, jointStates);
+            }
+        }
+        else
+        {
+            // Default weapon positioning when no animation is available
+            DefaultWeaponPositioning(ref data, player);
+        }
+    }
+
     public void ApplyWalkCycleFromAnimation(ref DrawData data, Player player, Dictionary<SegmentType, SegmentState> jointStates)
     {
         // Apply walk bobbing based on body joint if available
         if (jointStates.TryGetValue(SegmentType.Body, out var bodyState))
         {
             data.position.X += bodyState.Rotation * 5f * player.direction;
-
             data.position.Y += bodyState.Position.Y;
 
             // Slightly adjust rotation to match body movement
@@ -185,6 +259,7 @@ public partial class AnimationPlayer
             data.position.Y += legState.Position.Y * 0.5f;
         }
     }
+
     public void DrawGlowLayer(DrawData data, Player player, Item heldItem, ref PlayerDrawSet drawInfo)
     {
         if (heldItem.glowMask <= 0) return;
@@ -207,70 +282,71 @@ public partial class AnimationPlayer
         drawInfo.DrawDataCache.Add(glowData);
     }
 
-    // Keep the original methods as fallbacks
-    //
-    //public void ApplyFrontWeaponPositioning(ref DrawData data, Player player, float length, float width)
-    //{
-    //    var playerBodyFrameNum = player.bodyFrame.Y / player.bodyFrame.Height;
+    /// <summary>
+    /// Default weapon positioning used when no animation is active
+    /// </summary>
+    private void DefaultWeaponPositioning(ref DrawData data, Player player)
+    {
+        var playerBodyFrameNum = player.bodyFrame.Y / player.bodyFrame.Height;
 
-    //    // Positioning based on player animation frame
-    //    if (playerBodyFrameNum < 5) // Standing
-    //    {
-    //        // Hold weapon at angle in front
-    //        data.rotation = (float)(Math.PI * 0.32f * player.direction) * player.gravDir;
-    //        data.position.X += 10 * player.direction; // In front
-    //        data.position.Y -= -14 * player.gravDir; // Slightly up
-    //    }
-    //    else if (playerBodyFrameNum == 5) // Jumping
-    //    {
-    //        // Hold weapon more horizontally while jumping
-    //        data.rotation = (float)(Math.PI * 0.15f * player.direction) * player.gravDir;
-    //        data.position.X += 10 * player.direction;
-    //        data.position.Y -= -4 * player.gravDir;
-    //    }
-    //    else // Walking
-    //    {
-    //        // Slight back and forth motion while walking
-    //        data.rotation = (float)(Math.PI * 0.20f * player.direction) * player.gravDir;
-    //        data.position.X += 11 * player.direction;
-    //        data.position.Y -= -6 * player.gravDir;
+        // Positioning based on player animation frame
+        if (playerBodyFrameNum < 5) // Standing
+        {
+            // Hold weapon at angle in front
+            data.rotation = (float)(Math.PI * 0.32f * player.direction) * player.gravDir;
+            data.position.X += 10 * player.direction; // In front
+            data.position.Y -= -14 * player.gravDir; // Slightly up
+        }
+        else if (playerBodyFrameNum == 5) // Jumping
+        {
+            // Hold weapon more horizontally while jumping
+            data.rotation = (float)(Math.PI * 0.15f * player.direction) * player.gravDir;
+            data.position.X += 10 * player.direction;
+            data.position.Y -= -4 * player.gravDir;
+        }
+        else // Walking
+        {
+            // Slight back and forth motion while walking
+            data.rotation = (float)(Math.PI * 0.20f * player.direction) * player.gravDir;
+            data.position.X += 11 * player.direction;
+            data.position.Y -= -6 * player.gravDir;
 
-    //        // Apply walk cycle adjustments
-    //        ApplyWalkCyclePositioning(ref data, player);
-    //    }
-    //}
+            // Apply walk cycle adjustments
+            DefaultWalkCyclePositioning(ref data, player);
+        }
+    }
 
-    //public void ApplyWalkCyclePositioning(ref DrawData data, Player player)
-    //{
-    //    // Original implementation remaining the same
-    //    var playerBodyFrameNum = player.bodyFrame.Y / player.bodyFrame.Height;
+    /// <summary>
+    /// Default walk cycle positioning used when no animation is active
+    /// </summary>
+    private void DefaultWalkCyclePositioning(ref DrawData data, Player player)
+    {
+        var playerBodyFrameNum = player.bodyFrame.Y / player.bodyFrame.Height;
 
-    //    // Adjust vertical position during certain walk frames
-    //    if (playerBodyFrameNum >= 7 && playerBodyFrameNum <= 9 ||
-    //        playerBodyFrameNum >= 14 && playerBodyFrameNum <= 16)
-    //    {
-    //        data.position.Y -= 2 * player.gravDir;
-    //    }
+        // Adjust vertical position during certain walk frames
+        if ((playerBodyFrameNum >= 7 && playerBodyFrameNum <= 9) ||
+            (playerBodyFrameNum >= 14 && playerBodyFrameNum <= 16))
+        {
+            data.position.Y -= 2 * player.gravDir;
+        }
 
-    //    // Add horizontal bobbing during walk
-    //    switch (playerBodyFrameNum)
-    //    {
-    //        case 7:
-    //        case 8:
-    //        case 9:
-    //        case 10:
-    //            data.position.X -= player.direction * 1;
-    //            data.rotation += 0.05f * player.direction * player.gravDir;
-    //            break;
-    //        case 14:
-    //        case 15:
-    //        case 16:
-    //        case 17:
-    //            data.position.X += player.direction * 1;
-    //            data.rotation -= 0.05f * player.direction * player.gravDir;
-    //            break;
-    //    }
-    //}
-
-
+        // Add horizontal bobbing during walk
+        switch (playerBodyFrameNum)
+        {
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+                data.position.X -= player.direction * 1;
+                data.rotation += 0.05f * player.direction * player.gravDir;
+                break;
+            case 14:
+            case 15:
+            case 16:
+            case 17:
+                data.position.X += player.direction * 1;
+                data.rotation -= 0.05f * player.direction * player.gravDir;
+                break;
+        }
+    }
 }

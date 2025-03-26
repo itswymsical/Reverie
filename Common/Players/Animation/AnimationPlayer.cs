@@ -18,25 +18,39 @@ public enum AnimationState
     Swing
 }
 
+public enum AnimationLayer
+{
+    Base,
+    LowerBody,
+    UpperBody,
+    Arms,
+    Head,
+    Override
+}
+
 public partial class AnimationPlayer : ModPlayer
 {
-    public ProceduralAnimation currentAnimation = null;
-    public float animationTime = 0f;
+    // Animation state tracking
     private readonly Dictionary<SegmentType, SegmentState> defaultJointStates = [];
     private float lastGameUpdateCount = 0f;
     public bool needsReset = false;
 
-    private readonly Dictionary<string, ProceduralAnimation> animations = [];
+    // Layer-based animation system
+    private readonly Dictionary<AnimationLayer, ActiveAnimation> activeAnimations = [];
+    private readonly Dictionary<string, ProceduralAnimation> registeredAnimations = [];
+
+    // Blend factors for transitioning between animations
+    private const float DEFAULT_BLEND_DURATION = 0.25f; // 0.25 seconds default blend time
 
     public override void Initialize()
     {
         SaveDefaultPositions();
-
         RegisterAnimations();
 
-        if (animations.TryGetValue("Idle", out var idleAnim))
+        // Initialize with idle animation on base layer
+        if (registeredAnimations.TryGetValue("Idle", out var idleAnim))
         {
-            PlayAnimation(idleAnim);
+            PlayAnimation(AnimationLayer.Base, idleAnim);
         }
 
         lastGameUpdateCount = Main.GameUpdateCount;
@@ -79,96 +93,174 @@ public partial class AnimationPlayer : ModPlayer
 
     private void RegisterAnimations()
     {
-        animations["Idle"] = IdleAnimation();
-        animations["UseIdle"] = IdleUseAnimation();
-        animations["Walking"] = WalkingAnimation();
-        animations["UseWalking"] = WalkingUseAnimation();
+        // Register base animations
+        registeredAnimations["Idle"] = IdleAnimation();
+        registeredAnimations["Walking"] = WalkingAnimation();
+
+        // Register arm animations
+        registeredAnimations["ArmSwing"] = ArmSwingAnimation();
+        registeredAnimations["DrinkPotion"] = DrinkPotionAnimation();
+
+        // Register leg animations
+        registeredAnimations["Jump"] = JumpAnimation();
+        registeredAnimations["Dash"] = DashAnimation();
+
+        // More animations can be registered here
     }
 
     public void RegisterAnimation(ProceduralAnimation animation)
     {
         if (!string.IsNullOrEmpty(animation.Id))
         {
-            animations[animation.Id] = animation;
+            registeredAnimations[animation.Id] = animation;
         }
     }
 
-    public void PlayAnimation(string animationId)
+    public void PlayAnimation(AnimationLayer layer, string animationId, float blendDuration = DEFAULT_BLEND_DURATION)
     {
-        if (animations.TryGetValue(animationId, out var animation))
+        if (registeredAnimations.TryGetValue(animationId, out var animation))
         {
-            PlayAnimation(animation);
+            PlayAnimation(layer, animation, blendDuration);
         }
     }
 
-    public void PlayAnimation(ProceduralAnimation animation)
+    public void PlayAnimation(AnimationLayer layer, ProceduralAnimation animation, float blendDuration = DEFAULT_BLEND_DURATION)
     {
         if (animation == null)
             return;
 
-        // Only restart if it's a different animation
-        if (currentAnimation != animation)
+        // Check if we already have an animation on this layer
+        if (activeAnimations.TryGetValue(layer, out var currentAnim))
         {
-            currentAnimation = animation;
-            animationTime = 0f;
-            needsReset = true;
+            // If it's the same animation, don't restart
+            if (currentAnim.Animation == animation)
+                return;
+
+            // Start blending from current animation
+            currentAnim.BlendOutDuration = blendDuration;
+            currentAnim.IsBlendingOut = true;
         }
+
+        // Create new active animation instance
+        var newActiveAnim = new ActiveAnimation
+        {
+            Animation = animation,
+            Time = 0f,
+            Layer = layer,
+            BlendInDuration = blendDuration,
+            BlendFactor = 0f,
+        };
+
+        activeAnimations[layer] = newActiveAnim;
+        needsReset = true;
     }
 
     public override void PostUpdate()
     {
         if (!Main.gamePaused)
         {
-            UpdateAnimationState();
-
-            if (currentAnimation != null)
-            {
-                animationTime += 1f / 60f;
-
-                if (animationTime > currentAnimation.Duration)
-                {
-                    if (currentAnimation.Looping)
-                    {
-                        animationTime %= currentAnimation.Duration;
-                    }
-                    else
-                    {
-                        animationTime = currentAnimation.Duration;
-
-                        // Auto-transition to idle when non-looping animation ends
-                        if (animations.TryGetValue("Idle", out var idleAnim))
-                        {
-                            currentAnimation = idleAnim;
-                            animationTime = 0f;
-                        }
-                    }
-                }
-            }
-
+            UpdatePlayerState();
+            UpdateAnimations();
             lastGameUpdateCount = Main.GameUpdateCount;
         }
     }
 
-    private void UpdateAnimationState()
+    private void UpdatePlayerState()
     {
-        if (Player.IsMoving() && !Player.IsUsingItem() && !Player.IsJumping())
+        // Detect player actions and play appropriate animations
+
+        // Override layer takes priority
+        if (Player.ItemAnimationActive)
         {
-            PlayAnimation("Walking");
+            // Item usage (attacks, using tools, etc)
+            if (Player.HeldItem.useStyle == ItemUseStyleID.Swing)
+            {
+                PlayAnimation(AnimationLayer.Arms, "ArmSwing");
+            }
+            else if (Player.HeldItem.useStyle == ItemUseStyleID.DrinkLong || Player.HeldItem.useStyle == ItemUseStyleID.DrinkLiquid)
+            {
+                PlayAnimation(AnimationLayer.Arms, "DrinkPotion");
+            }
         }
-        else if (!currentAnimation?.Looping ?? true)
+
+        // Handle movement states
+        if (Player.IsJumping())
         {
+            PlayAnimation(AnimationLayer.Base, "Jump");
         }
-        else if (Player.afkCounter > 0)
+        else if (Player.dashDelay > 0)
         {
-            PlayAnimation("Idle");
+            PlayAnimation(AnimationLayer.UpperBody, "Dash");
         }
-        else if (Player.IsUsingItem())
+        else if (Player.IsMoving())
         {
-            PlayAnimation("UseIdle");
+            // Only change base animation if no other animations are active
+            if (!activeAnimations.ContainsKey(AnimationLayer.Override))
+            {
+                PlayAnimation(AnimationLayer.Base, "Walking");
+            }
         }
-        else if (Player.IsUsingItem() && Player.IsMoving())
+        else if (!activeAnimations.ContainsKey(AnimationLayer.Override))
         {
-            PlayAnimation("UseWalk");
+            // Return to idle if we're not doing anything else
+            PlayAnimation(AnimationLayer.Base, "Idle");
+        }
+    }
+
+    private void UpdateAnimations()
+    {
+        float deltaTime = 1f / 60f; // Assuming 60fps
+        var finishedAnimations = new List<AnimationLayer>();
+
+        foreach (var pair in activeAnimations)
+        {
+            var layer = pair.Key;
+            var activeAnim = pair.Value;
+
+            // Update time
+            activeAnim.Time += deltaTime;
+
+            // Handle blending
+            if (activeAnim.IsBlendingIn)
+            {
+                activeAnim.BlendFactor = MathHelper.Clamp(activeAnim.Time / activeAnim.BlendInDuration, 0f, 1f);
+                if (activeAnim.BlendFactor >= 1f)
+                {
+                    activeAnim.IsBlendingIn = false;
+                }
+            }
+            else if (activeAnim.IsBlendingOut)
+            {
+                activeAnim.BlendFactor = MathHelper.Clamp(1f - (activeAnim.Time / activeAnim.BlendOutDuration), 0f, 1f);
+                if (activeAnim.BlendFactor <= 0f)
+                {
+                    finishedAnimations.Add(layer);
+                }
+            }
+
+            // Check for animation completion
+            if (!activeAnim.IsBlendingOut && !activeAnim.Animation.Looping &&
+                activeAnim.Time >= activeAnim.Animation.Duration)
+            {
+                // Non-looping animation has finished
+                if (layer == AnimationLayer.Base)
+                {
+                    // Auto-transition base layer back to idle
+                    PlayAnimation(AnimationLayer.Base, "Idle");
+                }
+                else
+                {
+                    // Start blending out other layers
+                    activeAnim.IsBlendingOut = true;
+                    activeAnim.Time = 0f; // Reset time for blend out
+                }
+            }
+        }
+
+        // Remove finished animations
+        foreach (var layer in finishedAnimations)
+        {
+            activeAnimations.Remove(layer);
         }
     }
 
@@ -183,9 +275,9 @@ public partial class AnimationPlayer : ModPlayer
             needsReset = false;
         }
 
-        if (currentAnimation != null)
+        if (activeAnimations.Count > 0)
         {
-            ApplyAnimationState(ref drawInfo);
+            ApplyAnimationStates(ref drawInfo);
         }
     }
 
@@ -212,16 +304,86 @@ public partial class AnimationPlayer : ModPlayer
         drawInfo.drawPlayer.fullRotation = 0f;
     }
 
-    private void ApplyAnimationState(ref PlayerDrawSet drawInfo)
+    private void ApplyAnimationStates(ref PlayerDrawSet drawInfo)
     {
-        var currentState = currentAnimation.GetStateAtTime(animationTime);
+        // Define which layers affect which joints
+        var layerJointMap = new Dictionary<AnimationLayer, List<SegmentType>>
+        {
+            [AnimationLayer.Base] = new List<SegmentType>
+            {
+                SegmentType.Head, SegmentType.Body, SegmentType.Legs,
+                SegmentType.LeftArm, SegmentType.RightArm
+            },
+            [AnimationLayer.LowerBody] = new List<SegmentType> { SegmentType.Legs },
+            [AnimationLayer.UpperBody] = new List<SegmentType> { SegmentType.Body },
+            [AnimationLayer.Arms] = new List<SegmentType> { SegmentType.LeftArm, SegmentType.RightArm },
+            [AnimationLayer.Head] = new List<SegmentType> { SegmentType.Head },
+            [AnimationLayer.Override] = new List<SegmentType>
+            {
+                SegmentType.Head, SegmentType.Body, SegmentType.Legs,
+                SegmentType.LeftArm, SegmentType.RightArm
+            }
+        };
 
-        // Apply defined joints from the animation
-        foreach (var pair in currentState)
+        // First, gather all animation states by layer priority
+        var layerOrder = new List<AnimationLayer>
+        {
+            AnimationLayer.Base,
+            AnimationLayer.LowerBody,
+            AnimationLayer.UpperBody,
+            AnimationLayer.Head,
+            AnimationLayer.Arms,
+            AnimationLayer.Override
+        };
+
+        // Final blended states for each joint
+        var finalJointStates = new Dictionary<SegmentType, SegmentState>();
+
+        // Process each layer in order of priority
+        foreach (var layer in layerOrder)
+        {
+            if (!activeAnimations.TryGetValue(layer, out var activeAnim))
+                continue;
+
+            float time = activeAnim.Time;
+            if (!activeAnim.Animation.Looping && time > activeAnim.Animation.Duration)
+            {
+                time = activeAnim.Animation.Duration;
+            }
+            else if (activeAnim.Animation.Looping)
+            {
+                time %= activeAnim.Animation.Duration;
+            }
+
+            var stateAtTime = activeAnim.Animation.GetStateAtTime(time);
+
+            // Only process joints that this layer affects
+            if (layerJointMap.TryGetValue(layer, out var affectedJoints))
+            {
+                foreach (var joint in affectedJoints)
+                {
+                    if (stateAtTime.TryGetValue(joint, out var state))
+                    {
+                        if (finalJointStates.TryGetValue(joint, out var existingState) && activeAnim.BlendFactor < 1f)
+                        {
+                            // Blend with existing state if we're not at full weight
+                            finalJointStates[joint] = SegmentState.Lerp(existingState, state, activeAnim.BlendFactor);
+                        }
+                        else
+                        {
+                            // Either first layer to affect this joint or full weight
+                            finalJointStates[joint] = state;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Apply final joint states
+        foreach (var pair in finalJointStates)
         {
             ApplySegmentState(pair.Key, pair.Value, ref drawInfo);
         }
-
     }
 
     private void ApplySegmentState(SegmentType jointType, SegmentState state, ref PlayerDrawSet drawInfo)
@@ -229,6 +391,7 @@ public partial class AnimationPlayer : ModPlayer
         var rotation = state.Rotation;
         var position = state.Position;
 
+        // Handle direction
         if (drawInfo.drawPlayer.direction == -1)
         {
             rotation = -rotation;
@@ -270,269 +433,269 @@ public partial class AnimationPlayer : ModPlayer
         }
     }
 
-    private ProceduralAnimation IdleAnimation()
-    {
-        var idle = new ProceduralAnimation("Idle", "Idle", 2.0f);
-        idle.Looping = true;
+    //private ProceduralAnimation IdleAnimation()
+    //{
+    //    var idle = new ProceduralAnimation("Idle", "Idle", 2.0f);
+    //    idle.Looping = true;
 
-        var start = new AnimationFrame(0f);
-        start.Parts[SegmentType.Body] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0f
-        };
-        start.Parts[SegmentType.Head] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0f
-        };
-        start.Parts[SegmentType.LeftArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = -0.1f,
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
-        start.Parts[SegmentType.RightArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0.1f,
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
+    //    var start = new AnimationFrame(0f);
+    //    start.Parts[SegmentType.Body] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = 0f
+    //    };
+    //    start.Parts[SegmentType.Head] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = 0f
+    //    };
+    //    start.Parts[SegmentType.LeftArm] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = -0.1f,
+    //        StretchAmount = CompositeArmStretchAmount.Full
+    //    };
+    //    start.Parts[SegmentType.RightArm] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = 0.1f,
+    //        StretchAmount = CompositeArmStretchAmount.Full
+    //    };
 
-        var mid = new AnimationFrame(1.0f);
-        mid.Parts[SegmentType.Body] = new SegmentState
-        {
-            Position = new Vector2(0, -1f),
-            Rotation = 0.05f
-        };
-        mid.Parts[SegmentType.Head] = new SegmentState
-        {
-            Position = new Vector2(0, -0.5f),
-            Rotation = -0.02f
-        };
-        mid.Parts[SegmentType.LeftArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0.1f,
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
-        mid.Parts[SegmentType.RightArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = -0.1f,
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
+    //    var mid = new AnimationFrame(1.0f);
+    //    mid.Parts[SegmentType.Body] = new SegmentState
+    //    {
+    //        Position = new Vector2(0, -1f),
+    //        Rotation = 0.05f
+    //    };
+    //    mid.Parts[SegmentType.Head] = new SegmentState
+    //    {
+    //        Position = new Vector2(0, -0.5f),
+    //        Rotation = -0.02f
+    //    };
+    //    mid.Parts[SegmentType.LeftArm] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = 0.1f,
+    //        StretchAmount = CompositeArmStretchAmount.Full
+    //    };
+    //    mid.Parts[SegmentType.RightArm] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = -0.1f,
+    //        StretchAmount = CompositeArmStretchAmount.Full
+    //    };
 
-        var end = new AnimationFrame(2.0f);
-        end.Parts[SegmentType.Body] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0f
-        };
-        end.Parts[SegmentType.Head] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0f
-        };
-        end.Parts[SegmentType.LeftArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = -0.1f,
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
-        end.Parts[SegmentType.RightArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0.1f,
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
+    //    var end = new AnimationFrame(2.0f);
+    //    end.Parts[SegmentType.Body] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = 0f
+    //    };
+    //    end.Parts[SegmentType.Head] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = 0f
+    //    };
+    //    end.Parts[SegmentType.LeftArm] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = -0.1f,
+    //        StretchAmount = CompositeArmStretchAmount.Full
+    //    };
+    //    end.Parts[SegmentType.RightArm] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = 0.1f,
+    //        StretchAmount = CompositeArmStretchAmount.Full
+    //    };
 
-        idle.AddFrame(start);
-        idle.AddFrame(mid);
-        idle.AddFrame(end);
+    //    idle.AddFrame(start);
+    //    idle.AddFrame(mid);
+    //    idle.AddFrame(end);
 
-        return idle;
-    }
+    //    return idle;
+    //}
 
-    private ProceduralAnimation IdleUseAnimation()
-    {
-        var idle = new ProceduralAnimation("Idle", "Idle", 2.0f);
-        idle.Looping = true;
+    //private ProceduralAnimation IdleUseAnimation()
+    //{
+    //    var idle = new ProceduralAnimation("Idle", "Idle", 2.0f);
+    //    idle.Looping = true;
 
-        var start = new AnimationFrame(0f);
-        start.Parts[SegmentType.Body] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0f
-        };
-        start.Parts[SegmentType.Head] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0f
-        };
+    //    var start = new AnimationFrame(0f);
+    //    start.Parts[SegmentType.Body] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = 0f
+    //    };
+    //    start.Parts[SegmentType.Head] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = 0f
+    //    };
 
-        var mid = new AnimationFrame(1.0f);
-        mid.Parts[SegmentType.Body] = new SegmentState
-        {
-            Position = new Vector2(0, -1f),
-            Rotation = 0.05f
-        };
-        mid.Parts[SegmentType.Head] = new SegmentState
-        {
-            Position = new Vector2(0, -0.5f),
-            Rotation = -0.02f
-        };
+    //    var mid = new AnimationFrame(1.0f);
+    //    mid.Parts[SegmentType.Body] = new SegmentState
+    //    {
+    //        Position = new Vector2(0, -1f),
+    //        Rotation = 0.05f
+    //    };
+    //    mid.Parts[SegmentType.Head] = new SegmentState
+    //    {
+    //        Position = new Vector2(0, -0.5f),
+    //        Rotation = -0.02f
+    //    };
 
-        var end = new AnimationFrame(2.0f);
-        end.Parts[SegmentType.Body] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0f
-        };
-        end.Parts[SegmentType.Head] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0f
-        };
+    //    var end = new AnimationFrame(2.0f);
+    //    end.Parts[SegmentType.Body] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = 0f
+    //    };
+    //    end.Parts[SegmentType.Head] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = 0f
+    //    };
 
-        idle.AddFrame(start);
-        idle.AddFrame(mid);
-        idle.AddFrame(end);
+    //    idle.AddFrame(start);
+    //    idle.AddFrame(mid);
+    //    idle.AddFrame(end);
 
-        return idle;
-    }
+    //    return idle;
+    //}
 
-    private ProceduralAnimation WalkingAnimation()
-    {
-        // Create walking animation
-        var walking = new ProceduralAnimation("Walking", "Walking", 0.8f);
-        walking.Looping = true;
-        // Add frames with joint states...
-        // First frame
-        var frame1 = new AnimationFrame(0f);
-        frame1.Parts[SegmentType.Body] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = -0.05f
-        };
-        frame1.Parts[SegmentType.Legs] = new SegmentState
-        {
-            Position = new Vector2(-0.5f, 0),
-            Rotation = 0.1f
-        };
-        frame1.Parts[SegmentType.LeftArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = -0.2f,
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
-        frame1.Parts[SegmentType.RightArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0.2f,
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
-        // Mid frame
-        var frame2 = new AnimationFrame(0.4f);
-        frame2.Parts[SegmentType.Body] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0.05f
-        };
-        frame2.Parts[SegmentType.Legs] = new SegmentState
-        {
-            Position = new Vector2(0.5f, 0),
-            Rotation = -0.1f
-        };
-        frame2.Parts[SegmentType.LeftArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0.2f,
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
-        frame2.Parts[SegmentType.RightArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = -0.2f,
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
-        // End frame (same as first to loop smoothly)
-        var frame3 = new AnimationFrame(0.8f);
-        frame3.Parts[SegmentType.Body] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = -0.05f
-        };
-        frame3.Parts[SegmentType.Legs] = new SegmentState
-        {
-            Position = new Vector2(-0.5f, 0),
-            Rotation = 0.1f
-        };
-        frame3.Parts[SegmentType.LeftArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = -0.2f,
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
-        frame3.Parts[SegmentType.RightArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0.2f,
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
-        walking.AddFrame(frame1);
-        walking.AddFrame(frame2);
-        walking.AddFrame(frame3);
-        return walking;
-    }
+    //private ProceduralAnimation WalkingAnimation()
+    //{
+    //    // Create walking animation
+    //    var walking = new ProceduralAnimation("Walking", "Walking", 0.8f);
+    //    walking.Looping = true;
+    //    // Add frames with joint states...
+    //    // First frame
+    //    var frame1 = new AnimationFrame(0f);
+    //    frame1.Parts[SegmentType.Body] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = -0.05f
+    //    };
+    //    frame1.Parts[SegmentType.Legs] = new SegmentState
+    //    {
+    //        Position = new Vector2(-0.5f, 0),
+    //        Rotation = 0.1f
+    //    };
+    //    frame1.Parts[SegmentType.LeftArm] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = -0.2f,
+    //        StretchAmount = CompositeArmStretchAmount.Full
+    //    };
+    //    frame1.Parts[SegmentType.RightArm] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = 0.2f,
+    //        StretchAmount = CompositeArmStretchAmount.Full
+    //    };
+    //    // Mid frame
+    //    var frame2 = new AnimationFrame(0.4f);
+    //    frame2.Parts[SegmentType.Body] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = 0.05f
+    //    };
+    //    frame2.Parts[SegmentType.Legs] = new SegmentState
+    //    {
+    //        Position = new Vector2(0.5f, 0),
+    //        Rotation = -0.1f
+    //    };
+    //    frame2.Parts[SegmentType.LeftArm] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = 0.2f,
+    //        StretchAmount = CompositeArmStretchAmount.Full
+    //    };
+    //    frame2.Parts[SegmentType.RightArm] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = -0.2f,
+    //        StretchAmount = CompositeArmStretchAmount.Full
+    //    };
+    //    // End frame (same as first to loop smoothly)
+    //    var frame3 = new AnimationFrame(0.8f);
+    //    frame3.Parts[SegmentType.Body] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = -0.05f
+    //    };
+    //    frame3.Parts[SegmentType.Legs] = new SegmentState
+    //    {
+    //        Position = new Vector2(-0.5f, 0),
+    //        Rotation = 0.1f
+    //    };
+    //    frame3.Parts[SegmentType.LeftArm] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = -0.2f,
+    //        StretchAmount = CompositeArmStretchAmount.Full
+    //    };
+    //    frame3.Parts[SegmentType.RightArm] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = 0.2f,
+    //        StretchAmount = CompositeArmStretchAmount.Full
+    //    };
+    //    walking.AddFrame(frame1);
+    //    walking.AddFrame(frame2);
+    //    walking.AddFrame(frame3);
+    //    return walking;
+    //}
 
-    private ProceduralAnimation WalkingUseAnimation()
-    {
-        // Create walking animation
-        var walking = new ProceduralAnimation("Walking", "Walking", 0.8f);
-        walking.Looping = true;
-        // Add frames with joint states...
-        // First frame
-        var frame1 = new AnimationFrame(0f);
-        frame1.Parts[SegmentType.Body] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = -0.05f
-        };
-        frame1.Parts[SegmentType.Legs] = new SegmentState
-        {
-            Position = new Vector2(-0.5f, 0),
-            Rotation = 0.1f
-        };
-        // Mid frame
-        var frame2 = new AnimationFrame(0.4f);
-        frame2.Parts[SegmentType.Body] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0.05f
-        };
-        frame2.Parts[SegmentType.Legs] = new SegmentState
-        {
-            Position = new Vector2(0.5f, 0),
-            Rotation = -0.1f
-        };
+    //private ProceduralAnimation WalkingUseAnimation()
+    //{
+    //    // Create walking animation
+    //    var walking = new ProceduralAnimation("Walking", "Walking", 0.8f);
+    //    walking.Looping = true;
+    //    // Add frames with joint states...
+    //    // First frame
+    //    var frame1 = new AnimationFrame(0f);
+    //    frame1.Parts[SegmentType.Body] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = -0.05f
+    //    };
+    //    frame1.Parts[SegmentType.Legs] = new SegmentState
+    //    {
+    //        Position = new Vector2(-0.5f, 0),
+    //        Rotation = 0.1f
+    //    };
+    //    // Mid frame
+    //    var frame2 = new AnimationFrame(0.4f);
+    //    frame2.Parts[SegmentType.Body] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = 0.05f
+    //    };
+    //    frame2.Parts[SegmentType.Legs] = new SegmentState
+    //    {
+    //        Position = new Vector2(0.5f, 0),
+    //        Rotation = -0.1f
+    //    };
 
-        // End frame (same as first to loop smoothly)
-        var frame3 = new AnimationFrame(0.8f);
-        frame3.Parts[SegmentType.Body] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = -0.05f
-        };
-        frame3.Parts[SegmentType.Legs] = new SegmentState
-        {
-            Position = new Vector2(-0.5f, 0),
-            Rotation = 0.1f
-        };
+    //    // End frame (same as first to loop smoothly)
+    //    var frame3 = new AnimationFrame(0.8f);
+    //    frame3.Parts[SegmentType.Body] = new SegmentState
+    //    {
+    //        Position = Vector2.Zero,
+    //        Rotation = -0.05f
+    //    };
+    //    frame3.Parts[SegmentType.Legs] = new SegmentState
+    //    {
+    //        Position = new Vector2(-0.5f, 0),
+    //        Rotation = 0.1f
+    //    };
 
-        walking.AddFrame(frame1);
-        walking.AddFrame(frame2);
-        walking.AddFrame(frame3);
-        return walking;
-    }
+    //    walking.AddFrame(frame1);
+    //    walking.AddFrame(frame2);
+    //    walking.AddFrame(frame3);
+    //    return walking;
+    //}
 }
