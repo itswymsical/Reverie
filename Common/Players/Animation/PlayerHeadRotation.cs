@@ -6,7 +6,7 @@
 using Reverie.Core.Dialogue;
 using Terraria.DataStructures;
 
-namespace Reverie.Common.Players;
+namespace Reverie.Common.Players.Animation;
 
 /// <summary>
 /// Adapted from Terraria Overhaul, by Mirsario. Rotates the <see cref="Player"/> head by (<see cref="Main.MouseWorld"/> - <see cref="Player.Center"/>).
@@ -45,8 +45,8 @@ public class PlayerHeadRotation : ModPlayer
         }
         else
         {
-            Vector2 lookPosition = Main.MouseWorld;
-            Vector2 offset = lookPosition - Player.Center;
+            var lookPosition = Main.MouseWorld;
+            var offset = lookPosition - Player.Center;
 
             if (Math.Sign(offset.X) == Player.direction)
             {
@@ -64,10 +64,10 @@ public class PlayerHeadRotation : ModPlayer
                     Player.direction = 1;
                 else
                     Player.direction = -1;
-            }      
+            }
         }
-       
-        float lerpSpeed = 0.15f;
+
+        var lerpSpeed = 0.15f;
         headRotation = MathHelper.Lerp(headRotation, targetHeadRotation, lerpSpeed);
     }
 

@@ -1,7 +1,5 @@
 ﻿using Reverie.Core.Missions;
 using System.Collections.Generic;
-using Terraria;
-using Terraria.DataStructures;
 
 namespace Reverie.Content.Missions;
 
