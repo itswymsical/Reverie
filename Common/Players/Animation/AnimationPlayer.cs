@@ -1,12 +1,12 @@
-﻿using Reverie.Common.Animation;
-using Reverie.Common.Systems;
-using Reverie.Utilities;
+﻿using Reverie.Core.Animation;
 using Reverie.Utilities.Extensions;
+
 using System.Collections.Generic;
+
 using Terraria.DataStructures;
 using static Terraria.Player;
 
-namespace Reverie.Common.Players;
+namespace Reverie.Common.Players.Animation;
 
 public enum AnimationState
 {
@@ -18,15 +18,15 @@ public enum AnimationState
     Swing
 }
 
-public class AnimationPlayer : ModPlayer
+public partial class AnimationPlayer : ModPlayer
 {
-    private ReverieAnimation currentAnimation = null;
-    private float animationTime = 0f;
-    private Dictionary<JointType, JointState> defaultJointStates = new Dictionary<JointType, JointState>();
+    public ProceduralAnimation currentAnimation = null;
+    public float animationTime = 0f;
+    private readonly Dictionary<SegmentType, SegmentState> defaultJointStates = [];
     private float lastGameUpdateCount = 0f;
-    private bool needsReset = false;
+    public bool needsReset = false;
 
-    private Dictionary<string, ReverieAnimation> animations = new Dictionary<string, ReverieAnimation>();
+    private readonly Dictionary<string, ProceduralAnimation> animations = [];
 
     public override void Initialize()
     {
@@ -44,32 +44,32 @@ public class AnimationPlayer : ModPlayer
 
     private void SaveDefaultPositions()
     {
-        defaultJointStates[JointType.Head] = new JointState
+        defaultJointStates[SegmentType.Head] = new SegmentState
         {
             Position = Player.headPosition,
             Rotation = Player.headRotation
         };
 
-        defaultJointStates[JointType.Body] = new JointState
+        defaultJointStates[SegmentType.Body] = new SegmentState
         {
             Position = Player.bodyPosition,
             Rotation = Player.bodyRotation
         };
 
-        defaultJointStates[JointType.Legs] = new JointState
+        defaultJointStates[SegmentType.Legs] = new SegmentState
         {
             Position = Player.legPosition,
             Rotation = Player.legRotation
         };
 
-        defaultJointStates[JointType.LeftArm] = new JointState
+        defaultJointStates[SegmentType.LeftArm] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0f,
             StretchAmount = CompositeArmStretchAmount.Full
         };
 
-        defaultJointStates[JointType.RightArm] = new JointState
+        defaultJointStates[SegmentType.RightArm] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0f,
@@ -79,13 +79,13 @@ public class AnimationPlayer : ModPlayer
 
     private void RegisterAnimations()
     {
-        animations["Idle"] = CreateIdleAnimation();
-        animations["UseIdle"] = CreateIdleUseAnimation();
-        animations["Walking"] = CreateWalkingAnimation();
-        animations["UseWalking"] = CreateWalkingUseAnimation();
+        animations["Idle"] = IdleAnimation();
+        animations["UseIdle"] = IdleUseAnimation();
+        animations["Walking"] = WalkingAnimation();
+        animations["UseWalking"] = WalkingUseAnimation();
     }
 
-    public void RegisterAnimation(ReverieAnimation animation)
+    public void RegisterAnimation(ProceduralAnimation animation)
     {
         if (!string.IsNullOrEmpty(animation.Id))
         {
@@ -101,7 +101,7 @@ public class AnimationPlayer : ModPlayer
         }
     }
 
-    public void PlayAnimation(ReverieAnimation animation)
+    public void PlayAnimation(ProceduralAnimation animation)
     {
         if (animation == null)
             return;
@@ -177,24 +177,6 @@ public class AnimationPlayer : ModPlayer
         if (Main.gameMenu || Player.sleeping.isSleeping)
             return;
 
-        if (!Player.IsUsingItem())
-        {
-            if (Player.HeldItem.DealsDamage())
-            {
-                PlayerExtensions.DrawItemBehindPlayer(Player, ref drawInfo);
-            }
-        }
-
-
-        if (Main.gamePaused)
-        {
-            if (currentAnimation != null)
-            {
-                ApplyAnimationState(ref drawInfo);
-            }
-            return;
-        }
-
         if (needsReset)
         {
             ResetPositions(ref drawInfo);
@@ -203,25 +185,25 @@ public class AnimationPlayer : ModPlayer
 
         if (currentAnimation != null)
         {
-
             ApplyAnimationState(ref drawInfo);
         }
     }
+
     private void ResetPositions(ref PlayerDrawSet drawInfo)
     {
-        if (defaultJointStates.TryGetValue(JointType.Head, out var headState))
+        if (defaultJointStates.TryGetValue(SegmentType.Head, out var headState))
         {
             drawInfo.drawPlayer.headPosition = headState.Position;
             drawInfo.drawPlayer.headRotation = headState.Rotation;
         }
 
-        if (defaultJointStates.TryGetValue(JointType.Body, out var bodyState))
+        if (defaultJointStates.TryGetValue(SegmentType.Body, out var bodyState))
         {
             drawInfo.drawPlayer.bodyPosition = bodyState.Position;
             drawInfo.drawPlayer.bodyRotation = bodyState.Rotation;
         }
 
-        if (defaultJointStates.TryGetValue(JointType.Legs, out var legsState))
+        if (defaultJointStates.TryGetValue(SegmentType.Legs, out var legsState))
         {
             drawInfo.drawPlayer.legPosition = legsState.Position;
             drawInfo.drawPlayer.legRotation = legsState.Rotation;
@@ -232,20 +214,20 @@ public class AnimationPlayer : ModPlayer
 
     private void ApplyAnimationState(ref PlayerDrawSet drawInfo)
     {
-        Dictionary<JointType, JointState> currentState = currentAnimation.GetStateAtTime(animationTime);
+        var currentState = currentAnimation.GetStateAtTime(animationTime);
 
         // Apply defined joints from the animation
         foreach (var pair in currentState)
         {
-            ApplyJointState(pair.Key, pair.Value, ref drawInfo);
+            ApplySegmentState(pair.Key, pair.Value, ref drawInfo);
         }
 
     }
 
-    private void ApplyJointState(JointType jointType, JointState state, ref PlayerDrawSet drawInfo)
+    private void ApplySegmentState(SegmentType jointType, SegmentState state, ref PlayerDrawSet drawInfo)
     {
-        float rotation = state.Rotation;
-        Vector2 position = state.Position;
+        var rotation = state.Rotation;
+        var position = state.Position;
 
         if (drawInfo.drawPlayer.direction == -1)
         {
@@ -255,22 +237,22 @@ public class AnimationPlayer : ModPlayer
 
         switch (jointType)
         {
-            case JointType.Head:
+            case SegmentType.Head:
                 drawInfo.drawPlayer.headRotation = rotation;
                 drawInfo.drawPlayer.headPosition = position;
                 break;
 
-            case JointType.Body:
+            case SegmentType.Body:
                 drawInfo.drawPlayer.bodyRotation = rotation;
                 drawInfo.drawPlayer.bodyPosition = position;
                 break;
 
-            case JointType.Legs:
+            case SegmentType.Legs:
                 drawInfo.drawPlayer.legRotation = rotation;
                 drawInfo.drawPlayer.legPosition = position;
                 break;
 
-            case JointType.LeftArm:
+            case SegmentType.LeftArm:
                 drawInfo.drawPlayer.SetCompositeArmFront(
                     true,
                     state.StretchAmount,
@@ -278,7 +260,7 @@ public class AnimationPlayer : ModPlayer
                 );
                 break;
 
-            case JointType.RightArm:
+            case SegmentType.RightArm:
                 drawInfo.drawPlayer.SetCompositeArmBack(
                     true,
                     state.StretchAmount,
@@ -288,77 +270,77 @@ public class AnimationPlayer : ModPlayer
         }
     }
 
-    private ReverieAnimation CreateIdleAnimation()
+    private ProceduralAnimation IdleAnimation()
     {
-        ReverieAnimation idle = new ReverieAnimation("Idle", "Idle", 2.0f);
+        var idle = new ProceduralAnimation("Idle", "Idle", 2.0f);
         idle.Looping = true;
 
-        AnimationFrame start = new AnimationFrame(0f);
-        start.Joints[JointType.Body] = new JointState
+        var start = new AnimationFrame(0f);
+        start.Parts[SegmentType.Body] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0f
         };
-        start.Joints[JointType.Head] = new JointState
+        start.Parts[SegmentType.Head] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0f
         };
-        start.Joints[JointType.LeftArm] = new JointState
+        start.Parts[SegmentType.LeftArm] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = -0.1f,
             StretchAmount = CompositeArmStretchAmount.Full
         };
-        start.Joints[JointType.RightArm] = new JointState
+        start.Parts[SegmentType.RightArm] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0.1f,
             StretchAmount = CompositeArmStretchAmount.Full
         };
 
-        AnimationFrame mid = new AnimationFrame(1.0f);
-        mid.Joints[JointType.Body] = new JointState
+        var mid = new AnimationFrame(1.0f);
+        mid.Parts[SegmentType.Body] = new SegmentState
         {
             Position = new Vector2(0, -1f),
             Rotation = 0.05f
         };
-        mid.Joints[JointType.Head] = new JointState
+        mid.Parts[SegmentType.Head] = new SegmentState
         {
             Position = new Vector2(0, -0.5f),
             Rotation = -0.02f
         };
-        mid.Joints[JointType.LeftArm] = new JointState
+        mid.Parts[SegmentType.LeftArm] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0.1f,
             StretchAmount = CompositeArmStretchAmount.Full
         };
-        mid.Joints[JointType.RightArm] = new JointState
+        mid.Parts[SegmentType.RightArm] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = -0.1f,
             StretchAmount = CompositeArmStretchAmount.Full
         };
 
-        AnimationFrame end = new AnimationFrame(2.0f);
-        end.Joints[JointType.Body] = new JointState
+        var end = new AnimationFrame(2.0f);
+        end.Parts[SegmentType.Body] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0f
         };
-        end.Joints[JointType.Head] = new JointState
+        end.Parts[SegmentType.Head] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0f
         };
-        end.Joints[JointType.LeftArm] = new JointState
+        end.Parts[SegmentType.LeftArm] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = -0.1f,
             StretchAmount = CompositeArmStretchAmount.Full
         };
-        end.Joints[JointType.RightArm] = new JointState
+        end.Parts[SegmentType.RightArm] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0.1f,
@@ -372,42 +354,42 @@ public class AnimationPlayer : ModPlayer
         return idle;
     }
 
-    private ReverieAnimation CreateIdleUseAnimation()
+    private ProceduralAnimation IdleUseAnimation()
     {
-        ReverieAnimation idle = new ReverieAnimation("Idle", "Idle", 2.0f);
+        var idle = new ProceduralAnimation("Idle", "Idle", 2.0f);
         idle.Looping = true;
 
-        AnimationFrame start = new AnimationFrame(0f);
-        start.Joints[JointType.Body] = new JointState
+        var start = new AnimationFrame(0f);
+        start.Parts[SegmentType.Body] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0f
         };
-        start.Joints[JointType.Head] = new JointState
+        start.Parts[SegmentType.Head] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0f
         };
 
-        AnimationFrame mid = new AnimationFrame(1.0f);
-        mid.Joints[JointType.Body] = new JointState
+        var mid = new AnimationFrame(1.0f);
+        mid.Parts[SegmentType.Body] = new SegmentState
         {
             Position = new Vector2(0, -1f),
             Rotation = 0.05f
         };
-        mid.Joints[JointType.Head] = new JointState
+        mid.Parts[SegmentType.Head] = new SegmentState
         {
             Position = new Vector2(0, -0.5f),
             Rotation = -0.02f
         };
 
-        AnimationFrame end = new AnimationFrame(2.0f);
-        end.Joints[JointType.Body] = new JointState
+        var end = new AnimationFrame(2.0f);
+        end.Parts[SegmentType.Body] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0f
         };
-        end.Joints[JointType.Head] = new JointState
+        end.Parts[SegmentType.Head] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0f
@@ -420,79 +402,79 @@ public class AnimationPlayer : ModPlayer
         return idle;
     }
 
-    private ReverieAnimation CreateWalkingAnimation()
+    private ProceduralAnimation WalkingAnimation()
     {
         // Create walking animation
-        ReverieAnimation walking = new ReverieAnimation("Walking", "Walking", 0.8f);
+        var walking = new ProceduralAnimation("Walking", "Walking", 0.8f);
         walking.Looping = true;
         // Add frames with joint states...
         // First frame
-        AnimationFrame frame1 = new AnimationFrame(0f);
-        frame1.Joints[JointType.Body] = new JointState
+        var frame1 = new AnimationFrame(0f);
+        frame1.Parts[SegmentType.Body] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = -0.05f
         };
-        frame1.Joints[JointType.Legs] = new JointState
+        frame1.Parts[SegmentType.Legs] = new SegmentState
         {
             Position = new Vector2(-0.5f, 0),
             Rotation = 0.1f
         };
-        frame1.Joints[JointType.LeftArm] = new JointState
+        frame1.Parts[SegmentType.LeftArm] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = -0.2f,
             StretchAmount = CompositeArmStretchAmount.Full
         };
-        frame1.Joints[JointType.RightArm] = new JointState
+        frame1.Parts[SegmentType.RightArm] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0.2f,
             StretchAmount = CompositeArmStretchAmount.Full
         };
         // Mid frame
-        AnimationFrame frame2 = new AnimationFrame(0.4f);
-        frame2.Joints[JointType.Body] = new JointState
+        var frame2 = new AnimationFrame(0.4f);
+        frame2.Parts[SegmentType.Body] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0.05f
         };
-        frame2.Joints[JointType.Legs] = new JointState
+        frame2.Parts[SegmentType.Legs] = new SegmentState
         {
             Position = new Vector2(0.5f, 0),
             Rotation = -0.1f
         };
-        frame2.Joints[JointType.LeftArm] = new JointState
+        frame2.Parts[SegmentType.LeftArm] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0.2f,
             StretchAmount = CompositeArmStretchAmount.Full
         };
-        frame2.Joints[JointType.RightArm] = new JointState
+        frame2.Parts[SegmentType.RightArm] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = -0.2f,
             StretchAmount = CompositeArmStretchAmount.Full
         };
         // End frame (same as first to loop smoothly)
-        AnimationFrame frame3 = new AnimationFrame(0.8f);
-        frame3.Joints[JointType.Body] = new JointState
+        var frame3 = new AnimationFrame(0.8f);
+        frame3.Parts[SegmentType.Body] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = -0.05f
         };
-        frame3.Joints[JointType.Legs] = new JointState
+        frame3.Parts[SegmentType.Legs] = new SegmentState
         {
             Position = new Vector2(-0.5f, 0),
             Rotation = 0.1f
         };
-        frame3.Joints[JointType.LeftArm] = new JointState
+        frame3.Parts[SegmentType.LeftArm] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = -0.2f,
             StretchAmount = CompositeArmStretchAmount.Full
         };
-        frame3.Joints[JointType.RightArm] = new JointState
+        frame3.Parts[SegmentType.RightArm] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0.2f,
@@ -504,45 +486,45 @@ public class AnimationPlayer : ModPlayer
         return walking;
     }
 
-    private ReverieAnimation CreateWalkingUseAnimation()
+    private ProceduralAnimation WalkingUseAnimation()
     {
         // Create walking animation
-        ReverieAnimation walking = new ReverieAnimation("Walking", "Walking", 0.8f);
+        var walking = new ProceduralAnimation("Walking", "Walking", 0.8f);
         walking.Looping = true;
         // Add frames with joint states...
         // First frame
-        AnimationFrame frame1 = new AnimationFrame(0f);
-        frame1.Joints[JointType.Body] = new JointState
+        var frame1 = new AnimationFrame(0f);
+        frame1.Parts[SegmentType.Body] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = -0.05f
         };
-        frame1.Joints[JointType.Legs] = new JointState
+        frame1.Parts[SegmentType.Legs] = new SegmentState
         {
             Position = new Vector2(-0.5f, 0),
             Rotation = 0.1f
         };
         // Mid frame
-        AnimationFrame frame2 = new AnimationFrame(0.4f);
-        frame2.Joints[JointType.Body] = new JointState
+        var frame2 = new AnimationFrame(0.4f);
+        frame2.Parts[SegmentType.Body] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = 0.05f
         };
-        frame2.Joints[JointType.Legs] = new JointState
+        frame2.Parts[SegmentType.Legs] = new SegmentState
         {
             Position = new Vector2(0.5f, 0),
             Rotation = -0.1f
         };
 
         // End frame (same as first to loop smoothly)
-        AnimationFrame frame3 = new AnimationFrame(0.8f);
-        frame3.Joints[JointType.Body] = new JointState
+        var frame3 = new AnimationFrame(0.8f);
+        frame3.Parts[SegmentType.Body] = new SegmentState
         {
             Position = Vector2.Zero,
             Rotation = -0.05f
         };
-        frame3.Joints[JointType.Legs] = new JointState
+        frame3.Parts[SegmentType.Legs] = new SegmentState
         {
             Position = new Vector2(-0.5f, 0),
             Rotation = 0.1f
