@@ -1,11 +1,8 @@
-﻿using Microsoft.Xna.Framework;
-using Terraria;
-using Terraria.DataStructures;
-using static Terraria.Player;
+﻿using static Terraria.Player;
 
-namespace Reverie.Common.Animation;
+namespace Reverie.Core.Animation;
 
-public enum JointType
+public enum SegmentType
 {
     Head,
     Body,
@@ -14,25 +11,25 @@ public enum JointType
     RightArm
 }
 
-public class JointState
+public class SegmentState
 {
     public Vector2 Position { get; set; } = Vector2.Zero;
     public float Rotation { get; set; } = 0f;
     public CompositeArmStretchAmount StretchAmount { get; set; } = CompositeArmStretchAmount.Full;
-    
-    public JointState Clone()
+
+    public SegmentState Clone()
     {
-        return new JointState
+        return new SegmentState
         {
-            Position = this.Position,
-            Rotation = this.Rotation,
-            StretchAmount = this.StretchAmount
+            Position = Position,
+            Rotation = Rotation,
+            StretchAmount = StretchAmount
         };
     }
 
-    public static JointState Lerp(JointState a, JointState b, float t)
+    public static SegmentState Lerp(SegmentState a, SegmentState b, float t)
     {
-        return new JointState
+        return new SegmentState
         {
             Position = Vector2.Lerp(a.Position, b.Position, t),
             Rotation = MathHelper.Lerp(a.Rotation, b.Rotation, t),

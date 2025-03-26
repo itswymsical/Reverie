@@ -1,5 +1,6 @@
 ﻿using Reverie.Common.Players;
-
+using Reverie.Common.Systems;
+using Reverie.Core.Cinematics.Cutscenes;
 using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
 
@@ -504,7 +505,7 @@ public partial class MissionPlayer : ModPlayer
             AFallingStar.Availability != MissionAvailability.Completed &&
             AFallingStar.Progress != MissionProgress.Active)
         {
-            //CutsceneSystem.PlayCutscene(new FallingStarCutscene());
+            CutsceneSystem.PlayCutscene(new FallingStarCutscene());
             UnlockMission(MissionID.BUILD_VALID_HOUSE);
             StartMission(MissionID.BUILD_VALID_HOUSE);
         }
