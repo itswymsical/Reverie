@@ -98,7 +98,6 @@ public partial class AnimationPlayer : ModPlayer
         registeredAnimations["Walking"] = WalkingAnimation();
 
         // Register arm animations
-        registeredAnimations["ArmSwing"] = ArmSwingAnimation();
         registeredAnimations["DrinkPotion"] = DrinkPotionAnimation();
 
         // Register leg animations
@@ -172,12 +171,7 @@ public partial class AnimationPlayer : ModPlayer
         // Override layer takes priority
         if (Player.ItemAnimationActive)
         {
-            // Item usage (attacks, using tools, etc)
-            if (Player.HeldItem.useStyle == ItemUseStyleID.Swing)
-            {
-                PlayAnimation(AnimationLayer.Arms, "ArmSwing");
-            }
-            else if (Player.HeldItem.useStyle == ItemUseStyleID.DrinkLong || Player.HeldItem.useStyle == ItemUseStyleID.DrinkLiquid)
+            if (Player.HeldItem.useStyle == ItemUseStyleID.DrinkLong || Player.HeldItem.useStyle == ItemUseStyleID.DrinkLiquid)
             {
                 PlayAnimation(AnimationLayer.Arms, "DrinkPotion");
             }
@@ -203,7 +197,10 @@ public partial class AnimationPlayer : ModPlayer
         else if (!activeAnimations.ContainsKey(AnimationLayer.Override))
         {
             // Return to idle if we're not doing anything else
-            PlayAnimation(AnimationLayer.Base, "Idle");
+            if (Player.afkCounter > 0)
+            {
+                PlayAnimation(AnimationLayer.Base, "Idle");
+            }
         }
     }
 

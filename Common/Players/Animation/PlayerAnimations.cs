@@ -37,7 +37,7 @@ public partial class AnimationPlayer
         var mid = new AnimationFrame(1.0f);
         mid.Parts[SegmentType.Body] = new SegmentState
         {
-            Position = new Vector2(0, -1f),
+            Position = new Vector2(0, -0.5f),
             Rotation = 0.05f
         };
         mid.Parts[SegmentType.Head] = new SegmentState
@@ -264,64 +264,6 @@ public partial class AnimationPlayer
 
         return dash;
     }
-
-    private ProceduralAnimation ArmSwingAnimation()
-    {
-        var swing = new ProceduralAnimation("ArmSwing", "Arm Swing Animation", 0.4f);
-        swing.Looping = false;
-
-        // Start frame (wind up)
-        var start = new AnimationFrame(0f);
-        start.Parts[SegmentType.LeftArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = -0.5f, // Pull back
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
-        start.Parts[SegmentType.RightArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = -0.5f, // Pull back
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
-
-        // Mid frame (swing)
-        var mid = new AnimationFrame(0.2f);
-        mid.Parts[SegmentType.LeftArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0.8f, // Swing forward
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
-        mid.Parts[SegmentType.RightArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0.8f, // Swing forward
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
-
-        // End frame (follow through)
-        var end = new AnimationFrame(0.4f);
-        end.Parts[SegmentType.LeftArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0.3f, // Return to neutral
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
-        end.Parts[SegmentType.RightArm] = new SegmentState
-        {
-            Position = Vector2.Zero,
-            Rotation = 0.3f, // Return to neutral
-            StretchAmount = CompositeArmStretchAmount.Full
-        };
-
-        swing.AddFrame(start);
-        swing.AddFrame(mid);
-        swing.AddFrame(end);
-
-        return swing;
-    }
-
     private ProceduralAnimation DrinkPotionAnimation()
     {
         var drink = new ProceduralAnimation("DrinkPotion", "Drink Potion Animation", 0.5f);

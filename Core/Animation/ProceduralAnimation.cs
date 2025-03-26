@@ -20,7 +20,7 @@ public class ProceduralAnimation
     public float Duration { get; }
     public bool Looping { get; set; } = true;
     public List<AnimationFrame> Frames { get; } = [];
-    public bool UseVanillaFramesWhenRunning { get; set; } = false;
+    public bool UseVanillaFrames { get; set; } = false;
 
     public ProceduralAnimation(string id, string name, float duration)
     {

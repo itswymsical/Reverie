@@ -33,6 +33,7 @@ public partial class AnimationPlayer
         var gWidth = itemTexture.Width;
         var gHeight = itemTexture.Height;
 
+        // Check for animations
         Rectangle? sourceRect = null;
         if (heldItem.ModItem != null && Main.itemAnimations[heldItem.type] != null)
         {
@@ -46,8 +47,7 @@ public partial class AnimationPlayer
         }
 
         var position = player.MountedCenter - Main.screenPosition;
-        position += new Vector2((player.HeldItem.width / 3.6f) * player.direction, player.HeldItem.height / 2);
-
+        position += new Vector2(( (player.HeldItem.width / 3f) - 8) * player.direction, player.HeldItem.height / 1.56f);
         var lighting = Lighting.GetColor(
             (int)(player.Center.X / 16f),
             (int)(player.Center.Y / 16f)
@@ -74,14 +74,38 @@ public partial class AnimationPlayer
             0
         );
 
-        var itemWidth = gWidth * heldItem.scale;
-        var itemHeight = gHeight * heldItem.scale;
-        var larger = Math.Max(itemWidth, itemHeight);
-        var lesser = Math.Min(itemWidth, itemHeight);
-
         var segmentStates = GetCombinedJointStates();
 
         PositionWeaponBasedOnAnimations(ref data, player, segmentStates);
+
+        if (player.velocity.X != 0)
+        {
+            var playerBodyFrameNum = player.bodyFrame.Y / player.bodyFrame.Height;
+
+            if ((playerBodyFrameNum >= 7 && playerBodyFrameNum <= 9) ||
+                (playerBodyFrameNum >= 14 && playerBodyFrameNum <= 16))
+            {
+                data.position.Y -= 2 * player.gravDir;
+            }
+
+            switch (playerBodyFrameNum)
+            {
+                case 7:
+                case 8:
+                case 9:
+                case 10:
+                    data.position.X -= player.direction * 1;
+                    data.rotation += 0.003f * player.direction * player.gravDir;
+                    break;
+                case 14:
+                case 15:
+                case 16:
+                case 17:
+                    data.position.X += player.direction * 1;
+                    data.rotation -= 0.003f * player.direction * player.gravDir;
+                    break;
+            }
+        }
 
         drawInfo.DrawDataCache.Add(data);
 
