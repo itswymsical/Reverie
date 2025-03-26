@@ -5,6 +5,8 @@ using Reverie.Core.Cinematics;
 using SubworldLibrary;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.GameContent;
+using Terraria.UI.Chat;
 
 namespace Reverie.Common.Players;
 
@@ -20,8 +22,9 @@ public class ReveriePlayer : ModPlayer
         
         if (Cutscene.NoFallDamage)
             Player.noFallDmg = true;
-    }
 
+        var sb = Main.spriteBatch;
+    }
     public override void SetControls()
     {
         if (Cutscene.DisableMoment)

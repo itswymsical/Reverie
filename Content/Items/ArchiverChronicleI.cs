@@ -1,9 +1,11 @@
-﻿using Reverie.Core.Dialogue;
+﻿using Reverie.Common.UI;
+using Reverie.Core.Dialogue;
 using Terraria.GameContent;
+using Terraria.UI;
 
 namespace Reverie.Content.Items
 {
-    public class ChronicleI : ModItem
+    public class ArchiverChronicleI : ModItem
     {
         public override string Texture => "Reverie/Assets/Textures/Items/ArchiverChronicle";
         public override void SetDefaults()
@@ -81,16 +83,16 @@ namespace Reverie.Content.Items
 
         public override bool CanUseItem(Player player)
         {
-            if (DialogueManager.Instance.StartDialogue(NPCDataManager.Default, DialogueID.ChronicleI_Chapter1, true))
-                return false;
+            if (!DialogueManager.Instance.IsAnyActive())
+                return true;
 
-            return base.CanUseItem(player);
+            return false;
         }
 
         public override bool? UseItem(Player player)
         {
             if (Main.myPlayer == player.whoAmI)
-                DialogueManager.Instance.StartDialogue(NPCDataManager.Default, DialogueID.ChronicleI_Chapter1, true);
+                ArchiverChronicleUI.ShowChronicle($"DialogueLibrary.ArchiverChronicles.Book1");
 
             return true;
         }

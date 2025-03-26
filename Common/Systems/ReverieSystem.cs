@@ -1,5 +1,8 @@
 ﻿using Reverie.Core.Dialogue;
+using Reverie.Utilities;
+using Terraria.GameContent;
 using Terraria.Localization;
+using Terraria.UI.Chat;
 
 namespace Reverie.Common.Systems
 {
@@ -11,7 +14,6 @@ namespace Reverie.Common.Systems
             Reverie.Instance.Logger.Info("NPCDataManager initialized...");
         }
         public static ReverieSystem Instance => ModContent.GetInstance<ReverieSystem>();
-
         public override void AddRecipeGroups()
         {
             RecipeGroup CopperBarRecipeGroup = new(() => $"{Language.GetTextValue("LegacyMisc.37")} {Lang.GetItemNameValue(ItemID.CopperBar)}",
@@ -36,8 +38,14 @@ namespace Reverie.Common.Systems
         }
         public override void PostDrawInterface(SpriteBatch spriteBatch)
         {
+            if (Main.gameMenu)
+                return;
+
             Vector2 bottomAnchorPosition = new(Main.screenWidth / 2, Main.screenHeight - 20);
             DialogueManager.Instance.Draw(spriteBatch, bottomAnchorPosition);
+
+            DrawUtils.DrawText(spriteBatch, Color.Wheat, "            - Reverie Demonstration (dev-alpha build v03.26.2025) -" +
+                "\n- (All current content portrayed in Reverie is subject to change or removal) -", new(Main.screenWidth / 2, Main.screenHeight / 24f), 0.3f);
         }
     }
 }

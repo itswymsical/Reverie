@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Items: {
 	DialogueTest: {
@@ -158,6 +158,11 @@ Items: {
 	BustedTranslocator: {
 		DisplayName: Busted Translocator
 		Tooltip: "'Use at your own descretion'"
+	}
+
+	ArchiverChronicleI: {
+		DisplayName: Archiver Chronicle I
+		Tooltip: ""
 	}
 }
 
