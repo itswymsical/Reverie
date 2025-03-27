@@ -1,6 +1,6 @@
-DialogueLibrary: {
+﻿DialogueLibrary: {
 	CrashLanding: {
-		Intro.Line1: What the H***?!?!
+		Intro.Line1: What the Hell?!?!
 		Cutscene.Line1: Hmm? What's that?
 
 		SettlingIn: {

@@ -60,7 +60,7 @@ namespace Reverie.Core.Cinematics.Cutscenes
 
         private readonly Vector2 _guideOffset = new(-185, 0);
         private readonly Vector2 _playerOffset = new(-150, -Main.screenHeight * 1.3f);
-        private readonly Vector2 _logoPos = new(Main.screenWidth / 2f, Main.screenHeight * 0.1f);
+        private readonly Vector2 _logoPos = new(Main.screenWidth / 2.15f, Main.screenHeight * 0.1f);
 
         public FallingStarCutscene()
         {

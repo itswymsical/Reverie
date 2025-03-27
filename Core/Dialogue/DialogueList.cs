@@ -27,7 +27,6 @@ public static class DialogueList
 
     private static void Initialize()
     {
-        var builder = new DialogueBuilder();
         dialogues = new Dictionary<DialogueID, DialogueSequence>
         {
             [DialogueID.ChronicleI_Chapter1] = DialogueBuilder.Build("Chronicle_01", "Chapter1", 14),

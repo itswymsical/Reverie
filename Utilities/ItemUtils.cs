@@ -19,6 +19,10 @@ public static class ItemUtils
     {
         return item.pick > 0 || item.Name.Contains("Shovel");
     }
+    public static bool IsOre(this Item item)
+           => item.Name.Contains("Ore") || item.Name.EndsWith("ium")
+           || item.Name.EndsWith("ite") || item.Name.EndsWith("yte");
+
 
     private static readonly HashSet<string> MetalKeywords =
     [

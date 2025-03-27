@@ -246,7 +246,7 @@ public class MissionFactory : ModSystem
             ModContent.GetInstance<Reverie>().Logger.Info("Registering mission types...");
 
             // Register each mission type with its ID
-            //missionTypes[MissionID.A_FALLING_STAR] = typeof();
+            missionTypes[MissionID.A_FALLING_STAR] = typeof(AFallingStar);
             missionTypes[MissionID.BUILD_VALID_HOUSE] = typeof(HousingMission);
            
 
