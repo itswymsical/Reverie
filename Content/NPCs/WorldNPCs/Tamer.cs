@@ -52,7 +52,11 @@ public class Tamer : WorldNPCActor
     {
         if (!firstButton)
         {
-            DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.TamerTestMission);
+            DialogueManager.Instance.StartDialogueByKey(
+                    NPCDataManager.Default,
+                    DialogueKeys.TamerMissions.Chapter1,
+                    lineCount: 2,
+                    zoomIn: true);
         }
     }
 }

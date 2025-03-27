@@ -23,6 +23,7 @@
 	<ItemGroup>
 	  <Folder Include="Common\Items\Configs\" />
 	  <Folder Include="Common\Projectiles\" />
+	  <Folder Include="Dialouge\" />
 	</ItemGroup>
 
 </Project>

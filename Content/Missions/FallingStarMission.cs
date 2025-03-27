@@ -93,13 +93,25 @@ public class AFallingStar : Mission
             switch (objective)
             {
                 case Objectives.GatherResources:
-                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_GiveGuideResources, true);
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCDataManager.GuideData,
+                    DialogueKeys.CrashLanding.GiveGuideResources,
+                    lineCount: 5,
+                    zoomIn: true);
                     break;
                 case Objectives.ObtainEquipment:
-                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_WildlifeWoes, true);
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCDataManager.GuideData,
+                    DialogueKeys.CrashLanding.WildlifeWoes,
+                    lineCount: 3,
+                    zoomIn: true);
                     break;
                 case Objectives.ClearInitialSlimes:
-                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation, true);
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCDataManager.GuideData,
+                    DialogueKeys.CrashLanding.SlimeInfestation,
+                    lineCount: 2,
+                    zoomIn: true);
                     break;
             }
         }
@@ -120,10 +132,18 @@ public class AFallingStar : Mission
                     GiveStarterItems();
                     break;
                 case Objectives.ClearInitialSlimes:
-                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation, true);
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCDataManager.GuideData,
+                    DialogueKeys.CrashLanding.SlimeInfestation,
+                    lineCount: 2,
+                    zoomIn: true);
                     break;
                 case Objectives.ExploreUnderground:
-                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation_Commentary, false);
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCDataManager.GuideData,
+                    DialogueKeys.CrashLanding.SlimeInfestationCommentary,
+                    lineCount: 2,
+                    zoomIn: true);
                     break;
                 case Objectives.ContinueLooting:
                     StartSlimeRainEvent();
@@ -132,7 +152,11 @@ public class AFallingStar : Mission
                     StartKingSlimeEncounter();
                     break;
                 case Objectives.DefeatKingSlime:
-                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_KS_Victory, true);
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCDataManager.GuideData,
+                    DialogueKeys.CrashLanding.KSVictory,
+                    lineCount: 4,
+                    zoomIn: true);
                     break;
             }
         }
@@ -233,7 +257,11 @@ public class AFallingStar : Mission
             switch (objective)
             {
                 case Objectives.TalkToLaine:
-                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_GatheringResources, true);
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCDataManager.GuideData,
+                    DialogueKeys.CrashLanding.GatheringResources,
+                    lineCount: 2,
+                    zoomIn: true);
                     UpdateProgress(0);
                     break;
             }
@@ -252,7 +280,11 @@ public class AFallingStar : Mission
             switch (objective)
             {
                 case Objectives.GatherResources:
-                    DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_GiveGuideResources, true);
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCDataManager.GuideData,
+                    DialogueKeys.CrashLanding.GiveGuideResources,
+                    lineCount: 5,
+                    zoomIn: true);
                     UpdateProgress(2);
                     break;
             }
@@ -276,12 +308,20 @@ public class AFallingStar : Mission
     private void StartSlimeRainEvent()
     {
         Main.StartSlimeRain(true);
-        DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeRain);
+        DialogueManager.Instance.StartDialogueByKey(
+        NPCDataManager.GuideData,
+        DialogueKeys.CrashLanding.SlimeRain,
+        lineCount: 2,
+        zoomIn: true);
     }
 
     private void StartKingSlimeEncounter()
     {
-        DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_KS_Encounter, true);
+        DialogueManager.Instance.StartDialogueByKey(
+        NPCDataManager.GuideData,
+        DialogueKeys.CrashLanding.KSEncounter,
+        lineCount: 3,
+        zoomIn: true);
         SpawnKingSlime();
     }
 
@@ -342,7 +382,11 @@ public class AFallingStar : Mission
             UpdateProgress(1, item.stack);
             if (ObjectiveIndex[CurObjectiveIndex].Objectives[1].CurrentCount == LOOT_NOTIFICATION_THRESHOLD)
             {
-                DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SlimeInfestation);
+                DialogueManager.Instance.StartDialogueByKey(
+                NPCDataManager.GuideData,
+                DialogueKeys.CrashLanding.SlimeInfestation,
+                lineCount: 2,
+                zoomIn: true);
             }
         }
     }
@@ -371,8 +415,11 @@ public class AFallingStar : Mission
             UpdateProgress(0);
             if (ObjectiveIndex[CurObjectiveIndex].Objectives[0].CurrentCount == SLIME_COMMENTARY_THRESHOLD)
             {
-                DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData,
-                    DialogueID.CrashLanding_SlimeRain_Commentary, false);
+                DialogueManager.Instance.StartDialogueByKey(
+                NPCDataManager.GuideData,
+                DialogueKeys.CrashLanding.SlimeRainCommentary,
+                lineCount: 2,
+                zoomIn: true);
             }
         }
     }

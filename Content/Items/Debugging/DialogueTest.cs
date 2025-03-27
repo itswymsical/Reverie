@@ -12,17 +12,15 @@ public class DialogueTest : ModItem
         Item.rare = ItemRarityID.Quest;
         Item.useStyle = ItemUseStyleID.HoldUp;
     }
-    public override bool CanUseItem(Player player)
-    {
-        if (!DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SettlingIn, true))
-            return true;
-
-        return false;
-    }
     public override bool? UseItem(Player player)
     {
         if (Main.myPlayer == player.whoAmI)
-            DialogueManager.Instance.StartDialogue(NPCDataManager.GuideData, DialogueID.CrashLanding_SettlingIn, true);
+            DialogueManager.Instance.StartDialogueByKey(
+               NPCDataManager.GuideData,
+               DialogueKeys.CrashLanding.SettlingIn,
+               lineCount: 5,
+               zoomIn: true
+           );
 
         return true;
     }
