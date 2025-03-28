@@ -145,20 +145,6 @@ public partial class MissionManager
         }
     }
 
-    public void OnNPCLoot(NPC npc)
-    {
-        try
-        {
-            foreach (var mission in ActiveMissions)
-            {
-                mission.OnNPCLoot(npc);
-            }
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCLoot: {ex.Message}");
-        }
-    }
 
     public void OnNPCHit(NPC npc, int damage)
     {
