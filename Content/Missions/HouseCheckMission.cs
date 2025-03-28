@@ -26,7 +26,7 @@ public class HousingMission : Mission
     { }
 
     // Override to handle the housing found event
-    public override void OnValidHousingFound()
+    public override void OnHousingFound()
     {
         if (Progress == MissionProgress.Active)
         {

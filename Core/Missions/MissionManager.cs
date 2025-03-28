@@ -60,12 +60,12 @@ public partial class MissionManager
         {
             if (activeMissions.TryGetValue(mission.ID, out var activeMission))
             {
-                activeMission.OnObjectiveComplete(objectiveIndex);
+                activeMission.HandleObjectiveCompletion(objectiveIndex);
             }
         }
         catch (Exception ex)
         {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnObjectiveComplete: {ex.Message}");
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error in HandleObjectiveCompletion: {ex.Message}");
         }
     }
 
@@ -91,12 +91,12 @@ public partial class MissionManager
         {
             foreach (var mission in ActiveMissions)
             {
-                mission.OnItemObtained(item);
+                mission.OnCollected(item);
             }
         }
         catch (Exception ex)
         {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnItemObtained: {ex.Message}");
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnCollected: {ex.Message}");
         }
     }
 
@@ -106,12 +106,12 @@ public partial class MissionManager
         {
             foreach (var mission in ActiveMissions)
             {
-                mission.OnNPCKill(npc);
+                mission.OnKill(npc);
             }
         }
         catch (Exception ex)
         {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCKill: {ex.Message}");
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnKill: {ex.Message}");
         }
     }
 
@@ -121,12 +121,12 @@ public partial class MissionManager
         {
             foreach (var mission in ActiveMissions)
             {
-                mission.OnNPCChat(npc);
+                mission.OnChat(npc);
             }
         }
         catch (Exception ex)
         {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCChat: {ex.Message}");
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnChat: {ex.Message}");
         }
     }
 
@@ -169,12 +169,12 @@ public partial class MissionManager
 
             foreach (var mission in missions)
             {
-                mission.OnNPCHit(npc, damage);
+                mission.OnHitTarget(npc, damage);
             }
         }
         catch (Exception ex)
         {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCHit: {ex.Message}");
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnHitTarget: {ex.Message}");
         }
     }
 

@@ -62,25 +62,25 @@ public class ObjectiveEventNPC : GlobalNPC
         {
             var rateRareSlimes = 0.002f;
 
-            var currentSet = AFallingStar.ObjectiveIndex[AFallingStar.CurObjectiveIndex];
+            var currentSet = AFallingStar.ObjectiveIndex[AFallingStar.CurrentIndex];
 
-            if (!currentSet.IsCompleted && AFallingStar.CurObjectiveIndex < 2)
+            if (!currentSet.IsCompleted && AFallingStar.CurrentIndex < 2)
                 pool.Clear();
 
             if (spawnInfo.PlayerInTown)
             {
-                if (AFallingStar.CurObjectiveIndex >= 3 && Main.LocalPlayer.ZoneOverworldHeight)
+                if (AFallingStar.CurrentIndex >= 3 && Main.LocalPlayer.ZoneOverworldHeight)
                 {
                     pool.Add(NPCID.RedSlime, rateRareSlimes);
                     pool.Add(NPCID.YellowSlime, rateRareSlimes);
                     pool.Add(NPCID.Pinky, rateRareSlimes);
 
                 }
-                else if (AFallingStar.CurObjectiveIndex >= 6 && Main.LocalPlayer.ZoneOverworldHeight)
+                else if (AFallingStar.CurrentIndex >= 6 && Main.LocalPlayer.ZoneOverworldHeight)
                 {
                     rateRareSlimes = 0.008f;
                 }
-                else if (AFallingStar.CurObjectiveIndex >= 9 && AFallingStar.CurObjectiveIndex <= 10
+                else if (AFallingStar.CurrentIndex >= 9 && AFallingStar.CurrentIndex <= 10
                     && Main.LocalPlayer.ZoneOverworldHeight)
                 {
                     rateRareSlimes = 0.02f;
@@ -99,18 +99,18 @@ public class ObjectiveEventNPC : GlobalNPC
 
         if (AFallingStar?.Progress == MissionProgress.Active && player.ZoneOverworldHeight)
         {
-            var currentSet = AFallingStar.ObjectiveIndex[AFallingStar.CurObjectiveIndex];
-            if (AFallingStar.CurObjectiveIndex >= 3)
+            var currentSet = AFallingStar.ObjectiveIndex[AFallingStar.CurrentIndex];
+            if (AFallingStar.CurrentIndex >= 3)
             {
                 spawnRate = 3;
                 maxSpawns = 7;
             }
-            if (AFallingStar.CurObjectiveIndex >= 5)
+            if (AFallingStar.CurrentIndex >= 5)
             {
                 spawnRate = 2;
                 maxSpawns = 9;
             }
-            else if (AFallingStar.CurObjectiveIndex >= 9)
+            else if (AFallingStar.CurrentIndex >= 9)
             {
                 spawnRate = 3;
                 maxSpawns = 14;

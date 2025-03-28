@@ -45,9 +45,9 @@ public class FungalFracas : Mission //todo: implement mission logic
         DefeatFungore = 6,
     }
 
-    public override void WhileActive()
+    public override void Update()
     {
-        base.WhileActive();
+        base.Update();
         Main.bloodMoon = false;
     }
 }

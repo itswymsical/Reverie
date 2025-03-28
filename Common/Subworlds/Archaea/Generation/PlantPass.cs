@@ -154,11 +154,11 @@ public class PlantPass : GenPass
                     !HasAtLeastOneEmptyNeighbor(clusterX, clusterY))
                     continue;
 
-                if (Generator.GenerateMultistructureRandom("Structures/Saguaros_3x11", new Point16(clusterX + 1, clusterY - 11), Instance))
-                {
-                    successfulPlacements++;
-                    _failCount = WorldGen.genRand.Next(20, 40);
-                }
+                //if (GenerateMultistructureRandom("Structures/Saguaros_3x11", new Point16(clusterX + 1, clusterY - 11), Instance))
+                //{
+                //    successfulPlacements++;
+                //    _failCount = WorldGen.genRand.Next(20, 40);
+                //}
             }
         }
         catch (Exception ex)

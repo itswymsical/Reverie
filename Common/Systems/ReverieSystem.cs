@@ -29,12 +29,18 @@ namespace Reverie.Common.Systems
             RecipeGroup.RegisterGroup(nameof(ItemID.GoldBar), GoldBarRecipeGroup);
         }
 
+        public override void ClearWorld()
+        {
+            base.ClearWorld();
+            Main.time -= 0.5;
+        }
         public override void PostUpdateWorld()
         {
             if (Main.netMode != NetmodeID.Server) // todo: multiplayer support.
             {
                 DialogueManager.Instance.UpdateActive();
             }
+            
         }
         public override void PostDrawInterface(SpriteBatch spriteBatch)
         {

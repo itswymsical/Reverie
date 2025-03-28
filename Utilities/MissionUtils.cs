@@ -29,7 +29,7 @@ public static class MissionUtils
 
         foreach (var mission in missionPlayer.GetActiveMissions())
         {
-            var currentSet = mission.ObjectiveIndex[mission.CurObjectiveIndex];
+            var currentSet = mission.ObjectiveIndex[mission.CurrentIndex];
 
             if (item.stack > 0 && !currentSet.IsCompleted)
             {
@@ -75,7 +75,7 @@ public static class MissionUtils
             Progress = mission.Progress,
             Availability = mission.Availability,
             Unlocked = mission.Unlocked,
-            CurObjectiveIndex = mission.CurObjectiveIndex,
+            CurObjectiveIndex = mission.CurrentIndex,
             ObjectiveIndex = mission.ObjectiveIndex
                 .Select(set => new ObjectiveIndexState
                 {
@@ -99,7 +99,7 @@ public static class MissionUtils
         mission.Progress = state.Progress;
         mission.Availability = state.Availability;
         mission.Unlocked = state.Unlocked;
-        mission.CurObjectiveIndex = state.CurObjectiveIndex;
+        mission.CurrentIndex = state.CurObjectiveIndex;
 
 
         for (var i = 0; i < Math.Min(mission.ObjectiveIndex.Count, state.ObjectiveIndex.Count); i++)

@@ -85,7 +85,7 @@ public partial class MissionManager
     {
         foreach (var mission in ActiveMissions)
         {
-            mission.OnValidHousingFound();
+            mission.OnHousingFound();
         }
     }
 

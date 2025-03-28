@@ -16,13 +16,12 @@ public class FallingStarMission : Mission
       "\nBegin your journey in Terraria, discovering knowledge and power...",
       [
           [("Talk to Guide", 1)],
-          [("Gather wood", 30), ("Gather stone", 10), ("Build a shelter", 1)],
-          [("Harvest ore", 30),("Smelt bars", 15), ("Discover accessories", 2)],
-          [("Obtain a helmet", 1), ("Obtain a chestplate", 1), ("Obtain leggings", 1), ("Obtain a greater Pickaxe", 1)],
+          [("Gather wood", 50), ("Build a shelter", 1)],
+          [("Harvest ore", 30),("Craft a pickaxe", 1), ("Discover accessories", 2)],
+          [("Obtain a helmet", 1), ("Obtain a chestplate", 1), ("Obtain leggings", 1), ("Obtain a new weapon", 1)],
           [("Clear slimes", 6)],
-          [("Explore the Underground", 1), ("Loot items", 20)],
+          [("Explore the Underground", 1), ("Discover a Mushroom Biome", 1), ("Kill enemies", 10)],
           [("Clear out slimes, again...", 12)],
-          [("Return to looting", 100)],
           [("Return to Guide", 1)],
           [("Clear Slime Infestation", 50)],
           [("Defeat the King Slime", 1)]
@@ -38,6 +37,7 @@ public class FallingStarMission : Mission
 
     private const int LOOT_NOTIFICATION_THRESHOLD = 10;
     private const int SLIME_COMMENTARY_THRESHOLD = 20;
+
     private readonly List<Item> starterItems =
     [
         new Item(ItemID.WoodenSword),
@@ -48,23 +48,23 @@ public class FallingStarMission : Mission
     internal enum Objectives
     {
         TalkToGuide = 0,
-        GatherResources = 1,
-        ExploreAndGather = 2,
-        ObtainEquipment = 3,
-        ClearInitialSlimes = 4,
-        ExploreUnderground = 5,
-        ClearSecondSlimes = 6,
+        WoodShelter = 1,
+        AquireMetal = 2,
+        SuitUp = 3,
+        ClearSlimes = 4,
+        Explore = 5,
+        ClearSlimes2 = 6,
         ContinueLooting = 7,
         ReturnToGuide = 8,
         ClearInfestation = 9,
         DefeatKingSlime = 10
     }
 
-    public override void WhileActive()
+    public override void Update()
     {
-        base.WhileActive();
+        base.Update();
 
-        if (CurObjectiveIndex < (int)Objectives.ClearInfestation)
+        if (CurrentIndex < (int)Objectives.ClearInfestation)
         {
             Main.slimeRain = false;
             Main.slimeRainTime = 0;
@@ -72,7 +72,7 @@ public class FallingStarMission : Mission
             Main.time = 18000;
         }
 
-        if (CurObjectiveIndex == (int)Objectives.ClearInfestation)
+        if (CurrentIndex == (int)Objectives.ClearInfestation)
         {
             if (!Main.slimeRain)
             {
@@ -82,8 +82,7 @@ public class FallingStarMission : Mission
         Main.bloodMoon = false;
     }
 
-    #region Completion Handlers
-    protected override void HandleObjectiveSetComplete(int setIndex, ObjectiveSet set)
+    protected override void OnIndexComplete(int setIndex, ObjectiveSet set)
     {
         try
         {
@@ -92,21 +91,21 @@ public class FallingStarMission : Mission
 
             switch (objective)
             {
-                case Objectives.GatherResources:
+                case Objectives.WoodShelter:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
                     DialogueKeys.CrashLanding.GiveGuideResources,
                     lineCount: 5,
                     zoomIn: true);
                     break;
-                case Objectives.ObtainEquipment:
+                case Objectives.SuitUp:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
                     DialogueKeys.CrashLanding.WildlifeWoes,
                     lineCount: 3,
                     zoomIn: true);
                     break;
-                case Objectives.ClearInitialSlimes:
+                case Objectives.ClearSlimes:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
                     DialogueKeys.CrashLanding.SlimeInfestation,
@@ -117,28 +116,28 @@ public class FallingStarMission : Mission
         }
         catch (Exception ex)
         {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in HandleObjectiveSetComplete: {ex.Message}");
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnIndexComplete: {ex.Message}");
         }
     }
 
-    protected override void HandleObjectiveComplete(int objectiveIndex)
+    protected override void OnObjectiveComplete(int objectiveIndex)
     {
         try
         {
-            var objective = (Objectives)CurObjectiveIndex;
+            var objective = (Objectives)CurrentIndex;
             switch (objective)
             {
                 case Objectives.TalkToGuide:
                     GiveStarterItems();
                     break;
-                case Objectives.ClearInitialSlimes:
+                case Objectives.ClearSlimes:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
                     DialogueKeys.CrashLanding.SlimeInfestation,
                     lineCount: 2,
                     zoomIn: true);
                     break;
-                case Objectives.ExploreUnderground:
+                case Objectives.Explore:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
                     DialogueKeys.CrashLanding.SlimeInfestationCommentary,
@@ -162,29 +161,36 @@ public class FallingStarMission : Mission
         }
         catch (Exception ex)
         {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in HandleObjectiveComplete: {ex.Message}");
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnObjectiveComplete: {ex.Message}");
         }
     }
-    #endregion
+
+    public override void OnMissionComplete(bool giveRewards = true)
+    {
+        base.OnMissionComplete(giveRewards);
+        //MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+        //player.StartNextMission(...);
+    }
 
     #region Event Handlers
-    public override void OnItemObtained(Item item)
+    public override void OnCollected(Item item)
     {
         try
         {
-            var objective = (Objectives)CurObjectiveIndex;
+            var objective = (Objectives)CurrentIndex;
             switch (objective)
             {
-                case Objectives.GatherResources:
-                    HandleResourceGathering(item);
+                case Objectives.WoodShelter:
+                    if (item.type == ItemID.Wood)
+                        UpdateProgress(0, item.stack);
                     break;
-                case Objectives.ObtainEquipment:
+                case Objectives.SuitUp:
                     HandleEquipmentCollection(item);
                     break;
-                case Objectives.ExploreAndGather:
+                case Objectives.AquireMetal:
                     HandleExplorationGathering(item);
                     break;
-                case Objectives.ExploreUnderground:
+                case Objectives.Explore:
                     HandleUndergroundLoot(item);
                     break;
                 case Objectives.ContinueLooting:
@@ -198,15 +204,15 @@ public class FallingStarMission : Mission
         }
     }
 
-    public override void OnNPCKill(NPC npc)
+    public override void OnKill(NPC npc)
     {
         try
         {
-            var objective = (Objectives)CurObjectiveIndex;
+            var objective = (Objectives)CurrentIndex;
             switch (objective)
             {
-                case Objectives.ClearInitialSlimes:
-                case Objectives.ClearSecondSlimes:
+                case Objectives.ClearSlimes:
+                case Objectives.ClearSlimes2:
                     if (npc.type == NPCAIStyleID.Slime)
                         UpdateProgress(0);
                     break;
@@ -221,7 +227,7 @@ public class FallingStarMission : Mission
         }
         catch (Exception ex)
         {
-            Instance.Logger.Error($"Error in OnNPCKill: {ex.Message}");
+            Instance.Logger.Error($"Error in OnKill: {ex.Message}");
         }
     }
 
@@ -229,10 +235,10 @@ public class FallingStarMission : Mission
     {
         try
         {
-            var objective = (Objectives)CurObjectiveIndex;
+            var objective = (Objectives)CurrentIndex;
             switch (objective)
             {
-                case Objectives.ExploreUnderground:
+                case Objectives.Explore:
                     if (biome == BiomeType.Underground)
                         UpdateProgress(0);
                     break;
@@ -248,12 +254,11 @@ public class FallingStarMission : Mission
         }
     }
 
-
-    public override void OnNPCChat(NPC npc)
+    public override void OnChat(NPC npc)
     {
         try
         {
-            var objective = (Objectives)CurObjectiveIndex;
+            var objective = (Objectives)CurrentIndex;
             switch (objective)
             {
                 case Objectives.TalkToGuide:
@@ -268,24 +273,25 @@ public class FallingStarMission : Mission
         }
         catch (Exception ex)
         {
-            Instance.Logger.Error($"Error in OnNPCChat: {ex.Message}");
+            Instance.Logger.Error($"Error in OnChat: {ex.Message}");
         }
     }
 
-    public override void OnValidHousingFound()
+    public override void OnHousingFound()
     {
         try
         {
-            var objective = (Objectives)CurObjectiveIndex;
+            var objective = (Objectives)CurrentIndex;
             switch (objective)
             {
-                case Objectives.GatherResources:
+                case Objectives.WoodShelter:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
                     DialogueKeys.CrashLanding.GiveGuideResources,
                     lineCount: 5,
                     zoomIn: true);
-                    UpdateProgress(2);
+
+                    UpdateProgress(1);
                     break;
             }
         }
@@ -301,7 +307,7 @@ public class FallingStarMission : Mission
     {
         foreach (var item in starterItems)
         {
-            player.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), item.type, item.stack);
+            Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), item.type, item.stack);
         }
     }
 
@@ -343,14 +349,6 @@ public class FallingStarMission : Mission
         }
     }
 
-    private void HandleResourceGathering(Item item)
-    {
-        if (item.type == ItemID.StoneBlock)
-            UpdateProgress(1, item.stack);
-        if (item.type == ItemID.Wood)
-            UpdateProgress(0, item.stack);
-    }
-
     private void HandleEquipmentCollection(Item item)
     {
         if (item.headSlot != -1 && !item.vanity)
@@ -380,7 +378,7 @@ public class FallingStarMission : Mission
         if (IsValuableLoot(item))
         {
             UpdateProgress(1, item.stack);
-            if (ObjectiveIndex[CurObjectiveIndex].Objectives[1].CurrentCount == LOOT_NOTIFICATION_THRESHOLD)
+            if (ObjectiveIndex[CurrentIndex].Objectives[1].CurrentCount == LOOT_NOTIFICATION_THRESHOLD)
             {
                 DialogueManager.Instance.StartDialogueByKey(
                 NPCDataManager.GuideData,
@@ -413,7 +411,7 @@ public class FallingStarMission : Mission
         if (npc.type == NPCAIStyleID.Slime)
         {
             UpdateProgress(0);
-            if (ObjectiveIndex[CurObjectiveIndex].Objectives[0].CurrentCount == SLIME_COMMENTARY_THRESHOLD)
+            if (ObjectiveIndex[CurrentIndex].Objectives[0].CurrentCount == SLIME_COMMENTARY_THRESHOLD)
             {
                 DialogueManager.Instance.StartDialogueByKey(
                 NPCDataManager.GuideData,

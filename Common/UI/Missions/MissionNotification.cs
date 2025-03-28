@@ -16,7 +16,7 @@ public class MissionNotification : IInGameNotification
     private float fadeInProgress = 0f;
     private float alpha = 0f;
     private const float FADE_IN_SPEED = 0.03f;
-    private const float FADE_OUT_SPEED = 0.03f;
+    private const float FADE_OUT_SPEED = 0.02f;
 
     private readonly Mission currentMission;
     private List<Objective> activeObjectives;
@@ -39,9 +39,9 @@ public class MissionNotification : IInGameNotification
         iconTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/ObjectiveInfo").Value;
 
         activeObjectives = new List<Objective>();
-        if (mission.ObjectiveIndex.Count > 0 && mission.CurObjectiveIndex < mission.ObjectiveIndex.Count)
+        if (mission.ObjectiveIndex.Count > 0 && mission.CurrentIndex < mission.ObjectiveIndex.Count)
         {
-            var currentSet = mission.ObjectiveIndex[mission.CurObjectiveIndex];
+            var currentSet = mission.ObjectiveIndex[mission.CurrentIndex];
             foreach (var objective in currentSet.Objectives)
             {
                 activeObjectives.Add(objective);
@@ -176,15 +176,6 @@ public class MissionNotification : IInGameNotification
         {
             fadeoutProgress += FADE_OUT_SPEED;
             fadeoutProgress = Math.Min(fadeoutProgress, 1.0f);
-        }
-
-        foreach (var objective in activeObjectives)
-        {
-            if (objective.IsCompleted && objective.RequiredCount > 0)
-            {
-                objective.RequiredCount = 0;
-                SoundEngine.PlaySound(SoundID.ResearchComplete);
-            }
         }
     }
 

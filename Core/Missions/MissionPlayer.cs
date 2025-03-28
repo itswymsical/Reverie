@@ -39,7 +39,7 @@ public partial class MissionPlayer : ModPlayer
 
             var container = mission.ToState();
 
-            ModContent.GetInstance<Reverie>().Logger.Debug($"Mission {mission.Name} progress updated: Set {mission.CurObjectiveIndex}");
+            ModContent.GetInstance<Reverie>().Logger.Debug($"Mission {mission.Name} progress updated: Set {mission.CurrentIndex}");
         }
         catch (Exception ex)
         {
@@ -125,7 +125,7 @@ public partial class MissionPlayer : ModPlayer
                         ["Progress"] = (int)mission.Progress,
                         ["Availability"] = (int)mission.Availability,
                         ["Unlocked"] = mission.Unlocked,
-                        ["CurObjectiveIndex"] = mission.CurObjectiveIndex,
+                        ["CurrentIndex"] = mission.CurrentIndex,
                         ["ObjectiveIndex"] = SerializeObjectives(mission.ObjectiveIndex)
                     }
                 };
@@ -143,7 +143,7 @@ public partial class MissionPlayer : ModPlayer
                         ["Progress"] = (int)mission.Progress,
                         ["Availability"] = (int)mission.Availability,
                         ["Unlocked"] = mission.Unlocked,
-                        ["CurObjectiveIndex"] = mission.CurObjectiveIndex,
+                        ["CurrentIndex"] = mission.CurrentIndex,
                         ["ObjectiveIndex"] = SerializeObjectives(mission.ObjectiveIndex)
                     }
                 };
@@ -271,7 +271,7 @@ public partial class MissionPlayer : ModPlayer
                 Progress = (MissionProgress)stateTag.GetInt("Progress"),
                 Availability = (MissionAvailability)stateTag.GetInt("Availability"),
                 Unlocked = stateTag.GetBool("Unlocked"),
-                CurObjectiveIndex = stateTag.GetInt("CurObjectiveIndex"),
+                CurObjectiveIndex = stateTag.GetInt("CurrentIndex"),
                 ObjectiveIndex = DeserializeObjectives(stateTag.GetList<TagCompound>("ObjectiveIndex"))
             };
 
