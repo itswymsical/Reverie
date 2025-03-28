@@ -91,13 +91,6 @@ public class FallingStarMission : Mission
 
             switch (objective)
             {
-                case Objectives.WoodShelter:
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCDataManager.GuideData,
-                    DialogueKeys.CrashLanding.GiveGuideResources,
-                    lineCount: 5,
-                    zoomIn: true);
-                    break;
                 case Objectives.SuitUp:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
@@ -129,6 +122,13 @@ public class FallingStarMission : Mission
             {
                 case Objectives.TalkToGuide:
                     GiveStarterItems();
+                    break;
+                case Objectives.WoodShelter:
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCDataManager.GuideData,
+                    DialogueKeys.CrashLanding.BuildShelter,
+                    lineCount: 5,
+                    zoomIn: true);
                     break;
                 case Objectives.ClearSlimes:
                     DialogueManager.Instance.StartDialogueByKey(
@@ -287,7 +287,7 @@ public class FallingStarMission : Mission
                 case Objectives.WoodShelter:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
-                    DialogueKeys.CrashLanding.GiveGuideResources,
+                    DialogueKeys.CrashLanding.BuildShelter,
                     lineCount: 5,
                     zoomIn: true);
 

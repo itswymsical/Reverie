@@ -94,30 +94,81 @@ public static class MissionUtils
 
     public static void LoadState(this Mission mission, MissionDataContainer state)
     {
-        if (state == null) return;
+        if (state == null)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Warn($"Null state provided for mission {mission.ID}");
+            return;
+        }
 
         mission.Progress = state.Progress;
         mission.Availability = state.Availability;
         mission.Unlocked = state.Unlocked;
-        mission.CurrentIndex = state.CurObjectiveIndex;
 
+        // Validate current index is within bounds
+        if (state.CurObjectiveIndex >= 0 && state.CurObjectiveIndex < mission.ObjectiveIndex.Count)
+        {
+            mission.CurrentIndex = state.CurObjectiveIndex;
+        }
+        else
+        {
+            ModContent.GetInstance<Reverie>().Logger.Warn($"Invalid CurrentIndex {state.CurObjectiveIndex} for mission {mission.ID}, resetting to 0");
+            mission.CurrentIndex = 0;
+        }
 
+        // If objective counts don't match, log a warning
+        if (mission.ObjectiveIndex.Count != state.ObjectiveIndex.Count)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Warn(
+                $"Mission {mission.ID} objective set count mismatch: Expected {mission.ObjectiveIndex.Count}, got {state.ObjectiveIndex.Count}");
+        }
+
+        // Process each objective set
         for (var i = 0; i < Math.Min(mission.ObjectiveIndex.Count, state.ObjectiveIndex.Count); i++)
         {
             var savedSet = state.ObjectiveIndex[i];
             var currentSet = mission.ObjectiveIndex[i];
 
-            for (var j = 0; j < Math.Min(currentSet.Objectives.Count, savedSet.Objectives.Count); j++)
+            // If objective counts within a set don't match, log a warning
+            if (currentSet.Objectives.Count != savedSet.Objectives.Count)
             {
-                var savedObj = savedSet.Objectives[j];
-                var currentObj = currentSet.Objectives[j];
+                ModContent.GetInstance<Reverie>().Logger.Warn(
+                    $"Mission {mission.ID} set {i} objective count mismatch: Expected {currentSet.Objectives.Count}, got {savedSet.Objectives.Count}");
+            }
 
-                if (savedObj.Description == currentObj.Description)
+            // Process each objective, using description matching to handle potential reordering
+            foreach (var savedObj in savedSet.Objectives)
+            {
+                var matchingObj = currentSet.Objectives.FirstOrDefault(obj =>
+                    obj.Description.Equals(savedObj.Description, StringComparison.OrdinalIgnoreCase));
+
+                if (matchingObj != null)
                 {
-                    currentObj.IsCompleted = savedObj.IsCompleted;
-                    currentObj.CurrentCount = savedObj.CurrentCount;
+                    matchingObj.IsCompleted = savedObj.IsCompleted;
+                    matchingObj.CurrentCount = savedObj.CurrentCount;
+                }
+                else
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Warn(
+                        $"Mission {mission.ID} set {i} couldn't find matching objective for '{savedObj.Description}'");
                 }
             }
+
+            // Validate the set completion state
+            bool shouldBeCompleted = currentSet.Objectives.All(o => o.IsCompleted);
+            if (shouldBeCompleted != currentSet.IsCompleted)
+            {
+                ModContent.GetInstance<Reverie>().Logger.Warn(
+                    $"Mission {mission.ID} set {i} completion state inconsistency, fixing...");
+            }
+        }
+
+        // Ensure mission index is valid if mission is active
+        if (mission.Progress == MissionProgress.Active &&
+            (mission.CurrentIndex < 0 || mission.CurrentIndex >= mission.ObjectiveIndex.Count))
+        {
+            ModContent.GetInstance<Reverie>().Logger.Warn(
+                $"Active mission {mission.ID} has invalid current index {mission.CurrentIndex}, resetting to 0");
+            mission.CurrentIndex = 0;
         }
     }
 }

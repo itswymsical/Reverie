@@ -31,7 +31,7 @@ public static class DialogueKeys
         public static string Cutscene => $"{PREFIX}.Cutscene";
         public static string SettlingIn => $"{PREFIX}.SettlingIn";
         public static string GatheringResources => $"{PREFIX}.GatheringResources";
-        public static string GiveGuideResources => $"{PREFIX}.GiveGuideResources";
+        public static string BuildShelter => $"{PREFIX}.BuildShelter";
         public static string WildlifeWoes => $"{PREFIX}.WildlifeWoes";
         public static string SlimeInfestation => $"{PREFIX}.SlimeInfestation";
         public static string SlimeInfestationCommentary => $"{PREFIX}.SlimeInfestation_Commentary";
