@@ -8,22 +8,22 @@ using Terraria.DataStructures;
 
 namespace Reverie.Content.Missions;
 
-public class AFallingStar : Mission
+public class FallingStarMission : Mission
 {
-    public AFallingStar() : base(MissionID.A_FALLING_STAR,
-      "A Falling Star",
+    public FallingStarMission() : base(MissionID.A_FALLING_STAR,
+      "Falling Star...",
       "'Well, that's one way to make an appearance...'" +
       "\nBegin your journey in Terraria, discovering knowledge and power...",
       [
           [("Talk to Guide", 1)],
-          [("Collect Wood", 30), ("Collect Stone", 10), ("Build a shelter", 1)],
-          [("Harvest Ore", 30),("Smelt Bars", 15), ("Discover Accessories", 2)],
-          [("Obtain Helmet", 1), ("Obtain a Chestplate", 1), ("Obtain Leggings", 1), ("Obtain greater Pickaxe", 1)],
-          [("Clear Slimes", 6)],
+          [("Gather wood", 30), ("Gather stone", 10), ("Build a shelter", 1)],
+          [("Harvest ore", 30),("Smelt bars", 15), ("Discover accessories", 2)],
+          [("Obtain a helmet", 1), ("Obtain a chestplate", 1), ("Obtain leggings", 1), ("Obtain a greater Pickaxe", 1)],
+          [("Clear slimes", 6)],
           [("Explore the Underground", 1), ("Loot items", 20)],
-          [("Clear out slimes, again", 12)],
-          [("Resume glorius looting", 100)],
-          [("Return to Laine", 1)],
+          [("Clear out slimes, again...", 12)],
+          [("Return to looting", 100)],
+          [("Return to Guide", 1)],
           [("Clear Slime Infestation", 50)],
           [("Defeat the King Slime", 1)]
       ],
@@ -47,7 +47,7 @@ public class AFallingStar : Mission
 
     internal enum Objectives
     {
-        TalkToLaine = 0,
+        TalkToGuide = 0,
         GatherResources = 1,
         ExploreAndGather = 2,
         ObtainEquipment = 3,
@@ -55,7 +55,7 @@ public class AFallingStar : Mission
         ExploreUnderground = 5,
         ClearSecondSlimes = 6,
         ContinueLooting = 7,
-        ReturnToLaine = 8,
+        ReturnToGuide = 8,
         ClearInfestation = 9,
         DefeatKingSlime = 10
     }
@@ -128,7 +128,7 @@ public class AFallingStar : Mission
             var objective = (Objectives)CurObjectiveIndex;
             switch (objective)
             {
-                case Objectives.TalkToLaine:
+                case Objectives.TalkToGuide:
                     GiveStarterItems();
                     break;
                 case Objectives.ClearInitialSlimes:
@@ -236,7 +236,7 @@ public class AFallingStar : Mission
                     if (biome == BiomeType.Underground)
                         UpdateProgress(0);
                     break;
-                case Objectives.ReturnToLaine:
+                case Objectives.ReturnToGuide:
                     if (biome == BiomeType.Forest)
                         UpdateProgress(0);
                     break;
@@ -256,7 +256,7 @@ public class AFallingStar : Mission
             var objective = (Objectives)CurObjectiveIndex;
             switch (objective)
             {
-                case Objectives.TalkToLaine:
+                case Objectives.TalkToGuide:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
                     DialogueKeys.CrashLanding.GatheringResources,

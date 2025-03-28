@@ -7,6 +7,20 @@
 	<PropertyGroup>
 		
 	</PropertyGroup>
+	<ItemGroup>
+	  <AdditionalFiles Remove="Common\Items\Configs\**" />
+	  <AdditionalFiles Remove="Common\Projectiles\**" />
+	  <AdditionalFiles Remove="Dialouge\**" />
+	  <Compile Remove="Common\Items\Configs\**" />
+	  <Compile Remove="Common\Projectiles\**" />
+	  <Compile Remove="Dialouge\**" />
+	  <EmbeddedResource Remove="Common\Items\Configs\**" />
+	  <EmbeddedResource Remove="Common\Projectiles\**" />
+	  <EmbeddedResource Remove="Dialouge\**" />
+	  <None Remove="Common\Items\Configs\**" />
+	  <None Remove="Common\Projectiles\**" />
+	  <None Remove="Dialouge\**" />
+	</ItemGroup>
 
 	<!-- References -->
 	<ItemGroup>
@@ -19,11 +33,6 @@
 	  <Reference Include="SubworldLibrary">
 	    <HintPath>..\ReverieMod\Utilities\SubworldLibrary.dll</HintPath>
 	  </Reference>
-	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="Common\Items\Configs\" />
-	  <Folder Include="Common\Projectiles\" />
-	  <Folder Include="Dialouge\" />
 	</ItemGroup>
 
 </Project>

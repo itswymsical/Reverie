@@ -1,29 +1,48 @@
 ﻿using Reverie.Common.Subworlds.Archaea;
+using Reverie.Common.UI.Missions;
 using Reverie.Content.Dusts;
 using Reverie.Content.Tiles.Archaea;
 using Reverie.Core.Cinematics;
+using Reverie.Core.Missions;
 using SubworldLibrary;
 using System.Collections.Generic;
+using System.Linq;
 using Terraria;
 using Terraria.GameContent;
+using Terraria.UI;
 using Terraria.UI.Chat;
 
 namespace Reverie.Common.Players;
 
 public class ReveriePlayer : ModPlayer
 {
+    private bool wasInventoryOpen = false;
+    private Mission currentMission;
+
     public override void PostUpdate()
     {
         if (Main.LocalPlayer.ZoneDesert || SubworldSystem.IsActive<ArchaeaSub>())
-                DrawSandHaze();
-        
+            DrawSandHaze();
+
         if (!Cutscene.IsPlayerVisible)
             Player.AddBuff(BuffID.Invisibility, 1, true);
-        
+
         if (Cutscene.NoFallDamage)
             Player.noFallDmg = true;
 
-        var sb = Main.spriteBatch;
+        bool isInventoryOpen = Main.playerInventory;
+
+        if (isInventoryOpen && !wasInventoryOpen)
+        {
+            currentMission = Main.LocalPlayer.GetModPlayer<MissionPlayer>().GetActiveMissions().FirstOrDefault();
+
+            if (currentMission != null)
+            {
+                InGameNotificationsTracker.AddNotification(new MissionNotification(currentMission));
+            }
+        }
+
+        wasInventoryOpen = isInventoryOpen;
     }
     public override void SetControls()
     {

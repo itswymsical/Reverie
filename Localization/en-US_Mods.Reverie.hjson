@@ -164,6 +164,11 @@ Items: {
 		DisplayName: Archiver Chronicle I
 		Tooltip: ""
 	}
+
+	ObjTest: {
+		DisplayName: Obj Test
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
