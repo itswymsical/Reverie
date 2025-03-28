@@ -12,11 +12,35 @@ public partial class MissionManager
     private static MissionManager instance;
     public static MissionManager Instance => instance ??= new MissionManager();
 
-    public void RegisterMission(Mission mission)
+    private bool isWorldFullyLoaded = false;
+    private readonly HashSet<int> pendingRegistrations = [];
+    public void OnWorldLoad()
     {
-        if (mission == null)
-            return;
+        activeMissions.Clear();
+        pendingRegistrations.Clear();
+        isWorldFullyLoaded = false;
+        ModContent.GetInstance<Reverie>().Logger.Info("MissionManager reset for world load");
+    }
+    public void OnWorldFullyLoaded()
+    {
+        isWorldFullyLoaded = true;
 
+        // Register any pending missions
+        foreach (var missionId in pendingRegistrations)
+        {
+            var mission = MissionFactory.Instance.GetMissionData(missionId);
+            if (mission != null)
+            {
+                RegisterMissionInternal(mission);
+            }
+        }
+
+        pendingRegistrations.Clear();
+        ModContent.GetInstance<Reverie>().Logger.Info("MissionManager marked world as fully loaded");
+    }
+
+    private void RegisterMissionInternal(Mission mission)
+    {
         try
         {
             ModContent.GetInstance<Reverie>().Logger.Debug($"Active mission count before registration: {activeMissions.Count}");
@@ -36,6 +60,21 @@ public partial class MissionManager
         {
             ModContent.GetInstance<Reverie>().Logger.Error($"Failed to register mission: {ex.Message}");
         }
+    }
+
+    public void RegisterMission(Mission mission)
+    {
+        if (mission == null)
+            return;
+
+        if (!isWorldFullyLoaded)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Info($"Queueing mission {mission.ID} for registration after world load");
+            pendingRegistrations.Add(mission.ID);
+            return;
+        }
+
+        RegisterMissionInternal(mission);
     }
 
     public void Reset()

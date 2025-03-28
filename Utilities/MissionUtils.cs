@@ -122,7 +122,7 @@ public static class MissionUtils
                 $"Mission {mission.ID} objective set count mismatch: Expected {mission.ObjectiveIndex.Count}, got {state.ObjectiveIndex.Count}");
         }
 
-        // Process each objective set
+        // Process each objective set with improved matching by description
         for (var i = 0; i < Math.Min(mission.ObjectiveIndex.Count, state.ObjectiveIndex.Count); i++)
         {
             var savedSet = state.ObjectiveIndex[i];
@@ -136,29 +136,26 @@ public static class MissionUtils
             }
 
             // Process each objective, using description matching to handle potential reordering
-            foreach (var savedObj in savedSet.Objectives)
+            foreach (var currentObj in currentSet.Objectives)
             {
-                var matchingObj = currentSet.Objectives.FirstOrDefault(obj =>
-                    obj.Description.Equals(savedObj.Description, StringComparison.OrdinalIgnoreCase));
+                var matchingObj = savedSet.Objectives.FirstOrDefault(obj =>
+                    obj.Description.Equals(currentObj.Description, StringComparison.OrdinalIgnoreCase));
 
                 if (matchingObj != null)
                 {
-                    matchingObj.IsCompleted = savedObj.IsCompleted;
-                    matchingObj.CurrentCount = savedObj.CurrentCount;
+                    currentObj.IsCompleted = matchingObj.IsCompleted;
+                    currentObj.CurrentCount = Math.Min(matchingObj.CurrentCount, currentObj.RequiredCount);
+
+                    if (currentObj.IsCompleted && currentObj.CurrentCount < currentObj.RequiredCount)
+                    {
+                        currentObj.CurrentCount = currentObj.RequiredCount;
+                    }
                 }
                 else
                 {
                     ModContent.GetInstance<Reverie>().Logger.Warn(
-                        $"Mission {mission.ID} set {i} couldn't find matching objective for '{savedObj.Description}'");
+                        $"Mission {mission.ID} set {i} couldn't find saved state for objective '{currentObj.Description}'");
                 }
-            }
-
-            // Validate the set completion state
-            bool shouldBeCompleted = currentSet.Objectives.All(o => o.IsCompleted);
-            if (shouldBeCompleted != currentSet.IsCompleted)
-            {
-                ModContent.GetInstance<Reverie>().Logger.Warn(
-                    $"Mission {mission.ID} set {i} completion state inconsistency, fixing...");
             }
         }
 

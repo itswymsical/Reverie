@@ -19,10 +19,10 @@ public class FallingStarMission : Mission
           [("Gather wood", 50), ("Build a shelter", 1)],
           [("Harvest ore", 30),("Craft a pickaxe", 1), ("Discover accessories", 2)],
           [("Obtain a helmet", 1), ("Obtain a chestplate", 1), ("Obtain leggings", 1), ("Obtain a new weapon", 1)],
-          [("Clear slimes", 6)],
           [("Explore the Underground", 1), ("Discover a Mushroom Biome", 1), ("Kill enemies", 10)],
+          [("Clear slimes", 6)],
           [("Clear out slimes, again...", 12)],
-          [("Return to Guide", 1)],
+          [("Defend the Forest", 1)],
           [("Clear Slime Infestation", 50)],
           [("Defeat the King Slime", 1)]
       ],
@@ -51,13 +51,12 @@ public class FallingStarMission : Mission
         WoodShelter = 1,
         AquireMetal = 2,
         SuitUp = 3,
-        ClearSlimes = 4,
-        Explore = 5,
+        Explore = 4,
+        ClearSlimes = 5,
         ClearSlimes2 = 6,
-        ContinueLooting = 7,
-        ReturnToGuide = 8,
-        ClearInfestation = 9,
-        DefeatKingSlime = 10
+        DefendForest = 7,
+        ClearInfestation = 8,
+        DefeatKingSlime = 9
     }
 
     public override void Update()
@@ -144,16 +143,16 @@ public class FallingStarMission : Mission
                     lineCount: 2,
                     zoomIn: true);
                     break;
-                case Objectives.ContinueLooting:
-                    StartSlimeRainEvent();
+                case Objectives.ClearSlimes2:
+                    StartSlimeRain();
                     break;
                 case Objectives.ClearInfestation:
-                    StartKingSlimeEncounter();
+                    StartKingSlime();
                     break;
                 case Objectives.DefeatKingSlime:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
-                    DialogueKeys.CrashLanding.KSVictory,
+                    DialogueKeys.CrashLanding.KingSlimeDefeat,
                     lineCount: 4,
                     zoomIn: true);
                     break;
@@ -185,16 +184,22 @@ public class FallingStarMission : Mission
                         UpdateProgress(0, item.stack);
                     break;
                 case Objectives.SuitUp:
-                    HandleEquipmentCollection(item);
+                    if (item.headSlot != -1 && !item.vanity)
+                        UpdateProgress(0, item.stack);
+                    if (item.bodySlot != -1 && !item.vanity)
+                        UpdateProgress(1, item.stack);
+                    if (item.legSlot != -1 && !item.vanity)
+                        UpdateProgress(2, item.stack);
+                    if (item.DealsDamage())
+                        UpdateProgress(3);
                     break;
                 case Objectives.AquireMetal:
-                    HandleExplorationGathering(item);
-                    break;
-                case Objectives.Explore:
-                    HandleUndergroundLoot(item);
-                    break;
-                case Objectives.ContinueLooting:
-                    HandleContinuedLooting(item);
+                    if (item.IsOre())
+                        UpdateProgress(0, item.stack);
+                    if (item.IsMiningTool())
+                        UpdateProgress(1, item.stack);
+                    if (item.accessory)
+                        UpdateProgress(2, item.stack);
                     break;
             }
         }
@@ -215,6 +220,10 @@ public class FallingStarMission : Mission
                 case Objectives.ClearSlimes2:
                     if (npc.type == NPCAIStyleID.Slime)
                         UpdateProgress(0);
+                    break;
+                case Objectives.Explore:
+                    if (!npc.CountsAsACritter)
+                        UpdateProgress(2);
                     break;
                 case Objectives.ClearInfestation:
                     HandleSlimeInfestation(npc);
@@ -241,8 +250,11 @@ public class FallingStarMission : Mission
                 case Objectives.Explore:
                     if (biome == BiomeType.Underground)
                         UpdateProgress(0);
+                    if (biome == BiomeType.Glowshroom)
+                        UpdateProgress(1);
                     break;
-                case Objectives.ReturnToGuide:
+
+                case Objectives.DefendForest:
                     if (biome == BiomeType.Forest)
                         UpdateProgress(0);
                     break;
@@ -311,7 +323,7 @@ public class FallingStarMission : Mission
         }
     }
 
-    private void StartSlimeRainEvent()
+    private void StartSlimeRain()
     {
         Main.StartSlimeRain(true);
         DialogueManager.Instance.StartDialogueByKey(
@@ -321,7 +333,7 @@ public class FallingStarMission : Mission
         zoomIn: true);
     }
 
-    private void StartKingSlimeEncounter()
+    private void StartKingSlime()
     {
         DialogueManager.Instance.StartDialogueByKey(
         NPCDataManager.GuideData,
@@ -347,63 +359,6 @@ public class FallingStarMission : Mission
                     number2: NPCID.KingSlime);
             }
         }
-    }
-
-    private void HandleEquipmentCollection(Item item)
-    {
-        if (item.headSlot != -1 && !item.vanity)
-            UpdateProgress(0, item.stack);
-        if (item.bodySlot != -1 && !item.vanity)
-            UpdateProgress(1, item.stack);
-        if (item.legSlot != -1 && !item.vanity)
-            UpdateProgress(2, item.stack);
-        if (item.IsMiningTool())
-            UpdateProgress(3);
-    }
-
-    private void HandleExplorationGathering(Item item)
-    {
-        if (item.IsOre())
-            UpdateProgress(0, item.stack);
-
-        if (item.Name.EndsWith("Bar"))
-            UpdateProgress(1, item.stack);
-
-        if (item.accessory)
-            UpdateProgress(2, item.stack);
-    }
-
-    private void HandleUndergroundLoot(Item item)
-    {
-        if (IsValuableLoot(item))
-        {
-            UpdateProgress(1, item.stack);
-            if (ObjectiveIndex[CurrentIndex].Objectives[1].CurrentCount == LOOT_NOTIFICATION_THRESHOLD)
-            {
-                DialogueManager.Instance.StartDialogueByKey(
-                NPCDataManager.GuideData,
-                DialogueKeys.CrashLanding.SlimeInfestation,
-                lineCount: 2,
-                zoomIn: true);
-            }
-        }
-    }
-
-    private void HandleContinuedLooting(Item item)
-    {
-        if (IsValuableLoot(item))
-        {
-            UpdateProgress(0, item.stack);
-        }
-    }
-
-    private bool IsValuableLoot(Item item)
-    {
-        return (item.rare >= ItemRarityID.Blue
-            || item.accessory
-            || item.damage > 0 || item.pick > 0 || item.axe > 0 || item.hammer > 0
-            || item.value >= Item.buyPrice(silver: 1))
-            || item.type != ItemID.CopperCoin;
     }
 
     private void HandleSlimeInfestation(NPC npc)

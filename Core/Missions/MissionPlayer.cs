@@ -22,7 +22,13 @@ public partial class MissionPlayer : ModPlayer
     private readonly HashSet<int> notifiedMissions = [];
 
     private readonly HashSet<int> dirtyMissions = [];
+
     private int check = 0;
+
+    private TagCompound savedMissionData = null;
+    private bool isWorldFullyLoaded = false;
+    private bool hasDeferredLoadRun = false;
+
     #endregion
 
     #region Mission Logic
@@ -133,6 +139,8 @@ public partial class MissionPlayer : ModPlayer
             }
             tag["ActiveMissions"] = activeMissionData;
 
+            // Remove the duplicate loop
+
             tag["CompletedMissionIDs"] = GetCompletedMissions().Select(m => m.ID).ToList();
             tag["NotifiedMissions"] = notifiedMissions.ToList();
 
@@ -142,6 +150,8 @@ public partial class MissionPlayer : ModPlayer
                 ["MissionIDs"] = kvp.Value
             }).ToList();
             tag["NPCMissions"] = npcMissionData;
+
+            ModContent.GetInstance<Reverie>().Logger.Info($"Successfully saved mission data for {activeMissionData.Count} active missions");
         }
         catch (Exception ex)
         {
@@ -151,12 +161,31 @@ public partial class MissionPlayer : ModPlayer
 
     public override void LoadData(TagCompound tag)
     {
+        // Only store the data, don't process it yet
+        savedMissionData = tag;
+
+        // Reset to clean state to avoid any partial loading issues
+        ResetToCleanState();
+
+        ModContent.GetInstance<Reverie>().Logger.Info("Mission data stored for deferred loading");
+    }
+
+    // New method for deferred loading
+    private void ProcessDeferredLoad()
+    {
+        if (hasDeferredLoadRun || savedMissionData == null)
+        {
+            return;
+        }
+
+        hasDeferredLoadRun = true;
+
         try
         {
-            ResetToCleanState();
+            ModContent.GetInstance<Reverie>().Logger.Info("Starting deferred mission data loading");
 
             // Load completed missions first
-            var completedMissionIds = tag.GetList<int>("CompletedMissionIDs");
+            var completedMissionIds = savedMissionData.GetList<int>("CompletedMissionIDs");
             int completedMissionsLoaded = 0;
 
             foreach (var missionId in completedMissionIds)
@@ -176,7 +205,7 @@ public partial class MissionPlayer : ModPlayer
 
             // Load active missions
             int activeMissionsLoaded = 0;
-            var activeMissionData = tag.GetList<TagCompound>("ActiveMissions").ToList();
+            var activeMissionData = savedMissionData.GetList<TagCompound>("ActiveMissions").ToList();
 
             foreach (var missionTag in activeMissionData)
             {
@@ -197,7 +226,7 @@ public partial class MissionPlayer : ModPlayer
             // Load notified missions
             try
             {
-                notifiedMissions.UnionWith([.. tag.GetList<int>("NotifiedMissions")]);
+                notifiedMissions.UnionWith([.. savedMissionData.GetList<int>("NotifiedMissions")]);
             }
             catch (Exception ex)
             {
@@ -207,7 +236,7 @@ public partial class MissionPlayer : ModPlayer
             // Load NPC mission assignments
             try
             {
-                var npcMissionData = tag.GetList<TagCompound>("NPCMissions").ToList();
+                var npcMissionData = savedMissionData.GetList<TagCompound>("NPCMissions").ToList();
                 foreach (var npcTag in npcMissionData)
                 {
                     try
@@ -245,10 +274,18 @@ public partial class MissionPlayer : ModPlayer
 
             // Validate mission state consistency
             ValidateStates();
+
+            // Clear saved data to free memory
+            savedMissionData = null;
+
+            // Mark world as fully loaded
+            isWorldFullyLoaded = true;
+
+            ModContent.GetInstance<Reverie>().Logger.Info("Completed deferred mission loading successfully");
         }
         catch (Exception ex)
         {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Critical failure loading mission data: {ex}");
+            ModContent.GetInstance<Reverie>().Logger.Error($"Critical failure in deferred mission loading: {ex}");
             ResetToCleanState();
         }
     }
@@ -399,14 +436,39 @@ public partial class MissionPlayer : ModPlayer
                 return;
             }
 
+            // Gather state data
+            var progress = (MissionProgress)stateTag.GetInt("Progress");
+            var availability = (MissionAvailability)stateTag.GetInt("Availability");
+            var unlocked = stateTag.GetBool("Unlocked");
+            var currentIndex = stateTag.GetInt("CurrentIndex");
+
+            // Validate state data
+            if (!Enum.IsDefined(typeof(MissionProgress), progress))
+            {
+                ModContent.GetInstance<Reverie>().Logger.Warn($"Invalid mission progress value {(int)progress} for mission {missionId}, defaulting to Inactive");
+                progress = MissionProgress.Inactive;
+            }
+
+            if (!Enum.IsDefined(typeof(MissionAvailability), availability))
+            {
+                ModContent.GetInstance<Reverie>().Logger.Warn($"Invalid mission availability value {(int)availability} for mission {missionId}, defaulting to Locked");
+                availability = MissionAvailability.Locked;
+            }
+
+            if (currentIndex < 0 || currentIndex >= mission.ObjectiveIndex.Count)
+            {
+                ModContent.GetInstance<Reverie>().Logger.Warn($"Invalid currentIndex {currentIndex} for mission {missionId}, defaulting to 0");
+                currentIndex = 0;
+            }
+
             // Create container from saved state
             var container = new MissionDataContainer
             {
                 ID = missionId,
-                Progress = (MissionProgress)stateTag.GetInt("Progress"),
-                Availability = (MissionAvailability)stateTag.GetInt("Availability"),
-                Unlocked = stateTag.GetBool("Unlocked"),
-                CurObjectiveIndex = stateTag.GetInt("CurrentIndex")
+                Progress = progress,
+                Availability = availability,
+                Unlocked = unlocked,
+                CurObjectiveIndex = currentIndex
             };
 
             // Load objective data with validation
@@ -444,11 +506,10 @@ public partial class MissionPlayer : ModPlayer
             mission.LoadState(container);
             missionDict[missionId] = mission;
 
-            // Register with handler manager if active
-            if (mission.Progress == MissionProgress.Active)
-            {
-                MissionManager.Instance.RegisterMission(mission);
-            }
+            // Mark mission as dirty to ensure proper sync
+            dirtyMissions.Add(missionId);
+
+            ModContent.GetInstance<Reverie>().Logger.Info($"Successfully loaded mission {mission.Name} (ID: {missionId}) with state {mission.Progress}");
         }
         catch (Exception ex)
         {
@@ -615,10 +676,31 @@ public partial class MissionPlayer : ModPlayer
     #endregion
 
     #region Objective Tracking & Mission Handlers
+    public override void OnEnterWorld()
+    {
+        ProcessDeferredLoad();
+
+        var AFallingStar = GetMission(MissionID.A_FALLING_STAR);
+        var player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
+
+        if (AFallingStar != null &&
+            AFallingStar.Availability != MissionAvailability.Completed &&
+            AFallingStar.Progress != MissionProgress.Active)
+        {
+            CutsceneSystem.PlayCutscene(new FallingStarCutscene());
+            UnlockMission(MissionID.A_FALLING_STAR);
+            StartMission(MissionID.A_FALLING_STAR);
+        }
+    }
 
     public override void PostUpdate()
     {
         base.PostUpdate();
+
+        if (!hasDeferredLoadRun)
+        {
+            ProcessDeferredLoad();
+        }
 
         MissionManager.Instance.OnUpdate();
 
@@ -637,21 +719,6 @@ public partial class MissionPlayer : ModPlayer
                 }
             }
             check = 0;
-        }
-    }
-
-    public override void OnEnterWorld()
-    {
-        var AFallingStar = GetMission(MissionID.A_FALLING_STAR);
-        var player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
-
-        if (AFallingStar != null &&
-            AFallingStar.Availability != MissionAvailability.Completed &&
-            AFallingStar.Progress != MissionProgress.Active)
-        {
-            CutsceneSystem.PlayCutscene(new FallingStarCutscene());
-            UnlockMission(MissionID.A_FALLING_STAR);
-            StartMission(MissionID.A_FALLING_STAR);
         }
     }
 

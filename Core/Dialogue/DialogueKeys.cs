@@ -38,7 +38,7 @@ public static class DialogueKeys
         public static string SlimeRain => $"{PREFIX}.SlimeRain";
         public static string SlimeRainCommentary => $"{PREFIX}.SlimeRain_Commentary";
         public static string KSEncounter => $"{PREFIX}.KS_Encounter";
-        public static string KSVictory => $"{PREFIX}.KS_Victory";
+        public static string KingSlimeDefeat => $"{PREFIX}.KingSlimeDefeat";
     }
 
     // Add more dialogue categories as needed

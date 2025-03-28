@@ -5,15 +5,15 @@
 
 		SettlingIn: {
 			Line1: Are you alright? That was quite the entrance.
-			Line2: Is crashing and exploding on people's property a custom where you come from?
-			Line3: Nice to meet ya.
-			Line4: Let's get settled in; I could use some help repairing the damage from your, uh...
-			Line5: ...arrival.
+			Line2: Hey uh, you appear to be glowing...?
+			Line3: Just what are you?
+			Line4: Sorry, that's a bit rude.
+			Line5: Let's get settled in. I've got some tools for you.
 		}
 
 		GatheringResources: {
-			Line1: While you're out there, could you gather some wood and stone?
-			Line2: I need to patch up the house, and you should familiarize yourself.
+			Line1: Sorry there's no copper sword, the wood is all I could do with at the momment.
+			Line2: Explore around the area a bit, there's a lot to see in this world of ours.
 		}
 
 		BuildShelter: {
@@ -25,14 +25,14 @@
 		}
 
 		WildlifeWoes: {
-			Line1: We've got a lot of slimes prancing about lately.
-			Line2: Nothing to worry about, they're pretty easy to handle.
-			Line3: Clear them out, and we'll be able to explore the area more safely.
+			Line1: Hey, we've got a lot of slimes prancing about.
+			Line2: Nothing to worry about! they're pretty feeble.
+			Line3: Clear them out, we'll be able to explore the area more safely.
 		}
 
 		SlimeInfestation: {
-			Line1: Is it just me, or are there more slimes around than usual?
-			Line2: Also, I've never seen them so aggressive before...
+			Line1: There's definitely something going on with these slimes.
+			Line2: I've never seen this aggressive before... something must be agitating the ecosystem.
 		}
 
 		SlimeInfestation_Commentary: {
@@ -58,8 +58,8 @@
 			Line3: Heh, didn't know that would cause this to happen. My bad.
 		}
 
-		KS_Victory: {
-			Line1: Well fought! The King Slime is no more.
+		KingSlimeDefeat: {
+			Line1: That was too much to handle...
 			Line2: I don't have a good feeling about the nature of the creature aggression.
 			Line3: They've been like this since you arrived...
 			Line4: and you do have that glowy aura...
