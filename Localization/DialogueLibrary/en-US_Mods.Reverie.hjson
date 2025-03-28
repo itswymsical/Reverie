@@ -1,6 +1,6 @@
-DialogueLibrary: {
+﻿DialogueLibrary: {
 	CrashLanding: {
-		Intro.Line1: What the H***?!?!
+		Intro.Line1: What the Hell?!?!
 		Cutscene.Line1: Hmm? What's that?
 
 		SettlingIn: {
@@ -120,7 +120,7 @@ DialogueLibrary: {
 
 	ArchiverChronicles.Book1: I, Laine L., record these words as testimony to what I have witnessed. The veil between worlds grows thin, and I can no longer distinguish between vision and reality. They call it Reverie—this force of unity that flows through all things like currents in an endless sea. I've felt it pulse beneath my fingertips when touching ancient stone. It is creation itself, the binding thread that connects all consciousness. But where light casts, shadow follows. The oppositional force—Apathia—grows stronger. It is not merely absence or void, but active resistance; A severing, A willful rejection of connection. I've seen them—the Assailants—moving through our world like oil through water, never truly mixing with what surrounds them. They are harbingers of something vast and hungry that waits beyond our perception. Their master dwells in the sunken depths where pressure should crush any living thing. Yet he endures, a being of immense will who once sought to unite the disparate world of a distant ocean kingdom. He now seeks not to elevate but to dissolve—to return all consciousness to the primordial soup from which it emerged. I am not the hero destined to face him. I merely record what approaches. The hero will come from beyond, trailing light like a falling star.
 
-	TamerTestMission: {
+	TamerMissions: {
 		Chapter1: {
 			Line1: I appreciate you taking the time to pick up this job.
 			Line2: I need about 5 bunnies, bring me them and ill have your reward.

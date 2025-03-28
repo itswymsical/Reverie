@@ -6,12 +6,18 @@ using static Reverie.Reverie;
 
 namespace Reverie.Core.Dialogue;
 
-public class NPCPortrait(Asset<Texture2D> texture, int frameCount)
+public class NPCPortrait
 {
-    public Asset<Texture2D> Texture { get; } = texture;
-    public int FrameCount { get; } = frameCount;
+    public Asset<Texture2D> Texture { get; }
+    public int FrameCount { get; }
     public int FrameWidth = 92;
     public int FrameHeight = 92;
+
+    public NPCPortrait(Asset<Texture2D> texture, int frameCount)
+    {
+        Texture = texture;
+        FrameCount = frameCount;
+    }
 
     public Rectangle GetFrameRect(int frameIndex)
     {
@@ -19,19 +25,92 @@ public class NPCPortrait(Asset<Texture2D> texture, int frameCount)
     }
 }
 
-public class NPCData(NPCPortrait portrait, string npcName, int npcID, Color dialogueColor, SoundStyle characterSound)
+public class NPCData
 {
-    public NPCPortrait Portrait { get; } = portrait;
-    public string NpcName { get; } = npcName;
-    public int NpcID { get; } = npcID;
-    public Color DialogueColor { get; } = dialogueColor;
-    public SoundStyle CharacterSound { get; } = characterSound;
-    public Dictionary<DialogueID, DialogueSequence> DialogueSequences { get; } = [];
+    public NPCPortrait Portrait { get; }
+    public string NpcName { get; }
+    public int NpcID { get; }
+    public Color DialogueColor { get; }
+    public SoundStyle CharacterSound { get; }
 
-    public void AddDialogueSequence(DialogueID dialogueId, DialogueSequence sequence)
+    // This cache stores frequently used dialogues for this NPC
+    private readonly Dictionary<string, DialogueSequence> _dialogueCache = [];
+
+    public NPCData(NPCPortrait portrait, string npcName, int npcID, Color dialogueColor, SoundStyle characterSound)
     {
-        DialogueSequences[dialogueId] = sequence;
+        Portrait = portrait;
+        NpcName = npcName;
+        NpcID = npcID;
+        DialogueColor = dialogueColor;
+        CharacterSound = characterSound;
     }
+
+    /// <summary>
+    /// Caches a dialogue sequence for this NPC for quicker access
+    /// </summary>
+    public void CacheDialogue(string dialogueKey, DialogueSequence sequence)
+    {
+        _dialogueCache[dialogueKey] = sequence;
+    }
+
+    /// <summary>
+    /// Gets a cached dialogue sequence for this NPC
+    /// </summary>
+    public DialogueSequence GetCachedDialogue(string dialogueKey)
+    {
+        return _dialogueCache.TryGetValue(dialogueKey, out var sequence) ? sequence : null;
+    }
+
+    /// <summary>
+    /// Clears all cached dialogues for this NPC
+    /// </summary>
+    public void ClearDialogueCache()
+    {
+        _dialogueCache.Clear();
+    }
+
+    /// <summary>
+    /// Starts a dialogue directly for this NPC
+    /// </summary>
+    public bool StartDialogue(string dialogueKey, int lineCount, bool zoomIn = false,
+        int defaultDelay = 2, int defaultEmote = 0, int? musicId = null,
+        params (int line, int delay, int emote)[] modifications)
+    {
+        // Check if dialogue is already cached
+        DialogueSequence dialogue = GetCachedDialogue(dialogueKey);
+
+        if (dialogue == null)
+        {
+            // Build and cache the dialogue
+            dialogue = DialogueBuilder.BuildByKey(dialogueKey, lineCount, defaultDelay, defaultEmote, musicId, modifications);
+            CacheDialogue(dialogueKey, dialogue);
+        }
+
+        return DialogueManager.Instance.StartDialogue(this, dialogue, dialogueKey, zoomIn);
+    }
+
+    /// <summary>
+    /// Starts a simple one-line dialogue for this NPC
+    /// </summary>
+    public bool StartSimpleDialogue(string dialogueKey, bool zoomIn = false,
+        int delay = 2, int emote = 0, int? musicId = null)
+    {
+        // Check if dialogue is already cached
+        DialogueSequence dialogue = GetCachedDialogue(dialogueKey);
+
+        if (dialogue == null)
+        {
+            // Build and cache the dialogue
+            dialogue = DialogueBuilder.SimpleLineByKey(dialogueKey, delay, emote, musicId);
+            CacheDialogue(dialogueKey, dialogue);
+        }
+
+        return DialogueManager.Instance.StartDialogue(this, dialogue, dialogueKey, zoomIn);
+    }
+
+    /// <summary>
+    /// Gets the NPC's given name from the game
+    /// </summary>
     public string GetNpcGivenName(int npcID)
     {
         var thisNPC = NPC.FindFirstNPC(npcID);
@@ -49,6 +128,7 @@ public static class NPCDataManager
     {
         Initialize();
     }
+
     public static void Initialize()
     {
         var basicPortrait = new NPCPortrait(
@@ -77,18 +157,14 @@ public static class NPCDataManager
             SoundID.MenuOpen
         );
 
-
-        foreach (DialogueID dialogueId in Enum.GetValues(typeof(DialogueID)))
-        {
-            var dialogue = DialogueList.GetDialogueById(dialogueId);
-            if (dialogue != null)
-            {
-                Default.AddDialogueSequence(dialogueId, dialogue);
-                GuideData.AddDialogueSequence(dialogueId, dialogue);
-            }
-        }
-
         DialogueManager.Instance.RegisterNPC("Default", Default);
         DialogueManager.Instance.RegisterNPC("Guide", GuideData);
+
+        // Pre-cache some common dialogues if needed
+        Default.CacheDialogue(DialogueKeys.CrashLanding.Intro,
+            DialogueBuilder.BuildByKey(DialogueKeys.CrashLanding.Intro, 1, 1, 0));
+
+        GuideData.CacheDialogue(DialogueKeys.CrashLanding.Intro,
+            DialogueBuilder.BuildByKey(DialogueKeys.CrashLanding.Intro, 1, 1, 0));
     }
 }
