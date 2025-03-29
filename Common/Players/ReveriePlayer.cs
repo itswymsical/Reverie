@@ -8,6 +8,7 @@ using SubworldLibrary;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.UI;
 using Terraria.UI.Chat;
@@ -65,7 +66,7 @@ public class ReveriePlayer : ModPlayer
         itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperPickaxe);
         itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperAxe);
     }
-    
+
     private const int SAND_HAZE_RANGE_X = 55;
     private const int SAND_HAZE_RANGE_Y = 30;
     private const int DUST_SPAWN_CHANCE = 95;
