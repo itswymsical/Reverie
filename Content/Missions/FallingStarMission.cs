@@ -19,11 +19,11 @@ public class FallingStarMission : Mission
           [("Gather wood", 50), ("Build a shelter", 1)],
           [("Harvest ore", 30),("Craft a pickaxe", 1), ("Discover accessories", 2)],
           [("Obtain a helmet", 1), ("Obtain a chestplate", 1), ("Obtain leggings", 1), ("Obtain a new weapon", 1)],
-          [("Explore the Underground", 1), ("Discover a Mushroom Biome", 1), ("Kill enemies", 10)],
-          [("Clear slimes", 6)],
-          [("Clear out slimes, again...", 12)],
+          [("Explore the Underground", 1), ("Discover a Glowing Mushroom Biome", 1), ("Kill enemies", 15)],
+          [("Clear out slimes", 10)],
+          [("Clear out slimes, again...", 10)],
           [("Defend the Forest", 1)],
-          [("Clear Slime Infestation", 50)],
+          [("Clear Slime Infestation", 80)],
           [("Defeat the King Slime", 1)]
       ],
 
@@ -37,6 +37,7 @@ public class FallingStarMission : Mission
 
     private const int LOOT_NOTIFICATION_THRESHOLD = 10;
     private const int SLIME_COMMENTARY_THRESHOLD = 20;
+    private const int SLIME_WARNING_THRESHOLD = 45;
 
     private readonly List<Item> starterItems =
     [
@@ -55,7 +56,7 @@ public class FallingStarMission : Mission
         ClearSlimes = 5,
         ClearSlimes2 = 6,
         DefendForest = 7,
-        ClearInfestation = 8,
+        ClearSlimeRain = 8,
         DefeatKingSlime = 9
     }
 
@@ -63,7 +64,7 @@ public class FallingStarMission : Mission
     {
         base.Update();
 
-        if (CurrentIndex < (int)Objectives.ClearInfestation)
+        if (CurrentIndex < (int)Objectives.ClearSlimeRain)
         {
             Main.slimeRain = false;
             Main.slimeRainTime = 0;
@@ -71,7 +72,7 @@ public class FallingStarMission : Mission
             Main.time = 18000;
         }
 
-        if (CurrentIndex == (int)Objectives.ClearInfestation)
+        if (CurrentIndex == (int)Objectives.ClearSlimeRain)
         {
             if (!Main.slimeRain)
             {
@@ -90,17 +91,31 @@ public class FallingStarMission : Mission
 
             switch (objective)
             {
-                case Objectives.SuitUp:
+                case Objectives.SuitUp: //get armor and weapon
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
                     DialogueKeys.CrashLanding.WildlifeWoes,
                     lineCount: 3,
                     zoomIn: true);
                     break;
+                case Objectives.WoodShelter: //chop trees , build shelter
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCDataManager.GuideData,
+                    DialogueKeys.CrashLanding.BuildShelter,
+                    lineCount: 5,
+                    zoomIn: true);
+                    break;
                 case Objectives.ClearSlimes:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
                     DialogueKeys.CrashLanding.SlimeInfestation,
+                    lineCount: 2,
+                    zoomIn: true);
+                    break;
+                case Objectives.Explore: //post-exploring slimes attack the guide
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCDataManager.GuideData,
+                    DialogueKeys.CrashLanding.SlimeInfestationCommentary,
                     lineCount: 2,
                     zoomIn: true);
                     break;
@@ -122,13 +137,6 @@ public class FallingStarMission : Mission
                 case Objectives.TalkToGuide:
                     GiveStarterItems();
                     break;
-                case Objectives.WoodShelter:
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCDataManager.GuideData,
-                    DialogueKeys.CrashLanding.BuildShelter,
-                    lineCount: 5,
-                    zoomIn: true);
-                    break;
                 case Objectives.ClearSlimes:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
@@ -136,18 +144,11 @@ public class FallingStarMission : Mission
                     lineCount: 2,
                     zoomIn: true);
                     break;
-                case Objectives.Explore:
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCDataManager.GuideData,
-                    DialogueKeys.CrashLanding.SlimeInfestationCommentary,
-                    lineCount: 2,
-                    zoomIn: true);
-                    break;
                 case Objectives.ClearSlimes2:
                     StartSlimeRain();
                     break;
-                case Objectives.ClearInfestation:
-                    StartKingSlime();
+                case Objectives.ClearSlimeRain:
+                    SpawnKingSlime();
                     break;
                 case Objectives.DefeatKingSlime:
                     DialogueManager.Instance.StartDialogueByKey(
@@ -172,6 +173,29 @@ public class FallingStarMission : Mission
     }
 
     #region Event Handlers
+    public override void OnChat(NPC npc)
+    {
+        try
+        {
+            var objective = (Objectives)CurrentIndex;
+            switch (objective)
+            {
+                case Objectives.TalkToGuide:
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCDataManager.GuideData,
+                    DialogueKeys.CrashLanding.GatheringResources,
+                    lineCount: 2,
+                    zoomIn: true);
+                    UpdateProgress(0);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Instance.Logger.Error($"Error in OnChat: {ex.Message}");
+        }
+    }
+
     public override void OnCollected(Item item)
     {
         try
@@ -222,11 +246,12 @@ public class FallingStarMission : Mission
                         UpdateProgress(0);
                     break;
                 case Objectives.Explore:
-                    if (!npc.CountsAsACritter)
-                        UpdateProgress(2);
+                    if (!player.ZoneOverworldHeight || !player.ZoneSkyHeight)
+                        if (!npc.CountsAsACritter || npc.type != NPCAIStyleID.Slime)
+                            UpdateProgress(2);
                     break;
-                case Objectives.ClearInfestation:
-                    HandleSlimeInfestation(npc);
+                case Objectives.ClearSlimeRain:
+                    HandleSlimeRain(npc);
                     break;
                 case Objectives.DefeatKingSlime:
                     if (npc.type == NPCID.KingSlime)
@@ -237,6 +262,30 @@ public class FallingStarMission : Mission
         catch (Exception ex)
         {
             Instance.Logger.Error($"Error in OnKill: {ex.Message}");
+        }
+    }
+
+    public override void OnHousingFound()
+    {
+        try
+        {
+            var objective = (Objectives)CurrentIndex;
+            switch (objective)
+            {
+                case Objectives.WoodShelter:
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCDataManager.GuideData,
+                    DialogueKeys.CrashLanding.BuildShelter,
+                    lineCount: 5,
+                    zoomIn: true);
+
+                    UpdateProgress(1);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Instance.Logger.Error($"Error in OnValidHousing: {ex.Message}");
         }
     }
 
@@ -265,53 +314,6 @@ public class FallingStarMission : Mission
             Instance.Logger.Error($"Error in OnBiomeEnter: {ex.Message}");
         }
     }
-
-    public override void OnChat(NPC npc)
-    {
-        try
-        {
-            var objective = (Objectives)CurrentIndex;
-            switch (objective)
-            {
-                case Objectives.TalkToGuide:
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCDataManager.GuideData,
-                    DialogueKeys.CrashLanding.GatheringResources,
-                    lineCount: 2,
-                    zoomIn: true);
-                    UpdateProgress(0);
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            Instance.Logger.Error($"Error in OnChat: {ex.Message}");
-        }
-    }
-
-    public override void OnHousingFound()
-    {
-        try
-        {
-            var objective = (Objectives)CurrentIndex;
-            switch (objective)
-            {
-                case Objectives.WoodShelter:
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCDataManager.GuideData,
-                    DialogueKeys.CrashLanding.BuildShelter,
-                    lineCount: 5,
-                    zoomIn: true);
-
-                    UpdateProgress(1);
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            Instance.Logger.Error($"Error in OnValidHousing: {ex.Message}");
-        }
-    }
     #endregion
 
     #region Helper Methods
@@ -330,21 +332,41 @@ public class FallingStarMission : Mission
         NPCDataManager.GuideData,
         DialogueKeys.CrashLanding.SlimeRain,
         lineCount: 2,
-        zoomIn: true);
+        zoomIn: false);
     }
 
-    private void StartKingSlime()
+    private void HandleSlimeRain(NPC npc)
+    {
+        if (npc.type == NPCAIStyleID.Slime)
+        {
+            UpdateProgress(0);
+            if (ObjectiveIndex[CurrentIndex].Objectives[0].CurrentCount == SLIME_COMMENTARY_THRESHOLD)
+            {
+                DialogueManager.Instance.StartDialogueByKey(
+                NPCDataManager.GuideData,
+                DialogueKeys.CrashLanding.SlimeRainCommentary,
+                lineCount: 2,
+                zoomIn: false);
+            }
+            if (ObjectiveIndex[CurrentIndex].Objectives[0].CurrentCount == SLIME_WARNING_THRESHOLD)
+            {
+                DialogueManager.Instance.StartDialogueByKey(
+                NPCDataManager.GuideData,
+                DialogueKeys.CrashLanding.SlimeRainWarning,
+                lineCount: 2,
+                zoomIn: false);
+            }
+        }
+    }
+
+    private void SpawnKingSlime()
     {
         DialogueManager.Instance.StartDialogueByKey(
         NPCDataManager.GuideData,
         DialogueKeys.CrashLanding.KSEncounter,
         lineCount: 3,
-        zoomIn: true);
-        SpawnKingSlime();
-    }
+        zoomIn: false);
 
-    private void SpawnKingSlime()
-    {
         if (!NPC.AnyNPCs(NPCID.KingSlime) && Main.LocalPlayer.whoAmI == Main.myPlayer)
         {
             SoundEngine.PlaySound(SoundID.Roar, Main.LocalPlayer.position);
@@ -361,20 +383,5 @@ public class FallingStarMission : Mission
         }
     }
 
-    private void HandleSlimeInfestation(NPC npc)
-    {
-        if (npc.type == NPCAIStyleID.Slime)
-        {
-            UpdateProgress(0);
-            if (ObjectiveIndex[CurrentIndex].Objectives[0].CurrentCount == SLIME_COMMENTARY_THRESHOLD)
-            {
-                DialogueManager.Instance.StartDialogueByKey(
-                NPCDataManager.GuideData,
-                DialogueKeys.CrashLanding.SlimeRainCommentary,
-                lineCount: 2,
-                zoomIn: true);
-            }
-        }
-    }
     #endregion
 }

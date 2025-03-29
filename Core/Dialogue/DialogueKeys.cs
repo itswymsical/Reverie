@@ -37,6 +37,8 @@ public static class DialogueKeys
         public static string SlimeInfestationCommentary => $"{PREFIX}.SlimeInfestation_Commentary";
         public static string SlimeRain => $"{PREFIX}.SlimeRain";
         public static string SlimeRainCommentary => $"{PREFIX}.SlimeRain_Commentary";
+
+        public static string SlimeRainWarning => $"{PREFIX}.SlimeRain_Warning";
         public static string KSEncounter => $"{PREFIX}.KS_Encounter";
         public static string KingSlimeDefeat => $"{PREFIX}.KingSlimeDefeat";
     }

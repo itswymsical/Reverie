@@ -12,7 +12,7 @@
 		}
 
 		GatheringResources: {
-			Line1: Sorry there's no copper sword, the wood is all I could do with at the momment.
+			Line1: Sorry there's no copper sword, the wood is all I could do with at the moment.
 			Line2: Explore around the area a bit, there's a lot to see in this world of ours.
 		}
 
@@ -36,12 +36,12 @@
 		}
 
 		SlimeInfestation_Commentary: {
-			Line1: Gah! I can't take a step outside without being swarmed by these slimy menaces!
-			Line2: Could you help a guy out?
+			Line1: Hey, i'm kind of in some trouble here with the slimes, hehe...
+			Line2: I could really use your help!
 		}
 
 		SlimeRain: {
-			Line1: You gotta be kidding me...
+			Line1: You've gotta be kidding me...
 			Line2: I've never seen anything like it... the slimes are raining from the sky!
 		}
 
@@ -50,6 +50,11 @@
 			// Reminder: Add a callback in the future to this line when a pigron is discovered.
 			
 			Line2: I thought I'd seen it all, but this takes the cake!
+		}
+
+		SlimeRain_Warning: {
+			Line1: This is getting kind of out of hand...
+			Line2: Maybe you should build an arena to fight them off?
 		}
 
 		KS_Encounter: {

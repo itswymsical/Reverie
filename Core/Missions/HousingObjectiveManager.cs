@@ -1,4 +1,6 @@
 ﻿
+using Terraria.Enums;
+
 namespace Reverie.Core.Missions;
 
 public partial class MissionManager
@@ -20,7 +22,7 @@ public partial class MissionManager
         try
         {
             Player player = Main.LocalPlayer;
-            int checkRadius = 60;
+            int checkRadius = 30;
             int sampleDistance = 10;
 
             int playerX = (int)(player.position.X / 16);
@@ -69,7 +71,7 @@ public partial class MissionManager
             Main.gameMenu = false;
 
             bool isValid = WorldGen.StartRoomCheck(x, y);
-
+            WorldGen.CheckRoom(x, y);
             Main.gameMenu = tempGameMenu;
 
             return isValid;

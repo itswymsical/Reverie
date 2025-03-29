@@ -85,6 +85,9 @@ public class MissionNotification : IInGameNotification
 
         Rectangle panelRect = new Rectangle(posX, posY, TitlePanelWidth, totalHeight);
         Color panelColor = new Color(83, 85, 192, (int)(225 * alpha));
+
+        //psuedo draw additive effect
+        DrawUtils.DrawPanel(spriteBatch, panelRect, panelColor);
         DrawUtils.DrawPanel(spriteBatch, panelRect, panelColor);
 
         Vector2 titlePos = new Vector2(posX, posY + PanelHeight / (float)Math.PI);
