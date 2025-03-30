@@ -8,12 +8,20 @@ namespace Reverie.Common.Systems
 {
     public class ReverieSystem : ModSystem
     {
+        public static ReverieSystem Instance => ModContent.GetInstance<ReverieSystem>();
+
         public override void Load()
         {
             NPCDataManager.Initialize();
-            Reverie.Instance.Logger.Info("NPCDataManager initialized...");
+            Reverie.Instance.Logger.Info("NPCDataManager for dialogue initialized...");
         }
-        public static ReverieSystem Instance => ModContent.GetInstance<ReverieSystem>();
+
+        public override void ModifyTimeRate(ref double timeRate, ref double tileUpdateRate, ref double eventUpdateRate)
+        {
+            base.ModifyTimeRate(ref timeRate, ref tileUpdateRate, ref eventUpdateRate);
+            timeRate /= 2;
+        }
+
         public override void AddRecipeGroups()
         {
             RecipeGroup CopperBarRecipeGroup = new(() => $"{Language.GetTextValue("LegacyMisc.37")} {Lang.GetItemNameValue(ItemID.CopperBar)}",
@@ -29,11 +37,6 @@ namespace Reverie.Common.Systems
             RecipeGroup.RegisterGroup(nameof(ItemID.GoldBar), GoldBarRecipeGroup);
         }
 
-        public override void ClearWorld()
-        {
-            base.ClearWorld();
-            Main.time -= 0.5;
-        }
         public override void PostUpdateWorld()
         {
             if (Main.netMode != NetmodeID.Server) // todo: multiplayer support.
@@ -42,6 +45,7 @@ namespace Reverie.Common.Systems
             }
             
         }
+
         public override void PostDrawInterface(SpriteBatch spriteBatch)
         {
             if (Main.gameMenu)

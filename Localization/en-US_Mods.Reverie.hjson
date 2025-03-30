@@ -11,7 +11,17 @@ Items: {
 		Tooltip: ""
 	}
 
+	BorealHewer: {
+		DisplayName: Boreal Hewer
+		Tooltip: ""
+	}
+
 	FlailstormItem: {
+		DisplayName: Flailstorm
+		Tooltip: ""
+	}
+
+	Flailstorm: {
 		DisplayName: Flailstorm
 		Tooltip: ""
 	}
@@ -21,12 +31,27 @@ Items: {
 		Tooltip: ""
 	}
 
+	FrostbarkGreaves: {
+		DisplayName: Frostbark Greaves
+		Tooltip: ""
+	}
+
 	FrostbarkHauberkItem: {
 		DisplayName: Frostbark Hauberk
 		Tooltip: ""
 	}
 
+	FrostbarkHauberk: {
+		DisplayName: Frostbark Hauberk
+		Tooltip: ""
+	}
+
 	FrostbarkHelmItem: {
+		DisplayName: Frostbark Helm
+		Tooltip: ""
+	}
+
+	FrostbarkHelm: {
 		DisplayName: Frostbark Helm
 		Tooltip: ""
 	}
@@ -167,6 +192,11 @@ Items: {
 
 	ObjTest: {
 		DisplayName: Obj Test
+		Tooltip: ""
+	}
+
+	WoodenShingle: {
+		DisplayName: Wooden Shingle
 		Tooltip: ""
 	}
 }
