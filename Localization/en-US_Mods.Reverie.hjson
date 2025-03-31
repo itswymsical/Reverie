@@ -199,6 +199,41 @@ Items: {
 		DisplayName: Wooden Shingle
 		Tooltip: ""
 	}
+
+	WoodWickerBlock: {
+		DisplayName: Wood Wicker Block
+		Tooltip: ""
+	}
+
+	LodestoneChestplate: {
+		DisplayName: Lodestone Chestplate
+		Tooltip: ""
+	}
+
+	LodestoneHelmet: {
+		DisplayName: Lodestone Helmet
+		Tooltip: ""
+	}
+
+	LodestoneLeggings: {
+		DisplayName: Lodestone Leggings
+		Tooltip: ""
+	}
+
+	TombBrick: {
+		DisplayName: Tomb Brick
+		Tooltip: ""
+	}
+
+	TombBrickWall_Item: {
+		DisplayName: Tomb Brick Wall_ Item
+		Tooltip: ""
+	}
+
+	WoodWickerWall_Item: {
+		DisplayName: Wood Wicker Wall_ Item
+		Tooltip: ""
+	}
 }
 
 Projectiles: {

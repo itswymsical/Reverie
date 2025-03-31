@@ -1,5 +1,6 @@
 ﻿using static Terraria.Player;
 using Terraria.DataStructures;
+using System.Collections.Generic;
 
 namespace Reverie.Utilities.Extensions;
 
@@ -57,6 +58,45 @@ public static class PlayerExtensions
         }
         
         player.PickTile(i, j, power - (power / 2));
+    }
+
+    public static bool IsTouchingTiles(this Player player, int type = -1)
+    {
+        player.TouchedTiles.Clear();
+        List<Point> list = null;
+        List<Point> list2 = null;
+        if (!Collision.IsClearSpotTest(player.position + player.velocity, 16f, player.width, player.height, fallThrough: false, fall2: false, (int)player.gravDir, checkCardinals: true, checkSlopes: true))
+            list = Collision.FindCollisionTile((Math.Sign(player.velocity.Y) == 1) ? 2 : 3, player.position + player.velocity, 16f, player.width, player.height, fallThrough: false, fall2: false, (int)player.gravDir);
+        if (!Collision.IsClearSpotTest(player.position, Math.Abs(player.velocity.Y), player.width, player.height, fallThrough: false, fall2: false, (int)player.gravDir, checkCardinals: true, checkSlopes: true))
+            list2 = Collision.FindCollisionTile((Math.Sign(player.velocity.Y) == 1) ? 2 : 3, player.position, Math.Abs(player.velocity.Y), player.width, player.height, fallThrough: false, fall2: false, (int)player.gravDir, checkCardinals: true, checkSlopes: true);
+        if (list != null && list2 != null)
+        {
+            for (int i = 0; i < list2.Count; i++)
+            {
+                if (!list.Contains(list2[i]))
+                    list.Add(list2[i]);
+            }
+        }
+        if (list == null && list2 != null)
+            list = list2;
+        if (list != null)
+            player.TouchedTiles = list;
+
+        // If type parameter is specified, filter TouchedTiles by type
+        if (type != -1 && player.TouchedTiles.Count > 0)
+        {
+            List<Point> filteredTiles = new List<Point>();
+            foreach (Point point in player.TouchedTiles)
+            {
+                if (Main.tile[point.X, point.Y].TileType == type)
+                {
+                    filteredTiles.Add(point);
+                }
+            }
+            player.TouchedTiles = filteredTiles;
+        }
+
+        return player.TouchedTiles.Count > 0;
     }
 
     /// 

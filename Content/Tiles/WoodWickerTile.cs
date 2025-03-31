@@ -1,6 +1,6 @@
 ﻿namespace Reverie.Content.Tiles;
 
-public class WoodenShingleTile : ModTile
+public class WoodWickerTile : ModTile
 {
     public override void SetStaticDefaults()
     {

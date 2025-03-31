@@ -1,17 +1,19 @@
 ﻿using Reverie.Common.Subworlds.Archaea;
 using Reverie.Common.UI.Missions;
+
 using Reverie.Content.Dusts;
 using Reverie.Content.Tiles.Archaea;
+
 using Reverie.Core.Cinematics;
+using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
+
 using SubworldLibrary;
+
 using System.Collections.Generic;
 using System.Linq;
-using Terraria;
-using Terraria.DataStructures;
-using Terraria.GameContent;
+
 using Terraria.UI;
-using Terraria.UI.Chat;
 
 namespace Reverie.Common.Players;
 
@@ -19,6 +21,8 @@ public class ReveriePlayer : ModPlayer
 {
     private bool wasInventoryOpen = false;
     private Mission currentMission;
+    public bool magnetizedFall;
+    public bool lodestoneKB;
 
     public override void PostUpdate()
     {
@@ -44,7 +48,9 @@ public class ReveriePlayer : ModPlayer
         }
 
         wasInventoryOpen = isInventoryOpen;
+        DialogueManager.Instance.UpdateActive();
     }
+
     public override void SetControls()
     {
         if (Cutscene.DisableMoment)
@@ -60,6 +66,13 @@ public class ReveriePlayer : ModPlayer
             Player.controlUseTile = false;
         }
     }
+
+    public override void ResetEffects()
+    {
+        magnetizedFall = false;
+        lodestoneKB = false;
+    }
+
     public override void ModifyStartingInventory(IReadOnlyDictionary<string, List<Item>> itemsByMod, bool mediumCoreDeath)
     {
         itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperShortsword);

@@ -1,17 +1,16 @@
 ﻿using Reverie.Content.Tiles;
 
-namespace Reverie.Content.Items;
+namespace Reverie.Content.Items.Tiles;
 
-public class WoodenShingle : ModItem
+public class WoodWickerBlock : ModItem
 {
-    public override string Texture => $"Terraria/Images/Item_{ItemID.Wood}";
     public override void SetDefaults()
     {
         base.SetDefaults();
 
-        Item.value = Item.sellPrice(copper: 15);
+        Item.value = Item.sellPrice(copper: 4);
 
-        Item.DefaultToPlaceableTile(ModContent.TileType<WoodenShingleTile>());
+        Item.DefaultToPlaceableTile(ModContent.TileType<WoodWickerTile>());
 
         Item.rare = ItemRarityID.White;
     }
@@ -20,7 +19,8 @@ public class WoodenShingle : ModItem
         base.AddRecipes();
 
         CreateRecipe(4)
-        .AddIngredient(ItemID.Wood, 2)
+        .AddIngredient(ItemID.Wood, 4)
+        .AddIngredient(ItemID.Cobweb, 2)
         .AddTile(TileID.Sawmill)
         .Register();
     }

@@ -29,8 +29,16 @@ public class ArchaeaSub : Otherworld
 
     public override void SetStaticDefaults()
     {
-        base.SetStaticDefaults();
-        OtherworldTitle = TextureAssets.Logo.Value;
+        try
+        {
+            base.SetStaticDefaults();
+            OtherworldTitle = TextureAssets.Logo?.Value;
+        }
+        catch (Exception ex)
+        {
+            ModContent.GetInstance<Reverie>()?.Logger.Error($"Error in ArchaeaSub.SetStaticDefaults: {ex.Message}");
+            OtherworldTitle = null;
+        }
     }
     public override void Update()
     {
