@@ -1,17 +1,11 @@
-﻿using ReLogic.Content;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Reverie.Common.NPCs;
+﻿namespace Reverie.Common.NPCs;
 
 public abstract class WorldNPC : ModNPC
 {
-    public Texture2D HairType { get; set; }
+    public virtual int HairType { get; set; }
+    public virtual Color HairColor { get; set; }
     public virtual Color SkinColor { get; set; }
-    
+
     public override void SetStaticDefaults()
     {
         Main.npcFrameCount[Type] = 19;
@@ -74,7 +68,7 @@ public abstract class WorldNPC : ModNPC
         Texture2D bodyTexture = ModContent.Request<Texture2D>(Texture + "_Body").Value;
         Texture2D armsTexture = ModContent.Request<Texture2D>(Texture + "_Arms").Value;
         Texture2D faceTexture = ModContent.Request<Texture2D>(Texture + "_Head").Value;
-
+        Texture2D hair = Main.Assets.Request<Texture2D>($"Images/Player_Hair_{HairType}").Value;
         // Calculate draw position - don't add origin here
         Vector2 drawPos = NPC.position - screenPos;
         SpriteEffects effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
@@ -84,14 +78,12 @@ public abstract class WorldNPC : ModNPC
         // This is important for proper grounding
         Vector2 origin = new Vector2(frame.Width / 2f, frame.Height);
 
-        drawColor = SkinColor;
-
         // Draw each body part
         spriteBatch.Draw(
             legsTexture,
             drawPos + new Vector2(NPC.width / 2f, NPC.height),
             frame,
-            drawColor,
+            SkinColor,
             NPC.rotation,
             origin,
             NPC.scale,
@@ -104,7 +96,7 @@ public abstract class WorldNPC : ModNPC
             bodyTexture,
             drawPos + new Vector2(NPC.width / 2f, NPC.height),
             frame,
-            drawColor,
+            SkinColor,
             NPC.rotation,
             origin,
             NPC.scale,
@@ -116,7 +108,7 @@ public abstract class WorldNPC : ModNPC
             armsTexture,
             drawPos + new Vector2(NPC.width / 2f, NPC.height),
             frame,
-            drawColor,
+            SkinColor,
             NPC.rotation,
             origin,
             NPC.scale,
@@ -128,7 +120,19 @@ public abstract class WorldNPC : ModNPC
             faceTexture,
             drawPos + new Vector2(NPC.width / 2f, NPC.height),
             frame,
-            drawColor,
+            SkinColor,
+            NPC.rotation,
+            origin,
+            NPC.scale,
+            effects,
+            0f
+        );
+
+        spriteBatch.Draw(
+            hair,
+            drawPos + new Vector2(NPC.width / 2f, NPC.height),
+            frame,
+            HairColor,
             NPC.rotation,
             origin,
             NPC.scale,

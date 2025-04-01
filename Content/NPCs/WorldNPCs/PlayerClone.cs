@@ -1,12 +1,13 @@
-﻿
-using Reverie.Common.NPCs;
-using Reverie.Core.Dialogue;
+﻿using Reverie.Common.NPCs;
+using Terraria.GameContent;
 
 namespace Reverie.Content.NPCs.WorldNPCs;
 
 public class BasicNPC : WorldNPC
 {
     public override Color SkinColor => new Color(232, 122, 85);
+    public override int HairType => 66;
+    public override Color HairColor => new Color(173, 33, 121);
     public override void SetStaticDefaults()
     {
         base.SetStaticDefaults();
