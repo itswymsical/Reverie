@@ -136,7 +136,7 @@ public class TaigaTerrain : GenPass
                 break;
 
             case TileID.Stone:
-                if (noiseValue > 0.495f)
+                if (noiseValue > 0.3145926f)
                     tile.TileType = TileID.SnowBlock;
                 else
                 {
