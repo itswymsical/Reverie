@@ -1,13 +1,17 @@
 ﻿using Reverie.Common.NPCs;
-using Terraria.GameContent;
 
 namespace Reverie.Content.NPCs.WorldNPCs;
 
 public class BasicNPC : WorldNPC
 {
-    public override Color SkinColor => new Color(232, 122, 85);
-    public override int HairType => 66;
-    public override Color HairColor => new Color(173, 33, 121);
+    public override Color SkinColor => Color.BurlyWood;
+    public override int HairType => 55;
+    public override Color HairColor => new Color(183, 21, 44);
+    public override int ArmorType => 9;
+    public override bool WearsHelmet => false;
+    public override bool WearsChestplate => true;
+    public override bool WearsLeggings => true;
+
     public override void SetStaticDefaults()
     {
         base.SetStaticDefaults();
@@ -41,6 +45,6 @@ public class BasicNPC : WorldNPC
 
     public override void SetChatButtons(ref string button, ref string button2)
     {
-        button = "Taming Shop";
+        button = "Empty button that don't do shit";
     }
 }

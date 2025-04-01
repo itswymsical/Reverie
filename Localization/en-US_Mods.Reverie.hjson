@@ -388,53 +388,8 @@ NPCs: {
 	WardenArm.DisplayName: Warden Arm
 	WoodenWarden.DisplayName: Wooden Warden
 
-	Tamer: {
-		DisplayName: Tamer
-
-		TownNPCMood: {
-			Content: I am content.
-			NoHome: I hate not having a home.
-			FarFromHome: I am too far from home.
-			LoveSpace: I love having so much space.
-			DislikeCrowded: I dislike how crowded I am.
-			HateCrowded: I hate how crowded I am.
-			LikeNPC_Princess: I like {NPCName}.
-			Princess_LovesNPC: I like {NPCName}.
-		}
-	}
-
-	PlayerClone: {
-		DisplayName: Player Clone
-
-		TownNPCMood: {
-			Content: I am content.
-			NoHome: I hate not having a home.
-			FarFromHome: I am too far from home.
-			LoveSpace: I love having so much space.
-			DislikeCrowded: I dislike how crowded I am.
-			HateCrowded: I hate how crowded I am.
-			LikeNPC_Princess: I like {NPCName}.
-			Princess_LovesNPC: I like {NPCName}.
-		}
-	}
-
-	WorldNPC: {
-		DisplayName: World N P C
-
-		TownNPCMood: {
-			Content: I am content.
-			NoHome: I hate not having a home.
-			FarFromHome: I am too far from home.
-			LoveSpace: I love having so much space.
-			DislikeCrowded: I dislike how crowded I am.
-			HateCrowded: I hate how crowded I am.
-			LikeNPC_Princess: I like {NPCName}.
-			Princess_LovesNPC: I like {NPCName}.
-		}
-	}
-
 	BasicNPC: {
-		DisplayName: Basic N P C
+		DisplayName: Randomized NPC
 
 		TownNPCMood: {
 			Content: I am content.
@@ -457,31 +412,31 @@ Biomes: {
 
 	EmberiteCavernsBiome: {
 		DisplayName: Emberite Caverns Biome
-		TownNPCDialogueName: the Emberite Caverns Biome
+		TownNPCDialogueName: the Emberite Caverns
 	}
 
 	SylvanOverworldBiome: {
 		DisplayName: Sylvan Overworld Biome
-		TownNPCDialogueName: the Sylvan Overworld Biome
+		TownNPCDialogueName: the Sylvan Overworld
 	}
 
 	LowerCanopyBiome: {
 		DisplayName: Lower Canopy Biome
-		TownNPCDialogueName: the Lower Canopy Biome
+		TownNPCDialogueName: the Lower Canopy
 	}
 
 	WoodlandCanopyBiome: {
 		DisplayName: Woodland Canopy Biome
-		TownNPCDialogueName: the Woodland Canopy Biome
+		TownNPCDialogueName: the Woodland Canopy
 	}
 
 	SylvanOverworldDayBiome: {
 		DisplayName: Sylvan Overworld Day Biome
-		TownNPCDialogueName: the Sylvan Overworld Day Biome
+		TownNPCDialogueName: the Sylvan Overworld
 	}
 
 	SylvanOverworldNightBiome: {
 		DisplayName: Sylvan Overworld Night Biome
-		TownNPCDialogueName: the Sylvan Overworld Night Biome
+		TownNPCDialogueName: the Sylvan Overworld
 	}
 }
