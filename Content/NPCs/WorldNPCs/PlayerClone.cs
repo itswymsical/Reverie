@@ -1,34 +1,30 @@
 ﻿
+using Reverie.Common.NPCs;
 using Reverie.Core.Dialogue;
-using Reverie.Core.NPCs.Actors;
 
 namespace Reverie.Content.NPCs.WorldNPCs;
 
-[AutoloadHead]
-public class Tamer : WorldNPCActor
+public class BasicNPC : WorldNPC
 {
+    public override Color SkinColor => new Color(232, 122, 85);
     public override void SetStaticDefaults()
     {
         base.SetStaticDefaults();
-
-        Main.npcFrameCount[Type] = 1;
     }
 
     public override void SetDefaults()
     {
         NPC.townNPC = true;
         NPC.friendly = true;
-        NPC.width = 18;
-        NPC.height = 40;
-        NPC.aiStyle = 7; // Town NPC AI style
+        NPC.width = 32;
+        NPC.height = 46;
+        NPC.aiStyle = 7;
         NPC.damage = 10;
         NPC.defense = 15;
         NPC.lifeMax = 250;
         NPC.HitSound = SoundID.NPCHit1;
         NPC.DeathSound = SoundID.NPCDeath1;
         NPC.knockBackResist = 0.5f;
-
-        AnimationType = NPCID.Guide; // Uses Guide's animation
     }
 
     public override string GetChat()
@@ -45,18 +41,5 @@ public class Tamer : WorldNPCActor
     public override void SetChatButtons(ref string button, ref string button2)
     {
         button = "Taming Shop";
-
-        button2 = "Missions";
-    }
-    public override void OnChatButtonClicked(bool firstButton, ref string shopName)
-    {
-        if (!firstButton)
-        {
-            DialogueManager.Instance.StartDialogueByKey(
-                    NPCDataManager.Default,
-                    DialogueKeys.TamerMissions.Chapter1,
-                    lineCount: 2,
-                    zoomIn: true);
-        }
     }
 }
