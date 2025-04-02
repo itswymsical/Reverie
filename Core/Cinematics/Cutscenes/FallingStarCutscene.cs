@@ -153,9 +153,9 @@ namespace Reverie.Core.Cinematics.Cutscenes
                 PlaySoundWithDelay();
                 DialogueManager.Instance.StartDialogueByKey(
                 NPCDataManager.GuideData,
-                DialogueKeys.CrashLanding.Cutscene,
+                DialogueKeys.FallingStar.Cutscene,
                 lineCount: 1,
-                zoomIn: true);
+                zoomIn: true, defaultEmote: 2);
                 _dialoguePlayed = true;
             }
 
@@ -193,9 +193,9 @@ namespace Reverie.Core.Cinematics.Cutscenes
                 ElapsedTime = 0f;
                 DialogueManager.Instance.StartDialogueByKey(
                 NPCDataManager.GuideData,
-                DialogueKeys.CrashLanding.Intro,
+                DialogueKeys.FallingStar.Intro,
                 lineCount: 1,
-                zoomIn: true);
+                zoomIn: true, defaultEmote: 3);
             }
 
             if (ElapsedTime >= Timing.DESCENT)
@@ -335,10 +335,17 @@ namespace Reverie.Core.Cinematics.Cutscenes
             try
             {
                 DialogueManager.Instance.StartDialogueByKey(
-                NPCDataManager.GuideData,
-                DialogueKeys.CrashLanding.SettlingIn,
-                lineCount: 5,
-                zoomIn: true);
+                   NPCDataManager.GuideData,
+                   DialogueKeys.FallingStar.CrashLanding,
+                   lineCount: 5,
+                   zoomIn: true,
+                   modifications:
+                   [(line: 1, delay: 2, emote: 1),
+                (line: 2, delay: 2, emote: 3),
+                (line: 3, delay: 3, emote: 3),
+                (line: 4, delay: 3, emote: 3),
+                (line: 5, delay: 3, emote: 0)]);
+
                 EnableFallDamage();
                 EnablePlayerMovement();
                 CameraSystem.Reset();

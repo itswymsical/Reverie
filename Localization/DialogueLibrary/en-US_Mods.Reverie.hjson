@@ -1,27 +1,33 @@
-﻿DialogueLibrary: {
-	CrashLanding: {
+DialogueLibrary: {
+	FallingStar: {
 		Intro.Line1: What the Hell?!?!
 		Cutscene.Line1: Hmm? What's that?
 
-		SettlingIn: {
-			Line1: Are you alright? That was quite the entrance.
-			Line2: Hey uh, you appear to be glowing...?
+		CrashLanding: {
+			Line1: That's one way to make an entrance...
+			Line2: Are you... glowing...?
 			Line3: Just what are you?
-			Line4: Sorry, that's a bit rude.
-			Line5: Let's get settled in. I've got some tools for you.
+			Line4: Sorry... that was a little rude.
+			Line5: Hey uh, how about you come meet the townsfolk?
+			Line6: I've got some tools for you too, here.
 		}
 
 		GatheringResources: {
-			Line1: Sorry there's no copper sword, the wood is all I could do with at the moment.
-			Line2: Explore around the area a bit, there's a lot to see in this world of ours.
+			Line1: Okay, cool.
+			Line2: So, uh... where did you fall from?
+			Line3: That was a pretty gnarly landing, I'll assume your not a normal Terrarian judging how you survived that fall.
+			Line4: It's odd though. you look like us, yet you give off am otherworldy presence...
+			Line5: Anyways...
+			Line6: Around here everyone works for themselves. If you want to survive, you'll have to gather resources.
+			Line7: Explore around the area a bit, there's a lot to see in this world of ours.
 		}
 
 		BuildShelter: {
 			Line1: Nice base. You're a natural at this.
-			Line2: I'll get to work on researching that glowy aura from where you landed.
-			Line3: I've never seen anything like it...
-			Line4: ...The ecosystems can be dangerous, you should get yourself some materials.
-			Line5: That'll serve as our base of operations for now.
+			Line2: We're always welcome to new faces here, no matter how odd they may be.
+			Line3: You should interact with some of the folks here, get to know 'em a bit.
+			Line4: While you do that, I'm gonna investigate that emmanating energy you left in the crater.
+			Line5: I've never seen anything like it...
 		}
 
 		WildlifeWoes: {

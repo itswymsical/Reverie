@@ -21,7 +21,7 @@ public class NPCPortrait
 
     public Rectangle GetFrameRect(int frameIndex)
     {
-        return new Rectangle(frameIndex * FrameWidth, 0, FrameWidth, FrameHeight);
+        return new Rectangle(0, frameIndex * FrameHeight, FrameWidth, FrameHeight);
     }
 }
 
@@ -30,19 +30,19 @@ public class NPCData
     public NPCPortrait Portrait { get; }
     public string NpcName { get; }
     public int NpcID { get; }
-    public Color DialogueColor { get; }
-    public SoundStyle CharacterSound { get; }
+    public Color BoxColor { get; }
+    public SoundStyle TalkSFX { get; }
 
     // This cache stores frequently used dialogues for this NPC
     private readonly Dictionary<string, DialogueSequence> _dialogueCache = [];
 
-    public NPCData(NPCPortrait portrait, string npcName, int npcID, Color dialogueColor, SoundStyle characterSound)
+    public NPCData(NPCPortrait portrait, string npcName, int npcID, Color boxColor, SoundStyle talkSFX)
     {
         Portrait = portrait;
         NpcName = npcName;
         NpcID = npcID;
-        DialogueColor = dialogueColor;
-        CharacterSound = characterSound;
+        BoxColor = boxColor;
+        TalkSFX = talkSFX;
     }
 
     /// <summary>
@@ -146,14 +146,14 @@ public static class NPCDataManager
 
         var guidePortrait = new NPCPortrait(
             ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Guide"),
-            frameCount: 2
+            frameCount: 5
         );
 
         GuideData = new NPCData(
             guidePortrait,
             "Guide",
             NPCID.Guide,
-            new Color(64, 109, 164),
+            new Color(63, 82, 151),
             SoundID.MenuOpen
         );
 
@@ -161,10 +161,10 @@ public static class NPCDataManager
         DialogueManager.Instance.RegisterNPC("Guide", GuideData);
 
         // Pre-cache some common dialogues if needed
-        Default.CacheDialogue(DialogueKeys.CrashLanding.Intro,
-            DialogueBuilder.BuildByKey(DialogueKeys.CrashLanding.Intro, 1, 1, 0));
+        Default.CacheDialogue(DialogueKeys.FallingStar.Intro,
+            DialogueBuilder.BuildByKey(DialogueKeys.FallingStar.Intro, 1, 1, 0));
 
-        GuideData.CacheDialogue(DialogueKeys.CrashLanding.Intro,
-            DialogueBuilder.BuildByKey(DialogueKeys.CrashLanding.Intro, 1, 1, 0));
+        GuideData.CacheDialogue(DialogueKeys.FallingStar.Intro,
+            DialogueBuilder.BuildByKey(DialogueKeys.FallingStar.Intro, 1, 1, 0));
     }
 }

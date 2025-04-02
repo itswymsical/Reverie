@@ -23,13 +23,13 @@ public static class DialogueKeys
     }
 
     // Crash Landing dialogues
-    public static class CrashLanding
+    public static class FallingStar
     {
-        private const string PREFIX = "CrashLanding";
+        private const string PREFIX = "FallingStar";
 
         public static string Intro => $"{PREFIX}.Intro";
         public static string Cutscene => $"{PREFIX}.Cutscene";
-        public static string SettlingIn => $"{PREFIX}.SettlingIn";
+        public static string CrashLanding => $"{PREFIX}.FallingStar";
         public static string GatheringResources => $"{PREFIX}.GatheringResources";
         public static string BuildShelter => $"{PREFIX}.BuildShelter";
         public static string WildlifeWoes => $"{PREFIX}.WildlifeWoes";

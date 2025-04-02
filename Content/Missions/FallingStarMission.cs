@@ -94,28 +94,28 @@ public class FallingStarMission : Mission
                 case Objectives.SuitUp: //get armor and weapon
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
-                    DialogueKeys.CrashLanding.WildlifeWoes,
+                    DialogueKeys.FallingStar.WildlifeWoes,
                     lineCount: 3,
                     zoomIn: true);
                     break;
                 case Objectives.WoodShelter: //chop trees , build shelter
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
-                    DialogueKeys.CrashLanding.BuildShelter,
+                    DialogueKeys.FallingStar.BuildShelter,
                     lineCount: 5,
                     zoomIn: true);
                     break;
                 case Objectives.ClearSlimes:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
-                    DialogueKeys.CrashLanding.SlimeInfestation,
+                    DialogueKeys.FallingStar.SlimeInfestation,
                     lineCount: 2,
                     zoomIn: true);
                     break;
                 case Objectives.Explore: //post-exploring slimes attack the guide
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
-                    DialogueKeys.CrashLanding.SlimeInfestationCommentary,
+                    DialogueKeys.FallingStar.SlimeInfestationCommentary,
                     lineCount: 2,
                     zoomIn: true);
                     break;
@@ -140,7 +140,7 @@ public class FallingStarMission : Mission
                 case Objectives.ClearSlimes:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
-                    DialogueKeys.CrashLanding.SlimeInfestation,
+                    DialogueKeys.FallingStar.SlimeInfestation,
                     lineCount: 2,
                     zoomIn: true);
                     break;
@@ -153,7 +153,7 @@ public class FallingStarMission : Mission
                 case Objectives.DefeatKingSlime:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
-                    DialogueKeys.CrashLanding.KingSlimeDefeat,
+                    DialogueKeys.FallingStar.KingSlimeDefeat,
                     lineCount: 4,
                     zoomIn: true);
                     break;
@@ -183,9 +183,18 @@ public class FallingStarMission : Mission
                 case Objectives.TalkToGuide:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
-                    DialogueKeys.CrashLanding.GatheringResources,
-                    lineCount: 2,
-                    zoomIn: true);
+                    DialogueKeys.FallingStar.GatheringResources,
+                    lineCount: 7,
+                    zoomIn: true,
+                    modifications:
+                    [(line: 1, delay: 2, emote: 0),
+                    (line: 2, delay: 2, emote: 3),
+                    (line: 3, delay: 3, emote: 1),
+                    (line: 4, delay: 3, emote: 0),
+                    (line: 5, delay: 5, emote: 2),
+                    (line: 6, delay: 2, emote: 0),
+                    (line: 7, delay: 2, emote: 0)]);
+
                     UpdateProgress(0);
                     break;
             }
@@ -275,9 +284,15 @@ public class FallingStarMission : Mission
                 case Objectives.WoodShelter:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
-                    DialogueKeys.CrashLanding.BuildShelter,
+                    DialogueKeys.FallingStar.BuildShelter,
                     lineCount: 5,
-                    zoomIn: true);
+                    zoomIn: true,
+                    modifications:
+                    [(line: 1, delay: 2, emote: 0),
+                    (line: 2, delay: 2, emote: 0),
+                    (line: 3, delay: 2, emote: 0),
+                    (line: 4, delay: 2, emote: 0),
+                    (line: 5, delay: 2, emote: 2)]);
 
                     UpdateProgress(1);
                     break;
@@ -330,7 +345,7 @@ public class FallingStarMission : Mission
         Main.StartSlimeRain(true);
         DialogueManager.Instance.StartDialogueByKey(
         NPCDataManager.GuideData,
-        DialogueKeys.CrashLanding.SlimeRain,
+        DialogueKeys.FallingStar.SlimeRain,
         lineCount: 2,
         zoomIn: false);
     }
@@ -344,7 +359,7 @@ public class FallingStarMission : Mission
             {
                 DialogueManager.Instance.StartDialogueByKey(
                 NPCDataManager.GuideData,
-                DialogueKeys.CrashLanding.SlimeRainCommentary,
+                DialogueKeys.FallingStar.SlimeRainCommentary,
                 lineCount: 2,
                 zoomIn: false);
             }
@@ -352,7 +367,7 @@ public class FallingStarMission : Mission
             {
                 DialogueManager.Instance.StartDialogueByKey(
                 NPCDataManager.GuideData,
-                DialogueKeys.CrashLanding.SlimeRainWarning,
+                DialogueKeys.FallingStar.SlimeRainWarning,
                 lineCount: 2,
                 zoomIn: false);
             }
@@ -363,7 +378,7 @@ public class FallingStarMission : Mission
     {
         DialogueManager.Instance.StartDialogueByKey(
         NPCDataManager.GuideData,
-        DialogueKeys.CrashLanding.KSEncounter,
+        DialogueKeys.FallingStar.KSEncounter,
         lineCount: 3,
         zoomIn: false);
 
