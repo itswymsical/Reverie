@@ -29,7 +29,7 @@ public static class DialogueKeys
 
         public static string Intro => $"{PREFIX}.Intro";
         public static string Cutscene => $"{PREFIX}.Cutscene";
-        public static string CrashLanding => $"{PREFIX}.FallingStar";
+        public static string CrashLanding => $"{PREFIX}.CrashLanding";
         public static string GatheringResources => $"{PREFIX}.GatheringResources";
         public static string BuildShelter => $"{PREFIX}.BuildShelter";
         public static string WildlifeWoes => $"{PREFIX}.WildlifeWoes";
