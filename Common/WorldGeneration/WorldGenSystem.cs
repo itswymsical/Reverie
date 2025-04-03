@@ -19,12 +19,12 @@ public class WorldGenSystem : ModSystem
 
         tundraPass.Apply(progress, configuration);
     }
-    //public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
-    //{
-    //    var tundraIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Generate Ice Biome"));
-    //    if (tundraIndex >= 0)
-    //    {
-    //        tasks.Insert(tundraIndex + 1, new TaigaPass());
-    //    }
-    //}
+    public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
+    {
+        var tundraIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Generate Ice Biome"));
+        if (tundraIndex >= 0)
+        {
+            tasks.Insert(tundraIndex + 1, new TaigaPlantPass());
+        }
+    }
 }
