@@ -1,14 +1,15 @@
-﻿using System.Collections.Generic;
+﻿// Adapted from Spirit: Reforged, by Team Spirit
+// https://github.com/GabeHasWon/SpiritReforged/blob/master/Common/TileCommon/PresetTiles/GrassTile.cs
+
+using Terraria.ObjectData;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace Reverie.Common.Tiles;
 
 public abstract class GrassTile : ModTile
 {
-    /// <summary>
-    /// The tile type that this grass turns into when killed.
-    /// </summary>
-    public virtual int SoilType => TileID.Dirt;
-
+    protected virtual int DirtType => TileID.Dirt;
     /// <summary>
     /// Chance for the grass to spread in a random update. Lower values mean higher chance.
     /// </summary>
@@ -22,26 +23,34 @@ public abstract class GrassTile : ModTile
     /// <summary>
     /// The plant types that can grow on this grass.
     /// </summary>
-    public virtual List<int> PlantTypes => new List<int> { TileID.Plants };
+    public virtual List<int> PlantTypes => [TileID.Plants];
+    protected void AllowAnchor(params int[] types)
+    {
+        foreach (var type in types)
+        {
+            var data = TileObjectData.GetTileData(type, 0);
+            if (data != null)
+                data.AnchorValidTiles = data.AnchorValidTiles.Concat([Type]).ToArray();
+        }
+    }
 
+    /// <summary>
+    /// <inheritdoc/><para/>Also automatically controls common grass tile settings.
+    /// </summary>
     public override void SetStaticDefaults()
     {
         Main.tileSolid[Type] = true;
-        Main.tileBrick[Type] = true;
         Main.tileBlockLight[Type] = true;
+        Main.tileBlendAll[Type] = true;
 
-        Main.tileMergeDirt[Type] = true;
-        Main.tileMerge[Type][SoilType] = true;
-        Main.tileMerge[SoilType][Type] = true;
-
-        TileID.Sets.NeedsGrassFraming[Type] = true;
-        TileID.Sets.NeedsGrassFramingDirt[SoilType] = Type;
+        Merge(DirtType, TileID.Grass);
+        AllowAnchor(TileID.Sunflower);
 
         TileID.Sets.Grass[Type] = true;
-        TileID.Sets.GrassSpecial[Type] = false;
-        TileID.Sets.ChecksForMerge[Type] = true;
+        TileID.Sets.CanBeDugByShovel[Type] = true;
+        TileID.Sets.NeedsGrassFramingDirt[Type] = DirtType;
+        TileID.Sets.NeedsGrassFraming[Type] = true;
     }
-
     public override void RandomUpdate(int i, int j)
     {
         if (!Main.rand.NextBool(spreadChance)) return;
@@ -58,7 +67,7 @@ public abstract class GrassTile : ModTile
                 if (y < 0 || y >= Main.maxTilesY) continue;
 
                 Tile tile = Main.tile[x, y];
-                if (tile.HasTile && tile.TileType == SoilType)
+                if (tile.HasTile && tile.TileType == DirtType)
                 {
                     if (!Main.tile[x, y - 1].HasTile || !Main.tileSolid[Main.tile[x, y - 1].TileType])
                     {
@@ -81,13 +90,26 @@ public abstract class GrassTile : ModTile
         }
     }
 
+    public override bool CanExplode(int i, int j)
+    {
+        WorldGen.KillTile(i, j, false, false, true); //Makes the tile completely go away instead of reverting to dirt
+        return true;
+    }
+
     public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
     {
-        if (fail || effectOnly) return;
-
-        Main.tile[i, j].TileType = (ushort)SoilType;
-
-        if (Main.netMode == NetmodeID.Server)
-            NetMessage.SendTileSquare(-1, i, j, 1);
+        if (!effectOnly) //Change self into dirt
+        {
+            fail = true;
+            Framing.GetTileSafely(i, j).TileType = (ushort)DirtType;
+        }
+    }
+    public void Merge(params int[] otherIds)
+    {
+        foreach (int id in otherIds)
+        {
+            Main.tileMerge[Type][id] = true;
+            Main.tileMerge[id][Type] = true;
+        }
     }
 }
