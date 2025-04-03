@@ -98,13 +98,13 @@ public class FallingStarMission : Mission
                     lineCount: 3,
                     zoomIn: true);
                     break;
-                case Objectives.WoodShelter: //chop trees , build shelter
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCDataManager.GuideData,
-                    DialogueKeys.FallingStar.BuildShelter,
-                    lineCount: 5,
-                    zoomIn: true);
-                    break;
+                //case Objectives.WoodShelter: //chop trees , build shelter
+                //    DialogueManager.Instance.StartDialogueByKey(
+                //    NPCDataManager.GuideData,
+                //    DialogueKeys.FallingStar.BuildShelter,
+                //    lineCount: 5,
+                //    zoomIn: true);
+                //    break;
                 case Objectives.ClearSlimes:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
@@ -282,18 +282,6 @@ public class FallingStarMission : Mission
             switch (objective)
             {
                 case Objectives.WoodShelter:
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCDataManager.GuideData,
-                    DialogueKeys.FallingStar.BuildShelter,
-                    lineCount: 5,
-                    zoomIn: true,
-                    modifications:
-                    [(line: 1, delay: 2, emote: 0),
-                    (line: 2, delay: 2, emote: 0),
-                    (line: 3, delay: 2, emote: 0),
-                    (line: 4, delay: 2, emote: 0),
-                    (line: 5, delay: 2, emote: 2)]);
-
                     UpdateProgress(1);
                     break;
             }

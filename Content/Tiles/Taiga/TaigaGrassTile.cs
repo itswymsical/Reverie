@@ -21,6 +21,35 @@ public class TaigaGrassTile : GrassTile
         TileID.Sets.SnowBiome[Type] = Type;
         AddMapEntry(new Color(88, 150, 112));
     }
+    public override void RandomUpdate(int i, int j)
+    {
+        if (!Main.rand.NextBool(6)) return;
+
+        int[] directions = { -1, 1 };
+        foreach (int xDir in directions)
+        {
+            int x = i + xDir;
+            if (x < 0 || x >= Main.maxTilesX) continue;
+
+            foreach (int yDir in directions)
+            {
+                int y = j + yDir;
+                if (y < 0 || y >= Main.maxTilesY) continue;
+
+                Tile tile = Main.tile[x, y];
+                if (tile.HasTile && tile.TileType == Type)
+                {
+                    if (!Main.tile[x, y - 1].HasTile || !Main.tileSolid[Main.tile[x, y - 1].TileType])
+                    {
+                        tile.TileType = (ushort)ModContent.TileType<SnowTaigaGrassTile>();
+
+                        if (Main.netMode == NetmodeID.Server)
+                            NetMessage.SendTileSquare(-1, x, y, 1);
+                    }
+                }
+            }
+        }
+    }
 }
 
 public class SnowTaigaGrassTile : GrassTile

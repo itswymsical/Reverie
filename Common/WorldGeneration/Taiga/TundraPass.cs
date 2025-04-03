@@ -256,9 +256,9 @@ public class TundraPass : GenPass
                 {
                     tile.TileType = (ushort)ModContent.TileType<SnowTaigaGrassTile>();
 
-                    for (var grassX = x - 1; grassX <= x + 1; grassX++) // Changed < to <= to include x+1
+                    for (var grassX = x - 1; grassX < x + 1; grassX++) // Changed < to <= to include x+1
                     {
-                        for (var grassY = y - 1; grassY <= y + 1; grassY++) // Changed < to <= to include y+1
+                        for (var grassY = y - 1; grassY < y + 1; grassY++) // Changed < to <= to include y+1
                         {
                             if (grassX >= 0 && grassX < Main.maxTilesX && grassY >= 0 && grassY < Main.maxTilesY)
                             {
@@ -276,8 +276,7 @@ public class TundraPass : GenPass
 
                 if (WorldGen.genRand.NextBool(3) && !tileAbove.HasTile && !tile.LeftSlope && !tile.RightSlope && !tile.IsHalfBlock)
                 {
-                    // Make sure we're not at the top edge of the world
-                    if (y > 1) // Ensure there's room for the tile above
+                    if (y > 1)
                     {
                         WorldGen.PlaceTile(x, y - 1, (ushort)ModContent.TileType<SnowTaigaPlants>(), mute: true);
                         var newTileAbove = Framing.GetTileSafely(x, y - 1);

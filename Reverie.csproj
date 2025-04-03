@@ -28,7 +28,7 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <Reference Include="StructureHelper">
-	    <HintPath>lib\StructureHelper.dll</HintPath>
+	    <HintPath>lib\StructureHelper2.dll</HintPath>
 	  </Reference>
 	  <Reference Include="SubworldLibrary">
 	    <HintPath>..\ReverieMod\Utilities\SubworldLibrary.dll</HintPath>
