@@ -129,16 +129,26 @@ public class BeginningTownPass : GenPass
             groundLevels[i] = groundY;
         }
 
-        int averageGroundLevel = (int)Math.Round(groundLevels.Average());
+        int minGroundLevel = groundLevels.Min();
 
-        // Place the structure at the right height relative to ground
         var structureX = x - STRUCTURE_WIDTH / 2;
-        var structureY = averageGroundLevel - STRUCTURE_HEIGHT;
+        var structureY = minGroundLevel - STRUCTURE_HEIGHT;
 
-        StructureHelper.API.Generator.GenerateStructure("Structures/BeginningTown", new Point16(structureX, structureY), Instance);
+        // Optional: You can push it even deeper by adding a constant value
+        // e.g., structureY += 3; // Push 3 tiles deeper into the ground
 
-        Main.spawnTileX = structureX - 48;
-        Main.spawnTileY = structureY + 8;
+        StructureHelper.API.Generator.GenerateStructure("Structures/BeginningTown", new Point16(structureX, structureY + 4), Instance);
+
+        int spawnX = structureX - 48;
+        int spawnColumnIndex = Math.Max(0, Math.Min(STRUCTURE_WIDTH, 48));
+        int spawnGroundLevel = groundLevels[spawnColumnIndex];
+        int spawnY = spawnGroundLevel - 3;
+        while (spawnY > structureY && WorldGen.SolidTile(spawnX, spawnY))
+        {
+            spawnY--;
+        }
+        Main.spawnTileX = spawnX;
+        Main.spawnTileY = spawnY;
 
         GetNPCs(structureX, structureY);
     }
@@ -148,19 +158,19 @@ public class BeginningTownPass : GenPass
         // adding to Y moves them down
 
         var guideX = structureX + 60;
-        var guideY = y + 31;
+        var guideY = y + 33;
         PlaceNPC(NPCID.Guide, guideX, guideY, -1);
 
         var merchantX = structureX + 94;
-        var merchantY = y + 18;
+        var merchantY = y + 19;
         PlaceNPC(NPCID.Merchant, merchantX, merchantY, -1);
 
         var demoX = structureX + 94;
-        var demoY = y + 25;
+        var demoY = y + 27;
         PlaceNPC(NPCID.Demolitionist, demoX, demoY, -1);
 
         var nurseX = structureX + 35;
-        var nurseY = y + 22;
+        var nurseY = y + 24;
         PlaceNPC(NPCID.Nurse, nurseX, nurseY, -1);
     }
 

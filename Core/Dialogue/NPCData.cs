@@ -123,7 +123,9 @@ public static class NPCDataManager
 {
     public static NPCData Default { get; private set; } = null!;
     public static NPCData GuideData { get; private set; } = null!;
-
+    public static NPCData MerchantData { get; private set; } = null!;
+    public static NPCData DemolitionistData { get; private set; } = null!;
+    public static NPCData NurseData { get; private set; } = null!;
     static NPCDataManager()
     {
         Initialize();
@@ -154,11 +156,54 @@ public static class NPCDataManager
             "Guide",
             NPCID.Guide,
             new Color(63, 82, 151),
-            SoundID.MenuOpen
+            new SoundStyle($"{SFX_DIRECTORY}Dialogue/Guide/Speech")
+            {
+                MaxInstances = 4,
+                Volume = 0.2f
+            }
+        );
+
+        MerchantData = new NPCData(
+            basicPortrait,
+            "Merchant",
+            NPCID.Merchant,
+            new Color(196, 102, 58),
+            new SoundStyle($"{SFX_DIRECTORY}Dialogue/Merchant/Speech")
+            {
+                MaxInstances = 4,
+                Volume = 0.2f
+            }
+        );
+
+        DemolitionistData = new NPCData(
+            basicPortrait,
+            "Demolitionist",
+            NPCID.Demolitionist,
+            new Color(223, 213, 106),
+            new SoundStyle($"{SFX_DIRECTORY}Dialogue/Demolitionist/Speech")
+            {
+                MaxInstances = 4,
+                Volume = 0.2f
+            }
+        );
+
+        NurseData = new NPCData(
+            basicPortrait,
+            "Nurse",
+            NPCID.Nurse,
+            new Color(255, 87, 126),
+            new SoundStyle($"{SFX_DIRECTORY}Dialogue/Nurse/Speech")
+            {
+                MaxInstances = 4,
+                Volume = 0.2f
+            }
         );
 
         DialogueManager.Instance.RegisterNPC("Default", Default);
         DialogueManager.Instance.RegisterNPC("Guide", GuideData);
+        DialogueManager.Instance.RegisterNPC("Merchant", MerchantData);
+        DialogueManager.Instance.RegisterNPC("Demolitionist", DemolitionistData);
+        DialogueManager.Instance.RegisterNPC("Nurse", NurseData);
 
         // Pre-cache some common dialogues if needed
         Default.CacheDialogue(DialogueKeys.FallingStar.Intro,

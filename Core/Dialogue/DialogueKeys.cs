@@ -28,6 +28,9 @@ public static class DialogueKeys
         private const string PREFIX = "FallingStar";
 
         public static string Intro => $"{PREFIX}.Intro";
+        public static string MerchantIntro => $"{PREFIX}.MerchantIntro";
+        public static string DemolitionistIntro => $"{PREFIX}.DemolitionistIntro";
+        public static string NurseIntro => $"{PREFIX}.NurseIntro";
         public static string Cutscene => $"{PREFIX}.Cutscene";
         public static string CrashLanding => $"{PREFIX}.CrashLanding";
         public static string GatheringResources => $"{PREFIX}.GatheringResources";

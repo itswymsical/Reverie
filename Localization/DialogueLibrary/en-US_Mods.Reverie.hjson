@@ -1,4 +1,4 @@
-DialogueLibrary: {
+﻿DialogueLibrary: {
 	FallingStar: {
 		Intro.Line1: What the Hell?!?!
 		Cutscene.Line1: Hmm? What's that?
@@ -9,17 +9,38 @@ DialogueLibrary: {
 			Line3: Just what are you?
 			Line4: Sorry... that was a little rude.
 			Line5: Hey uh, how about you come meet the townsfolk?
-			Line6: I've got some tools for you too, here.
+			Line6: Tools? Oh, right. The merchant can help you out with that.
+		}
+
+		MerchantIntro: {
+			Line1: Hey! Nice to meet ya. I'm the local merchant around here.
+			Line2: That's a nice aura you got. Are you some kind of fairy?
+			Line3: Hehe, well whatever you are, I've got the goods if you need 'em.
+			Line4: Since your new here, I'll give ya some copper tools, on the house.
+			Line5: Looking forward to doing business with ya!
+		}
+
+		DemolitionistIntro: {
+			Line1: Hahaha! What an explosive landing!
+			Line2: What would've been even better is if you landed on the Guide's house!
+			Line3: You and me? Friends, my brother. Anything you need, come to me!
+			Line4: I must focus now, I have explosives to create.
+		}
+
+		NurseIntro: {
+			Line1: Hey there sunshine, that aura of yours is looking a little worn.
+			Line2: How about you let me patch you up?
+			Line3: Don't worry, I don't bite... much.
+			Line4: I'm just kidding! I don't bite at all. I'm a nurse, not a monster.
 		}
 
 		GatheringResources: {
-			Line1: Okay, cool.
-			Line2: So, uh... where did you fall from?
-			Line3: That was a pretty gnarly landing, I'll assume your not a normal Terrarian judging how you survived that fall.
-			Line4: It's odd though. you look like us, yet you give off am otherworldy presence...
-			Line5: Anyways...
-			Line6: Around here everyone works for themselves. If you want to survive, you'll have to gather resources.
-			Line7: Explore around the area a bit, there's a lot to see in this world of ours.
+			Line1: where did you fall from exactly?
+			Line2: That was a pretty gnarly landing, I'll assume your no normal Terrarian judging how you survived that fall.
+			Line3: It's odd though. you look like us, yet you give off am otherworldy presence...
+			Line4: Anyways...
+			Line5: Around here everyone works for themselves. If you want to survive, you'll have to gather resources.
+			Line6: Explore around the area a bit, there's a lot to see in this world of ours.
 		}
 
 		BuildShelter: {

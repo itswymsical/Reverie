@@ -15,7 +15,7 @@ public class FallingStarMission : Mission
       "'Well, that's one way to make an appearance...'" +
       "\nBegin your journey in Terraria, discovering knowledge and power...",
       [
-          [("Talk to Guide", 1)],
+          [("Talk to Guide", 1), ("Talk to Merchant", 1), ("Talk to Demolitionist", 1), ("Talk to Nurse", 1)],
           [("Gather wood", 50), ("Build a shelter", 1)],
           [("Harvest ore", 30),("Craft a pickaxe", 1), ("Discover accessories", 2)],
           [("Obtain a helmet", 1), ("Obtain a chestplate", 1), ("Obtain leggings", 1), ("Obtain a new weapon", 1)],
@@ -41,14 +41,14 @@ public class FallingStarMission : Mission
 
     private readonly List<Item> starterItems =
     [
-        new Item(ItemID.WoodenSword),
+        new Item(ItemID.CopperShortsword),
         new Item(ItemID.CopperPickaxe),
         new Item(ItemID.CopperAxe)
     ];
 
     internal enum Objectives
     {
-        TalkToGuide = 0,
+        TalkToTownies = 0,
         WoodShelter = 1,
         AquireMetal = 2,
         SuitUp = 3,
@@ -134,9 +134,6 @@ public class FallingStarMission : Mission
             var objective = (Objectives)CurrentIndex;
             switch (objective)
             {
-                case Objectives.TalkToGuide:
-                    GiveStarterItems();
-                    break;
                 case Objectives.ClearSlimes:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
@@ -180,22 +177,63 @@ public class FallingStarMission : Mission
             var objective = (Objectives)CurrentIndex;
             switch (objective)
             {
-                case Objectives.TalkToGuide:
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCDataManager.GuideData,
-                    DialogueKeys.FallingStar.GatheringResources,
-                    lineCount: 7,
-                    zoomIn: true,
-                    modifications:
-                    [(line: 1, delay: 2, emote: 0),
-                    (line: 2, delay: 2, emote: 3),
-                    (line: 3, delay: 3, emote: 1),
-                    (line: 4, delay: 3, emote: 0),
-                    (line: 5, delay: 5, emote: 2),
-                    (line: 6, delay: 2, emote: 0),
-                    (line: 7, delay: 2, emote: 0)]);
+                case Objectives.TalkToTownies:
+                    if (npc.type == NPCID.Guide)
+                    {
+                        DialogueManager.Instance.StartDialogueByKey(
+                            NPCDataManager.GuideData,
+                            DialogueKeys.FallingStar.GatheringResources,
+                            lineCount: 7,
+                            zoomIn: true,
+                            modifications:
+                            [(line: 1, delay: 2, emote: 0),
+                        (line: 2, delay: 2, emote: 3),
+                        (line: 3, delay: 3, emote: 1),
+                        (line: 4, delay: 3, emote: 0),
+                        (line: 5, delay: 5, emote: 2),
+                        (line: 6, delay: 2, emote: 0),
+                        (line: 7, delay: 2, emote: 0)]);
+                        UpdateProgress(0);
+                    }
+                    if (npc.type == NPCID.Merchant)
+                    {
+                        DialogueManager.Instance.StartDialogueByKey(
+                            NPCDataManager.GuideData,
+                            DialogueKeys.FallingStar.MerchantIntro,
+                            lineCount: 5,
+                            zoomIn: false
+                            /*modifications:
+                            [(line: 1, delay: 2, emote: 0),
+                            (line: 2, delay: 2, emote: 3),
+                            (line: 3, delay: 3, emote: 1),
+                            (line: 4, delay: 3, emote: 0),
+                            (line: 5, delay: 5, emote: 2),
+                            (line: 6, delay: 2, emote: 0),
+                            (line: 7, delay: 2, emote: 0)]*/
+                            );
 
-                    UpdateProgress(0);
+                        UpdateProgress(1);
+                        GiveStarterItems();
+                    }
+                    if (npc.type == NPCID.Demolitionist)
+                    {
+                        DialogueManager.Instance.StartDialogueByKey(
+                            NPCDataManager.GuideData,
+                            DialogueKeys.FallingStar.MerchantIntro,
+                            lineCount: 5,
+                            zoomIn: false
+                            /*modifications:
+                            [(line: 1, delay: 2, emote: 0),
+                            (line: 2, delay: 2, emote: 3),
+                            (line: 3, delay: 3, emote: 1),
+                            (line: 4, delay: 3, emote: 0),
+                            (line: 5, delay: 5, emote: 2),
+                            (line: 6, delay: 2, emote: 0),
+                            (line: 7, delay: 2, emote: 0)]*/
+                            );
+
+                        UpdateProgress(2);
+                    }
                     break;
             }
         }
