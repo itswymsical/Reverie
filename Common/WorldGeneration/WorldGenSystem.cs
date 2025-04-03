@@ -6,7 +6,7 @@ using Terraria.WorldBuilding;
 
 namespace Reverie.Common.WorldGeneration;
 
-public class WorldGenerationSystem : ModSystem
+public class WorldGenSystem : ModSystem
 {
     public override void Load()
     {
@@ -15,18 +15,16 @@ public class WorldGenerationSystem : ModSystem
 
     private void Detour_Tundra(WorldGen.orig_GenPassDetour orig, object self, GenerationProgress progress, GameConfiguration configuration)
     {
-        var taiga = new TaigaTerrain();
+        var tundraPass = new TundraPass();
 
-        taiga.Apply(progress, configuration);
+        tundraPass.Apply(progress, configuration);
     }
-
-    public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalweight)
-    {
-
-        var snowindex = tasks.FindIndex(genpass => genpass.Name.Equals("Generate Ice Biome"));
-        if (snowindex >= 0)
-        {
-            tasks.Insert(snowindex + 1, new TaigaGrassGenPass());
-        }
-    }
+    //public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
+    //{
+    //    var tundraIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Generate Ice Biome"));
+    //    if (tundraIndex >= 0)
+    //    {
+    //        tasks.Insert(tundraIndex + 1, new TaigaPass());
+    //    }
+    //}
 }

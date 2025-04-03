@@ -18,9 +18,9 @@ public class PeatBlock : ModItem
     {
         base.AddRecipes();
 
-        CreateRecipe(2)
+        CreateRecipe()
         .AddIngredient(ItemID.MudBlock, 1)
-        .AddRecipeGroup(RecipeGroupID.Wood, 2)
+        .AddIngredient(ItemID.ClayBlock, 1)
         .Register();
     }
 }
