@@ -45,7 +45,7 @@ namespace Reverie.Common.Systems
             Vector2 bottomAnchorPosition = new(Main.screenWidth / 2, Main.screenHeight - 20);
             DialogueManager.Instance.Draw(spriteBatch, bottomAnchorPosition);
 
-            DrawUtils.DrawText(spriteBatch, Color.Wheat, "            - Reverie Demonstration (dev-alpha build v03.26.2025) -" +
+            DrawUtils.DrawText(spriteBatch, Color.Wheat, "            - Reverie Demonstration (dev-alpha build v04.02.2025) -" +
                 "\n- (All current content portrayed in Reverie is subject to change or removal) -", new(Main.screenWidth / 2, Main.screenHeight / 24f), 0.3f);
         }
     }

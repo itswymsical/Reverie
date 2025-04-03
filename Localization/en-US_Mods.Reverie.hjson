@@ -234,6 +234,16 @@ Items: {
 		DisplayName: Wood Wicker Wall_ Item
 		Tooltip: ""
 	}
+
+	PeatBlock: {
+		DisplayName: Peat Block
+		Tooltip: ""
+	}
+
+	TaigaGrassSeeds: {
+		DisplayName: Taiga Grass Seeds
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
