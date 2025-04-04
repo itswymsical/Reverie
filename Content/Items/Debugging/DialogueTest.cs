@@ -19,16 +19,16 @@ public class DialogueTest : ModItem
     {
         if (Main.myPlayer == player.whoAmI)
             DialogueManager.Instance.StartDialogueByKey(
-               NPCDataManager.GuideData,
-               DialogueKeys.FallingStar.GatheringResources,
+               NPCDataManager.MerchantData,
+               DialogueKeys.FallingStar.MerchantIntro,
                lineCount: 5,
                zoomIn: true, 
                modifications: 
                [(line: 1, delay: 3, emote: 0), 
-                (line: 2, delay: 3, emote: 2),
+                (line: 2, delay: 3, emote: 1),
                 (line: 3, delay: 3, emote: 0),
                 (line: 4, delay: 3, emote: 0),
-                (line: 5, delay: 3, emote: 0)]);
+                (line: 5, delay: 3, emote: 1)]);
 
         return true;
     }

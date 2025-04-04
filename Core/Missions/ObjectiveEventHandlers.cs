@@ -60,30 +60,13 @@ public class ObjectiveEventNPC : GlobalNPC
 
         if (AFallingStar?.Progress == MissionProgress.Active)
         {
-            var rateRareSlimes = 0.002f;
-
             var currentSet = AFallingStar.ObjectiveIndex[AFallingStar.CurrentIndex];
-
-            if (!currentSet.IsCompleted && AFallingStar.CurrentIndex < 2)
-                pool.Clear();
-
-            if (spawnInfo.PlayerInTown)
+            if (spawnInfo.PlayerInTown && AFallingStar.CurrentIndex >= 5)
             {
                 if (AFallingStar.CurrentIndex >= 3 && Main.LocalPlayer.ZoneOverworldHeight)
                 {
-                    pool.Add(NPCID.RedSlime, rateRareSlimes);
-                    pool.Add(NPCID.YellowSlime, rateRareSlimes);
-                    pool.Add(NPCID.Pinky, rateRareSlimes);
-
-                }
-                else if (AFallingStar.CurrentIndex >= 6 && Main.LocalPlayer.ZoneOverworldHeight)
-                {
-                    rateRareSlimes = 0.008f;
-                }
-                else if (AFallingStar.CurrentIndex >= 9 && AFallingStar.CurrentIndex <= 10
-                    && Main.LocalPlayer.ZoneOverworldHeight)
-                {
-                    rateRareSlimes = 0.02f;
+                    pool.Add(NPCID.BlueSlime, 0.08f);
+                    pool.Add(NPCID.GreenSlime, 0.102f);
                 }
             }
         }
@@ -100,7 +83,7 @@ public class ObjectiveEventNPC : GlobalNPC
         if (AFallingStar?.Progress == MissionProgress.Active && player.ZoneOverworldHeight)
         {
             var currentSet = AFallingStar.ObjectiveIndex[AFallingStar.CurrentIndex];
-            if (AFallingStar.CurrentIndex >= 3)
+            if (AFallingStar.CurrentIndex >= 4)
             {
                 spawnRate = 3;
                 maxSpawns = 7;
@@ -112,8 +95,8 @@ public class ObjectiveEventNPC : GlobalNPC
             }
             else if (AFallingStar.CurrentIndex >= 9)
             {
-                spawnRate = 3;
-                maxSpawns = 14;
+                spawnRate = 2;
+                maxSpawns = 11;
             }
         }
         else

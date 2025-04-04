@@ -14,6 +14,7 @@ public partial class MissionManager
 
     private bool isWorldFullyLoaded = false;
     private readonly HashSet<int> pendingRegistrations = [];
+
     public void OnWorldLoad()
     {
         activeMissions.Clear();
@@ -21,6 +22,7 @@ public partial class MissionManager
         isWorldFullyLoaded = false;
         ModContent.GetInstance<Reverie>().Logger.Info("MissionManager reset for world load");
     }
+
     public void OnWorldFullyLoaded()
     {
         isWorldFullyLoaded = true;
@@ -184,7 +186,6 @@ public partial class MissionManager
         }
     }
 
-
     public void OnNPCHit(NPC npc, int damage)
     {
         try
@@ -271,9 +272,9 @@ public class MissionFactory : ModSystem
             ModContent.GetInstance<Reverie>().Logger.Info("Registering mission types...");
 
             // Register each mission type with its ID
+            #region Missions
             missionTypes[MissionID.A_FALLING_STAR] = typeof(FallingStarMission);
-            //missionTypes[MissionID.BUILD_VALID_HOUSE] = typeof(HousingMission);
-           
+            #endregion
 
             ModContent.GetInstance<Reverie>().Logger.Info($"Registered {missionTypes.Count} mission types");
 

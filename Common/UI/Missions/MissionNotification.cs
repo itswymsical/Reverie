@@ -36,7 +36,7 @@ public class MissionNotification : IInGameNotification
     {
         currentMission = mission;
 
-        iconTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/ObjectiveInfo").Value;
+        iconTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/MissionAvailable").Value;
 
         activeObjectives = new List<Objective>();
         if (mission.ObjectiveIndex.Count > 0 && mission.CurrentIndex < mission.ObjectiveIndex.Count)
@@ -100,7 +100,7 @@ public class MissionNotification : IInGameNotification
             Color.White * alpha,
             0f,
             new Vector2(iconTexture.Width / 2, iconTexture.Height / 2),
-            1f,
+            0.5f,
             SpriteEffects.None,
             0f
         );

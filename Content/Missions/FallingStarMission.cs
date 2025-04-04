@@ -15,16 +15,18 @@ public class FallingStarMission : Mission
       "'Well, that's one way to make an appearance...'" +
       "\nBegin your journey in Terraria, discovering knowledge and power...",
       [
-          [("Talk to Guide", 1), ("Talk to Merchant", 1), ("Talk to Demolitionist", 1), ("Talk to Nurse", 1)],
-          [("Gather wood", 50), ("Build a shelter", 1)],
-          [("Harvest ore", 30),("Craft a pickaxe", 1), ("Discover accessories", 2)],
-          [("Obtain a helmet", 1), ("Obtain a chestplate", 1), ("Obtain leggings", 1), ("Obtain a new weapon", 1)],
-          [("Explore the Underground", 1), ("Discover a Glowing Mushroom Biome", 1), ("Kill enemies", 15)],
-          [("Clear out slimes", 10)],
-          [("Clear out slimes, again...", 10)],
-          [("Defend the Forest", 1)],
-          [("Clear Slime Infestation", 80)],
-          [("Defeat the King Slime", 1)]
+        [("Talk to Guide", 1), ("Talk to Merchant", 1), ("Talk to Demolitionist", 1), ("Talk to Nurse", 1)],
+        [("Gather wood", 50), ("Build a shelter", 1)],
+        [("Explore the Underground", 1), 
+            ("Discover a Glowing Mushroom Biome", 1), ("Explore the Jungle", 1), 
+            ("Explore the Underground Desert", 1),  ("Explore the Tundra", 1)],
+        [("Harvest ore", 30),("Craft a pickaxe", 1), ("Discover accessories", 2)],
+        [("Obtain a helmet", 1), ("Obtain a chestplate", 1), ("Obtain leggings", 1)],
+        [("Clear out slimes", 10)],
+        [("Clear out slimes, again...", 10)],
+        [("Defend the Forest", 1)],
+        [("Clear Slime Infestation", 80)],
+        [("Defeat the King Slime", 1)]
       ],
 
       [new Item(ItemID.MagicMirror), new Item(ItemID.GoldCoin, Main.rand.Next(3, 4))],
@@ -35,7 +37,6 @@ public class FallingStarMission : Mission
         ModContent.GetInstance<Reverie>().Logger.Info("[A Falling Star] Mission constructed");
     }
 
-    private const int LOOT_NOTIFICATION_THRESHOLD = 10;
     private const int SLIME_COMMENTARY_THRESHOLD = 20;
     private const int SLIME_WARNING_THRESHOLD = 45;
 
@@ -50,9 +51,9 @@ public class FallingStarMission : Mission
     {
         TalkToTownies = 0,
         WoodShelter = 1,
-        AquireMetal = 2,
-        SuitUp = 3,
-        Explore = 4,
+        Explore = 2,
+        AquireGear = 3,
+        SuitUp = 4,
         ClearSlimes = 5,
         ClearSlimes2 = 6,
         DefendForest = 7,
@@ -198,19 +199,16 @@ public class FallingStarMission : Mission
                     if (npc.type == NPCID.Merchant)
                     {
                         DialogueManager.Instance.StartDialogueByKey(
-                            NPCDataManager.GuideData,
+                            NPCDataManager.MerchantData,
                             DialogueKeys.FallingStar.MerchantIntro,
                             lineCount: 5,
-                            zoomIn: false
-                            /*modifications:
-                            [(line: 1, delay: 2, emote: 0),
-                            (line: 2, delay: 2, emote: 3),
-                            (line: 3, delay: 3, emote: 1),
+                            zoomIn: false,
+                            modifications:
+                           [(line: 1, delay: 3, emote: 0),
+                            (line: 2, delay: 3, emote: 1),
+                            (line: 3, delay: 3, emote: 0),
                             (line: 4, delay: 3, emote: 0),
-                            (line: 5, delay: 5, emote: 2),
-                            (line: 6, delay: 2, emote: 0),
-                            (line: 7, delay: 2, emote: 0)]*/
-                            );
+                            (line: 5, delay: 3, emote: 1)]);
 
                         UpdateProgress(1);
                         GiveStarterItems();
@@ -218,21 +216,34 @@ public class FallingStarMission : Mission
                     if (npc.type == NPCID.Demolitionist)
                     {
                         DialogueManager.Instance.StartDialogueByKey(
-                            NPCDataManager.GuideData,
-                            DialogueKeys.FallingStar.MerchantIntro,
-                            lineCount: 5,
-                            zoomIn: false
-                            /*modifications:
-                            [(line: 1, delay: 2, emote: 0),
-                            (line: 2, delay: 2, emote: 3),
-                            (line: 3, delay: 3, emote: 1),
-                            (line: 4, delay: 3, emote: 0),
-                            (line: 5, delay: 5, emote: 2),
-                            (line: 6, delay: 2, emote: 0),
-                            (line: 7, delay: 2, emote: 0)]*/
+                            NPCDataManager.DemolitionistData,
+                            DialogueKeys.FallingStar.DemolitionistIntro,
+                            lineCount: 4,
+                            zoomIn: false,
+                            modifications:
+                            [(line: 1, delay: 3, emote: 0),
+                            (line: 2, delay: 3, emote: 0),
+                            (line: 3, delay: 3, emote: 0),
+                            (line: 4, delay: 3, emote: 0)]
                             );
 
                         UpdateProgress(2);
+                    }
+                    if (npc.type == NPCID.Nurse)
+                    {
+                        DialogueManager.Instance.StartDialogueByKey(
+                            NPCDataManager.NurseData,
+                            DialogueKeys.FallingStar.NurseIntro,
+                            lineCount: 4,
+                            zoomIn: false,
+                            modifications:
+                            [(line: 1, delay: 3, emote: 0),
+                            (line: 2, delay: 3, emote: 0),
+                            (line: 3, delay: 3, emote: 0),
+                            (line: 4, delay: 3, emote: 0)]
+                            );
+
+                        UpdateProgress(3);
                     }
                     break;
             }
@@ -261,10 +272,8 @@ public class FallingStarMission : Mission
                         UpdateProgress(1, item.stack);
                     if (item.legSlot != -1 && !item.vanity)
                         UpdateProgress(2, item.stack);
-                    if (item.DealsDamage())
-                        UpdateProgress(3);
                     break;
-                case Objectives.AquireMetal:
+                case Objectives.AquireGear:
                     if (item.IsOre())
                         UpdateProgress(0, item.stack);
                     if (item.IsMiningTool())
@@ -342,6 +351,12 @@ public class FallingStarMission : Mission
                         UpdateProgress(0);
                     if (biome == BiomeType.Glowshroom)
                         UpdateProgress(1);
+                    if (biome == BiomeType.Jungle)
+                        UpdateProgress(2);
+                    if (biome == BiomeType.UndergroundDesert)
+                        UpdateProgress(3);
+                    if (biome == BiomeType.Snow)
+                        UpdateProgress(4);
                     break;
 
                 case Objectives.DefendForest:

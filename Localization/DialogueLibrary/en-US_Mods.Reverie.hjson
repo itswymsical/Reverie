@@ -1,7 +1,12 @@
-﻿DialogueLibrary: {
+DialogueLibrary: {
 	FallingStar: {
-		Intro.Line1: What the Hell?!?!
-		Cutscene.Line1: Hmm? What's that?
+		Intro.Line1: WHAT THE HELL?!?!
+
+		Cutscene: {
+			Line1: Hey! Do you guys hear that?
+			Line2: Yes, we can hear your annoying voice.
+			Line3: No, not me, the thing falling from the sky!
+		}
 
 		CrashLanding: {
 			Line1: That's one way to make an entrance...

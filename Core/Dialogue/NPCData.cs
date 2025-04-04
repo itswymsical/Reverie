@@ -163,8 +163,12 @@ public static class NPCDataManager
             }
         );
 
+        var merchantPortrait = new NPCPortrait(
+            ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Merchant"),
+            frameCount: 1
+        );
         MerchantData = new NPCData(
-            basicPortrait,
+            merchantPortrait,
             "Merchant",
             NPCID.Merchant,
             new Color(196, 102, 58),

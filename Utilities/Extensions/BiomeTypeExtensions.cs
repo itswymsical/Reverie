@@ -28,7 +28,10 @@ public static class BiomeTypeExtensions
         BiomeType.PeaceCandle => player.ZonePeaceCandle,
         BiomeType.WaterCandle => player.ZoneWaterCandle,
         BiomeType.Forest => player.ZoneForest,
-        BiomeType.Underground => player.ZoneNormalUnderground,
+        BiomeType.Underground => player.ZoneRockLayerHeight || player.ZoneDirtLayerHeight,
+        BiomeType.Granite => player.ZoneGranite,
+        BiomeType.Marble => player.ZoneMarble,
+        BiomeType.Underworld => player.ZoneUnderworldHeight,
         _ => false
     };
 }
