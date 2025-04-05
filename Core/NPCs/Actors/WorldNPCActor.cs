@@ -14,9 +14,10 @@ public abstract class WorldNPCActor : ModNPC
         NPC.homeless = true;
         NPC.immortal = true;
         NPC.life = 300;
-        NPC.defense = 10;
+        NPC.defense = 30;
         NPC.damage = 15;
         NPC.friendly = true;
+        NPC.townNPC = true;
     }
     public override void SetChatButtons(ref string button, ref string button2)
     {

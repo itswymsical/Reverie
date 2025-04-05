@@ -3,6 +3,7 @@ using System.Linq;
 using Terraria.DataStructures;
 using Reverie.Utilities;
 using Reverie.Content.Missions;
+using Reverie.Content.Missions.Argie;
 
 namespace Reverie.Core.Missions;
 
@@ -274,6 +275,7 @@ public class MissionFactory : ModSystem
             // Register each mission type with its ID
             #region Missions
             missionTypes[MissionID.A_FALLING_STAR] = typeof(FallingStarMission);
+            missionTypes[MissionID.BLOOMCAP] = typeof(BloomcapMission);
             #endregion
 
             ModContent.GetInstance<Reverie>().Logger.Info($"Registered {missionTypes.Count} mission types");

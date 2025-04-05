@@ -22,7 +22,7 @@ public sealed partial class Reverie : Mod
     ///     Directory for UI assets.
     /// </summary>
     public const string UI_ASSET_DIRECTORY = nameof(Reverie) + "/Assets/Textures/UI/";
-    public const string NONE = nameof(Reverie) + "/Assets/Textures/NONE";
+    public const string PLACEHOLDER = nameof(Reverie) + "/Assets/Textures/PLACEHOLDER";
 
     /// <summary>
     ///     Directory invisile texture.

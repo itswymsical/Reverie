@@ -8,7 +8,7 @@ using Reverie.Utilities;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 
-namespace Reverie.Content.Missions;
+namespace Reverie.Content.Missions.Argie;
 
 public class FungalFracas : Mission //todo: implement mission logic
 {

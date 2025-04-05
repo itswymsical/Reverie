@@ -7,7 +7,7 @@ namespace Reverie.Content.Items.Debugging;
 
 public class DialogueTest : ModItem
 {
-    public override string Texture => NONE;
+    public override string Texture => PLACEHOLDER;
     public override void SetDefaults()
     {
         Item.useTime = Item.useAnimation = 20;

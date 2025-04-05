@@ -27,9 +27,9 @@ public static class MissionUtils
         var progressUpdated = false;
         var currentStack = 0;
 
-        foreach (var mission in missionPlayer.GetActiveMissions())
+        foreach (var mission in missionPlayer.ActiveMissions())
         {
-            var currentSet = mission.ObjectiveIndex[mission.CurrentIndex];
+            var currentSet = mission.Objective[mission.CurrentIndex];
 
             if (item.stack > 0 && !currentSet.IsCompleted)
             {
@@ -76,7 +76,7 @@ public static class MissionUtils
             Availability = mission.Availability,
             Unlocked = mission.Unlocked,
             CurObjectiveIndex = mission.CurrentIndex,
-            ObjectiveIndex = mission.ObjectiveIndex
+            ObjectiveIndex = mission.Objective
                 .Select(set => new ObjectiveIndexState
                 {
                     Objectives = set.Objectives
@@ -105,7 +105,7 @@ public static class MissionUtils
         mission.Unlocked = state.Unlocked;
 
         // Validate current index is within bounds
-        if (state.CurObjectiveIndex >= 0 && state.CurObjectiveIndex < mission.ObjectiveIndex.Count)
+        if (state.CurObjectiveIndex >= 0 && state.CurObjectiveIndex < mission.Objective.Count)
         {
             mission.CurrentIndex = state.CurObjectiveIndex;
         }
@@ -116,17 +116,17 @@ public static class MissionUtils
         }
 
         // If objective counts don't match, log a warning
-        if (mission.ObjectiveIndex.Count != state.ObjectiveIndex.Count)
+        if (mission.Objective.Count != state.ObjectiveIndex.Count)
         {
             ModContent.GetInstance<Reverie>().Logger.Warn(
-                $"Mission {mission.ID} objective set count mismatch: Expected {mission.ObjectiveIndex.Count}, got {state.ObjectiveIndex.Count}");
+                $"Mission {mission.ID} objective set count mismatch: Expected {mission.Objective.Count}, got {state.ObjectiveIndex.Count}");
         }
 
         // Process each objective set with improved matching by description
-        for (var i = 0; i < Math.Min(mission.ObjectiveIndex.Count, state.ObjectiveIndex.Count); i++)
+        for (var i = 0; i < Math.Min(mission.Objective.Count, state.ObjectiveIndex.Count); i++)
         {
             var savedSet = state.ObjectiveIndex[i];
-            var currentSet = mission.ObjectiveIndex[i];
+            var currentSet = mission.Objective[i];
 
             // If objective counts within a set don't match, log a warning
             if (currentSet.Objectives.Count != savedSet.Objectives.Count)
@@ -161,7 +161,7 @@ public static class MissionUtils
 
         // Ensure mission index is valid if mission is active
         if (mission.Progress == MissionProgress.Active &&
-            (mission.CurrentIndex < 0 || mission.CurrentIndex >= mission.ObjectiveIndex.Count))
+            (mission.CurrentIndex < 0 || mission.CurrentIndex >= mission.Objective.Count))
         {
             ModContent.GetInstance<Reverie>().Logger.Warn(
                 $"Active mission {mission.ID} has invalid current index {mission.CurrentIndex}, resetting to 0");

@@ -19,7 +19,7 @@ namespace Reverie.Common.Players;
 
 public class ReveriePlayer : ModPlayer
 {
-    private bool wasInventoryOpen = false;
+    private bool inventoryInit = false;
     private Mission currentMission;
     public bool magnetizedFall;
     public bool lodestoneKB;
@@ -35,19 +35,14 @@ public class ReveriePlayer : ModPlayer
         if (Cutscene.NoFallDamage)
             Player.noFallDmg = true;
 
-        bool isInventoryOpen = Main.playerInventory;
-
-        if (isInventoryOpen && !wasInventoryOpen)
+        if (Main.playerInventory && !inventoryInit)
         {
-            currentMission = Main.LocalPlayer.GetModPlayer<MissionPlayer>().GetActiveMissions().FirstOrDefault();
+            currentMission = Main.LocalPlayer.GetModPlayer<MissionPlayer>().ActiveMissions().FirstOrDefault();
 
-            if (currentMission != null)
-            {
-                InGameNotificationsTracker.AddNotification(new MissionNotification(currentMission));
-            }
+            InGameNotificationsTracker.AddNotification(new MissionNotification(currentMission));
+            inventoryInit = true;
         }
 
-        wasInventoryOpen = isInventoryOpen;
         DialogueManager.Instance.UpdateActive();
     }
 

@@ -14,8 +14,9 @@ namespace Reverie.Core.Missions;
 public static class MissionID
 {
     public const int A_FALLING_STAR = 1;
-    public const int FUNGAL_FRACAS = 2;
-    public const int BUILD_VALID_HOUSE = 3;
+    public const int BLOOMCAP = 2;
+
+    public const int FUNGAL_FRACAS = 8;
 }
 
 public enum MissionProgress
@@ -53,7 +54,7 @@ public abstract class Mission
     public int ID { get; set; }
     public string Name { get; private set; }
     public string Description { get; private set; }
-    public List<ObjectiveSet> ObjectiveIndex { get; protected set; }
+    public List<ObjectiveSet> Objective { get; protected set; }
     public List<Item> Rewards { get; private set; }
     public bool IsMainline { get; }
     public int Employer { get; set; }
@@ -73,7 +74,7 @@ public abstract class Mission
         ID = id;
         Name = name;
         Description = description;
-        ObjectiveIndex = objectiveSetData.Select(set =>
+        Objective = objectiveSetData.Select(set =>
             new ObjectiveSet(set.Select(o =>
                 new Objective(o.Item1, o.Item2)).ToList())).ToList();
         Rewards = rewards;
@@ -85,11 +86,12 @@ public abstract class Mission
     #endregion
 
     #region Virtual Event Handlers
+    public virtual void OnMissionStart() { }
     public void HandleObjectiveCompletion(int objectiveIndex)
     {
         try
         {
-            var currentSet = ObjectiveIndex[CurrentIndex];
+            var currentSet = Objective[CurrentIndex];
             var objective = currentSet.Objectives[objectiveIndex];
 
             if (objective.IsCompleted)
@@ -224,7 +226,7 @@ public abstract class Mission
         if (Progress != MissionProgress.Active)
             return false;
 
-        var currentSet = ObjectiveIndex[CurrentIndex];
+        var currentSet = Objective[CurrentIndex];
         if (objective >= 0 && objective < currentSet.Objectives.Count)
         {
             var obj = currentSet.Objectives[objective];
@@ -243,12 +245,12 @@ public abstract class Mission
 
                 if (currentSet.IsCompleted)
                 {
-                    if (CurrentIndex < ObjectiveIndex.Count - 1)
+                    if (CurrentIndex < Objective.Count - 1)
                     {
                         CurrentIndex++;
                         return true;
                     }
-                    if (ObjectiveIndex.All(set => set.IsCompleted))
+                    if (Objective.All(set => set.IsCompleted))
                     {
                         Complete();
                         return true;
@@ -263,7 +265,7 @@ public abstract class Mission
     {
         Progress = MissionProgress.Inactive;
         CurrentIndex = 0;
-        foreach (var set in ObjectiveIndex)
+        foreach (var set in Objective)
         {
             set.Reset();
         }
@@ -271,7 +273,7 @@ public abstract class Mission
 
     public void Complete()
     {
-        if (Progress == MissionProgress.Active && ObjectiveIndex.All(set => set.IsCompleted))
+        if (Progress == MissionProgress.Active && Objective.All(set => set.IsCompleted))
         {          
             Progress = MissionProgress.Completed;
             Availability = MissionAvailability.Completed;
@@ -358,7 +360,7 @@ public class MissionDataContainer
             ["Availability"] = (int)Availability,
             ["Unlocked"] = Unlocked,
             ["CurrentIndex"] = CurObjectiveIndex,
-            ["ObjectiveIndex"] = ObjectiveIndex.Select(set => set.Serialize()).ToList(),
+            ["Objective"] = ObjectiveIndex.Select(set => set.Serialize()).ToList(),
             ["NextMissionID"] = NextMissionID
         };
     }
@@ -374,7 +376,7 @@ public class MissionDataContainer
                 Availability = (MissionAvailability)tag.GetInt("Availability"),
                 Unlocked = tag.GetBool("Unlocked"),
                 CurObjectiveIndex = tag.GetInt("CurrentIndex"),
-                ObjectiveIndex = tag.GetList<TagCompound>("ObjectiveIndex")
+                ObjectiveIndex = tag.GetList<TagCompound>("Objective")
                     .Select(t => ObjectiveIndexState.Deserialize(t))
                     .ToList(),
                 NextMissionID = tag.GetInt("NextMissionID")

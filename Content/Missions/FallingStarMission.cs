@@ -396,7 +396,7 @@ public class FallingStarMission : Mission
         if (npc.type == NPCAIStyleID.Slime)
         {
             UpdateProgress(0);
-            if (ObjectiveIndex[CurrentIndex].Objectives[0].CurrentCount == SLIME_COMMENTARY_THRESHOLD)
+            if (Objective[CurrentIndex].Objectives[0].CurrentCount == SLIME_COMMENTARY_THRESHOLD)
             {
                 DialogueManager.Instance.StartDialogueByKey(
                 NPCDataManager.GuideData,
@@ -404,7 +404,7 @@ public class FallingStarMission : Mission
                 lineCount: 2,
                 zoomIn: false);
             }
-            if (ObjectiveIndex[CurrentIndex].Objectives[0].CurrentCount == SLIME_WARNING_THRESHOLD)
+            if (Objective[CurrentIndex].Objectives[0].CurrentCount == SLIME_WARNING_THRESHOLD)
             {
                 DialogueManager.Instance.StartDialogueByKey(
                 NPCDataManager.GuideData,

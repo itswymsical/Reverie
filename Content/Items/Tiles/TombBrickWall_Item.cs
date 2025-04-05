@@ -4,7 +4,7 @@ namespace Reverie.Content.Items.Tiles;
 
 public class TombBrickWall_Item : ModItem
 {
-    public override string Texture => NONE;
+    public override string Texture => PLACEHOLDER;
     public override void SetDefaults()
     {
         base.SetDefaults();

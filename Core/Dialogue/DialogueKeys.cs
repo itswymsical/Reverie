@@ -6,7 +6,6 @@
 /// </summary>
 public static class DialogueKeys
 {
-    // Chronicle dialogues
     public static class Chronicle
     {
         private const string PREFIX = "Chronicle_01";
@@ -14,7 +13,18 @@ public static class DialogueKeys
         public static string Chapter1 => $"{PREFIX}.Chapter1";
     }
 
-    // Tamer missions
+    public static class ArgieDialogue
+    {
+        private const string PREFIX = "ArgieDialogue";
+
+        public static string Introduction => $"{PREFIX}.Introduction";
+        public static string BloomcapIntro => $"{PREFIX}.BloomcapIntro";
+        public static string BloomcapCollected => $"{PREFIX}.BloomcapCollected";
+        public static string BloomcapCollectedHalf => $"{PREFIX}.BloomcapCollected2";
+        public static string BloomcapCollectedAll => $"{PREFIX}.BloomcapCollectedAll";
+        public static string BloomcapComplete => $"{PREFIX}.BloomcapComplete";
+    }
+
     public static class TamerMissions
     {
         private const string PREFIX = "TamerTestMission";
@@ -22,7 +32,6 @@ public static class DialogueKeys
         public static string Chapter1 => $"{PREFIX}.Chapter1";
     }
 
-    // Crash Landing dialogues
     public static class FallingStar
     {
         private const string PREFIX = "FallingStar";
@@ -46,8 +55,5 @@ public static class DialogueKeys
         public static string KingSlimeDefeat => $"{PREFIX}.KingSlimeDefeat";
     }
 
-    // Add more dialogue categories as needed
-
-    // Helper method to create custom dialogue keys
     public static string Custom(string category, string sequence) => $"{category}.{sequence}";
 }

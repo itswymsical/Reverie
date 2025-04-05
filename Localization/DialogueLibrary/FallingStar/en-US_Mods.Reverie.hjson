@@ -1,0 +1,48 @@
+DialogueLibrary: {
+	FallingStar: {
+		Cutscene: {
+		}
+
+		CrashLanding: {
+		}
+
+		MerchantIntro: {
+		}
+
+		DemolitionistIntro: {
+		}
+
+		NurseIntro: {
+		}
+
+		GatheringResources: {
+		}
+
+		BuildShelter: {
+		}
+
+		WildlifeWoes: {
+		}
+
+		SlimeInfestation: {
+		}
+
+		SlimeInfestation_Commentary: {
+		}
+
+		SlimeRain: {
+		}
+
+		SlimeRain_Commentary: {
+		}
+
+		SlimeRain_Warning: {
+		}
+
+		KS_Encounter: {
+		}
+
+		KingSlimeDefeat: {
+		}
+	}
+}

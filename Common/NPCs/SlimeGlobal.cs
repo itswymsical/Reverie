@@ -53,7 +53,7 @@ namespace Reverie.Common.NPCs
 
             if (AFallingStar?.Progress == MissionProgress.Active)
             {
-                var currentSet = AFallingStar.ObjectiveIndex[AFallingStar.CurrentIndex];
+                var currentSet = AFallingStar.Objective[AFallingStar.CurrentIndex];
                 if (AFallingStar.CurrentIndex >= 3)
                 {
                     UpdateState(npc);

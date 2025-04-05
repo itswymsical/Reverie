@@ -6,7 +6,7 @@ using Reverie.Core.Dialogue;
 
 using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
-using static Reverie.Core.Missions.MissionPlayer;
+using System.Linq;
 
 namespace Reverie.Core.Missions;
 
@@ -40,7 +40,7 @@ public class ObjectiveEventNPC : GlobalNPC
 {
     public override bool InstancePerEntity => true;
 
-    public Texture2D missionAvailableTexture =
+    public Texture2D missionTexture =
         ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Missions/MissionAvailable").Value;
 
     public override bool? CanChat(NPC npc)
@@ -60,7 +60,7 @@ public class ObjectiveEventNPC : GlobalNPC
 
         if (AFallingStar?.Progress == MissionProgress.Active)
         {
-            var currentSet = AFallingStar.ObjectiveIndex[AFallingStar.CurrentIndex];
+            var currentSet = AFallingStar.Objective[AFallingStar.CurrentIndex];
             if (spawnInfo.PlayerInTown && AFallingStar.CurrentIndex >= 5)
             {
                 if (AFallingStar.CurrentIndex >= 3 && Main.LocalPlayer.ZoneOverworldHeight)
@@ -82,7 +82,7 @@ public class ObjectiveEventNPC : GlobalNPC
 
         if (AFallingStar?.Progress == MissionProgress.Active && player.ZoneOverworldHeight)
         {
-            var currentSet = AFallingStar.ObjectiveIndex[AFallingStar.CurrentIndex];
+            var currentSet = AFallingStar.Objective[AFallingStar.CurrentIndex];
             if (AFallingStar.CurrentIndex >= 4)
             {
                 spawnRate = 3;
@@ -120,13 +120,13 @@ public class ObjectiveEventNPC : GlobalNPC
     public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
         var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        if (NPCHasAvailableMission(missionPlayer, npc.type))
+        if (missionPlayer.NPCHasAvailableMission(npc.type) && !missionPlayer.ActiveMissions().Any(m => npc.type == m.Employer))
         {
             var hoverOffset = (float)Math.Sin(Main.GameUpdateCount * 1f * 0.1f) * 4f;
-            var drawPos = npc.Top + new Vector2(-missionAvailableTexture.Width / 2f, -missionAvailableTexture.Height - 10f - hoverOffset);
+            var drawPos = npc.Top + new Vector2(-missionTexture.Width / 2f, -missionTexture.Height - 10f - hoverOffset);
             drawPos = Vector2.Transform(drawPos - Main.screenPosition, Main.GameViewMatrix.ZoomMatrix);
             spriteBatch.Draw(
-                missionAvailableTexture,
+                missionTexture,
                 drawPos,
                 null,
                 Color.White,
