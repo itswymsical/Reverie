@@ -6,7 +6,7 @@
 using Reverie.Core.Dialogue;
 using Terraria.DataStructures;
 
-namespace Reverie.Common.Players.Animation;
+namespace Reverie.Common.Players;
 
 /// <summary>
 /// Adapted from Terraria Overhaul, by Mirsario. Rotates the <see cref="Player"/> head by (<see cref="Main.MouseWorld"/> - <see cref="Player.Center"/>).
