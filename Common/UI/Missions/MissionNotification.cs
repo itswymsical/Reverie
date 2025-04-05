@@ -23,8 +23,8 @@ public class MissionNotification : IInGameNotification
     private List<Objective> activeObjectives;
 
     private Texture2D iconTexture;
-    private Texture2D nextButtonTexture;
-    private Texture2D prevButtonTexture;
+    private Texture2D prevTexture;
+    private Texture2D nextTexture;
     private Texture2D toggleTexture;
 
     private const string EMPTY_CHECKBOX = "☐";
@@ -50,8 +50,8 @@ public class MissionNotification : IInGameNotification
         currentMission = mission;
 
         iconTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/MissionAvailable").Value;
-        nextButtonTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Dialogue/ArrowForward").Value;
-        prevButtonTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Dialogue/ArrowBack").Value;
+        prevTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Dialogue/ArrowForward").Value;
+        nextTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Dialogue/ArrowBack").Value;
 
         LoadMissions();
         UpdateActiveObjectives();
@@ -170,8 +170,8 @@ public class MissionNotification : IInGameNotification
         int posY = 356;
 
         iconTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/MissionAvailable").Value;
-        nextButtonTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/Next").Value;
-        prevButtonTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/Prev").Value;
+        prevTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/Prev").Value;
+        nextTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/Next").Value;
         toggleTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/CycleMenu").Value;
         Rectangle panelRect = new Rectangle(posX, posY, TitlePanelWidth, totalHeight);
 
@@ -248,12 +248,12 @@ public class MissionNotification : IInGameNotification
             Rectangle prevButtonRect = new Rectangle((int)prevButtonPos.X - 8, (int)prevButtonPos.Y - 6, ButtonSize, 16);
 
             spriteBatch.Draw(
-                prevButtonTexture,
+                nextTexture,
                 prevButtonPos,
                 null,
                 Color.White * alpha,
                 0f,
-                new Vector2(prevButtonTexture.Width / 2, prevButtonTexture.Height / 2),
+                new Vector2(nextTexture.Width / 2, nextTexture.Height / 2),
                 0.6f,
                 SpriteEffects.None,
                 0f
@@ -263,12 +263,12 @@ public class MissionNotification : IInGameNotification
             Rectangle nextButtonRect = new Rectangle((int)nextButtonPos.X - 8, (int)nextButtonPos.Y - 6, ButtonSize, 16);
 
             spriteBatch.Draw(
-                nextButtonTexture,
+                prevTexture,
                 nextButtonPos,
                 null,
                 Color.White * alpha,
                 0f,
-                new Vector2(nextButtonTexture.Width / 2, nextButtonTexture.Height / 2),
+                new Vector2(prevTexture.Width / 2, prevTexture.Height / 2),
                 0.6f,
                 SpriteEffects.None,
                 0f
@@ -279,12 +279,12 @@ public class MissionNotification : IInGameNotification
                 if (prevButtonRect.Contains(Main.MouseScreen.ToPoint()))
                 {
                     CycleToPreviousMission();
-                    SoundEngine.PlaySound(SoundID.MenuClose);
+                    SoundEngine.PlaySound(SoundID.MenuTick);
                 }
                 else if (nextButtonRect.Contains(Main.MouseScreen.ToPoint()))
                 {
                     CycleToNextMission();
-                    SoundEngine.PlaySound(SoundID.MenuOpen);
+                    SoundEngine.PlaySound(SoundID.MenuTick);
                 }
             }
         }
@@ -459,13 +459,8 @@ public class MissionNotification : IInGameNotification
             fadeInProgress += FADE_IN_SPEED;
             fadeInProgress = Math.Min(fadeInProgress, 1.0f);
 
-            if (Main.GameUpdateCount % 60 == 0)
-            {
-                // Save the current mission ID to try to maintain selection
-                int oldMissionId = currentMission?.ID ?? -1;
-                LoadMissions();
-                UpdateActiveObjectives();
-            }
+            LoadMissions();
+            UpdateActiveObjectives();
         }
 
         if (isFadingOut)

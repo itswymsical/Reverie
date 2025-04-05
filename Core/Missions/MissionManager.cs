@@ -220,6 +220,21 @@ public partial class MissionManager
             ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnBiomeEnter: {ex.Message}");
         }
     }
+    public void OnBreakTile(int type, ref bool fail, ref bool effectOnly)
+    {
+        try
+        {
+            foreach (var mission in ActiveMissions)
+            {
+                mission.OnBreakTile(type, ref fail, ref effectOnly);
+                ModContent.GetInstance<Reverie>().Logger.Debug($"OnBreakTile: {type}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnBreakTile: {ex.Message}");
+        }
+    }
     #endregion
 }
 
@@ -274,7 +289,7 @@ public class MissionFactory : ModSystem
 
             // Register each mission type with its ID
             #region Missions
-            missionTypes[MissionID.A_FALLING_STAR] = typeof(FallingStarMission);
+            missionTypes[MissionID.FallingStar] = typeof(FallingStarMission);
             missionTypes[MissionID.BLOOMCAP] = typeof(BloomcapMission);
             #endregion
 

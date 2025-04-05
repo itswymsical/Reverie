@@ -60,45 +60,6 @@ public static class PlayerExtensions
         player.PickTile(i, j, power - (power / 2));
     }
 
-    public static bool IsTouchingTiles(this Player player, int type = -1)
-    {
-        player.TouchedTiles.Clear();
-        List<Point> list = null;
-        List<Point> list2 = null;
-        if (!Collision.IsClearSpotTest(player.position + player.velocity, 16f, player.width, player.height, fallThrough: false, fall2: false, (int)player.gravDir, checkCardinals: true, checkSlopes: true))
-            list = Collision.FindCollisionTile((Math.Sign(player.velocity.Y) == 1) ? 2 : 3, player.position + player.velocity, 16f, player.width, player.height, fallThrough: false, fall2: false, (int)player.gravDir);
-        if (!Collision.IsClearSpotTest(player.position, Math.Abs(player.velocity.Y), player.width, player.height, fallThrough: false, fall2: false, (int)player.gravDir, checkCardinals: true, checkSlopes: true))
-            list2 = Collision.FindCollisionTile((Math.Sign(player.velocity.Y) == 1) ? 2 : 3, player.position, Math.Abs(player.velocity.Y), player.width, player.height, fallThrough: false, fall2: false, (int)player.gravDir, checkCardinals: true, checkSlopes: true);
-        if (list != null && list2 != null)
-        {
-            for (int i = 0; i < list2.Count; i++)
-            {
-                if (!list.Contains(list2[i]))
-                    list.Add(list2[i]);
-            }
-        }
-        if (list == null && list2 != null)
-            list = list2;
-        if (list != null)
-            player.TouchedTiles = list;
-
-        // If type parameter is specified, filter TouchedTiles by type
-        if (type != -1 && player.TouchedTiles.Count > 0)
-        {
-            List<Point> filteredTiles = new List<Point>();
-            foreach (Point point in player.TouchedTiles)
-            {
-                if (Main.tile[point.X, point.Y].TileType == type)
-                {
-                    filteredTiles.Add(point);
-                }
-            }
-            player.TouchedTiles = filteredTiles;
-        }
-
-        return player.TouchedTiles.Count > 0;
-    }
-
     /// 
     /// <summary>
     ///     Attempts to position/rotate the <see cref="Player"/> head.
@@ -123,12 +84,6 @@ public static class PlayerExtensions
     ///     Checks if the <see cref="Player"/> is actively moving. Used for animations.
     /// </summary>
     public static bool IsMoving(this Player player) => player.velocity.Length() > 0.1f;
-
-    /// 
-    /// <summary>
-    ///     Checks if the <see cref="Player"/> is actively using a grappling hook. Used for animations.
-    /// </summary>
-    public static bool IsGrappling(this Player player) => player.controlHook && !player.releaseHook;
 
     /// 
     /// <summary>
@@ -157,51 +112,5 @@ public static class PlayerExtensions
         if (!consideredUsing && player.ItemAnimationEndingOrEnded) return false;
 
         return true;
-    }
-
-    /// 
-    /// <summary>
-    ///     Attempts to create an arm swaying animation with <see cref="Player.SetCompositeArmBack(bool, CompositeArmStretchAmount, float)"/> 
-    ///     and <see cref="Player.SetCompositeArmFront(bool, CompositeArmStretchAmount, float)"/>. Used for animations.
-    /// </summary>
-    public static void ArmSway(this Player player, ref PlayerDrawSet drawInfo, float speed, float amplitude)
-    {
-        float currentTime = Main.GameUpdateCount / 60f;
-        float animationTime = currentTime - Main.GameUpdateCount / 60f;
-        float cycle = (float)Math.Sin(animationTime * speed);
-        float frontArmOffset = (float)Math.Sin((animationTime + 0.1f) * speed);
-
-        float backArmRotation = cycle * amplitude;
-        float frontArmRotation = frontArmOffset * amplitude;
-        if (player.direction == -1)
-        {
-            drawInfo.drawPlayer.SetCompositeArmBack(true, CompositeArmStretchAmount.Full, backArmRotation);
-            drawInfo.drawPlayer.SetCompositeArmFront(true, CompositeArmStretchAmount.Full, -frontArmRotation);
-        }
-        else
-        {
-            drawInfo.drawPlayer.SetCompositeArmBack(true, CompositeArmStretchAmount.Full, -backArmRotation);
-            drawInfo.drawPlayer.SetCompositeArmFront(true, CompositeArmStretchAmount.Full, frontArmRotation);
-        }
-    }
-    /// 
-    /// <summary>
-    ///     Attempts to create an grappling animation with <see cref="Player.SetCompositeArmBack(bool, CompositeArmStretchAmount, float)"/> 
-    ///     and <see cref="Player.SetCompositeArmFront(bool, CompositeArmStretchAmount, float)"/>. Used for animations.
-    /// </summary>
-    public static void GrappleAnimation(this Player player, ref PlayerDrawSet drawInfo)
-    {
-        float armRotation = -MathHelper.PiOver2 + 0.2f;
-
-        if (player.direction == -1)
-        {
-            drawInfo.drawPlayer.SetCompositeArmFront(true, CompositeArmStretchAmount.Full, -(armRotation + 0.2f));
-            drawInfo.drawPlayer.SetCompositeArmBack(true, CompositeArmStretchAmount.Full, -(armRotation - 0.2f));
-        }
-        else
-        {
-            drawInfo.drawPlayer.SetCompositeArmFront(true, CompositeArmStretchAmount.Full, armRotation - 0.2f);
-            drawInfo.drawPlayer.SetCompositeArmBack(true, CompositeArmStretchAmount.Full, armRotation + 0.2f);
-        }
     }
 }

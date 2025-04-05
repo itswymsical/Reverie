@@ -284,6 +284,8 @@ public partial class AnimationPlayer : ModPlayer
         {
             drawInfo.drawPlayer.headPosition = headState.Position;
             drawInfo.drawPlayer.headRotation = headState.Rotation;
+
+
         }
 
         if (defaultJointStates.TryGetValue(SegmentType.Body, out var bodyState))

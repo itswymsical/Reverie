@@ -1,4 +1,6 @@
-﻿using Reverie.Core.Dialogue;
+﻿using Reverie.Common.Systems;
+using Reverie.Core.Cinematics.Cutscenes;
+using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Utilities;
 using System.Collections.Generic;
@@ -10,18 +12,17 @@ namespace Reverie.Content.Missions;
 
 public class FallingStarMission : Mission
 {
-    public FallingStarMission() : base(MissionID.A_FALLING_STAR,
+    public FallingStarMission() : base(MissionID.FallingStar,
       "Falling Star...",
       "'Well, that's one way to make an appearance...'" +
       "\nBegin your journey in Terraria, discovering knowledge and power...",
       [
         [("Talk to Guide", 1), ("Talk to Merchant", 1), ("Talk to Demolitionist", 1), ("Talk to Nurse", 1)],
-        [("Gather wood", 50), ("Build a shelter", 1)],
+        [("Gather wood", 50), ("Break Pots", 20)],
+        [("Harvest ore", 30), ("Discover accessories", 2)],
         [("Explore the Underground", 1), 
             ("Discover a Glowing Mushroom Biome", 1), ("Explore the Jungle", 1), 
             ("Explore the Underground Desert", 1),  ("Explore the Tundra", 1)],
-        [("Harvest ore", 30),("Craft a pickaxe", 1), ("Discover accessories", 2)],
-        [("Obtain a helmet", 1), ("Obtain a chestplate", 1), ("Obtain leggings", 1)],
         [("Clear out slimes", 10)],
         [("Clear out slimes, again...", 10)],
         [("Defend the Forest", 1)],
@@ -50,15 +51,19 @@ public class FallingStarMission : Mission
     internal enum Objectives
     {
         TalkToTownies = 0,
-        WoodShelter = 1,
-        Explore = 2,
-        AquireGear = 3,
-        SuitUp = 4,
-        ClearSlimes = 5,
-        ClearSlimes2 = 6,
-        DefendForest = 7,
-        ClearSlimeRain = 8,
-        DefeatKingSlime = 9
+        GatherResources = 1,
+        AquireItems = 2,
+        ExploreBiomes = 3,
+        ClearSlimes = 4,
+        ClearSlimes2 = 5,
+        DefendForest = 6,
+        ClearSlimeRain = 7,
+        DefeatKingSlime = 8
+    }
+    public override void OnMissionStart()
+    {
+        base.OnMissionStart();
+        CutsceneSystem.PlayCutscene(new FallingStarCutscene());
     }
 
     public override void Update()
@@ -92,31 +97,10 @@ public class FallingStarMission : Mission
 
             switch (objective)
             {
-                case Objectives.SuitUp: //get armor and weapon
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCDataManager.GuideData,
-                    DialogueKeys.FallingStar.WildlifeWoes,
-                    lineCount: 3,
-                    zoomIn: true);
-                    break;
-                //case Objectives.WoodShelter: //chop trees , build shelter
-                //    DialogueManager.Instance.StartDialogueByKey(
-                //    NPCDataManager.GuideData,
-                //    DialogueKeys.FallingStar.BuildShelter,
-                //    lineCount: 5,
-                //    zoomIn: true);
-                //    break;
                 case Objectives.ClearSlimes:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
                     DialogueKeys.FallingStar.SlimeInfestation,
-                    lineCount: 2,
-                    zoomIn: true);
-                    break;
-                case Objectives.Explore: //post-exploring slimes attack the guide
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCDataManager.GuideData,
-                    DialogueKeys.FallingStar.SlimeInfestationCommentary,
                     lineCount: 2,
                     zoomIn: true);
                     break;
@@ -261,25 +245,15 @@ public class FallingStarMission : Mission
             var objective = (Objectives)CurrentIndex;
             switch (objective)
             {
-                case Objectives.WoodShelter:
+                case Objectives.GatherResources:
                     if (item.type == ItemID.Wood)
                         UpdateProgress(0, item.stack);
                     break;
-                case Objectives.SuitUp:
-                    if (item.headSlot != -1 && !item.vanity)
-                        UpdateProgress(0, item.stack);
-                    if (item.bodySlot != -1 && !item.vanity)
-                        UpdateProgress(1, item.stack);
-                    if (item.legSlot != -1 && !item.vanity)
-                        UpdateProgress(2, item.stack);
-                    break;
-                case Objectives.AquireGear:
+                case Objectives.AquireItems:
                     if (item.IsOre())
                         UpdateProgress(0, item.stack);
-                    if (item.IsMiningTool())
-                        UpdateProgress(1, item.stack);
                     if (item.accessory)
-                        UpdateProgress(2, item.stack);
+                        UpdateProgress(1, item.stack);
                     break;
             }
         }
@@ -301,7 +275,7 @@ public class FallingStarMission : Mission
                     if (npc.type == NPCAIStyleID.Slime)
                         UpdateProgress(0);
                     break;
-                case Objectives.Explore:
+                case Objectives.ExploreBiomes:
                     if (!player.ZoneOverworldHeight || !player.ZoneSkyHeight)
                         if (!npc.CountsAsACritter || npc.type != NPCAIStyleID.Slime)
                             UpdateProgress(2);
@@ -321,21 +295,22 @@ public class FallingStarMission : Mission
         }
     }
 
-    public override void OnHousingFound()
+    public override void OnBreakTile(int type, ref bool fail, ref bool effectOnly)
     {
         try
         {
             var objective = (Objectives)CurrentIndex;
             switch (objective)
             {
-                case Objectives.WoodShelter:
-                    UpdateProgress(1);
+                case Objectives.GatherResources:
+                    if (type == TileID.Pots)
+                        UpdateProgress(1);
                     break;
             }
         }
         catch (Exception ex)
         {
-            Instance.Logger.Error($"Error in OnValidHousing: {ex.Message}");
+            Instance.Logger.Error($"Error in OnBreakTile: {ex.Message}");
         }
     }
 
@@ -346,7 +321,7 @@ public class FallingStarMission : Mission
             var objective = (Objectives)CurrentIndex;
             switch (objective)
             {
-                case Objectives.Explore:
+                case Objectives.ExploreBiomes:
                     if (biome == BiomeType.Underground)
                         UpdateProgress(0);
                     if (biome == BiomeType.Glowshroom)

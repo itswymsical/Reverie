@@ -20,7 +20,7 @@ public static class DialogueKeys
         public static string Introduction => $"{PREFIX}.Introduction";
         public static string BloomcapIntro => $"{PREFIX}.BloomcapIntro";
         public static string BloomcapCollected => $"{PREFIX}.BloomcapCollected";
-        public static string BloomcapCollectedHalf => $"{PREFIX}.BloomcapCollected2";
+        public static string BloomcapCollectedHalf => $"{PREFIX}.BloomcapCollectedHalf";
         public static string BloomcapCollectedAll => $"{PREFIX}.BloomcapCollectedAll";
         public static string BloomcapComplete => $"{PREFIX}.BloomcapComplete";
     }

@@ -537,13 +537,12 @@ public partial class MissionPlayer : ModPlayer
             mission.Progress = MissionProgress.Active;
             MissionManager.Instance.RegisterMission(mission);
             SyncMissionState(mission);
+            mission.OnMissionStart();
 
             if (!mission.IsMainline)
             {
-                mission.OnMissionStart();
+                InGameNotificationsTracker.AddNotification(new MissionAcceptNotification(mission));
             }
-
-            InGameNotificationsTracker.AddNotification(new MissionAcceptNotification(mission));
         }
     }
 
@@ -627,16 +626,13 @@ public partial class MissionPlayer : ModPlayer
         ProcessDeferredLoad();
         notifiedMissions.Clear();
 
-        var AFallingStar = GetMission(MissionID.A_FALLING_STAR);
-        var player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
+        var fallingStar = GetMission(MissionID.FallingStar);
 
-        if (AFallingStar != null &&
-            AFallingStar.Availability != MissionAvailability.Completed &&
-            AFallingStar.Progress != MissionProgress.Active)
+        if (fallingStar != null && fallingStar.Availability != MissionAvailability.Completed 
+            && fallingStar.Progress != MissionProgress.Active)
         {
-            CutsceneSystem.PlayCutscene(new FallingStarCutscene());
-            UnlockMission(MissionID.A_FALLING_STAR);
-            StartMission(MissionID.A_FALLING_STAR);
+            UnlockMission(MissionID.FallingStar);
+            StartMission(MissionID.FallingStar);
         }
     }
 

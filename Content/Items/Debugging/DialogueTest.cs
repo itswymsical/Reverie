@@ -46,7 +46,7 @@ public class ObjTest : ModItem
     }
     public override bool? UseItem(Player player)
     {
-        var m = Main.LocalPlayer.GetModPlayer<MissionPlayer>().GetMission(MissionID.A_FALLING_STAR);
+        var m = Main.LocalPlayer.GetModPlayer<MissionPlayer>().GetMission(MissionID.FallingStar);
         if (Main.myPlayer == player.whoAmI)
             InGameNotificationsTracker.AddNotification(new MissionNotification(m));
 

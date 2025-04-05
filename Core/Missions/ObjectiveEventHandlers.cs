@@ -56,7 +56,7 @@ public class ObjectiveEventNPC : GlobalNPC
     public override void EditSpawnPool(IDictionary<int, float> pool, NPCSpawnInfo spawnInfo)
     {
         var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        var AFallingStar = mPlayer.GetMission(MissionID.A_FALLING_STAR);
+        var AFallingStar = mPlayer.GetMission(MissionID.FallingStar);
 
         if (AFallingStar?.Progress == MissionProgress.Active)
         {
@@ -78,7 +78,7 @@ public class ObjectiveEventNPC : GlobalNPC
     {
         var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
 
-        var AFallingStar = mPlayer.GetMission(MissionID.A_FALLING_STAR);
+        var AFallingStar = mPlayer.GetMission(MissionID.FallingStar);
 
         if (AFallingStar?.Progress == MissionProgress.Active && player.ZoneOverworldHeight)
         {
@@ -138,5 +138,13 @@ public class ObjectiveEventNPC : GlobalNPC
             );
         }
         base.PostDraw(npc, spriteBatch, screenPos, drawColor);
+    }
+}
+public class ObjectiveEventTile : GlobalTile
+{
+    public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
+    {
+        base.KillTile(i, j, type, ref fail, ref effectOnly, ref noItem);
+        MissionManager.Instance.OnBreakTile(type, ref fail, ref effectOnly);
     }
 }

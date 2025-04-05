@@ -13,7 +13,7 @@ namespace Reverie.Core.Missions;
 
 public static class MissionID
 {
-    public const int A_FALLING_STAR = 1;
+    public const int FallingStar = 1;
     public const int BLOOMCAP = 2;
 
     public const int FUNGAL_FRACAS = 8;
@@ -132,6 +132,20 @@ public abstract class Mission
     }
 
     protected virtual void HandleCollected(Item item) { }
+
+    public virtual void OnBreakTile(int type, ref bool fail, ref bool effectOnly)
+    {
+        try
+        {
+            HandleBreakTile(type, ref fail, ref effectOnly);
+        }
+        catch (Exception ex)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnBreakTile for mission {Name}: {ex.Message}");
+        }
+    }
+
+    protected virtual void HandleBreakTile(int type, ref bool fail, ref bool effectOnly) { }
 
     public virtual void OnItemCreated(Item item, ItemCreationContext context)
     {
