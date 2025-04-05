@@ -305,7 +305,7 @@ namespace Reverie.Core.Animation
         {
             var player = drawInfo.drawPlayer;
             var animPlayer = player.GetModPlayer<DrawHeldItems>();
-            animPlayer.DrawWeaponInFront(ref drawInfo);
+            //animPlayer.DrawWeaponInFront(ref drawInfo);
         }
     }
 }

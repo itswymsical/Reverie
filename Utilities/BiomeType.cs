@@ -25,5 +25,9 @@ public enum BiomeType
     Underground,
     Granite,
     Marble,
-    Underworld
+    Underworld,
+    Graveyard,
+    Hive,
+    JungleTemple,
+    Shimmer,
 }

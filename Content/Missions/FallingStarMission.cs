@@ -18,28 +18,29 @@ public class FallingStarMission : Mission
       "\nBegin your journey in Terraria, discovering knowledge and power...",
       [
         [("Talk to Guide", 1), ("Talk to Merchant", 1), ("Talk to Demolitionist", 1), ("Talk to Nurse", 1)],
-        [("Gather wood", 50), ("Break Pots", 20)],
-        [("Harvest ore", 30), ("Discover accessories", 2)],
+        [("Gather Wood", 50), ("Break Pots", 20)],
+        [("Harvest Ore", 30), ("Discover accessories", 2)],
         [("Explore the Underground", 1), 
             ("Discover a Glowing Mushroom Biome", 1), ("Explore the Jungle", 1), 
             ("Explore the Underground Desert", 1),  ("Explore the Tundra", 1)],
+        [("Check in with the Guide", 1)],
         [("Clear out slimes", 10)],
-        [("Clear out slimes, again...", 10)],
-        [("Defend the Forest", 1)],
-        [("Clear Slime Infestation", 80)],
-        [("Defeat the King Slime", 1)]
+        [("Defend the Town", 10)],
+        [("Clear slime infestation", 100)],
+        [("Defeat King Slime", 1)]
       ],
 
-      [new Item(ItemID.MagicMirror), new Item(ItemID.GoldCoin, Main.rand.Next(3, 4))],
+      [new Item(ItemID.RegenerationPotion), 
+          new Item(ItemID.IronskinPotion), 
+          new Item(ItemID.MagicMirror), 
+          new Item(ItemID.GoldCoin, Main.rand.Next(4, 6))],
       isMainline: true,
       NPCID.Guide,
-      xpReward: 80)
+      xpReward: 100)
     {
         ModContent.GetInstance<Reverie>().Logger.Info("[A Falling Star] Mission constructed");
     }
 
-    private const int SLIME_COMMENTARY_THRESHOLD = 20;
-    private const int SLIME_WARNING_THRESHOLD = 45;
 
     private readonly List<Item> starterItems =
     [
@@ -54,12 +55,13 @@ public class FallingStarMission : Mission
         GatherResources = 1,
         AquireItems = 2,
         ExploreBiomes = 3,
-        ClearSlimes = 4,
-        ClearSlimes2 = 5,
-        DefendForest = 6,
+        CheckIn = 4,
+        ClearSlimes = 5,
+        DefendTown = 6,
         ClearSlimeRain = 7,
         DefeatKingSlime = 8
     }
+
     public override void OnMissionStart()
     {
         base.OnMissionStart();
@@ -74,8 +76,6 @@ public class FallingStarMission : Mission
         {
             Main.slimeRain = false;
             Main.slimeRainTime = 0;
-            Main.dayTime = true;
-            Main.time = 18000;
         }
 
         if (CurrentIndex == (int)Objectives.ClearSlimeRain)
@@ -97,7 +97,7 @@ public class FallingStarMission : Mission
 
             switch (objective)
             {
-                case Objectives.ClearSlimes:
+                case Objectives.CheckIn:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
                     DialogueKeys.FallingStar.SlimeInfestation,
@@ -119,14 +119,14 @@ public class FallingStarMission : Mission
             var objective = (Objectives)CurrentIndex;
             switch (objective)
             {
-                case Objectives.ClearSlimes:
+                case Objectives.CheckIn:
                     DialogueManager.Instance.StartDialogueByKey(
                     NPCDataManager.GuideData,
                     DialogueKeys.FallingStar.SlimeInfestation,
                     lineCount: 2,
                     zoomIn: true);
                     break;
-                case Objectives.ClearSlimes2:
+                case Objectives.ClearSlimes:
                     StartSlimeRain();
                     break;
                 case Objectives.ClearSlimeRain:
@@ -230,6 +230,12 @@ public class FallingStarMission : Mission
                         UpdateProgress(3);
                     }
                     break;
+                case Objectives.CheckIn:
+                    if (npc.type == NPCID.Guide)
+                    {
+                        UpdateProgress(0);
+                    }
+                    break;
             }
         }
         catch (Exception ex)
@@ -271,13 +277,12 @@ public class FallingStarMission : Mission
             switch (objective)
             {
                 case Objectives.ClearSlimes:
-                case Objectives.ClearSlimes2:
                     if (npc.type == NPCAIStyleID.Slime)
                         UpdateProgress(0);
                     break;
                 case Objectives.ExploreBiomes:
-                    if (!player.ZoneOverworldHeight || !player.ZoneSkyHeight)
-                        if (!npc.CountsAsACritter || npc.type != NPCAIStyleID.Slime)
+                    if (player.ZoneRockLayerHeight || player.ZoneDirtLayerHeight)
+                        if (npc.aiStyle != NPCAIStyleID.Slime)
                             UpdateProgress(2);
                     break;
                 case Objectives.ClearSlimeRain:
@@ -334,7 +339,7 @@ public class FallingStarMission : Mission
                         UpdateProgress(4);
                     break;
 
-                case Objectives.DefendForest:
+                case Objectives.DefendTown:
                     if (biome == BiomeType.Forest)
                         UpdateProgress(0);
                     break;
@@ -371,7 +376,7 @@ public class FallingStarMission : Mission
         if (npc.type == NPCAIStyleID.Slime)
         {
             UpdateProgress(0);
-            if (Objective[CurrentIndex].Objectives[0].CurrentCount == SLIME_COMMENTARY_THRESHOLD)
+            if (Objective[CurrentIndex].Objectives[0].CurrentCount == 25)
             {
                 DialogueManager.Instance.StartDialogueByKey(
                 NPCDataManager.GuideData,
@@ -379,7 +384,7 @@ public class FallingStarMission : Mission
                 lineCount: 2,
                 zoomIn: false);
             }
-            if (Objective[CurrentIndex].Objectives[0].CurrentCount == SLIME_WARNING_THRESHOLD)
+            if (Objective[CurrentIndex].Objectives[0].CurrentCount == 50)
             {
                 DialogueManager.Instance.StartDialogueByKey(
                 NPCDataManager.GuideData,

@@ -14,7 +14,7 @@ public class BloomcapMission : Mission
         [("Return to Argie", 1)]
       ],
 
-      [new Item(ItemID.GoldCoin, Main.rand.Next(2, 3))],
+      [new Item(ItemID.SilverCoin, Main.rand.Next(50, 75)), new Item(ItemID.HealingPotion, 3), new Item(ItemID.PlatinumBar, 8)],
       isMainline: false,
       ModContent.NPCType<NPCs.WorldNPCs.Argie>(),
       xpReward: 100)
