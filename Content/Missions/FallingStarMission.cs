@@ -168,16 +168,15 @@ public class FallingStarMission : Mission
                         DialogueManager.Instance.StartDialogueByKey(
                             NPCDataManager.GuideData,
                             DialogueKeys.FallingStar.GatheringResources,
-                            lineCount: 7,
+                            lineCount: 6,
                             zoomIn: true,
                             modifications:
-                            [(line: 1, delay: 2, emote: 0),
-                        (line: 2, delay: 2, emote: 3),
-                        (line: 3, delay: 3, emote: 1),
-                        (line: 4, delay: 3, emote: 0),
-                        (line: 5, delay: 5, emote: 2),
-                        (line: 6, delay: 2, emote: 0),
-                        (line: 7, delay: 2, emote: 0)]);
+                            [(line: 1, delay: 2, emote: 3),
+                        (line: 2, delay: 2, emote: 0),
+                        (line: 3, delay: 3, emote: 2),
+                        (line: 4, delay: 3, emote: 2),
+                        (line: 5, delay: 5, emote: 0),
+                        (line: 6, delay: 2, emote: 0)]);
                         UpdateProgress(0);
                     }
                     if (npc.type == NPCID.Merchant)

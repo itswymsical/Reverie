@@ -65,12 +65,12 @@ namespace Reverie.Core.Animation
                 _animationController.ApplySegmentTransformation(AnimationSegment.ARM_BACK, drawInfo);
 
                 // Safety check for NaN values which could crash the game
-                SafetyCheckDrawValues(drawInfo);
+                SafetyCheckDrawValues(ref drawInfo);
             }
             catch (Exception ex)
             {
                 // If any error occurs, restore original values and disable animations temporarily
-                RestoreOriginalValues(drawInfo);
+                RestoreOriginalValues(ref drawInfo);
 
                 // Log error
                 if (Main.netMode == NetmodeID.SinglePlayer)
@@ -86,7 +86,7 @@ namespace Reverie.Core.Animation
         /// <summary>
         /// Checks for invalid values in draw info and fixes them.
         /// </summary>
-        private void SafetyCheckDrawValues(PlayerDrawSet drawInfo)
+        private void SafetyCheckDrawValues(ref PlayerDrawSet drawInfo)
         {
             var player = drawInfo.drawPlayer;
 
@@ -136,7 +136,7 @@ namespace Reverie.Core.Animation
         /// <summary>
         /// Restores original values if an error occurs.
         /// </summary>
-        private void RestoreOriginalValues(PlayerDrawSet drawInfo)
+        private void RestoreOriginalValues(ref PlayerDrawSet drawInfo)
         {
             var player = drawInfo.drawPlayer;
 

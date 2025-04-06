@@ -1,10 +1,12 @@
-﻿using Reverie.Core.Interfaces;
-
+﻿using Reverie.Common.UI.Elements;
+using Reverie.Core.Interfaces;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Reflection;
 using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
+using Terraria.UI.Chat;
 
 namespace Reverie;
 
@@ -79,6 +81,8 @@ public sealed partial class Reverie : Mod
             loadCache[k].Load();
 
         }
+        ChatManager.Register<MissionTagHandler>(["ms", "missionTag"]);
+
     }
 
     public override void Unload()
@@ -101,6 +105,8 @@ public sealed partial class Reverie : Mod
         {
             Instance ??= null;
         }
+        var handlerDict = (ConcurrentDictionary<string, ITagHandler>)typeof(ChatManager).GetField("_handlers", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
+        handlerDict.TryRemove("missionTag", out var _);
     }
 
     [Obsolete]

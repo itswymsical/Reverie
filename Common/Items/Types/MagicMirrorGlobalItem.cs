@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Terraria.GameContent;
 
 namespace Reverie.Common.Items.Types;
 
