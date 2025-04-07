@@ -1,4 +1,4 @@
-﻿using Reverie.Common.UI.Elements;
+﻿
 using Reverie.Core.Interfaces;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -47,9 +47,13 @@ public sealed partial class Reverie : Mod
     /// </summary>
     public const string NAME_PREFIX = NAME + ": ";
 
+
+    public const string DIALOGUE_LIBRARY = "DialogueLibrary.";
+
     /// <summary>
     ///     Gets the <see cref="Mod" /> implementation of this mod.
     /// </summary>
+    /// 
     public static Reverie Instance { get; set; }
 
     private List<IOrderedLoadable> loadCache;
@@ -81,9 +85,9 @@ public sealed partial class Reverie : Mod
             loadCache[k].Load();
 
         }
-        ChatManager.Register<MissionTagHandler>(["ms", "missionTag"]);
 
     }
+    public string text = "Complete [m:1]A Falling Star[/m] mission to proceed.";
 
     public override void Unload()
     {
@@ -105,8 +109,6 @@ public sealed partial class Reverie : Mod
         {
             Instance ??= null;
         }
-        var handlerDict = (ConcurrentDictionary<string, ITagHandler>)typeof(ChatManager).GetField("_handlers", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
-        handlerDict.TryRemove("missionTag", out var _);
     }
 
     [Obsolete]

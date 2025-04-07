@@ -10,9 +10,9 @@ using Terraria.DataStructures;
 
 namespace Reverie.Content.Missions;
 
-public class FallingStarMission : Mission
+public class AFallingStar : Mission
 {
-    public FallingStarMission() : base(MissionID.FallingStar,
+    public AFallingStar() : base(MissionID.AFallingStar,
       "Falling Star...",
       "'Well, that's one way to make an appearance...'" +
       "\nBegin your journey in Terraria, discovering knowledge and power...",
@@ -99,7 +99,7 @@ public class FallingStarMission : Mission
             {
                 case Objectives.CheckIn:
                     DialogueManager.Instance.StartDialogueByKey(
-                    NPCDataManager.GuideData,
+                    NPCManager.GuideData,
                     DialogueKeys.FallingStar.SlimeInfestation,
                     lineCount: 2,
                     zoomIn: true);
@@ -121,7 +121,7 @@ public class FallingStarMission : Mission
             {
                 case Objectives.CheckIn:
                     DialogueManager.Instance.StartDialogueByKey(
-                    NPCDataManager.GuideData,
+                    NPCManager.GuideData,
                     DialogueKeys.FallingStar.SlimeInfestation,
                     lineCount: 2,
                     zoomIn: true);
@@ -134,7 +134,7 @@ public class FallingStarMission : Mission
                     break;
                 case Objectives.DefeatKingSlime:
                     DialogueManager.Instance.StartDialogueByKey(
-                    NPCDataManager.GuideData,
+                    NPCManager.GuideData,
                     DialogueKeys.FallingStar.KingSlimeDefeat,
                     lineCount: 4,
                     zoomIn: true);
@@ -166,7 +166,7 @@ public class FallingStarMission : Mission
                     if (npc.type == NPCID.Guide)
                     {
                         DialogueManager.Instance.StartDialogueByKey(
-                            NPCDataManager.GuideData,
+                            NPCManager.GuideData,
                             DialogueKeys.FallingStar.GatheringResources,
                             lineCount: 6,
                             zoomIn: true,
@@ -182,7 +182,7 @@ public class FallingStarMission : Mission
                     if (npc.type == NPCID.Merchant)
                     {
                         DialogueManager.Instance.StartDialogueByKey(
-                            NPCDataManager.MerchantData,
+                            NPCManager.MerchantData,
                             DialogueKeys.FallingStar.MerchantIntro,
                             lineCount: 5,
                             zoomIn: false,
@@ -199,7 +199,7 @@ public class FallingStarMission : Mission
                     if (npc.type == NPCID.Demolitionist)
                     {
                         DialogueManager.Instance.StartDialogueByKey(
-                            NPCDataManager.DemolitionistData,
+                            NPCManager.DemolitionistData,
                             DialogueKeys.FallingStar.DemolitionistIntro,
                             lineCount: 4,
                             zoomIn: false,
@@ -215,7 +215,7 @@ public class FallingStarMission : Mission
                     if (npc.type == NPCID.Nurse)
                     {
                         DialogueManager.Instance.StartDialogueByKey(
-                            NPCDataManager.NurseData,
+                            NPCManager.NurseData,
                             DialogueKeys.FallingStar.NurseIntro,
                             lineCount: 4,
                             zoomIn: false,
@@ -364,7 +364,7 @@ public class FallingStarMission : Mission
     {
         Main.StartSlimeRain(true);
         DialogueManager.Instance.StartDialogueByKey(
-        NPCDataManager.GuideData,
+        NPCManager.GuideData,
         DialogueKeys.FallingStar.SlimeRain,
         lineCount: 2,
         zoomIn: false);
@@ -378,7 +378,7 @@ public class FallingStarMission : Mission
             if (Objective[CurrentIndex].Objectives[0].CurrentCount == 25)
             {
                 DialogueManager.Instance.StartDialogueByKey(
-                NPCDataManager.GuideData,
+                NPCManager.GuideData,
                 DialogueKeys.FallingStar.SlimeRainCommentary,
                 lineCount: 2,
                 zoomIn: false);
@@ -386,7 +386,7 @@ public class FallingStarMission : Mission
             if (Objective[CurrentIndex].Objectives[0].CurrentCount == 50)
             {
                 DialogueManager.Instance.StartDialogueByKey(
-                NPCDataManager.GuideData,
+                NPCManager.GuideData,
                 DialogueKeys.FallingStar.SlimeRainWarning,
                 lineCount: 2,
                 zoomIn: false);
@@ -397,7 +397,7 @@ public class FallingStarMission : Mission
     private void SpawnKingSlime()
     {
         DialogueManager.Instance.StartDialogueByKey(
-        NPCDataManager.GuideData,
+        NPCManager.GuideData,
         DialogueKeys.FallingStar.KSEncounter,
         lineCount: 3,
         zoomIn: false);

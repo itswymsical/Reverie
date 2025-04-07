@@ -146,7 +146,7 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
                 effect.Parameters["repeats"]?.SetValue(8f);
                 effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
                 effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}WaterTrail").Value);
-                effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Bloom").Value);
+                effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}BloomcapHunt").Value);
 
                 trail?.Render(effect);
 

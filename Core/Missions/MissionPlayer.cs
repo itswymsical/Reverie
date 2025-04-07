@@ -626,19 +626,21 @@ public partial class MissionPlayer : ModPlayer
         ProcessDeferredLoad();
         notifiedMissions.Clear();
 
-        var fallingStar = GetMission(MissionID.FallingStar);
+        var fallingStar = GetMission(MissionID.AFallingStar);
 
         if (fallingStar != null && fallingStar.Availability != MissionAvailability.Completed 
             && fallingStar.Progress != MissionProgress.Active)
         {
-            UnlockMission(MissionID.FallingStar);
-            StartMission(MissionID.FallingStar);
+            UnlockMission(MissionID.AFallingStar);
+            StartMission(MissionID.AFallingStar);
         }
     }
 
     public override void PostUpdate()
     {
         base.PostUpdate();
+        PlayerTriggerEvents();
+        MissionNotificationManager.Instance.UpdateMissionNotifications();
 
         if (!hasDeferredLoadRun)
         {
@@ -665,6 +667,10 @@ public partial class MissionPlayer : ModPlayer
         }
     }
 
+    public void ResetMissionNotifications()
+    {
+        MissionNotificationManager.Instance.Reset();
+    }
     public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
     {
         base.OnHitNPC(target, hit, damageDone);

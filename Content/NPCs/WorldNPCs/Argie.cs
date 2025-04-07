@@ -38,13 +38,13 @@ public class Argie : WorldNPCActor
     {
         base.OnSpawn(source);
         var player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        var bloomCap = player.GetMission(MissionID.BLOOMCAP);
+        var bloomCap = player.GetMission(MissionID.BloomcapHunt);
 
         if (bloomCap != null &&
             bloomCap.Availability != MissionAvailability.Completed &&
             bloomCap.Progress != MissionProgress.Active)
         {
-            player.UnlockMission(MissionID.BLOOMCAP);
+            player.UnlockMission(MissionID.BloomcapHunt);
         }
     }
 
@@ -67,7 +67,7 @@ public class Argie : WorldNPCActor
         if (firstButton)
         {
             DialogueManager.Instance.StartDialogueByKey(
-                    NPCDataManager.Default,
+                    NPCManager.Default,
                     DialogueKeys.ArgieDialogue.Introduction,
                     lineCount: 4,
                     zoomIn: false, musicId: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}ArgiesTheme"));

@@ -355,7 +355,7 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
                 effect.Parameters["repeats"]?.SetValue(8f);
                 effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
                 effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/Textures/VFX/EnergyTrail").Value);
-                effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/Textures/VFX/Bloom").Value);
+                effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/Textures/VFX/BloomcapHunt").Value);
 
                 trail?.Render(effect);
 

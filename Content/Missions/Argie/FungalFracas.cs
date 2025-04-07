@@ -12,7 +12,7 @@ namespace Reverie.Content.Missions.Argie;
 
 public class FungalFracas : Mission //todo: implement mission logic
 {
-    public FungalFracas() : base(MissionID.FUNGAL_FRACAS,
+    public FungalFracas() : base(MissionID.FungalFracas,
       "Fungal Fracas",
       "'A fungus goliath is causing commotion'" +
       "\nInvestigate the forest and the strange mushrooms growing.",

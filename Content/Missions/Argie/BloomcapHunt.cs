@@ -4,10 +4,10 @@ using Reverie.Core.Missions;
 
 namespace Reverie.Content.Missions.Argie;
 
-public class BloomcapMission : Mission
+public class BloomcapHunt : Mission
 {
-    public BloomcapMission() : base(MissionID.BLOOMCAP,
-      "Bloomcap Hunt",
+    public BloomcapHunt() : base(MissionID.BloomcapHunt,
+      "BloomcapHunt Hunt",
       "'Argie wants a handful to decorate her stump.'",
       [
         [("Collect Bloomcaps", 8)],
@@ -19,7 +19,7 @@ public class BloomcapMission : Mission
       ModContent.NPCType<NPCs.WorldNPCs.Argie>(),
       xpReward: 100)
     {
-        ModContent.GetInstance<Reverie>().Logger.Info("[Bloomcap Hunt] Mission constructed");
+        ModContent.GetInstance<Reverie>().Logger.Info("[BloomcapHunt Hunt] Mission constructed");
     }
 
     internal enum Objectives
@@ -32,7 +32,7 @@ public class BloomcapMission : Mission
         base.OnMissionStart();
 
         DialogueManager.Instance.StartDialogueByKey(
-            NPCDataManager.Default,
+            NPCManager.Default,
             DialogueKeys.ArgieDialogue.BloomcapIntro,
             lineCount: 5,
             zoomIn: true);
@@ -43,7 +43,7 @@ public class BloomcapMission : Mission
         base.OnMissionComplete(giveRewards);
 
         DialogueManager.Instance.StartDialogueByKey(
-            NPCDataManager.Default,
+            NPCManager.Default,
             DialogueKeys.ArgieDialogue.BloomcapComplete,
             lineCount: 4,
             zoomIn: true);
@@ -54,7 +54,7 @@ public class BloomcapMission : Mission
         if (objectiveIndex == 0)
         {
             DialogueManager.Instance.StartDialogueByKey(
-                NPCDataManager.Default,
+                NPCManager.Default,
                 DialogueKeys.ArgieDialogue.BloomcapCollectedAll,
                 lineCount: 2,
                 zoomIn: true);
@@ -71,7 +71,7 @@ public class BloomcapMission : Mission
                 if (Objective[CurrentIndex].Objectives[0].CurrentCount == 1)
                 {
                     DialogueManager.Instance.StartDialogueByKey(
-                        NPCDataManager.Default,
+                        NPCManager.Default,
                         DialogueKeys.ArgieDialogue.BloomcapCollected,
                         lineCount: 2,
                         zoomIn: true);
@@ -80,7 +80,7 @@ public class BloomcapMission : Mission
                 if (Objective[CurrentIndex].Objectives[0].CurrentCount == 4)
                 {
                     DialogueManager.Instance.StartDialogueByKey(
-                        NPCDataManager.Default,
+                        NPCManager.Default,
                         DialogueKeys.ArgieDialogue.BloomcapCollectedHalf,
                         lineCount: 1,
                         zoomIn: true);

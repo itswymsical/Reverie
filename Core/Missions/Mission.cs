@@ -13,10 +13,13 @@ namespace Reverie.Core.Missions;
 
 public static class MissionID
 {
-    public const int FallingStar = 1;
-    public const int BLOOMCAP = 2;
+    #pragma warning disable IDE1006
+    public const int AFallingStar = 1;
+    public const int BloomcapHunt = 2;
+    public const int CopperStandard = 3;
 
-    public const int FUNGAL_FRACAS = 8;
+    public const int FungalFracas = 8;
+    #pragma warning restore IDE1006
 }
 
 public enum MissionProgress

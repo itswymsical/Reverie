@@ -12,8 +12,8 @@ namespace Reverie.Common.Systems
 
         public override void Load()
         {
-            NPCDataManager.Initialize();
-            Reverie.Instance.Logger.Info("NPCDataManager for dialogue initialized...");
+            NPCManager.Initialize();
+            Reverie.Instance.Logger.Info("NPCManager for dialogue initialized...");
         }
 
         public override void ModifyTimeRate(ref double timeRate, ref double tileUpdateRate, ref double eventUpdateRate)

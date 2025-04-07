@@ -19,7 +19,7 @@ public class DialogueTest : ModItem
     {
         if (Main.myPlayer == player.whoAmI)
             DialogueManager.Instance.StartDialogueByKey(
-               NPCDataManager.MerchantData,
+               NPCManager.MerchantData,
                DialogueKeys.FallingStar.MerchantIntro,
                lineCount: 5,
                zoomIn: true, 
@@ -46,7 +46,7 @@ public class ObjTest : ModItem
     }
     public override bool? UseItem(Player player)
     {
-        var m = Main.LocalPlayer.GetModPlayer<MissionPlayer>().GetMission(MissionID.FallingStar);
+        var m = Main.LocalPlayer.GetModPlayer<MissionPlayer>().GetMission(MissionID.AFallingStar);
         if (Main.myPlayer == player.whoAmI)
             InGameNotificationsTracker.AddNotification(new MissionNotification(m));
 

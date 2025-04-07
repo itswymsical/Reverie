@@ -182,4 +182,6 @@ DialogueLibrary: {
 			Line14: Mods.Reverie.DialogueLibrary.Chronicle_01.Chapter1.Line14
 		}
 	}
+
+	AFallingStar.Intro.Line1: Mods.Reverie.DialogueLibrary.AFallingStar.Intro.Line1
 }

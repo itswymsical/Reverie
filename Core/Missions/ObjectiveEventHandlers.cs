@@ -7,8 +7,27 @@ using Reverie.Core.Dialogue;
 using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
 using System.Linq;
+using Reverie.Common.UI.Missions;
+using Terraria.UI;
 
 namespace Reverie.Core.Missions;
+
+public partial class MissionPlayer
+{
+
+    /// <summary>
+    /// called in PostUpdate(), to trigger mission unlocks and events.
+    /// </summary>
+    public void PlayerTriggerEvents()
+    {
+        bool merchantPresent = NPC.AnyNPCs(NPCID.Merchant);
+        var cS = GetMission(MissionID.CopperStandard);
+        if (cS.Progress != MissionProgress.Completed && merchantPresent && Player.HasItemInAnyInventory(ItemID.CopperBar))
+        {
+            UnlockMission(MissionID.CopperStandard);
+        }   
+    }
+}
 
 public class ObjectiveEventItem : GlobalItem
 {
@@ -29,6 +48,7 @@ public class ObjectiveEventItem : GlobalItem
         base.UpdateEquip(item, player);
         MissionUtils.TryUpdateProgressForItem(item, player);
     }
+
     public override void UpdateInventory(Item item, Player player)
     {
         MissionUtils.TryUpdateProgressForItem(item, player);
@@ -40,8 +60,12 @@ public class ObjectiveEventNPC : GlobalNPC
 {
     public override bool InstancePerEntity => true;
 
-    public Texture2D missionTexture =
-        ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Missions/MissionAvailable").Value;
+    private static readonly Dictionary<int, bool> NotificationCreated = [];
+
+    public static void ResetNotificationTracking()
+    {
+        NotificationCreated.Clear();
+    }
 
     public override bool? CanChat(NPC npc)
         => (npc.isLikeATownNPC || npc.townNPC) && !DialogueManager.Instance.IsAnyActive();
@@ -49,14 +73,28 @@ public class ObjectiveEventNPC : GlobalNPC
     public override void GetChat(NPC npc, ref string chat)
     {
         base.GetChat(npc, ref chat);
-
         MissionManager.Instance.OnNPCChat(npc);
+    }
+
+    public override void OnChatButtonClicked(NPC npc, bool firstButton)
+    {
+        base.OnChatButtonClicked(npc, firstButton);
+        if (!firstButton)
+        {
+            var plr = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+
+            var mission = plr.AvailableMissions().FirstOrDefault(m => npc.type == m.Employer);
+            if (mission == null)
+                return;
+
+            plr.StartMission(mission.ID);
+        }
     }
 
     public override void EditSpawnPool(IDictionary<int, float> pool, NPCSpawnInfo spawnInfo)
     {
         var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        var AFallingStar = mPlayer.GetMission(MissionID.FallingStar);
+        var AFallingStar = mPlayer.GetMission(MissionID.AFallingStar);
 
         if (AFallingStar?.Progress == MissionProgress.Active)
         {
@@ -78,7 +116,7 @@ public class ObjectiveEventNPC : GlobalNPC
     {
         var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
 
-        var AFallingStar = mPlayer.GetMission(MissionID.FallingStar);
+        var AFallingStar = mPlayer.GetMission(MissionID.AFallingStar);
 
         if (AFallingStar?.Progress == MissionProgress.Active && player.ZoneOverworldHeight)
         {
@@ -106,8 +144,31 @@ public class ObjectiveEventNPC : GlobalNPC
     public override void AI(NPC npc)
     {
         base.AI(npc);
+
         if (npc.isLikeATownNPC)
+        {
             npc.ForceBubbleChatState();
+            //var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+
+            //int whoAmI = npc.whoAmI;
+            //if (missionPlayer.NPCHasAvailableMission(npc.type) &&
+            //    !missionPlayer.ActiveMissions().Any(m => npc.type == m.Employer) &&
+            //    (!NotificationCreated.ContainsKey(whoAmI) || !NotificationCreated[whoAmI]))
+            //{
+                
+            //    var mission = missionPlayer.AvailableMissions().FirstOrDefault(m => npc.type == m.Employer);
+            //    if (mission != null)
+            //    {
+
+            //        InGameNotificationsTracker.AddNotification(new NPCMissionNotification(npc, mission, npc.Top));
+            //        NotificationCreated[whoAmI] = true;
+            //    }
+            //}
+            //else if (!missionPlayer.NPCHasAvailableMission(npc.type) && NotificationCreated.ContainsKey(whoAmI))
+            //{
+            //    NotificationCreated[whoAmI] = false;
+            //}
+        }
     }
 
     public override void OnKill(NPC npc)
@@ -116,30 +177,8 @@ public class ObjectiveEventNPC : GlobalNPC
         if (!npc.immortal)
             MissionManager.Instance.OnNPCKill(npc);
     }
-
-    public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
-    {
-        var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        if (missionPlayer.NPCHasAvailableMission(npc.type) && !missionPlayer.ActiveMissions().Any(m => npc.type == m.Employer))
-        {
-            var hoverOffset = (float)Math.Sin(Main.GameUpdateCount * 1f * 0.1f) * 4f;
-            var drawPos = npc.Top + new Vector2(-missionTexture.Width / 2f, -missionTexture.Height - 10f - hoverOffset);
-            drawPos = Vector2.Transform(drawPos - Main.screenPosition, Main.GameViewMatrix.ZoomMatrix);
-            spriteBatch.Draw(
-                missionTexture,
-                drawPos,
-                null,
-                Color.White,
-                0f,
-                Vector2.Zero,
-                1f,
-                SpriteEffects.None,
-                0f
-            );
-        }
-        base.PostDraw(npc, spriteBatch, screenPos, drawColor);
-    }
 }
+
 public class ObjectiveEventTile : GlobalTile
 {
     public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
