@@ -249,6 +249,11 @@ Items: {
 		DisplayName: Bloomcap Item
 		Tooltip: ""
 	}
+
+	WorldCoordUIPlacer: {
+		DisplayName: World Coord U I Placer
+		Tooltip: ""
+	}
 }
 
 Projectiles: {

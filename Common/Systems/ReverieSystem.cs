@@ -1,4 +1,5 @@
-﻿using Reverie.Core.Dialogue;
+﻿using Reverie.Common.UI;
+using Reverie.Core.Dialogue;
 using Reverie.Utilities;
 using Terraria.GameContent;
 using Terraria.Localization;
@@ -14,6 +15,16 @@ namespace Reverie.Common.Systems
         {
             NPCManager.Initialize();
             Reverie.Instance.Logger.Info("NPCManager for dialogue initialized...");
+        }
+        public override void PostDrawTiles()
+        {
+            // Make sure to use the right transformation matrix
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp,
+                DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+
+            MissionIndicatorManager.Instance.Draw(Main.spriteBatch);
+
+            Main.spriteBatch.End();
         }
 
         public override void ModifyTimeRate(ref double timeRate, ref double tileUpdateRate, ref double eventUpdateRate)

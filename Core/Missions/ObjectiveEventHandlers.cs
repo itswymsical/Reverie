@@ -9,6 +9,7 @@ using Reverie.Utilities.Extensions;
 using System.Linq;
 using Reverie.Common.UI.Missions;
 using Terraria.UI;
+using Reverie.Common.UI;
 
 namespace Reverie.Core.Missions;
 
@@ -60,11 +61,13 @@ public class ObjectiveEventNPC : GlobalNPC
 {
     public override bool InstancePerEntity => true;
 
-    private static readonly Dictionary<int, bool> NotificationCreated = [];
+    // Dictionary to track which NPCs have had notifications created
+    private static Dictionary<int, bool> notificationCreated = new Dictionary<int, bool>();
 
+    // Method to reset notification tracking (call this when player enters the world)
     public static void ResetNotificationTracking()
     {
-        NotificationCreated.Clear();
+        notificationCreated.Clear();
     }
 
     public override bool? CanChat(NPC npc)
@@ -144,30 +147,21 @@ public class ObjectiveEventNPC : GlobalNPC
     public override void AI(NPC npc)
     {
         base.AI(npc);
-
         if (npc.isLikeATownNPC)
         {
             npc.ForceBubbleChatState();
-            //var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
 
-            //int whoAmI = npc.whoAmI;
-            //if (missionPlayer.NPCHasAvailableMission(npc.type) &&
-            //    !missionPlayer.ActiveMissions().Any(m => npc.type == m.Employer) &&
-            //    (!NotificationCreated.ContainsKey(whoAmI) || !NotificationCreated[whoAmI]))
-            //{
-                
-            //    var mission = missionPlayer.AvailableMissions().FirstOrDefault(m => npc.type == m.Employer);
-            //    if (mission != null)
-            //    {
+            var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
 
-            //        InGameNotificationsTracker.AddNotification(new NPCMissionNotification(npc, mission, npc.Top));
-            //        NotificationCreated[whoAmI] = true;
-            //    }
-            //}
-            //else if (!missionPlayer.NPCHasAvailableMission(npc.type) && NotificationCreated.ContainsKey(whoAmI))
-            //{
-            //    NotificationCreated[whoAmI] = false;
-            //}
+            if (missionPlayer.NPCHasAvailableMission(npc.type) &&
+                !missionPlayer.ActiveMissions().Any(m => npc.type == m.Employer))
+            {
+                var mission = missionPlayer.AvailableMissions().FirstOrDefault(m => npc.type == m.Employer);
+                if (mission != null)
+                {
+                    MissionIndicatorManager.Instance.CreateIndicatorForNPC(Main.npc[NPC.FindFirstNPC(npc.type)], mission);
+                }
+            }
         }
     }
 
@@ -177,6 +171,7 @@ public class ObjectiveEventNPC : GlobalNPC
         if (!npc.immortal)
             MissionManager.Instance.OnNPCKill(npc);
     }
+
 }
 
 public class ObjectiveEventTile : GlobalTile

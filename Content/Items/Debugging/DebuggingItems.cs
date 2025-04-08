@@ -1,6 +1,9 @@
-﻿using Reverie.Common.UI.Missions;
+﻿using Reverie.Common.UI;
+using Reverie.Common.UI.Missions;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
+using System.Reflection;
+using Terraria;
 using Terraria.UI;
 
 namespace Reverie.Content.Items.Debugging;
@@ -30,6 +33,29 @@ public class DialogueTest : ModItem
                 (line: 4, delay: 3, emote: 0),
                 (line: 5, delay: 3, emote: 1)]);
 
+        return true;
+    }
+}
+
+public class WorldCoordUIPlacer : ModItem
+{
+    public override string Texture => PLACEHOLDER;
+    public override void SetDefaults()
+    {
+        Item.useTime = Item.useAnimation = 20;
+        Item.value = Item.buyPrice(0);
+        Item.rare = ItemRarityID.Quest;
+        Item.useStyle = ItemUseStyleID.HoldUp;
+    }
+    public override bool? UseItem(Player player)
+    {
+        var mplayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+        var bb = mplayer.GetMission(MissionID.BloomcapHunt);
+        if (Main.myPlayer == player.whoAmI)
+        {
+            MissionIndicatorManager.Instance.CreateIndicator(Main.MouseWorld, bb);
+            Main.NewText($"Placed at position [X:{Main.MouseWorld.X} Y:{Main.MouseWorld.Y}]");
+        }
         return true;
     }
 }

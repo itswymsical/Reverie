@@ -143,11 +143,10 @@ public class MissionNotification : IInGameNotification
         alpha = MathHelper.Clamp(alpha, 0f, 1f);
 
         DrawObjectiveList(spriteBatch, bottomAnchorPosition);
-
-        if (showingAvailableMissions && isHoveringMission && currentMission != null)
-        {
-            DrawMissionDetailPanel(spriteBatch);
-        }
+        //if (showingAvailableMissions && isHoveringMission && currentMission != null)
+        //{
+        //    DrawMissionDetailPanel(spriteBatch, bottomAnchorPosition);
+        //}
     }
 
     private void DrawObjectiveList(SpriteBatch spriteBatch, Vector2 bottomAnchorPosition)
@@ -199,7 +198,7 @@ public class MissionNotification : IInGameNotification
         string missionTitle;
         if (showingAvailableMissions)
         {
-            missionTitle = "Job Opportunities";
+            missionTitle = "Available Missions";
         }
         else
         {
@@ -374,7 +373,6 @@ public class MissionNotification : IInGameNotification
                 0.8f
             );
 
-            // Check if mouse is hovering over the mission entry
             Rectangle missionEntryRect = new Rectangle(
                 posX,
                 posY + yOffset,
@@ -382,15 +380,15 @@ public class MissionNotification : IInGameNotification
                 PanelHeight
             );
 
-            isHoveringMission = missionEntryRect.Contains(Main.MouseScreen.ToPoint()) &&
-                                 !isHoveringToggleButton &&
-                                 !isHoveringPrevButton &&
-                                 !isHoveringNextButton &&
-                                 PlayerInput.IgnoreMouseInterface == false;
+            isHoveringMission = missionEntryRect.Contains(Main.MouseScreen.ToPoint()) 
+                && !isHoveringToggleButton &&
+                !isHoveringPrevButton &&
+                !isHoveringNextButton &&
+                PlayerInput.IgnoreMouseInterface == false;
 
             if (isHoveringMission)
             {
-                Main.LocalPlayer.mouseInterface = true;
+                Main.LocalPlayer.mouseInterface = true;               
             }
         }
         else
@@ -434,7 +432,7 @@ public class MissionNotification : IInGameNotification
         if (currentList.Count > 1)
         {
             string missionCounter = $"{currentMissionIndex + 1}/{currentList.Count}";
-            Vector2 counterPos = new Vector2(posX + TitlePanelWidth - 35, posY + PanelHeight * 4.2f);
+            Vector2 counterPos = new Vector2(posX + TitlePanelWidth, posY + PanelHeight * 4.2f);
 
             Utils.DrawBorderStringFourWay(
                 spriteBatch,
@@ -448,227 +446,6 @@ public class MissionNotification : IInGameNotification
                 0.7f
             );
         }
-    }
-
-    private void DrawMissionDetailPanel(SpriteBatch spriteBatch)
-    {
-        if (currentMission == null)
-            return;
-
-        int lineCount = 3;
-        if (currentMission.Objective.Count > 0)
-        {
-            lineCount += currentMission.Objective[0].Objectives.Count;
-        }
-
-        int panelHeight = 20 + (lineCount * 20) + DetailPanelPadding * 2;
-
-        var screenPos = Vector2.Transform(iconPos - Main.screenPosition, Main.GameViewMatrix.ZoomMatrix);
-
-        float panelX = screenPos.X + missionIconTexture.Width + 5;
-        float panelY = screenPos.Y;
-
-        if (panelX + DetailPanelWidth > Main.screenWidth)
-        {
-            panelX = screenPos.X - DetailPanelWidth - 5;
-        }
-
-        if (panelY + panelHeight > Main.screenHeight)
-        {
-            panelY = Main.screenHeight - panelHeight;
-        }
-
-        Rectangle panelRect = new Rectangle(
-            (int)panelX,
-            (int)panelY,
-            DetailPanelWidth,
-            panelHeight
-        );
-
-        // Update hover fade in/out effect
-        hoverFadeIn = MathHelper.Lerp(hoverFadeIn, 1f, HOVER_FADE_SPEED);
-        if (!isHoveringMission && hoverFadeIn < 0.05f)
-        {
-            hoverFadeIn = 0f;
-            return;
-        }
-
-        // Check if mouse is hovering over detail panel
-        bool isHoveringDetailPanel = panelRect.Contains(Main.MouseScreen.ToPoint()) && PlayerInput.IgnoreMouseInterface == false;
-        if (isHoveringDetailPanel)
-        {
-            Main.LocalPlayer.mouseInterface = true;
-        }
-
-        Color panelColor = new Color(0, 0, 0, (int)(200 * hoverFadeIn));
-
-        // Draw panel background
-        Utils.DrawInvBG(spriteBatch, panelRect, panelColor);
-
-        int textY = panelRect.Y + DetailPanelPadding;
-
-        Utils.DrawBorderStringFourWay(
-            spriteBatch,
-            FontAssets.MouseText.Value,
-            currentMission.Name,
-            panelRect.X + DetailPanelPadding,
-            textY,
-            new Color(192, 151, 83, (int)(255 * hoverFadeIn)), // Gold
-            Color.Black * hoverFadeIn,
-            Vector2.Zero,
-            1f
-        );
-        textY += 25;
-
-        string employerName = "Unknown";
-        if (currentMission.Employer > 0)
-        {
-            employerName = Lang.GetNPCNameValue(currentMission.Employer);
-        }
-
-        Utils.DrawBorderStringFourWay(
-            spriteBatch,
-            FontAssets.MouseText.Value,
-            $"From: {employerName}",
-            panelRect.X + DetailPanelPadding,
-            textY,
-            Color.White * hoverFadeIn,
-            Color.Black * hoverFadeIn,
-            Vector2.Zero,
-            0.9f
-        );
-        textY += 20;
-
-        Utils.DrawBorderStringFourWay(
-            spriteBatch,
-            FontAssets.MouseText.Value,
-            currentMission.Description,
-            panelRect.X + DetailPanelPadding,
-            textY,
-            Color.White * hoverFadeIn,
-            Color.Black * hoverFadeIn,
-            Vector2.Zero,
-            0.8f
-        );
-        textY += 30;
-
-        if (currentMission.Rewards.Count > 0 || currentMission.Experience > 0)
-        {
-            Utils.DrawBorderStringFourWay(
-                spriteBatch,
-                FontAssets.MouseText.Value,
-                "Rewards:",
-                panelRect.X + DetailPanelPadding,
-                textY,
-                Color.White * hoverFadeIn,
-                Color.Black * hoverFadeIn,
-                Vector2.Zero,
-                0.8f
-            );
-            textY += 20;
-
-            int rewardX = panelRect.X + DetailPanelPadding;
-            foreach (var reward in currentMission.Rewards)
-            {
-                if (reward.type <= 0)
-                    continue;
-
-                spriteBatch.Draw(
-                    TextureAssets.Item[reward.type].Value,
-                    new Vector2(rewardX, textY),
-                    null,
-                    Color.White * hoverFadeIn,
-                    0f,
-                    Vector2.Zero,
-                    0.8f,
-                    SpriteEffects.None,
-                    0f
-                );
-
-                if (reward.stack > 1)
-                {
-                    Utils.DrawBorderStringFourWay(
-                        spriteBatch,
-                        FontAssets.ItemStack.Value,
-                        reward.stack.ToString(),
-                        rewardX + 10,
-                        textY + 6,
-                        Color.White * hoverFadeIn,
-                        Color.Black * hoverFadeIn,
-                        Vector2.Zero,
-                        0.8f
-                    );
-                }
-
-                rewardX += 40;
-            }
-
-            if (currentMission.Experience > 0)
-            {
-                Utils.DrawBorderStringFourWay(
-                    spriteBatch,
-                    FontAssets.MouseText.Value,
-                    $"{currentMission.Experience} XP",
-                    rewardX,
-                    textY,
-                    new Color(73, 213, 255, (int)(255 * hoverFadeIn)), // Light blue for XP
-                    Color.Black * hoverFadeIn,
-                    Vector2.Zero,
-                    0.8f
-                );
-            }
-
-            textY += 30;
-        }
-
-        // Add a button-like region for accepting the mission
-        Rectangle acceptButtonRect = new Rectangle(
-            panelRect.X + DetailPanelWidth / 2 - 60,
-            panelRect.Y + panelHeight - DetailPanelPadding - 20,
-            120,
-            25
-        );
-
-        bool isHoveringAcceptButton = acceptButtonRect.Contains(Main.MouseScreen.ToPoint()) && PlayerInput.IgnoreMouseInterface == false;
-
-        // Draw a highlight for the accept button when hovering
-        if (isHoveringAcceptButton)
-        {
-            Utils.DrawInvBG(spriteBatch, acceptButtonRect, new Color(255, 255, 100, 50));
-        }
-
-        Utils.DrawBorderStringFourWay(
-            spriteBatch,
-            FontAssets.MouseText.Value,
-            "Click to accept",
-            panelRect.X + DetailPanelWidth / 2,
-            panelRect.Y + panelHeight - DetailPanelPadding - 6,
-            isHoveringAcceptButton ? Color.Yellow * hoverFadeIn : Color.Yellow * hoverFadeIn * 0.8f,
-            Color.Black * hoverFadeIn,
-            new Vector2(0.5f, 0f),
-            0.8f
-        );
-
-        // Handle click on accept button
-        if (isHoveringAcceptButton && Main.mouseLeft && Main.mouseLeftRelease && !clicked)
-        {
-            Main.mouseLeftRelease = false;
-            HandleMissionAccept();
-        }
-    }
-
-    private void HandleMissionAccept()
-    {
-        SoundEngine.PlaySound(SoundID.MenuOpen);
-
-        var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        missionPlayer.StartMission(currentMission.ID);
-
-        clicked = true;
-
-        // Refresh mission lists after accepting a mission
-        LoadMissions();
-        UpdateActiveObjectives();
     }
 
     private void CycleToNextMission()

@@ -51,7 +51,7 @@ public sealed class DialogueManager
     public bool StartDialogue(NPCData npcData, DialogueSequence dialogue, string dialogueKey, bool zoomIn = false,
             string nextDialogueKey = null, NPCData nextNpcData = null, bool nextZoomIn = false)
     {
-        Main.CloseNPCChatOrSign();
+        Main.LocalPlayer.SetTalkNPC(-1);
         //Letterbox.Show();
         IsUIHidden = true;
         if (IsAnyActive())

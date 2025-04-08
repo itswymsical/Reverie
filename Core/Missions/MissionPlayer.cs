@@ -1,7 +1,4 @@
-﻿using Reverie.Common.Players;
-using Reverie.Common.Systems;
-using Reverie.Common.UI.Missions;
-using Reverie.Core.Cinematics.Cutscenes;
+﻿using Reverie.Common.UI.Missions;
 using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
 
@@ -640,7 +637,6 @@ public partial class MissionPlayer : ModPlayer
     {
         base.PostUpdate();
         PlayerTriggerEvents();
-        MissionNotificationManager.Instance.UpdateMissionNotifications();
 
         if (!hasDeferredLoadRun)
         {
@@ -667,10 +663,6 @@ public partial class MissionPlayer : ModPlayer
         }
     }
 
-    public void ResetMissionNotifications()
-    {
-        MissionNotificationManager.Instance.Reset();
-    }
     public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
     {
         base.OnHitNPC(target, hit, damageDone);
