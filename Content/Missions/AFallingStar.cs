@@ -155,200 +155,170 @@ public class AFallingStar : Mission
     }
 
     #region Event Handlers
-    public override void OnChat(NPC npc)
+    protected override void HandleChat(NPC npc)
     {
-        try
+        var objective = (Objectives)CurrentIndex;
+        switch (objective)
         {
-            var objective = (Objectives)CurrentIndex;
-            switch (objective)
-            {
-                case Objectives.TalkToTownies:
-                    if (npc.type == NPCID.Guide)
-                    {
-                        DialogueManager.Instance.StartDialogueByKey(
-                            NPCManager.GuideData,
-                            DialogueKeys.FallingStar.GatheringResources,
-                            lineCount: 6,
-                            zoomIn: true,
-                            modifications:
-                            [(line: 1, delay: 2, emote: 3),
+            case Objectives.TalkToTownies:
+                if (npc.type == NPCID.Guide)
+                {
+                    DialogueManager.Instance.StartDialogueByKey(
+                        NPCManager.GuideData,
+                        DialogueKeys.FallingStar.GatheringResources,
+                        lineCount: 6,
+                        zoomIn: true,
+                        modifications:
+                        [(line: 1, delay: 2, emote: 3),
                         (line: 2, delay: 2, emote: 0),
                         (line: 3, delay: 3, emote: 2),
                         (line: 4, delay: 3, emote: 2),
                         (line: 5, delay: 5, emote: 0),
                         (line: 6, delay: 2, emote: 0)]);
-                        UpdateProgress(0);
-                    }
-                    if (npc.type == NPCID.Merchant)
-                    {
-                        DialogueManager.Instance.StartDialogueByKey(
-                            NPCManager.MerchantData,
-                            DialogueKeys.FallingStar.MerchantIntro,
-                            lineCount: 5,
-                            zoomIn: false,
-                            modifications:
-                           [(line: 1, delay: 3, emote: 0),
+                    UpdateProgress(0);
+                }
+                if (npc.type == NPCID.Merchant)
+                {
+                    DialogueManager.Instance.StartDialogueByKey(
+                        NPCManager.MerchantData,
+                        DialogueKeys.FallingStar.MerchantIntro,
+                        lineCount: 5,
+                        zoomIn: false,
+                        modifications:
+                       [(line: 1, delay: 3, emote: 0),
                             (line: 2, delay: 3, emote: 1),
                             (line: 3, delay: 3, emote: 0),
                             (line: 4, delay: 3, emote: 0),
                             (line: 5, delay: 3, emote: 1)]);
 
-                        UpdateProgress(1);
-                        GiveStarterItems();
-                    }
-                    if (npc.type == NPCID.Demolitionist)
-                    {
-                        DialogueManager.Instance.StartDialogueByKey(
-                            NPCManager.DemolitionistData,
-                            DialogueKeys.FallingStar.DemolitionistIntro,
-                            lineCount: 4,
-                            zoomIn: false,
-                            modifications:
-                            [(line: 1, delay: 3, emote: 0),
+                    UpdateProgress(1);
+                    GiveStarterItems();
+                }
+                if (npc.type == NPCID.Demolitionist)
+                {
+                    DialogueManager.Instance.StartDialogueByKey(
+                        NPCManager.DemolitionistData,
+                        DialogueKeys.FallingStar.DemolitionistIntro,
+                        lineCount: 4,
+                        zoomIn: false,
+                        modifications:
+                        [(line: 1, delay: 3, emote: 0),
                             (line: 2, delay: 3, emote: 0),
                             (line: 3, delay: 3, emote: 0),
                             (line: 4, delay: 3, emote: 0)]
-                            );
+                        );
 
-                        UpdateProgress(2);
-                    }
-                    if (npc.type == NPCID.Nurse)
-                    {
-                        DialogueManager.Instance.StartDialogueByKey(
-                            NPCManager.NurseData,
-                            DialogueKeys.FallingStar.NurseIntro,
-                            lineCount: 4,
-                            zoomIn: false,
-                            modifications:
-                            [(line: 1, delay: 3, emote: 0),
+                    UpdateProgress(2);
+                }
+                if (npc.type == NPCID.Nurse)
+                {
+                    DialogueManager.Instance.StartDialogueByKey(
+                        NPCManager.NurseData,
+                        DialogueKeys.FallingStar.NurseIntro,
+                        lineCount: 4,
+                        zoomIn: false,
+                        modifications:
+                        [(line: 1, delay: 3, emote: 0),
                             (line: 2, delay: 3, emote: 0),
                             (line: 3, delay: 3, emote: 0),
                             (line: 4, delay: 3, emote: 0)]
-                            );
+                        );
 
-                        UpdateProgress(3);
-                    }
-                    break;
-                case Objectives.CheckIn:
-                    if (npc.type == NPCID.Guide)
-                    {
-                        UpdateProgress(0);
-                    }
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            Instance.Logger.Error($"Error in OnChat: {ex.Message}");
+                    UpdateProgress(3);
+                }
+                break;
+            case Objectives.CheckIn:
+                if (npc.type == NPCID.Guide)
+                {
+                    UpdateProgress(0);
+                }
+                break;
         }
     }
 
-    public override void OnCollected(Item item)
+
+    protected override void HandleCollected(Item item)
     {
-        try
+
+        var objective = (Objectives)CurrentIndex;
+        switch (objective)
         {
-            var objective = (Objectives)CurrentIndex;
-            switch (objective)
-            {
-                case Objectives.GatherResources:
-                    if (item.type == ItemID.Wood)
-                        UpdateProgress(0, item.stack);
-                    break;
-                case Objectives.AquireItems:
-                    if (item.IsOre())
-                        UpdateProgress(0, item.stack);
-                    if (item.accessory)
-                        UpdateProgress(1, item.stack);
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            Instance.Logger.Error($"Error in OnItemPickup: {ex.Message}");
+            case Objectives.GatherResources:
+                if (item.type == ItemID.Wood)
+                    UpdateProgress(0, item.stack);
+                break;
+            case Objectives.AquireItems:
+                if (item.IsOre())
+                    UpdateProgress(0, item.stack);
+                if (item.accessory)
+                    UpdateProgress(1, item.stack);
+                break;
         }
     }
 
-    public override void OnKill(NPC npc)
+    protected override void HandleKill(NPC npc)
     {
-        try
-        {
-            var objective = (Objectives)CurrentIndex;
-            switch (objective)
-            {
-                case Objectives.ClearSlimes:
-                    if (npc.type == NPCAIStyleID.Slime)
-                        UpdateProgress(0);
-                    break;
-                case Objectives.ExploreBiomes:
-                    if (player.ZoneRockLayerHeight || player.ZoneDirtLayerHeight)
-                        if (npc.aiStyle != NPCAIStyleID.Slime)
-                            UpdateProgress(2);
-                    break;
-                case Objectives.ClearSlimeRain:
-                    HandleSlimeRain(npc);
-                    break;
-                case Objectives.DefeatKingSlime:
-                    if (npc.type == NPCID.KingSlime)
-                        UpdateProgress(0);
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            Instance.Logger.Error($"Error in OnKill: {ex.Message}");
-        }
-    }
 
-    public override void OnBreakTile(int type, ref bool fail, ref bool effectOnly)
-    {
-        try
+        var objective = (Objectives)CurrentIndex;
+        switch (objective)
         {
-            var objective = (Objectives)CurrentIndex;
-            switch (objective)
-            {
-                case Objectives.GatherResources:
-                    if (type == TileID.Pots)
-                        UpdateProgress(1);
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            Instance.Logger.Error($"Error in OnBreakTile: {ex.Message}");
-        }
-    }
-
-    public override void OnBiomeEnter(Player player, BiomeType biome)
-    {
-        try
-        {
-            var objective = (Objectives)CurrentIndex;
-            switch (objective)
-            {
-                case Objectives.ExploreBiomes:
-                    if (biome == BiomeType.Underground)
-                        UpdateProgress(0);
-                    if (biome == BiomeType.Glowshroom)
-                        UpdateProgress(1);
-                    if (biome == BiomeType.Jungle)
+            case Objectives.ClearSlimes:
+                if (npc.type == NPCAIStyleID.Slime)
+                    UpdateProgress(0);
+                break;
+            case Objectives.ExploreBiomes:
+                if (player.ZoneRockLayerHeight || player.ZoneDirtLayerHeight)
+                    if (npc.aiStyle != NPCAIStyleID.Slime)
                         UpdateProgress(2);
-                    if (biome == BiomeType.UndergroundDesert)
-                        UpdateProgress(3);
-                    if (biome == BiomeType.Snow)
-                        UpdateProgress(4);
-                    break;
-
-                case Objectives.DefendTown:
-                    if (biome == BiomeType.Forest)
-                        UpdateProgress(0);
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            Instance.Logger.Error($"Error in OnBiomeEnter: {ex.Message}");
+                break;
+            case Objectives.ClearSlimeRain:
+                HandleSlimeRain(npc);
+                break;
+            case Objectives.DefeatKingSlime:
+                if (npc.type == NPCID.KingSlime)
+                    UpdateProgress(0);
+                break;
         }
     }
+
+    protected override void HandleBreakTile(int type, ref bool fail, ref bool effectOnly)
+    {
+        var objective = (Objectives)CurrentIndex;
+        switch (objective)
+        {
+            case Objectives.GatherResources:
+                if (type == TileID.Pots)
+                    UpdateProgress(1);
+                break;
+        }
+    }
+
+    protected override void HandleBiomeEnter(Player player, BiomeType biome)
+    {
+
+        var objective = (Objectives)CurrentIndex;
+        switch (objective)
+        {
+            case Objectives.ExploreBiomes:
+                if (biome == BiomeType.Underground)
+                    UpdateProgress(0);
+                if (biome == BiomeType.Glowshroom)
+                    UpdateProgress(1);
+                if (biome == BiomeType.Jungle)
+                    UpdateProgress(2);
+                if (biome == BiomeType.UndergroundDesert)
+                    UpdateProgress(3);
+                if (biome == BiomeType.Snow)
+                    UpdateProgress(4);
+                break;
+
+            case Objectives.DefendTown:
+                if (biome == BiomeType.Forest)
+                    UpdateProgress(0);
+                break;
+        }
+    }
+    
     #endregion
 
     #region Helper Methods

@@ -11,7 +11,7 @@ public class CopperStandard : Mission
       "'The Merchant believes copper is the cornerstone of civilization—durable, shiny, and universally appealing. " +
         "\nHe wants to build a proper “copper-backed economy”, and needs your help collecting resources.",
       [
-        [("kill enemies for copper coins", 300)],
+        [("Collect copper coins", 300)],
         [("Mine copper ore", 80)],
         [("Collect or smelt copper bars", 25)],
         [("Return to the Merchant", 1)]
@@ -28,7 +28,7 @@ public class CopperStandard : Mission
 
     internal enum Objectives
     {
-        KillCopperCoins = 0,
+        CopperCoins = 0,
         MineCopper = 1,
         SmeltCopper = 2,
         ReturnToMerchant = 3
@@ -54,13 +54,12 @@ public class CopperStandard : Mission
             switch (objective)
             {
 
-                case Objectives.KillCopperCoins:
-                    if (item.type == ItemID.CopperCoin && 
-                        item.GetSource_FromThis() is EntitySource_Loot lootSource && lootSource.Entity is NPC)
+                case Objectives.CopperCoins:
+                    if (item.type == ItemID.CopperCoin)
                         UpdateProgress(0, item.stack);               
                 break;
             case Objectives.MineCopper:
-                    if (item.type == ItemID.CopperOre && item.GetSource_FromThis() is EntitySource_TileBreak)
+                    if (item.type == ItemID.CopperOre)
                         UpdateProgress(0, item.stack);
                 break;
             case Objectives.SmeltCopper:
@@ -82,17 +81,17 @@ public class CopperStandard : Mission
             NPCManager.MerchantData, DialogueKeys.Merchant.CopperStandardComplete, lineCount: 4, zoomIn: true);
     }
 
-    public override void OnChat(NPC npc)
+    protected override void HandleChat(NPC npc)
     {
-        try
+        var objective = (Objectives)CurrentIndex;
+        if (npc.type == Employer)
         {
-            var objective = (Objectives)CurrentIndex;
             switch (objective)
             {
-                case Objectives.KillCopperCoins:
+                case Objectives.CopperCoins:
                     if (Main.rand.NextBool(2))
                         DialogueManager.Instance.StartDialogueByKey(NPCManager.MerchantData,
-                            DialogueKeys.Merchant.CopperCoinsInProgress, lineCount: 2);                
+                            DialogueKeys.Merchant.CopperCoinsInProgress, lineCount: 2);
                     else
                         DialogueManager.Instance.StartDialogueByKey(NPCManager.MerchantData,
                             DialogueKeys.Merchant.CopperCoinsInProgress_Alt, lineCount: 2);
@@ -107,33 +106,22 @@ public class CopperStandard : Mission
                     break;
             }
         }
-        catch (Exception e)
-        {
-            Instance.Logger.Error($"[Copper Standard] Error in OnChat: {e}");
-        }
     }
 
-    public override void OnItemCreated(Item item, ItemCreationContext context)
+    protected override void HandleItemCreated(Item item, ItemCreationContext context)
     {
-        try
+        var objective = (Objectives)CurrentIndex;
+        switch (objective)
         {
-            var objective = (Objectives)CurrentIndex;
-            switch (objective)
-            {
 
-                case Objectives.KillCopperCoins:
-                    if (item.type == ItemID.CopperCoin)
-                        UpdateProgress(0, item.stack);
-                    break;
-                case Objectives.SmeltCopper:
-                    if (item.type == ItemID.CopperBar)
-                        UpdateProgress(0, item.stack);
-                    break;
-            }
-        }
-        catch (Exception e)
-        {
-            Instance.Logger.Error($"[Copper Standard] Error in OnItemCreated: {e}");
+            case Objectives.CopperCoins:
+                if (item.type == ItemID.CopperCoin)
+                    UpdateProgress(0, item.stack);
+                break;
+            case Objectives.SmeltCopper:
+                if (item.type == ItemID.CopperBar)
+                    UpdateProgress(0, item.stack);
+                break;
         }
     }
 }

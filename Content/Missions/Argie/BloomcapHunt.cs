@@ -7,7 +7,7 @@ namespace Reverie.Content.Missions.Argie;
 public class BloomcapHunt : Mission
 {
     public BloomcapHunt() : base(MissionID.BloomcapHunt,
-      "BloomcapHunt Hunt",
+      "Bloomcap Hunt",
       "'Argie wants a handful to decorate her stump.'",
       [
         [("Collect Bloomcaps", 8)],
@@ -27,6 +27,7 @@ public class BloomcapHunt : Mission
         CollectBloomcaps = 0,
         Return = 1,
     }
+
     public override void OnMissionStart()
     {
         base.OnMissionStart();
@@ -48,6 +49,7 @@ public class BloomcapHunt : Mission
             lineCount: 4,
             zoomIn: true);
     }
+
     protected override void OnObjectiveComplete(int objectiveIndex)
     {
         base.OnObjectiveComplete(objectiveIndex);
@@ -60,52 +62,39 @@ public class BloomcapHunt : Mission
                 zoomIn: true);
         }
     }
-    public override void OnCollected(Item item)
-    {
-        try
-        {
-            if ((Objectives)CurrentIndex == Objectives.CollectBloomcaps 
-                && item.type == ModContent.ItemType<BloomcapItem>())
-            {
-                UpdateProgress(0, item.stack);
-                if (Objective[CurrentIndex].Objectives[0].CurrentCount == 1)
-                {
-                    DialogueManager.Instance.StartDialogueByKey(
-                        NPCManager.Default,
-                        DialogueKeys.ArgieDialogue.BloomcapCollected,
-                        lineCount: 2,
-                        zoomIn: true);
-                }
 
-                if (Objective[CurrentIndex].Objectives[0].CurrentCount == 4)
-                {
-                    DialogueManager.Instance.StartDialogueByKey(
-                        NPCManager.Default,
-                        DialogueKeys.ArgieDialogue.BloomcapCollectedHalf,
-                        lineCount: 1,
-                        zoomIn: true);
-                }
-            }
-        }
-        catch (Exception ex)
+    protected override void HandleCollected(Item item)
+    {
+        if ((Objectives)CurrentIndex == Objectives.CollectBloomcaps
+            && item.type == ModContent.ItemType<BloomcapItem>())
         {
-            Instance.Logger.Error($"Error in OnObjectiveComplete: {ex.Message}");
+            UpdateProgress(0, item.stack);
+            if (Objective[CurrentIndex].Objectives[0].CurrentCount == 1)
+            {
+                DialogueManager.Instance.StartDialogueByKey(
+                    NPCManager.Default,
+                    DialogueKeys.ArgieDialogue.BloomcapCollected,
+                    lineCount: 2,
+                    zoomIn: true);
+            }
+
+            if (Objective[CurrentIndex].Objectives[0].CurrentCount == 4)
+            {
+                DialogueManager.Instance.StartDialogueByKey(
+                    NPCManager.Default,
+                    DialogueKeys.ArgieDialogue.BloomcapCollectedHalf,
+                    lineCount: 1,
+                    zoomIn: true);
+            }
         }
     }
 
-    public override void OnChat(NPC npc)
+    protected override void HandleChat(NPC npc)
     {
-        try
+        if ((Objectives)CurrentIndex == Objectives.Return
+            && npc.type == ModContent.NPCType<NPCs.WorldNPCs.Argie>())
         {
-            if ((Objectives)CurrentIndex == Objectives.Return 
-                && npc.type == ModContent.NPCType<NPCs.WorldNPCs.Argie>())
-            {
-                UpdateProgress(0);
-            }
-        }
-        catch (Exception ex)
-        {
-            Instance.Logger.Error($"Error in OnChat: {ex.Message}");
+            UpdateProgress(0);
         }
     }
 }

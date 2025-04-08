@@ -1,7 +1,5 @@
 DialogueLibrary: {
-	FallingStar: {
-		Intro.Line1: WHAT THE HELL?!?!
-
+	AFallingStar: {
 		Cutscene: {
 			Line1: Hey! Do you guys hear that?
 			Line2: Yes, we can hear your annoying voice.
@@ -101,6 +99,8 @@ DialogueLibrary: {
 			Line3: They've been like this since you arrived...
 			Line4: and you do have that glowy aura...
 		}
+
+		Intro.Line1: Mods.Reverie.DialogueLibrary.AFallingStar.Intro.Line1
 	}
 
 	CrashLanding_2: {
@@ -182,6 +182,4 @@ DialogueLibrary: {
 			Line14: Mods.Reverie.DialogueLibrary.Chronicle_01.Chapter1.Line14
 		}
 	}
-
-	AFallingStar.Intro.Line1: Mods.Reverie.DialogueLibrary.AFallingStar.Intro.Line1
 }
