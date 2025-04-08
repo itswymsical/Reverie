@@ -1,29 +1,21 @@
-﻿using System.Collections.Generic;
-
-using Terraria.DataStructures;
-
+﻿using Reverie.Core.CustomEntities;
 using Reverie.Core.Dialogue;
-
 using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
+using System.Collections.Generic;
 using System.Linq;
-using Reverie.Common.UI.Missions;
-using Terraria.UI;
-using Reverie.Common.UI;
+using Terraria.DataStructures;
 
 namespace Reverie.Core.Missions;
 
 public partial class MissionPlayer
 {
-
-    /// <summary>
-    /// called in PostUpdate(), to trigger mission unlocks and events.
-    /// </summary>
     public void PlayerTriggerEvents()
     {
         bool merchantPresent = NPC.AnyNPCs(NPCID.Merchant);
-        var cS = GetMission(MissionID.CopperStandard);
-        if (cS.Progress != MissionProgress.Completed && merchantPresent && Player.HasItemInAnyInventory(ItemID.CopperBar))
+        var copperStandard = GetMission(MissionID.CopperStandard);
+        if (copperStandard.Availability == MissionAvailability.Locked && copperStandard.Progress == MissionProgress.Inactive 
+            && merchantPresent && Player.HasItemInAnyInventory(ItemID.CopperBar))
         {
             UnlockMission(MissionID.CopperStandard);
         }   
@@ -61,37 +53,13 @@ public class ObjectiveEventNPC : GlobalNPC
 {
     public override bool InstancePerEntity => true;
 
-    // Dictionary to track which NPCs have had notifications created
-    private static Dictionary<int, bool> notificationCreated = new Dictionary<int, bool>();
-
-    // Method to reset notification tracking (call this when player enters the world)
-    public static void ResetNotificationTracking()
-    {
-        notificationCreated.Clear();
-    }
-
-    public override bool? CanChat(NPC npc)
-        => (npc.isLikeATownNPC || npc.townNPC) && !DialogueManager.Instance.IsAnyActive();
+    public override bool? CanChat(NPC npc) => (npc.isLikeATownNPC || npc.townNPC) 
+        && !DialogueManager.Instance.IsAnyActive();
 
     public override void GetChat(NPC npc, ref string chat)
     {
         base.GetChat(npc, ref chat);
         MissionManager.Instance.OnNPCChat(npc);
-    }
-
-    public override void OnChatButtonClicked(NPC npc, bool firstButton)
-    {
-        base.OnChatButtonClicked(npc, firstButton);
-        if (!firstButton)
-        {
-            var plr = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-
-            var mission = plr.AvailableMissions().FirstOrDefault(m => npc.type == m.Employer);
-            if (mission == null)
-                return;
-
-            plr.StartMission(mission.ID);
-        }
     }
 
     public override void EditSpawnPool(IDictionary<int, float> pool, NPCSpawnInfo spawnInfo)
@@ -147,20 +115,21 @@ public class ObjectiveEventNPC : GlobalNPC
     public override void AI(NPC npc)
     {
         base.AI(npc);
+
         if (npc.isLikeATownNPC)
         {
             npc.ForceBubbleChatState();
 
             var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
 
-            if (missionPlayer.NPCHasAvailableMission(npc.type) &&
-                !missionPlayer.ActiveMissions().Any(m => npc.type == m.Employer))
+            if (missionPlayer.NPCHasAvailableMission(npc.type))
             {
-                var mission = missionPlayer.AvailableMissions().FirstOrDefault(m => npc.type == m.Employer);
-                if (mission != null)
-                {
-                    MissionIndicatorManager.Instance.CreateIndicatorForNPC(Main.npc[NPC.FindFirstNPC(npc.type)], mission);
-                }
+                var mission = missionPlayer.AvailableMissions().FirstOrDefault(m => npc.type == m.ProviderNPC);
+
+                if (mission == null)
+                    return;
+                
+                MissionIndicatorManager.Instance.CreateIndicatorForNPC(npc, mission);
             }
         }
     }
@@ -168,10 +137,10 @@ public class ObjectiveEventNPC : GlobalNPC
     public override void OnKill(NPC npc)
     {
         base.OnKill(npc);
+
         if (!npc.immortal)
             MissionManager.Instance.OnNPCKill(npc);
     }
-
 }
 
 public class ObjectiveEventTile : GlobalTile

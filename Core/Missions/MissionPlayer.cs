@@ -492,7 +492,6 @@ public partial class MissionPlayer : ModPlayer
     #region Mission Access
     public Mission GetMission(int missionId)
     {
-        // Check local cache first
         if (missionDict.TryGetValue(missionId, out var mission))
         {
             return mission;
@@ -563,7 +562,6 @@ public partial class MissionPlayer : ModPlayer
     {
         foreach (var mission in missionDict.Values.Where(m => m.Progress == MissionProgress.Active))
         {
-            // Ensure we're working with the most up-to-date mission state
             if (dirtyMissions.Contains(mission.ID))
             {
                 mission.LoadState(mission.ToState());
@@ -581,7 +579,7 @@ public partial class MissionPlayer : ModPlayer
         var mission = GetMission(missionId);
         if (mission != null)
         {
-            mission.Employer = npcType;
+            mission.ProviderNPC = npcType;
             missionDict[missionId] = mission;
             SyncMissionState(mission);
         }
@@ -590,9 +588,9 @@ public partial class MissionPlayer : ModPlayer
     public void RemoveMissionFromNPC(int npcType, int missionId)
     {
         var mission = GetMission(missionId);
-        if (mission != null && mission.Employer == npcType)
+        if (mission != null && mission.ProviderNPC == npcType)
         {
-            mission.Employer = 0;
+            mission.ProviderNPC = 0;
             missionDict[missionId] = mission;
             SyncMissionState(mission);
         }
@@ -601,13 +599,13 @@ public partial class MissionPlayer : ModPlayer
     public bool NPCHasAvailableMission(int npcType)
     {
         foreach (var mission in missionDict.Values.Where(m =>
-            m.Employer == npcType &&
+            m.ProviderNPC == npcType &&
             m.Availability == MissionAvailability.Unlocked)) // Only show for inactive missions
         {
             if (!mission.IsMainline && !notifiedMissions.Contains(mission.ID))
             {
-                var npcName = Lang.GetNPCNameValue(mission.Employer);
-                Main.NewText($"{npcName} has a job opportunity!", Color.Yellow);
+                var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
+                Main.NewText($"{npcName} has a job opportunity!", Color.CornflowerBlue);
                 notifiedMissions.Add(mission.ID);
             }
             return true;

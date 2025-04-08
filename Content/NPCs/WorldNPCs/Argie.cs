@@ -81,7 +81,7 @@ public class Argie : WorldNPCActor
             if (availableMissions == null) return;
 
             var missionId = availableMissions
-                .FirstOrDefault(m => m.Employer == Type && m.Availability == MissionAvailability.Unlocked)
+                .FirstOrDefault(m => m.ProviderNPC == Type && m.Availability == MissionAvailability.Unlocked)
                 ?.ID;
 
             if (missionId != null)

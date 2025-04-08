@@ -87,7 +87,6 @@ public sealed partial class Reverie : Mod
         }
 
     }
-    public string text = "Complete [m:1]A Falling Star[/m] mission to proceed.";
 
     public override void Unload()
     {

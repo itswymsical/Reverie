@@ -254,6 +254,11 @@ Items: {
 		DisplayName: World Coord U I Placer
 		Tooltip: ""
 	}
+
+	SpawnUserInterfaceEntity: {
+		DisplayName: Spawn User Interface Entity
+		Tooltip: ""
+	}
 }
 
 Projectiles: {

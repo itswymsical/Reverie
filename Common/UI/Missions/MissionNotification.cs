@@ -353,8 +353,8 @@ public class MissionNotification : IInGameNotification
         if (showingAvailableMissions)
         {
             string employer = "Unknown";
-            var npcName = Lang.GetNPCNameValue(currentMission.Employer);
-            if (currentMission.Employer > 0)
+            var npcName = Lang.GetNPCNameValue(currentMission.ProviderNPC);
+            if (currentMission.ProviderNPC > 0)
             {
                 employer = $"{currentMission.Name} [{npcName}]";
             }

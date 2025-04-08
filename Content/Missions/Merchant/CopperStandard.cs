@@ -17,10 +17,10 @@ public class CopperStandard : Mission
         [("Return to the Merchant", 1)]
       ],
 
-      [new Item(ItemID.SilverCoin, Main.rand.Next(75, 150)), 
+      rewards: [new Item(ItemID.SilverCoin, Main.rand.Next(75, 150)), 
           new Item(ItemID.SilverWatch), new Item(ItemID.SilverBar, 20)],
       isMainline: false,
-      NPCID.Merchant,
+      providerNPC: NPCID.Merchant,
       xpReward: 150)
     {
         ModContent.GetInstance<Reverie>().Logger.Info("[Copper Standard] Mission constructed");
@@ -84,7 +84,7 @@ public class CopperStandard : Mission
     protected override void HandleChat(NPC npc)
     {
         var objective = (Objectives)CurrentIndex;
-        if (npc.type == Employer)
+        if (npc.type == ProviderNPC)
         {
             switch (objective)
             {
@@ -103,6 +103,9 @@ public class CopperStandard : Mission
                 case Objectives.SmeltCopper:
                     DialogueManager.Instance.StartDialogueByKey(NPCManager.MerchantData,
                        DialogueKeys.Merchant.SmeltCopperInProgress, lineCount: 5);
+                    break;
+                case Objectives.ReturnToMerchant:
+                    UpdateProgress(0);
                     break;
             }
         }

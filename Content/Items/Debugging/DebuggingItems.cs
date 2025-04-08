@@ -1,5 +1,6 @@
 ﻿using Reverie.Common.UI;
 using Reverie.Common.UI.Missions;
+using Reverie.Core.CustomEntities;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using System.Reflection;
@@ -37,7 +38,7 @@ public class DialogueTest : ModItem
     }
 }
 
-public class WorldCoordUIPlacer : ModItem
+public class SpawnUserInterfaceEntity : ModItem
 {
     public override string Texture => PLACEHOLDER;
     public override void SetDefaults()
@@ -53,7 +54,7 @@ public class WorldCoordUIPlacer : ModItem
         var bb = mplayer.GetMission(MissionID.BloomcapHunt);
         if (Main.myPlayer == player.whoAmI)
         {
-            MissionIndicatorManager.Instance.CreateIndicator(Main.MouseWorld, bb);
+            MissionIndicatorManager.Instance.CreateIndicator(Main.MouseWorld * 0.92f, bb);
             Main.NewText($"Placed at position [X:{Main.MouseWorld.X} Y:{Main.MouseWorld.Y}]");
         }
         return true;
