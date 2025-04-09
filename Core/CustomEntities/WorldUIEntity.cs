@@ -9,6 +9,10 @@ public class WorldUIEntity
     public int Width { get; set; }
     public int Height { get; set; }
 
+    private Entity trackingEntity;
+    private Vector2 trackingOffset;
+    private bool isTracking => trackingEntity != null && trackingEntity.active;
+
     public bool IsHovering { get; private set; }
     public bool WasHovering { get; private set; }
     public bool JustHovered => IsHovering && !WasHovering;
@@ -31,6 +35,28 @@ public class WorldUIEntity
         WorldPosition = worldPosition;
         Width = width;
         Height = height;
+    }
+    public void TrackEntity(Entity entity, Vector2 offset)
+    {
+        trackingEntity = entity;
+        trackingOffset = offset;
+
+        if (entity != null && entity.active)
+        {
+            UpdateTrackingPosition();
+        }
+    }
+    private void UpdateTrackingPosition()
+    {
+        if (trackingEntity is NPC npc)
+        {
+            // Get the top of the NPC and add the offset
+            WorldPosition = npc.Top + trackingOffset;
+        }
+        else
+        {
+            WorldPosition = trackingEntity.position + trackingOffset;
+        }
     }
 
     public WorldUIEntity(Entity parent, Vector2 offset, int width, int height)

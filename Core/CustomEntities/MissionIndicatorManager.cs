@@ -45,6 +45,7 @@ public class MissionIndicatorManager : ModSystem
             return value;
 
         var indicator = new MissionIndicator(npc.Top, mission);
+        indicator.TrackEntity(npc, new Vector2(0, -40));
         indicators.Add(indicator);
         npcIndicators[npc.whoAmI] = indicator;
 
