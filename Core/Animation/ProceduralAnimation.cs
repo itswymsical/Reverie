@@ -53,7 +53,7 @@ namespace Reverie.Core.Animation
         /// <param name="segment">The segment to animate.</param>
         /// <param name="drawInfo">The drawing information.</param>
         /// <param name="gameTime">The current game time count.</param>
-        void ApplySegmentTransformation(AnimationSegment segment, PlayerDrawSet drawInfo, int gameTime);
+        void ApplySegmentTransformation(AnimationSegment segment, ref PlayerDrawSet drawInfo, int gameTime);
 
         /// <summary>
         /// Initializes the animation.
@@ -118,7 +118,7 @@ namespace Reverie.Core.Animation
         /// <param name="segment">The segment to animate.</param>
         /// <param name="drawInfo">The drawing information.</param>
         /// <param name="gameTime">The current game time count.</param>
-        public abstract void ApplySegmentTransformation(AnimationSegment segment, PlayerDrawSet drawInfo, int gameTime);
+        public abstract void ApplySegmentTransformation(AnimationSegment segment, ref PlayerDrawSet drawInfo, int gameTime);
 
         /// <summary>
         /// Initializes the animation.
@@ -276,7 +276,7 @@ namespace Reverie.Core.Animation
         /// </summary>
         /// <param name="segment">The segment to animate.</param>
         /// <param name="drawInfo">The drawing information.</param>
-        public void ApplySegmentTransformation(AnimationSegment segment, PlayerDrawSet drawInfo)
+        public void ApplySegmentTransformation(AnimationSegment segment, ref PlayerDrawSet drawInfo)
         {
             try
             {
@@ -287,7 +287,7 @@ namespace Reverie.Core.Animation
                     _segmentAnimatedThisFrame[segment] = true;
 
                     // Apply the animation
-                    animation.ApplySegmentTransformation(segment, drawInfo, (int)Main.GameUpdateCount);
+                    animation.ApplySegmentTransformation(segment, ref drawInfo, (int)Main.GameUpdateCount);
 
                     // Debug info - detect large changes that might indicate issues
                     var player = drawInfo.drawPlayer;
