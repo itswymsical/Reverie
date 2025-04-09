@@ -8,9 +8,9 @@ public class BloomcapHunt : Mission
 {
     public BloomcapHunt() : base(MissionID.BloomcapHunt,
       "Bloomcap Hunt",
-      "'Argie wants a handful to decorate her stump.'",
+      @"""GIMME BLOOMCAPS! My stump will look so fancy!.""",
       [
-        [("Collect Bloomcaps", 8)],
+        [("Collect Bloomcaps", 12)],
         [("Return to Argie", 1)]
       ],
 
@@ -27,6 +27,79 @@ public class BloomcapHunt : Mission
         CollectBloomcaps = 0,
         Return = 1,
     }
+
+    #region Event Registration
+
+    protected override void RegisterEventHandlers()
+    {
+        if (eventsRegistered) return;
+
+        base.RegisterEventHandlers();
+
+        // Register only the events this mission cares about
+        ObjectiveEventItem.OnItemPickup += OnItemPickupHandler;
+        ObjectiveEventNPC.OnNPCChat += OnNPCChatHandler;
+
+        ModContent.GetInstance<Reverie>().Logger.Debug($"[BloomcapHunt] Registered event handlers");
+        eventsRegistered = true;
+    }
+
+    protected override void UnregisterEventHandlers()
+    {
+        if (!eventsRegistered) return;
+
+        // Unregister all event handlers
+        ObjectiveEventItem.OnItemPickup -= OnItemPickupHandler;
+        ObjectiveEventNPC.OnNPCChat -= OnNPCChatHandler;
+
+        ModContent.GetInstance<Reverie>().Logger.Debug($"[BloomcapHunt] Unregistered event handlers");
+        base.UnregisterEventHandlers();
+    }
+
+    #endregion
+
+    #region Event Handlers
+    private void OnItemPickupHandler(Item item, Player player)
+    {
+        if (Progress != MissionProgress.Active) return;
+
+        if ((Objectives)CurrentIndex == Objectives.CollectBloomcaps
+            && item.type == ModContent.ItemType<BloomcapItem>())
+        {
+            UpdateProgress(0, item.stack);
+
+            if (Objective[CurrentIndex].Objectives[0].CurrentCount == 1)
+            {
+                DialogueManager.Instance.StartDialogueByKey(
+                    NPCManager.Default,
+                    DialogueKeys.ArgieDialogue.BloomcapCollected,
+                    lineCount: 2,
+                    zoomIn: true);
+            }
+
+            if (Objective[CurrentIndex].Objectives[0].CurrentCount == 4)
+            {
+                DialogueManager.Instance.StartDialogueByKey(
+                    NPCManager.Default,
+                    DialogueKeys.ArgieDialogue.BloomcapCollectedHalf,
+                    lineCount: 1,
+                    zoomIn: true);
+            }
+        }
+    }
+
+    private void OnNPCChatHandler(NPC npc, ref string chat)
+    {
+        if (Progress != MissionProgress.Active) return;
+
+        if ((Objectives)CurrentIndex == Objectives.Return
+            && npc.type == ModContent.NPCType<NPCs.WorldNPCs.Argie>())
+        {
+            UpdateProgress(0);
+        }
+    }
+
+    #endregion
 
     public override void OnMissionStart()
     {
@@ -60,41 +133,6 @@ public class BloomcapHunt : Mission
                 DialogueKeys.ArgieDialogue.BloomcapCollectedAll,
                 lineCount: 2,
                 zoomIn: true);
-        }
-    }
-
-    protected override void HandleCollected(Item item)
-    {
-        if ((Objectives)CurrentIndex == Objectives.CollectBloomcaps
-            && item.type == ModContent.ItemType<BloomcapItem>())
-        {
-            UpdateProgress(0, item.stack);
-            if (Objective[CurrentIndex].Objectives[0].CurrentCount == 1)
-            {
-                DialogueManager.Instance.StartDialogueByKey(
-                    NPCManager.Default,
-                    DialogueKeys.ArgieDialogue.BloomcapCollected,
-                    lineCount: 2,
-                    zoomIn: true);
-            }
-
-            if (Objective[CurrentIndex].Objectives[0].CurrentCount == 4)
-            {
-                DialogueManager.Instance.StartDialogueByKey(
-                    NPCManager.Default,
-                    DialogueKeys.ArgieDialogue.BloomcapCollectedHalf,
-                    lineCount: 1,
-                    zoomIn: true);
-            }
-        }
-    }
-
-    protected override void HandleChat(NPC npc)
-    {
-        if ((Objectives)CurrentIndex == Objectives.Return
-            && npc.type == ModContent.NPCType<NPCs.WorldNPCs.Argie>())
-        {
-            UpdateProgress(0);
         }
     }
 }

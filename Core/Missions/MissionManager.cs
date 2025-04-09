@@ -1,22 +1,23 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Terraria.DataStructures;
-using Reverie.Utilities;
-using Reverie.Content.Missions;
+﻿using Reverie.Content.Missions;
 using Reverie.Content.Missions.Argie;
 using Reverie.Content.Missions.Merchant;
+using Reverie.Utilities;
+using System.Collections.Generic;
 
 namespace Reverie.Core.Missions;
 
 public partial class MissionManager
 {
+    #region Properties and Fields
     private readonly Dictionary<int, Mission> activeMissions = [];
     private static MissionManager instance;
     public static MissionManager Instance => instance ??= new MissionManager();
 
     private bool isWorldFullyLoaded = false;
     private readonly HashSet<int> pendingRegistrations = [];
+    #endregion
 
+    #region Initialization & Registration
     public void OnWorldLoad()
     {
         activeMissions.Clear();
@@ -80,21 +81,12 @@ public partial class MissionManager
 
         RegisterMissionInternal(mission);
     }
+    #endregion
 
     public void Reset()
     {
         activeMissions.Clear();
         Reverie.Instance.Logger.Info("All active missions reset");
-    }
-
-    private IEnumerable<Mission> ActiveMissions
-    {
-        get
-        {
-            return activeMissions.Values
-                .Where(m => m.Progress == MissionProgress.Active)
-                .ToList();
-        }
     }
 
     public void OnObjectiveComplete(Mission mission, int objectiveIndex)
@@ -112,135 +104,11 @@ public partial class MissionManager
         }
     }
 
-    #region Event Handlers
-    public void OnItemCreated(Item item, ItemCreationContext context)
-    {
-        try
-        {
-            foreach (var mission in ActiveMissions)
-            {
-                mission.OnItemCreated(item, context);
-            }
-        }
-        catch (Exception ex)
-        {
-            Reverie.Instance.Logger.Error($"Error in OnItemCreated: {ex.Message}");
-        }
-    }
-
-    public void OnItemObtained(Item item)
-    {
-        try
-        {
-            foreach (var mission in ActiveMissions)
-            {
-                mission.OnCollected(item);
-            }
-        }
-        catch (Exception ex)
-        {
-            Reverie.Instance.Logger.Error($"Error in OnCollected: {ex.Message}");
-        }
-    }
-
-    public void OnNPCKill(NPC npc)
-    {
-        try
-        {
-            foreach (var mission in ActiveMissions)
-            {
-                mission.OnKill(npc);
-            }
-        }
-        catch (Exception ex)
-        {
-            Reverie.Instance.Logger.Error($"Error in OnKill: {ex.Message}");
-        }
-    }
-
-    public void OnNPCChat(NPC npc)
-    {
-        try
-        {
-            foreach (var mission in ActiveMissions)
-            {
-                mission.OnChat(npc);
-            }
-        }
-        catch (Exception ex)
-        {
-            Reverie.Instance.Logger.Error($"Error in OnChat: {ex.Message}");
-        }
-    }
-
-    public void OnNPCSpawn(NPC npc)
-    {
-        try
-        {
-            foreach (var mission in ActiveMissions)
-            {
-                mission.OnNPCSpawn(npc);
-            }
-        }
-        catch (Exception ex)
-        {
-            Reverie.Instance.Logger.Error($"Error in OnNPCSpawn: {ex.Message}");
-        }
-    }
-
-    public void OnNPCHit(NPC npc, int damage)
-    {
-        try
-        {
-            var missions = ActiveMissions.ToList();
-            Reverie.Instance.Logger.Debug($"Processing NPC hit with {missions.Count} active missions");
-
-            foreach (var mission in missions)
-            {
-                mission.OnHitTarget(npc, damage);
-            }
-        }
-        catch (Exception ex)
-        {
-            Reverie.Instance.Logger.Error($"Error in OnHitTarget: {ex.Message}");
-        }
-    }
-
-    public void OnBiomeEnter(Player player, BiomeType biome)
-    {
-        try
-        {
-            foreach (var mission in ActiveMissions)
-            {
-                mission.OnBiomeEnter(player, biome);
-                Reverie.Instance.Logger.Debug($"OnBiomeEnter: {biome}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Reverie.Instance.Logger.Error($"Error in OnBiomeEnter: {ex.Message}");
-        }
-    }
-    public void OnBreakTile(int type, ref bool fail, ref bool effectOnly)
-    {
-        try
-        {
-            foreach (var mission in ActiveMissions)
-            {
-                mission.OnBreakTile(type, ref fail, ref effectOnly);
-                Reverie.Instance.Logger.Debug($"OnBreakTile: {type}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Reverie.Instance.Logger.Error($"Error in OnBreakTile: {ex.Message}");
-        }
-    }
-    #endregion
 }
 
 public class MissionFactory : ModSystem
 {
+    #region Properties and Fields
     private readonly Dictionary<int, Type> missionTypes = [];
     private readonly Dictionary<int, Mission> missionCache = [];
     private static MissionFactory instance;
@@ -260,7 +128,9 @@ public class MissionFactory : ModSystem
             return instance;
         }
     }
+    #endregion
 
+    #region Initialization & Registration
     public override void Load()
     {
         instance = this;
@@ -307,6 +177,7 @@ public class MissionFactory : ModSystem
             Reverie.Instance.Logger.Error($"Error registering mission types: {ex}");
         }
     }
+    #endregion
 
     public Mission GetMissionData(int missionId)
     {

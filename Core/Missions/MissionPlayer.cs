@@ -533,6 +533,7 @@ public partial class MissionPlayer : ModPlayer
             mission.Progress = MissionProgress.Active;
             MissionManager.Instance.RegisterMission(mission);
             SyncMissionState(mission);
+
             mission.OnMissionStart();
 
             if (!mission.IsMainline)
@@ -541,7 +542,6 @@ public partial class MissionPlayer : ModPlayer
             }
         }
     }
-
     public void UnlockMission(int missionId)
     {
         var mission = GetMission(missionId);
@@ -615,7 +615,7 @@ public partial class MissionPlayer : ModPlayer
 
     #endregion
 
-    #region Objective Tracking & Mission Handlers
+    #region Init & Update
     public override void OnEnterWorld()
     {
         ProcessDeferredLoad();
@@ -641,31 +641,10 @@ public partial class MissionPlayer : ModPlayer
             ProcessDeferredLoad();
         }
 
-        MissionManager.Instance.OnUpdate();
-
         if (dirtyMissions.Count > 0)
         {
             dirtyMissions.Clear();
         }
-        check++;
-        if (check > 300)
-        {
-            foreach (var biome in Enum.GetValues<BiomeType>())
-            {
-                if (biome.IsPlayerInBiome(Player))
-                {
-                    MissionManager.Instance.OnBiomeEnter(Player, biome);
-                }
-            }
-            check = 0;
-        }
-    }
-
-    public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
-    {
-        base.OnHitNPC(target, hit, damageDone);
-
-        MissionManager.Instance.OnNPCHit(target, damageDone);
     }
 
     #endregion

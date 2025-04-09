@@ -12,6 +12,16 @@ namespace Reverie.Content.Missions;
 
 public class AFallingStar : Mission
 {
+    private readonly Dictionary<BiomeType, int> biomeTimers = [];
+    private readonly Dictionary<BiomeType, bool> biomePresence = [];
+    private readonly Dictionary<BiomeType, int> biomeRequirements = new()
+    {
+        { BiomeType.Underground, 10 * 60 },
+        { BiomeType.Glowshroom, 5 * 60 },
+        { BiomeType.Jungle, 5 * 60 },
+        { BiomeType.UndergroundDesert, 5 * 60 },
+        { BiomeType.Snow, 5 * 60 }
+    };
     public AFallingStar() : base(MissionID.AFallingStar,
       "Falling Star...",
       "'Well, that's one way to make an appearance...'" +
@@ -20,8 +30,8 @@ public class AFallingStar : Mission
         [("Talk to Guide", 1), ("Talk to Merchant", 1), ("Talk to Demolitionist", 1), ("Talk to Nurse", 1)],
         [("Gather Wood", 50), ("Break Pots", 20)],
         [("Harvest Ore", 30), ("Discover accessories", 2)],
-        [("Explore the Underground", 1), 
-            ("Discover a Glowing Mushroom Biome", 1), ("Explore the Jungle", 1), 
+        [("Explore the Underground", 1),
+            ("Discover a Glowing Mushroom Biome", 1), ("Explore the Jungle", 1),
             ("Explore the Underground Desert", 1),  ("Explore the Tundra", 1)],
         [("Check in with the Guide", 1)],
         [("Clear out slimes", 10)],
@@ -30,9 +40,9 @@ public class AFallingStar : Mission
         [("Defeat King Slime", 1)]
       ],
 
-      [new Item(ItemID.RegenerationPotion), 
-          new Item(ItemID.IronskinPotion), 
-          new Item(ItemID.MagicMirror), 
+      [new Item(ItemID.RegenerationPotion),
+          new Item(ItemID.IronskinPotion),
+          new Item(ItemID.MagicMirror),
           new Item(ItemID.GoldCoin, Main.rand.Next(4, 6))],
       isMainline: true,
       NPCID.Guide,
@@ -40,7 +50,6 @@ public class AFallingStar : Mission
     {
         ModContent.GetInstance<Reverie>().Logger.Info("[A Falling Star] Mission constructed");
     }
-
 
     private readonly List<Item> starterItems =
     [
@@ -62,101 +71,48 @@ public class AFallingStar : Mission
         DefeatKingSlime = 8
     }
 
-    public override void OnMissionStart()
+    #region Event Registration
+
+    protected override void RegisterEventHandlers()
     {
-        base.OnMissionStart();
-        CutsceneSystem.PlayCutscene(new FallingStarCutscene());
+        if (eventsRegistered) return;
+
+        base.RegisterEventHandlers();
+
+        // Register event handlers specific to this mission
+        ObjectiveEventNPC.OnNPCChat += OnNPCChatHandler;
+        ObjectiveEventItem.OnItemPickup += OnItemPickupHandler;
+        ObjectiveEventNPC.OnNPCKill += OnNPCKillHandler;
+        ObjectiveEventTile.OnTileBreak += OnTileBreakHandler;
+        ObjectiveEventPlayer.OnBiomeEnter += OnBiomeEnterHandler;
+
+        ModContent.GetInstance<Reverie>().Logger.Debug($"[A Falling Star] Registered event handlers");
+        eventsRegistered = true;
     }
 
-    public override void Update()
+    protected override void UnregisterEventHandlers()
     {
-        base.Update();
+        if (!eventsRegistered) return;
 
-        if (CurrentIndex < (int)Objectives.ClearSlimeRain)
-        {
-            Main.slimeRain = false;
-            Main.slimeRainTime = 0;
-        }
+        // Unregister event handlers
+        ObjectiveEventNPC.OnNPCChat -= OnNPCChatHandler;
+        ObjectiveEventItem.OnItemPickup -= OnItemPickupHandler;
+        ObjectiveEventNPC.OnNPCKill -= OnNPCKillHandler;
+        ObjectiveEventTile.OnTileBreak -= OnTileBreakHandler;
+        ObjectiveEventPlayer.OnBiomeEnter -= OnBiomeEnterHandler;
 
-        if (CurrentIndex == (int)Objectives.ClearSlimeRain)
-        {
-            if (!Main.slimeRain)
-            {
-                Main.StartSlimeRain();
-            }
-        }
-        Main.bloodMoon = false;
+        ModContent.GetInstance<Reverie>().Logger.Debug($"[A Falling Star] Unregistered event handlers");
+        base.UnregisterEventHandlers();
     }
 
-    protected override void OnIndexComplete(int setIndex, ObjectiveSet set)
-    {
-        try
-        {
-            var objective = (Objectives)setIndex;
-            if (!set.Objectives.All(o => o.IsCompleted)) return;
-
-            switch (objective)
-            {
-                case Objectives.CheckIn:
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCManager.GuideData,
-                    DialogueKeys.FallingStar.SlimeInfestation,
-                    lineCount: 2,
-                    zoomIn: true);
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnIndexComplete: {ex.Message}");
-        }
-    }
-
-    protected override void OnObjectiveComplete(int objectiveIndex)
-    {
-        try
-        {
-            var objective = (Objectives)CurrentIndex;
-            switch (objective)
-            {
-                case Objectives.CheckIn:
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCManager.GuideData,
-                    DialogueKeys.FallingStar.SlimeInfestation,
-                    lineCount: 2,
-                    zoomIn: true);
-                    break;
-                case Objectives.ClearSlimes:
-                    StartSlimeRain();
-                    break;
-                case Objectives.ClearSlimeRain:
-                    SpawnKingSlime();
-                    break;
-                case Objectives.DefeatKingSlime:
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCManager.GuideData,
-                    DialogueKeys.FallingStar.KingSlimeDefeat,
-                    lineCount: 4,
-                    zoomIn: true);
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnObjectiveComplete: {ex.Message}");
-        }
-    }
-
-    public override void OnMissionComplete(bool giveRewards = true)
-    {
-        base.OnMissionComplete(giveRewards);
-        //MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        //player.StartNextMission(...);
-    }
+    #endregion
 
     #region Event Handlers
-    protected override void HandleChat(NPC npc)
+
+    private void OnNPCChatHandler(NPC npc, ref string chat)
     {
+        if (Progress != MissionProgress.Active) return;
+
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
@@ -236,9 +192,9 @@ public class AFallingStar : Mission
         }
     }
 
-
-    protected override void HandleCollected(Item item)
+    private void OnItemPickupHandler(Item item, Player player)
     {
+        if (Progress != MissionProgress.Active) return;
 
         var objective = (Objectives)CurrentIndex;
         switch (objective)
@@ -256,8 +212,9 @@ public class AFallingStar : Mission
         }
     }
 
-    protected override void HandleKill(NPC npc)
+    private void OnNPCKillHandler(NPC npc)
     {
+        if (Progress != MissionProgress.Active) return;
 
         var objective = (Objectives)CurrentIndex;
         switch (objective)
@@ -281,35 +238,52 @@ public class AFallingStar : Mission
         }
     }
 
-    protected override void HandleBreakTile(int type, ref bool fail, ref bool effectOnly)
+    private int potTileBreakCounter = 0;
+    private void OnTileBreakHandler(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
     {
+        if (Progress != MissionProgress.Active) return;
+
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
             case Objectives.GatherResources:
                 if (type == TileID.Pots)
-                    UpdateProgress(1);
+                {
+                    potTileBreakCounter++;
+                    if (potTileBreakCounter >= 4)
+                    {
+                        UpdateProgress(1);
+                        potTileBreakCounter = 0;
+                    }
+                }
                 break;
         }
     }
 
-    protected override void HandleBiomeEnter(Player player, BiomeType biome)
+    private void InitializeBiomeTracking()
     {
+        foreach (var biome in biomeRequirements.Keys)
+        {
+            if (!biomeTimers.ContainsKey(biome))
+                biomeTimers[biome] = 0;
+
+            if (!biomePresence.ContainsKey(biome))
+                biomePresence[biome] = false;
+        }
+    }
+
+    private void OnBiomeEnterHandler(Player player, BiomeType biome)
+    {
+        if (Progress != MissionProgress.Active) return;
 
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
             case Objectives.ExploreBiomes:
-                if (biome == BiomeType.Underground)
-                    UpdateProgress(0);
-                if (biome == BiomeType.Glowshroom)
-                    UpdateProgress(1);
-                if (biome == BiomeType.Jungle)
-                    UpdateProgress(2);
-                if (biome == BiomeType.UndergroundDesert)
-                    UpdateProgress(3);
-                if (biome == BiomeType.Snow)
-                    UpdateProgress(4);
+                if (biomeRequirements.ContainsKey(biome))
+                {
+                    biomePresence[biome] = true;
+                }
                 break;
 
             case Objectives.DefendTown:
@@ -318,8 +292,102 @@ public class AFallingStar : Mission
                 break;
         }
     }
-    
+
     #endregion
+
+    public override void OnMissionStart()
+    {
+        base.OnMissionStart(); // This now calls RegisterEventHandlers()
+        InitializeBiomeTracking();
+        CutsceneSystem.PlayCutscene(new FallingStarCutscene());
+    }
+
+    public override void Update()
+    {
+        base.Update();
+
+        if (CurrentIndex < (int)Objectives.ClearSlimeRain)
+        {
+            Main.slimeRain = false;
+            Main.slimeRainTime = 0;
+        }
+
+        if (CurrentIndex == (int)Objectives.ClearSlimeRain)
+        {
+            if (!Main.slimeRain)
+            {
+                Main.StartSlimeRain();
+            }
+        }
+        Main.bloodMoon = false;
+    }
+
+    protected override void OnObjectiveIndexComplete(int setIndex, ObjectiveSet set)
+    {
+        try
+        {
+            var objective = (Objectives)setIndex;
+            if (!set.Objectives.All(o => o.IsCompleted)) return;
+
+            switch (objective)
+            {
+                case Objectives.CheckIn:
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCManager.GuideData,
+                    DialogueKeys.FallingStar.SlimeInfestation,
+                    lineCount: 2,
+                    zoomIn: true);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnObjectiveIndexComplete: {ex.Message}");
+        }
+    }
+
+    protected override void OnObjectiveComplete(int objectiveIndex)
+    {
+        try
+        {
+            var objective = (Objectives)CurrentIndex;
+            switch (objective)
+            {
+                case Objectives.CheckIn:
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCManager.GuideData,
+                    DialogueKeys.FallingStar.SlimeInfestation,
+                    lineCount: 2,
+                    zoomIn: true);
+                    break;
+                case Objectives.ClearSlimes:
+                    StartSlimeRain();
+                    break;
+                case Objectives.ClearSlimeRain:
+                    SpawnKingSlime();
+                    break;
+                case Objectives.DefeatKingSlime:
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCManager.GuideData,
+                    DialogueKeys.FallingStar.KingSlimeDefeat,
+                    lineCount: 4,
+                    zoomIn: true);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnObjectiveComplete: {ex.Message}");
+        }
+    }
+
+    public override void OnMissionComplete(bool giveRewards = true)
+    {
+        base.OnMissionComplete(giveRewards);
+
+        //MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+        //player.StartNextMission(...);
+    }
 
     #region Helper Methods
     private void GiveStarterItems()
