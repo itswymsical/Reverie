@@ -6,13 +6,26 @@
 /// </summary>
 public static class DialogueKeys
 {
+
     public static class Chronicle
     {
         private const string PREFIX = "Chronicle_01";
 
         public static string Chapter1 => $"{PREFIX}.Chapter1";
     }
+    public static class Merchant
+    {
+        private const string PREFIX = "Merchant";
 
+        public static string CopperStandardStart => $"{PREFIX}.CopperStandardStart";
+        public static string CopperStandardComplete => $"{PREFIX}.CopperStandardComplete";
+        public static string CopperCoinsInProgress => $"{PREFIX}.CopperCoinsInProgress";
+        public static string CopperCoinsInProgress_Alt => $"{PREFIX}.CopperCoinsInProgress_Alt";
+        public static string MineCopperInProgress => $"{PREFIX}.MineCopperInProgress";
+        public static string SmeltCopperInProgress => $"{PREFIX}.SmeltCopperInProgress";
+        public static string MerchantIntro => $"{PREFIX}.MerchantIntro";
+
+    }
     public static class ArgieDialogue
     {
         private const string PREFIX = "ArgieDialogue";
@@ -34,7 +47,7 @@ public static class DialogueKeys
 
     public static class FallingStar
     {
-        private const string PREFIX = "FallingStar";
+        private const string PREFIX = "AFallingStar";
 
         public static string Intro => $"{PREFIX}.Intro";
         public static string MerchantIntro => $"{PREFIX}.MerchantIntro";

@@ -32,6 +32,10 @@ public static class BiomeTypeExtensions
         BiomeType.Granite => player.ZoneGranite,
         BiomeType.Marble => player.ZoneMarble,
         BiomeType.Underworld => player.ZoneUnderworldHeight,
+        BiomeType.Graveyard => player.ZoneGraveyard,
+        BiomeType.Hive => player.ZoneHive,
+        BiomeType.JungleTemple => player.ZoneLihzhardTemple,
+        BiomeType.Shimmer => player.ZoneShimmer,
         _ => false
     };
 }

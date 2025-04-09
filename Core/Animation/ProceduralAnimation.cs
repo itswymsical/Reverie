@@ -148,7 +148,8 @@ namespace Reverie.Core.Animation
         /// <returns>An oscillating value between -amplitude and amplitude.</returns>
         protected float Oscillate(float amplitude, float frequency, float offset = 0f)
         {
-            return amplitude * (float)Math.Cos(ElapsedTime * frequency + offset);
+            return amplitude * (float)Math.Sin(ElapsedTime * frequency + offset);
+            
         }
 
         /// <summary>

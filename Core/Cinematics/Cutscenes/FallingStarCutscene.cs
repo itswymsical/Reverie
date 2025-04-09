@@ -152,7 +152,7 @@ namespace Reverie.Core.Cinematics.Cutscenes
                 EnableInvisibility();
                 PlaySoundWithDelay();
                 DialogueManager.Instance.StartDialogueByKey(
-                NPCDataManager.GuideData,
+                NPCManager.GuideData,
                 DialogueKeys.FallingStar.Cutscene,
                 lineCount: 1,
                 zoomIn: true, defaultEmote: 2);
@@ -192,7 +192,7 @@ namespace Reverie.Core.Cinematics.Cutscenes
                 _phase = Phase.Impact;
                 ElapsedTime = 0f;
                 DialogueManager.Instance.StartDialogueByKey(
-                NPCDataManager.GuideData,
+                NPCManager.GuideData,
                 DialogueKeys.FallingStar.Intro,
                 lineCount: 1,
                 zoomIn: true, defaultEmote: 3);
@@ -335,7 +335,7 @@ namespace Reverie.Core.Cinematics.Cutscenes
             try
             {
                 DialogueManager.Instance.StartDialogueByKey(
-                   NPCDataManager.GuideData,
+                   NPCManager.GuideData,
                    DialogueKeys.FallingStar.CrashLanding,
                    lineCount: 5,
                    zoomIn: true,

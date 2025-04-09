@@ -51,8 +51,8 @@ public sealed class DialogueManager
     public bool StartDialogue(NPCData npcData, DialogueSequence dialogue, string dialogueKey, bool zoomIn = false,
             string nextDialogueKey = null, NPCData nextNpcData = null, bool nextZoomIn = false)
     {
-        Main.CloseNPCChatOrSign();
-        Letterbox.Show();
+        Main.LocalPlayer.SetTalkNPC(-1);
+        //Letterbox.Show();
         IsUIHidden = true;
         if (IsAnyActive())
         {
@@ -82,10 +82,13 @@ public sealed class DialogueManager
     public bool StartDialogueByKey(NPCData npcData, string dialogueKey, int lineCount, bool zoomIn = false,
             string nextDialogueKey = null, NPCData nextNpcData = null, bool nextZoomIn = false,
             int defaultDelay = 2, int defaultEmote = 0, int? musicId = null,
-            params (int line, int delay, int emote)[] modifications)
+             bool letterbox = false, params(int line, int delay, int emote)[] modifications)
     {
         DialogueSequence dialogue;
-
+        if (letterbox)
+        {
+            Letterbox.Show();
+        }
         // Check cache first
         if (!_dialogueCache.TryGetValue(dialogueKey, out dialogue))
         {

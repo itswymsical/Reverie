@@ -13,10 +13,13 @@ namespace Reverie.Core.Missions;
 
 public static class MissionID
 {
-    public const int FallingStar = 1;
-    public const int BLOOMCAP = 2;
+    #pragma warning disable IDE1006
+    public const int AFallingStar = 1;
+    public const int BloomcapHunt = 2;
+    public const int CopperStandard = 3;
 
-    public const int FUNGAL_FRACAS = 8;
+    public const int FungalFracas = 8;
+    #pragma warning restore IDE1006
 }
 
 public enum MissionProgress
@@ -57,7 +60,7 @@ public abstract class Mission
     public List<ObjectiveSet> Objective { get; protected set; }
     public List<Item> Rewards { get; private set; }
     public bool IsMainline { get; }
-    public int Employer { get; set; }
+    public int ProviderNPC { get; set; }
     public int Experience { get; private set; }
     public int NextMissionID { get; private set; }
     public MissionProgress Progress { get; set; } = MissionProgress.Inactive;
@@ -69,7 +72,7 @@ public abstract class Mission
 
     #region Initialization
     protected Mission(int id, string name, string description, List<List<(string, int)>> objectiveSetData,
-        List<Item> rewards, bool isMainline, int npc, int nextMissionID = -1, int xpReward = 0)
+        List<Item> rewards, bool isMainline, int providerNPC, int nextMissionID = -1, int xpReward = 0)
     {
         ID = id;
         Name = name;
@@ -79,7 +82,7 @@ public abstract class Mission
                 new Objective(o.Item1, o.Item2)).ToList())).ToList();
         Rewards = rewards;
         IsMainline = isMainline;
-        Employer = npc;
+        ProviderNPC = providerNPC;
         Experience = xpReward;
         NextMissionID = nextMissionID;
     }
