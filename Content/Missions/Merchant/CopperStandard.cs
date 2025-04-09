@@ -8,8 +8,7 @@ public class CopperStandard : Mission
 {
     public CopperStandard() : base(MissionID.CopperStandard,
       "The Copper Standard",
-      "'The Merchant believes copper is the cornerstone of civilization—durable, shiny, and universally appealing. " +
-        "\nHe wants to build a proper “copper-backed economy”, and needs your help collecting resources.",
+      "'The Merchant believes copper is the cornerstone of civilization—durable, shiny, and universally appealing.",
       [
         [("Collect copper coins", 300)],
         [("Mine copper ore", 80)],

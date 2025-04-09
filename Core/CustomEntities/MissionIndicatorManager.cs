@@ -14,6 +14,7 @@ public class MissionIndicatorManager : ModSystem
     private readonly List<MissionIndicator> indicators = [];
 
     private readonly Dictionary<int, MissionIndicator> npcIndicators = [];
+    private Dictionary<int, int> npcMissionTracking = [];
 
     public override void Unload()
     {
@@ -24,10 +25,14 @@ public class MissionIndicatorManager : ModSystem
         indicators.Clear();
         npcIndicators.Clear();
     }
+    public override void OnWorldUnload()
+    {
+        base.OnWorldUnload();
 
-    /// <summary>
-    /// Creates a mission indicator at a specific world position
-    /// </summary>
+        indicators.Clear();
+        npcIndicators.Clear();
+    }
+
     public MissionIndicator CreateIndicator(Vector2 worldPosition, Mission mission)
     {
         var indicator = new MissionIndicator(worldPosition, mission);
@@ -35,21 +40,34 @@ public class MissionIndicatorManager : ModSystem
         return indicator;
     }
 
-    /// <summary>
-    /// Creates a mission indicator for an NPC
-    /// </summary>
     public MissionIndicator CreateIndicatorForNPC(NPC npc, Mission mission)
     {
-        // Don't create duplicate indicators
-        if (npcIndicators.TryGetValue(npc.whoAmI, out var value))
-            return value;
+        int npcIndex = npc.whoAmI;
 
-        var indicator = new MissionIndicator(npc.Top, mission);
-        indicator.TrackEntity(npc, new Vector2(0, -40));
-        indicators.Add(indicator);
-        npcIndicators[npc.whoAmI] = indicator;
+        if (npcIndicators.ContainsKey(npcIndex))
+        {
+            if (npcMissionTracking.ContainsKey(npcIndex) && npcMissionTracking[npcIndex] != mission.ID)
+            {
+                var oldIndicator = npcIndicators[npcIndex];
+                indicators.Remove(oldIndicator);
+                npcIndicators.Remove(npcIndex);
 
-        return indicator;
+                var indicator = MissionIndicator.CreateForNPC(npc, mission);
+                indicators.Add(indicator);
+                npcIndicators[npcIndex] = indicator;
+                npcMissionTracking[npcIndex] = mission.ID;
+                return indicator;
+            }
+
+            return npcIndicators[npcIndex];
+        }
+
+        var newIndicator = MissionIndicator.CreateForNPC(npc, mission);
+        indicators.Add(newIndicator);
+        npcIndicators[npcIndex] = newIndicator;
+        npcMissionTracking[npcIndex] = mission.ID;
+
+        return newIndicator;
     }
 
     public override void PostUpdateEverything()
@@ -60,7 +78,6 @@ public class MissionIndicatorManager : ModSystem
 
             if (!indicators[i].IsVisible)
             {
-                // remove from NPC tracking if applicable
                 foreach (var kvp in npcIndicators)
                 {
                     if (kvp.Value == indicators[i])
@@ -78,7 +95,7 @@ public class MissionIndicatorManager : ModSystem
     public override void PostDrawTiles()
     {
         Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp,
-            DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+            DepthStencilState.None, RasterizerState.CullNone, null);
 
         Instance.Draw(Main.spriteBatch);
 
@@ -91,5 +108,11 @@ public class MissionIndicatorManager : ModSystem
         {
             indicator.Draw(spriteBatch);
         }
+    }
+    public void ClearAllNotifications()
+    {
+        indicators.Clear();
+        npcIndicators.Clear();
+        npcMissionTracking.Clear();
     }
 }

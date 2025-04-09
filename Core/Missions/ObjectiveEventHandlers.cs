@@ -131,6 +131,15 @@ public class ObjectiveEventNPC : GlobalNPC
                 
                 MissionIndicatorManager.Instance.CreateIndicatorForNPC(npc, mission);
             }
+            //else
+            //{
+                  // if the NPC no longer has a mission, remove the indicator
+            //    if (npcIndicators.ContainsKey(npc.whoAmI))
+            //    {
+            //        var indicator = npcIndicators[npc.whoAmI];
+            //        indicator.IsVisible = false;
+            //    }
+            //}
         }
     }
 

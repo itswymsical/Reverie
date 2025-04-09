@@ -5,6 +5,7 @@
 /// </summary>
 public class WorldUIEntity
 {
+    #region Properties
     public Vector2 WorldPosition { get; set; }
     public int Width { get; set; }
     public int Height { get; set; }
@@ -22,10 +23,8 @@ public class WorldUIEntity
     public float AnimationTimer { get; private set; } = 0f;
     public Vector2 Offset { get; set; } = Vector2.Zero;
 
-    private Entity parentEntity;
-    private Vector2 parentOffset;
-
     public event Action OnClick;
+    #endregion
 
     public delegate void DrawDelegate(SpriteBatch spriteBatch, Vector2 screenPos, float opacity);
     public DrawDelegate CustomDraw;
@@ -36,6 +35,10 @@ public class WorldUIEntity
         Width = width;
         Height = height;
     }
+
+    /// <summary>
+    /// Sets this entity to track another entity's position
+    /// </summary>
     public void TrackEntity(Entity entity, Vector2 offset)
     {
         trackingEntity = entity;
@@ -46,11 +49,11 @@ public class WorldUIEntity
             UpdateTrackingPosition();
         }
     }
+
     private void UpdateTrackingPosition()
     {
         if (trackingEntity is NPC npc)
         {
-            // Get the top of the NPC and add the offset
             WorldPosition = npc.Top + trackingOffset;
         }
         else
@@ -59,29 +62,13 @@ public class WorldUIEntity
         }
     }
 
-    public WorldUIEntity(Entity parent, Vector2 offset, int width, int height)
-    {
-        parentEntity = parent;
-        parentOffset = offset;
-        WorldPosition = parent.position + offset;
-        Width = width;
-        Height = height;
-    }
-
     public virtual void Update()
     {
         AnimationTimer += 0.1f;
 
-        if (parentEntity != null && parentEntity.active)
+        if (isTracking)
         {
-            if (parentEntity is NPC npc)
-            {
-                WorldPosition = npc.Top + parentOffset;
-            }
-            else
-            {
-                WorldPosition = parentEntity.position + parentOffset;
-            }
+            UpdateTrackingPosition();
         }
 
         WasHovering = IsHovering;
@@ -100,30 +87,44 @@ public class WorldUIEntity
     /// </summary>
     protected virtual void CustomUpdate() { }
 
+    /// <summary>
+    /// Checks if the mouse is hovering over this entity
+    /// </summary>
     public bool CheckHovering()
     {
         if (!IsVisible)
             return false;
 
-        // Convert world position to screen position
-        var screenPos = WorldToScreen(WorldPosition);
+        var zoom = Main.GameViewMatrix.Zoom.Y;
+
+        // Convert world position to screen position with proper zoom handling
+        var screenPos = WorldToScreen(WorldPosition + Offset);
+
+        // Scale width and height based on zoom
+        var scaledWidth = (int)(Width * zoom);
+        var scaledHeight = (int)(Height * zoom);
 
         // Check if mouse is within bounds
         return new Rectangle(
-            (int)screenPos.X,
-            (int)screenPos.Y,
+            (int)screenPos.X - Width / 2,
+            (int)screenPos.Y - Height / 2,
             Width,
             Height
         ).Contains(Main.MouseScreen.ToPoint());
     }
 
+    /// <summary>
+    /// Draws the entity in the world
+    /// </summary>
     public virtual void Draw(SpriteBatch spriteBatch)
     {
         if (!IsVisible)
             return;
 
-        var screenPos = WorldToScreen(WorldPosition);
+        // Get screen position with animation offset
+        var screenPos = WorldToScreen(WorldPosition + Offset);
 
+        // Call custom draw method if provided
         CustomDraw?.Invoke(spriteBatch, screenPos, 1f);
     }
 
@@ -132,7 +133,7 @@ public class WorldUIEntity
     /// </summary>
     public static Vector2 WorldToScreen(Vector2 worldPos)
     {
-        return Vector2.Transform(worldPos - Main.screenPosition, Main.GameViewMatrix.ZoomMatrix);
+        return Vector2.Transform(worldPos - Main.screenPosition, Main.GameViewMatrix.TransformationMatrix);
     }
 
     /// <summary>
@@ -140,6 +141,6 @@ public class WorldUIEntity
     /// </summary>
     public static Vector2 ScreenToWorld(Vector2 screenPos)
     {
-        return Vector2.Transform(screenPos, Matrix.Invert(Main.GameViewMatrix.ZoomMatrix)) + Main.screenPosition;
+        return Vector2.Transform(screenPos, Matrix.Invert(Main.GameViewMatrix.TransformationMatrix)) + Main.screenPosition;
     }
 }

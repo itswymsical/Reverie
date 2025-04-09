@@ -1,4 +1,5 @@
 ﻿using Reverie.Core.Missions;
+using Reverie.Utilities;
 using Terraria.Audio;
 using Terraria.GameContent;
 
@@ -20,11 +21,12 @@ public class MissionIndicator : WorldUIEntity
 
     private readonly float bobAmount = (float)Math.PI;
 
-    public MissionIndicator(Vector2 worldPosition, Mission mission): base(worldPosition, 48, 48)
+    public MissionIndicator(Vector2 worldPosition, Mission mission)
+         : base(worldPosition, 48, 48)
     {
         this.mission = mission;
 
-        iconTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/MissionAvailable").Value;
+        iconTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/Indicator").Value;
 
         if (iconTexture != null)
         {
@@ -32,24 +34,17 @@ public class MissionIndicator : WorldUIEntity
             Height = iconTexture.Height;
         }
 
+        // Set up custom draw delegate
         CustomDraw = DrawIndicator;
+
         OnClick += HandleClick;
     }
 
-    public MissionIndicator(NPC npc, Mission mission, Vector2? offset = null) : base(npc, offset ?? new Vector2(0, -40), 32, 32)
+    public static MissionIndicator CreateForNPC(NPC npc, Mission mission)
     {
-        this.mission = mission;
-
-        iconTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/MissionAvailable").Value;
-
-        if (iconTexture != null)
-        {
-            Width = iconTexture.Width;
-            Height = iconTexture.Height;
-        }
-
-        CustomDraw = DrawIndicator;
-        OnClick += HandleClick;
+        var indicator = new MissionIndicator(npc.Top, mission);
+        indicator.TrackEntity(npc, new Vector2(0, -40)); // Position above NPC's head
+        return indicator;
     }
 
     protected override void CustomUpdate()
@@ -76,8 +71,6 @@ public class MissionIndicator : WorldUIEntity
         if (iconTexture == null)
             return;
 
-        screenPos += Offset;
-
         var scale = IsHovering ? 1.1f : 1f;
 
         var glowColor = IsHovering ? Color.White : Color.White * 0.8f;
@@ -88,7 +81,7 @@ public class MissionIndicator : WorldUIEntity
             null,
             glowColor * opacity,
             0f,
-            new Vector2(iconTexture.Width / 2, iconTexture.Height / 2),
+            new Vector2(iconTexture.Width, iconTexture.Height),
             scale,
             SpriteEffects.None,
             0f
@@ -105,36 +98,47 @@ public class MissionIndicator : WorldUIEntity
         if (mission == null)
             return;
 
-        var lineCount = 3;
+        float zoom = Main.GameViewMatrix.Zoom.X;
+
+        int lineCount = 3;
         if (mission.Objective.Count > 0)
         {
             lineCount += mission.Objective[0].Objectives.Count;
         }
 
-        var panelHeight = 20 + lineCount * 20 + PADDING * 2;
+        int panelHeight = 20 + (lineCount * 20) + PADDING * 2;
 
-        var panelX = screenPos.X + Width + 5;
-        var panelY = screenPos.Y;
+        // Position panel to the right of the icon
+        float panelX = screenPos.X + (Width * zoom / 2) + 10;
+        float panelY = screenPos.Y - (panelHeight / 2);
 
+        // Adjust if panel would go off screen
         if (panelX + PANEL_WIDTH > Main.screenWidth)
         {
-            panelX = screenPos.X - PANEL_WIDTH - 5;
+            panelX = screenPos.X - (Width * zoom / 2) - PANEL_WIDTH - 10;
         }
 
         if (panelY + panelHeight > Main.screenHeight)
         {
-            panelY = Main.screenHeight - panelHeight;
+            panelY = Main.screenHeight - panelHeight - 10;
         }
 
-        var panelRect = new Rectangle(
+        if (panelY < 10)
+        {
+            panelY = 10;
+        }
+
+        Rectangle panelRect = new Rectangle(
             (int)panelX,
             (int)panelY,
             PANEL_WIDTH,
             panelHeight
         );
 
-        var textY = panelRect.Y + PADDING;
+        // Draw mission details
+        int textY = panelRect.Y + PADDING;
 
+        // Mission name
         Utils.DrawBorderStringFourWay(
             spriteBatch,
             FontAssets.MouseText.Value,
@@ -148,7 +152,8 @@ public class MissionIndicator : WorldUIEntity
         );
         textY += 25;
 
-        var employerName = "Unknown";
+        // Employer name
+        string employerName = "Unknown";
         if (mission.ProviderNPC > 0)
         {
             employerName = Lang.GetNPCNameValue(mission.ProviderNPC);
@@ -165,9 +170,9 @@ public class MissionIndicator : WorldUIEntity
             Vector2.Zero,
             0.9f
         );
-
         textY += 20;
 
+        // Mission description
         Utils.DrawBorderStringFourWay(
             spriteBatch,
             FontAssets.MouseText.Value,
@@ -181,15 +186,87 @@ public class MissionIndicator : WorldUIEntity
         );
         textY += 30;
 
+        // Draw rewards
+        if (mission.Rewards.Count > 0 || mission.Experience > 0)
+        {
+            Utils.DrawBorderStringFourWay(
+                spriteBatch,
+                FontAssets.MouseText.Value,
+                "Rewards:",
+                panelRect.X + PADDING,
+                textY,
+                Color.White * opacity,
+                Color.Black * opacity,
+                Vector2.Zero,
+                0.8f
+            );
+            textY += 20;
+
+            // Draw item rewards
+            int rewardX = panelRect.X + PADDING;
+            foreach (var reward in mission.Rewards)
+            {
+                if (reward.type <= 0)
+                    continue;
+
+                // Draw item icon
+                spriteBatch.Draw(
+                    TextureAssets.Item[reward.type].Value,
+                    new Vector2(rewardX, textY),
+                    null,
+                    Color.White * opacity,
+                    0f,
+                    Vector2.Zero,
+                    0.8f,
+                    SpriteEffects.None,
+                    0f
+                );
+
+                // Draw item count if more than 1
+                if (reward.stack > 1)
+                {
+                    Utils.DrawBorderStringFourWay(
+                        spriteBatch,
+                        FontAssets.ItemStack.Value,
+                        reward.stack.ToString(),
+                        rewardX + 10,
+                        textY + 10,
+                        Color.White * opacity,
+                        Color.Black * opacity,
+                        Vector2.Zero,
+                        0.8f
+                    );
+                }
+
+                rewardX += 40;
+            }
+
+            // Draw experience reward
+            if (mission.Experience > 0)
+            {
+                Utils.DrawBorderStringFourWay(
+                    spriteBatch,
+                    FontAssets.MouseText.Value,
+                    $"{mission.Experience} XP",
+                    rewardX,
+                    textY,
+                    new Color(73, 213, 255, (int)(255 * opacity)), // Light blue for XP
+                    Color.Black * opacity,
+                    Vector2.Zero,
+                    0.8f
+                );
+            }
+        }
+
         Utils.DrawBorderStringFourWay(
             spriteBatch,
             FontAssets.MouseText.Value,
             "Click to accept",
-            panelRect.X + PANEL_WIDTH / 2,
-            panelRect.Y + panelHeight - PADDING - 5,
+            panelRect.X + 4,
+            panelRect.Y + panelHeight + 22,
             Color.Yellow * opacity,
             Color.Black * opacity,
-            new Vector2(0.5f, 0f),
+            default,
             0.8f
         );
     }

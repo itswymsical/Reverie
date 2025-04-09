@@ -1,10 +1,7 @@
-﻿using Reverie.Common.UI;
-using Reverie.Common.UI.Missions;
+﻿using Reverie.Common.UI.Missions;
 using Reverie.Core.CustomEntities;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
-using System.Reflection;
-using Terraria;
 using Terraria.UI;
 
 namespace Reverie.Content.Items.Debugging;
@@ -52,11 +49,26 @@ public class SpawnUserInterfaceEntity : ModItem
     {
         var mplayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
         var bb = mplayer.GetMission(MissionID.BloomcapHunt);
-        if (Main.myPlayer == player.whoAmI)
+
+        if (player.altFunctionUse != 0)
         {
-            MissionIndicatorManager.Instance.CreateIndicator(Main.MouseWorld * 0.92f, bb);
-            Main.NewText($"Placed at position [X:{Main.MouseWorld.X} Y:{Main.MouseWorld.Y}]");
+            if (Main.myPlayer == player.whoAmI)
+            {
+                MissionIndicatorManager.Instance.CreateIndicator(Main.MouseWorld, bb);
+                Main.NewText($"Placed at position [X:{Main.MouseWorld.X} Y:{Main.MouseWorld.Y}]");
+            }
+           
         }
+        else
+        {
+            Main.NewText($"[Cleared All Indicators] | Right-click to place an Indicator.");
+            MissionIndicatorManager.Instance.ClearAllNotifications();
+        }
+
+        return true;
+    }
+    public override bool AltFunctionUse(Player player)
+    {
         return true;
     }
 }
