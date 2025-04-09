@@ -4,6 +4,7 @@ using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
 using System.Collections.Generic;
 using System.Linq;
+using Terraria;
 using Terraria.DataStructures;
 
 namespace Reverie.Core.Missions;
@@ -201,17 +202,20 @@ public class ObjectiveEventPlayer : ModPlayer
     public delegate void BiomeEnterHandler(Player player, BiomeType biome);
 
     public static event BiomeEnterHandler OnBiomeEnter;
-
+    private int timer = 0;
     public override void PostUpdate()
     {
         base.PostUpdate();
-
-        foreach (var biome in Enum.GetValues<BiomeType>())
+        if (timer > 7 * 60)
         {
-            if (biome.IsPlayerInBiome(Player))
+            foreach (var biome in Enum.GetValues<BiomeType>())
             {
-                OnBiomeEnter?.Invoke(Player, biome);
+                if (biome.IsPlayerInBiome(Player))
+                {
+                    OnBiomeEnter?.Invoke(Player, biome);
+                }
             }
+            timer = 0;
         }
     }
 }

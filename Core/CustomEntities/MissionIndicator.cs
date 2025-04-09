@@ -170,7 +170,7 @@ public class MissionIndicator : WorldUIEntity
             Vector2.Zero,
             0.9f
         );
-        textY += 20;
+        textY += 24;
 
         // Mission description
         Utils.DrawBorderStringFourWay(
@@ -184,7 +184,7 @@ public class MissionIndicator : WorldUIEntity
             Vector2.Zero,
             0.8f
         );
-        textY += 30;
+        textY += 28;
 
         // Draw rewards
         if (mission.Rewards.Count > 0 || mission.Experience > 0)

@@ -3,6 +3,7 @@ using Reverie.Core.Cinematics.Cutscenes;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Utilities;
+using Reverie.Utilities.Extensions;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria.Audio;
@@ -12,16 +13,6 @@ namespace Reverie.Content.Missions;
 
 public class AFallingStar : Mission
 {
-    private readonly Dictionary<BiomeType, int> biomeTimers = [];
-    private readonly Dictionary<BiomeType, bool> biomePresence = [];
-    private readonly Dictionary<BiomeType, int> biomeRequirements = new()
-    {
-        { BiomeType.Underground, 10 * 60 },
-        { BiomeType.Glowshroom, 5 * 60 },
-        { BiomeType.Jungle, 5 * 60 },
-        { BiomeType.UndergroundDesert, 5 * 60 },
-        { BiomeType.Snow, 5 * 60 }
-    };
     public AFallingStar() : base(MissionID.AFallingStar,
       "Falling Star...",
       "'Well, that's one way to make an appearance...'" +
@@ -200,7 +191,7 @@ public class AFallingStar : Mission
         switch (objective)
         {
             case Objectives.GatherResources:
-                if (item.type == ItemID.Wood)
+                if (item.IsWood())
                     UpdateProgress(0, item.stack);
                 break;
             case Objectives.AquireItems:
@@ -260,30 +251,25 @@ public class AFallingStar : Mission
         }
     }
 
-    private void InitializeBiomeTracking()
-    {
-        foreach (var biome in biomeRequirements.Keys)
-        {
-            if (!biomeTimers.ContainsKey(biome))
-                biomeTimers[biome] = 0;
-
-            if (!biomePresence.ContainsKey(biome))
-                biomePresence[biome] = false;
-        }
-    }
-
     private void OnBiomeEnterHandler(Player player, BiomeType biome)
     {
         if (Progress != MissionProgress.Active) return;
 
         var objective = (Objectives)CurrentIndex;
+
         switch (objective)
         {
             case Objectives.ExploreBiomes:
-                if (biomeRequirements.ContainsKey(biome))
-                {
-                    biomePresence[biome] = true;
-                }
+                if (biome == BiomeType.Underground)
+                    UpdateProgress(0);
+                if (biome == BiomeType.Glowshroom)
+                    UpdateProgress(1);
+                if (biome == BiomeType.Jungle)
+                    UpdateProgress(2);
+                if (biome == BiomeType.UndergroundDesert)
+                    UpdateProgress(3);
+                if (biome == BiomeType.Snow)
+                    UpdateProgress(4);
                 break;
 
             case Objectives.DefendTown:
@@ -298,7 +284,6 @@ public class AFallingStar : Mission
     public override void OnMissionStart()
     {
         base.OnMissionStart(); // This now calls RegisterEventHandlers()
-        InitializeBiomeTracking();
         CutsceneSystem.PlayCutscene(new FallingStarCutscene());
     }
 
