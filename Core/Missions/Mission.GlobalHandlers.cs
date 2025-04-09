@@ -17,7 +17,7 @@ public partial class MissionPlayer
         if (copperStandard.Availability == MissionAvailability.Locked && copperStandard.Progress == MissionProgress.Inactive
             && merchantPresent && Player.HasItemInAnyInventory(ItemID.CopperBar))
         {
-            UnlockMission(MissionID.CopperStandard);
+            UnlockMission(MissionID.CopperStandard, true);
         }
     }
 }

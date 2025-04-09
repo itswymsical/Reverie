@@ -542,7 +542,7 @@ public partial class MissionPlayer : ModPlayer
             }
         }
     }
-    public void UnlockMission(int missionId)
+    public void UnlockMission(int missionId, bool broadcast = false)
     {
         var mission = GetMission(missionId);
         if (mission != null)
@@ -551,6 +551,14 @@ public partial class MissionPlayer : ModPlayer
             mission.Progress = MissionProgress.Inactive;
             mission.Unlocked = true;
             SyncMissionState(mission);
+
+            // Add broadcast notification if specified
+            if (broadcast && mission.ProviderNPC > 0)
+            {
+                var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
+                Main.NewText($"{npcName} has a job opportunity!", Color.CornflowerBlue);
+                notifiedMissions.Add(mission.ID);
+            }
         }
     }
 
@@ -595,22 +603,43 @@ public partial class MissionPlayer : ModPlayer
             SyncMissionState(mission);
         }
     }
-
-    public bool NPCHasAvailableMission(int npcType)
+    public void BroadcastAvailableMissionsForNPC(int npcType)
     {
+        NPCHasAvailableMission(npcType, true);
+    }
+
+    public void CheckAndBroadcastAllAvailableMissions()
+    {
+        var npcTypesWithMissions = missionDict.Values
+            .Where(m => m.ProviderNPC > 0 && m.Availability == MissionAvailability.Unlocked)
+            .Select(m => m.ProviderNPC)
+            .Distinct();
+
+        foreach (var npcType in npcTypesWithMissions)
+        {
+            NPCHasAvailableMission(npcType, true);
+        }
+    }
+
+    public bool NPCHasAvailableMission(int npcType, bool broadcast = false)
+    {
+        bool hasAvailableMission = false;
+
         foreach (var mission in missionDict.Values.Where(m =>
             m.ProviderNPC == npcType &&
             m.Availability == MissionAvailability.Unlocked)) // Only show for inactive missions
         {
-            if (!mission.IsMainline && !notifiedMissions.Contains(mission.ID))
+            hasAvailableMission = true;
+
+            if (!mission.IsMainline && !notifiedMissions.Contains(mission.ID) && broadcast)
             {
                 var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
                 Main.NewText($"{npcName} has a job opportunity!", Color.CornflowerBlue);
                 notifiedMissions.Add(mission.ID);
             }
-            return true;
         }
-        return false;
+
+        return hasAvailableMission;
     }
 
     #endregion

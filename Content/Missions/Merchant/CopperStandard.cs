@@ -10,7 +10,7 @@ public class CopperStandard : Mission
       "The Copper Standard",
       @"""Copper's the cornerstone of civilization-durable! Plus, it's shiny, and appealing.""",
       [
-        [("Collect copper coins", 300)],
+        [("Collect copper coins", 800)],
         [("Mine copper ore", 80)],
         [("Collect or smelt copper bars", 25)],
         [("Return to the Merchant", 1)]
@@ -159,9 +159,6 @@ public class CopperStandard : Mission
             Instance.Logger.Error($"[Copper Standard] Error in OnNPCChatHandler: {e}");
         }
     }
-
-    // Remove the old handler methods since we're using specific event handlers now
-
     #endregion
 
     public override void Update()
