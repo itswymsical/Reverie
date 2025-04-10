@@ -34,10 +34,6 @@ public sealed class DialogueManager
 
     public bool IsUIHidden { get; private set; }
 
-    private string _nextDialogueKey = null;
-    private NPCData _nextNpcData = null;
-    private bool _nextZoomIn = false;
-
     public void RegisterNPC(string npcId, NPCData npcData)
         => _npcDialogueData[npcId] = npcData;
 
@@ -65,11 +61,6 @@ public sealed class DialogueManager
             ChangeMusic(dialogue.MusicID);
             _currentDialogueKey = dialogueKey;
 
-            // Store next dialogue information
-            _nextDialogueKey = nextDialogueKey;
-            _nextNpcData = nextNpcData;
-            _nextZoomIn = nextZoomIn;
-
             return true;
         }
 
@@ -79,9 +70,7 @@ public sealed class DialogueManager
     /// <summary>
     /// Start a dialogue by its key, building it on demand
     /// </summary>
-    public bool StartDialogueByKey(NPCData npcData, string dialogueKey, int lineCount, bool zoomIn = false,
-            string nextDialogueKey = null, NPCData nextNpcData = null, bool nextZoomIn = false,
-            int defaultDelay = 2, int defaultEmote = 0, int? musicId = null,
+    public bool StartDialogueByKey(NPCData npcData, string dialogueKey, int lineCount, bool zoomIn = false, int defaultDelay = 2, int defaultEmote = 0, int? musicId = null,
              bool letterbox = false, params(int line, int delay, int emote)[] modifications)
     {
         DialogueSequence dialogue;
@@ -98,7 +87,7 @@ public sealed class DialogueManager
             _dialogueCache[dialogueKey] = dialogue;
         }
 
-        return StartDialogue(npcData, dialogue, dialogueKey, zoomIn, nextDialogueKey, nextNpcData, nextZoomIn);
+        return StartDialogue(npcData, dialogue, dialogueKey, zoomIn);
     }
 
     /// <summary>
@@ -152,26 +141,6 @@ public sealed class DialogueManager
         }
 
         _activeDialogue = null;
-
-        // Check if we have a next dialogue to start
-        if (_nextDialogueKey != null && _nextNpcData != null)
-        {
-            var nextDialogueKey = _nextDialogueKey;
-            var nextNpcData = _nextNpcData;
-            var nextZoomIn = _nextZoomIn;
-
-            // Clear the next dialogue data before starting new dialogue
-            _nextDialogueKey = null;
-            _nextNpcData = null;
-            _nextZoomIn = false;
-
-            // Get the cached dialogue if available
-            if (_dialogueCache.TryGetValue(nextDialogueKey, out var nextDialogue))
-            {
-                StartDialogue(nextNpcData, nextDialogue, nextDialogueKey, nextZoomIn);
-            }
-            // If not in cache, we can't start it automatically - the caller must provide the line count
-        }
     }
 
     public void UpdateActive()

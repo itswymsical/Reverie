@@ -3,7 +3,6 @@ using Reverie.Core.Cinematics.Cutscenes;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Utilities;
-using Reverie.Utilities.Extensions;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria.Audio;
@@ -291,21 +290,28 @@ public class AFallingStar : Mission
     {
         base.Update();
 
+
         if (CurrentIndex < (int)Objectives.ClearSlimeRain)
         {
             Main.slimeRain = false;
             Main.slimeRainTime = 0;
         }
-
-        if (CurrentIndex == (int)Objectives.ClearSlimeRain)
+        else if (CurrentIndex == (int)Objectives.ClearSlimeRain)
         {
             if (!Main.slimeRain)
             {
                 Main.StartSlimeRain();
             }
         }
+
+        UpdateAmbientSound();
         Main.bloodMoon = false;
     }
+
+    private int reverieSFXtimer = 0;
+    private int nextChimeTime = 0;
+
+
 
     protected override void OnObjectiveIndexComplete(int setIndex, ObjectiveSet set)
     {
@@ -375,6 +381,72 @@ public class AFallingStar : Mission
     }
 
     #region Helper Methods
+    /// <summary>
+    /// Plays a periodic chime every 2-6 minutes, indicates the player's reverie is growing stronger.
+    /// </summary>
+    private void UpdateAmbientSound()
+    {
+        if (nextChimeTime == 0)
+        {
+            nextChimeTime = Main.rand.Next(120 * 60, 360 * 60);
+        }
+
+        reverieSFXtimer++;
+
+        int fadeStartTime = nextChimeTime - 10 * 60;
+
+        if (reverieSFXtimer > fadeStartTime && reverieSFXtimer < nextChimeTime)
+        {
+            float fadeOutProgress = (float)(reverieSFXtimer - fadeStartTime) / (10 * 60);
+
+            Main.musicFade[Main.curMusic] = 1f - fadeOutProgress;
+        }
+
+        if (reverieSFXtimer >= nextChimeTime)
+        {
+            Main.musicFade[Main.curMusic] = 0f;
+
+            SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ReverieChime")
+            {
+                Volume = 7.5f,
+                Pitch = 0f,
+                PitchVariance = 1f
+            }, Main.LocalPlayer.position);
+
+            reverieSFXtimer = 0;
+            nextChimeTime = 0;
+        }
+
+        if (reverieSFXtimer > 0 && reverieSFXtimer <= 2 * 60)
+        {
+            Main.musicFade[Main.curMusic] = 0f;
+        }
+
+        if (reverieSFXtimer > 2 * 60 && reverieSFXtimer < 5 * 60)
+        {
+            float fadeInProgress = (float)(reverieSFXtimer - 2 * 60) / (3 * 60);
+
+            Main.musicFade[Main.curMusic] = fadeInProgress;
+        }
+
+        if (reverieSFXtimer == 5 * 60 /*&& Main.rand.NextBool(4)*/)
+        {
+            if (!DialogueManager.Instance.IsAnyActive())
+            {
+                DialogueManager.Instance.StartDialogueByKey(
+                    NPCManager.GuideData,
+                    DialogueKeys.FallingStar.ChimeResponse,
+                    lineCount: 2,
+                    zoomIn: false);
+                DialogueManager.Instance.StartDialogueByKey(
+                    NPCManager.MerchantData,
+                    DialogueKeys.FallingStar.ChimeResponse_Merchant,
+                    lineCount: 1,
+                    zoomIn: false);
+            }
+        }
+    }
+
     private void GiveStarterItems()
     {
         foreach (var item in starterItems)

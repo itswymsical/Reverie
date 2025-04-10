@@ -62,7 +62,7 @@ public class ObjectiveEventItem : GlobalItem
         if (MissionUtils.TryUpdateProgressForItem(item, player))
         {
             // The item is relevant and hasn't contributed yet, so fire the event
-            OnItemUpdate?.Invoke(item, player);
+            OnItemPickup?.Invoke(item, player);
         }
         base.UpdateInventory(item, player);
     }
@@ -206,6 +206,7 @@ public class ObjectiveEventPlayer : ModPlayer
     public override void PostUpdate()
     {
         base.PostUpdate();
+        timer++;
         if (timer > 7 * 60)
         {
             foreach (var biome in Enum.GetValues<BiomeType>())

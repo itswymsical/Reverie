@@ -1,6 +1,7 @@
 ﻿using Reverie.Common.UI;
 using Reverie.Core.CustomEntities;
 using Reverie.Core.Dialogue;
+using Reverie.Core.Missions;
 using Reverie.Utilities;
 using Terraria.GameContent;
 using Terraria.Localization;
@@ -22,6 +23,19 @@ namespace Reverie.Common.Systems
         {
             base.ModifyTimeRate(ref timeRate, ref tileUpdateRate, ref eventUpdateRate);
             timeRate /= 2;
+        }
+
+        public override void PostUpdateWorld()
+        {
+            base.PostUpdateWorld();
+            if (Main.LocalPlayer?.active == true && !Main.gameMenu)
+            {
+                var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+                foreach (var mission in missionPlayer.ActiveMissions())
+                {
+                    mission.Update();
+                }
+            }
         }
 
         public override void AddRecipeGroups()

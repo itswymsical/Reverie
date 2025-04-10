@@ -1,7 +1,7 @@
-DialogueLibrary: {
+﻿DialogueLibrary: {
 	AFallingStar: {
 		Cutscene.Line1: Hey! Do you guys hear that?
-		Intro.Line1: Mods.Reverie.DialogueLibrary.AFallingStar.Intro.Line1
+		Intro.Line1: WHAT THE HELL?!?!
 
 		CrashLanding: {
 			Line1: That's one way to make an entrance...
@@ -10,6 +10,14 @@ DialogueLibrary: {
 			Line4: Sorry... that was a little rude.
 			Line5: Hey uh, how about you come meet the townsfolk?
 			Line6: Tools? Oh, right. The merchant can help you out with that.
+		}
+
+		ChimeResponse: {
+			Line1: Did you hear that?
+			Line2: Sounded like... a dream remembering itself.
+		}
+        ChimeResponse_Merchant: {
+			Line1: What the hell does that even mean?
 		}
 
 		MerchantIntro: {
