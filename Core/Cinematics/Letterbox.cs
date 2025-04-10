@@ -6,7 +6,7 @@ namespace Reverie.Core.Cinematics;
 public static class Letterbox
 {
     public static int LetterboxHeight { get; private set; }
-    public static float HeightPercentage { get; set; } = 0.05f;
+    public static float HeightPercentage { get; set; } = 0.02f;
     public static Color LetterboxColor { get; set; } = Color.Black;
     public static EaseFunction EasingFunction { get; set; } = EaseFunction.EaseQuadOut;
     public static int AnimationDurationFrames { get; set; } = 60;

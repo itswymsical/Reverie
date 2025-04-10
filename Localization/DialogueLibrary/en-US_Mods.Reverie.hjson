@@ -1,4 +1,4 @@
-﻿DialogueLibrary: {
+DialogueLibrary: {
 	AFallingStar: {
 		Cutscene.Line1: Hey! Do you guys hear that?
 		Intro.Line1: WHAT THE HELL?!?!
@@ -16,9 +16,8 @@
 			Line1: Did you hear that?
 			Line2: Sounded like... a dream remembering itself.
 		}
-        ChimeResponse_Merchant: {
-			Line1: What the hell does that even mean?
-		}
+
+		ChimeResponse_Merchant.Line1: What the hell does that even mean?
 
 		MerchantIntro: {
 			Line1: Hey! Nice to meet ya. I'm the local merchant around here.

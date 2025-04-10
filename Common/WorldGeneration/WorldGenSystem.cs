@@ -13,6 +13,13 @@ public class WorldGenSystem : ModSystem
     {
         WorldGen.DetourPass((PassLegacy)WorldGen.VanillaGenPasses["Generate Ice Biome"], Detour_Tundra);
         WorldGen.DetourPass((PassLegacy)WorldGen.VanillaGenPasses["Guide"], Detour_Town);
+        WorldGen.DetourPass((PassLegacy)WorldGen.VanillaGenPasses["Shinies"], Detour_Ores);
+    }
+    private void Detour_Ores(WorldGen.orig_GenPassDetour orig, object self, GenerationProgress progress, GameConfiguration configuration)
+    {
+        var orePass = new OrePass();
+
+        orePass.Apply(progress, configuration);
     }
 
     private void Detour_Tundra(WorldGen.orig_GenPassDetour orig, object self, GenerationProgress progress, GameConfiguration configuration)
@@ -32,7 +39,6 @@ public class WorldGenSystem : ModSystem
     public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
     {
         var tundraIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Generate Ice Biome"));
-        var livingTreeIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Dirt Rock Wall Runner"));
 
         if (tundraIndex >= 0)
         {
