@@ -308,7 +308,7 @@ namespace Reverie.Core.Cinematics.Cutscenes
                     float y = i * 60f;
                     Vector2 base1 = new(Main.screenWidth * _leftCredits[i].X, Main.screenHeight * 0.4f);
                     Vector2 labelPos = base1 + new Vector2(0, y);
-                    Vector2 valuePos = labelPos + new Vector2(0, 25f);
+                    Vector2 valuePos = labelPos + new Vector2(0, 12f);
 
                     Utils.DrawBorderString(spriteBatch, _leftCredits[i].Label, labelPos, Color.Gold * _textAlpha, 1.2f);
                     Utils.DrawBorderString(spriteBatch, _leftCredits[i].Value, valuePos, Color.White * _textAlpha, 0.9f);
@@ -320,7 +320,7 @@ namespace Reverie.Core.Cinematics.Cutscenes
                     float y = i * 60f;
                     Vector2 base1 = new(Main.screenWidth * _rightCredits[i].X, Main.screenHeight * 0.4f);
                     Vector2 labelPos = base1 + new Vector2(0, y);
-                    Vector2 valuePos = labelPos + new Vector2(0, 25f);
+                    Vector2 valuePos = labelPos + new Vector2(0, 12f);
 
                     Utils.DrawBorderString(spriteBatch, _rightCredits[i].Label, labelPos, Color.Gold * _textAlpha, 1.2f);
                     Utils.DrawBorderString(spriteBatch, _rightCredits[i].Value, valuePos, Color.White * _textAlpha, 0.9f);
@@ -357,6 +357,6 @@ namespace Reverie.Core.Cinematics.Cutscenes
             }
         }
 
-        protected override bool UsesCinematicLetterbox() => true;
+        protected override bool UsesLetterbox() => true;
     }
 }

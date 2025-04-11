@@ -12,41 +12,9 @@ namespace Reverie.Content.Missions;
 
 public class AFallingStar : Mission
 {
-    public AFallingStar() : base(MissionID.AFallingStar,
-      "Falling Star...",
-      "'Well, that's one way to make an appearance...'" +
-      "\nBegin your journey in Terraria, discovering knowledge and power...",
-      [
-        [("Talk to Guide", 1), ("Talk to Merchant", 1), ("Talk to Demolitionist", 1), ("Talk to Nurse", 1)],
-        [("Gather Wood", 50), ("Break Pots", 20)],
-        [("Harvest Ore", 30), ("Discover accessories", 2)],
-        [("Explore the Underground", 1),
-            ("Discover a Glowing Mushroom Biome", 1), ("Explore the Jungle", 1),
-            ("Explore the Underground Desert", 1),  ("Explore the Tundra", 1)],
-        [("Check in with the Guide", 1)],
-        [("Clear out slimes", 10)],
-        [("Defend the Town", 10)],
-        [("Clear slime infestation", 100)],
-        [("Defeat King Slime", 1)]
-      ],
-
-      [new Item(ItemID.RegenerationPotion),
-          new Item(ItemID.IronskinPotion),
-          new Item(ItemID.MagicMirror),
-          new Item(ItemID.GoldCoin, Main.rand.Next(4, 6))],
-      isMainline: true,
-      NPCID.Guide,
-      xpReward: 100)
-    {
-        ModContent.GetInstance<Reverie>().Logger.Info("[A Falling Star] Mission constructed");
-    }
-
-    private readonly List<Item> starterItems =
-    [
-        new Item(ItemID.CopperShortsword),
-        new Item(ItemID.CopperPickaxe),
-        new Item(ItemID.CopperAxe)
-    ];
+    private int reverieSFXtimer = 0;
+    private int nextChimeTime = 0;
+    private int potTileBreakCounter = 0;
 
     internal enum Objectives
     {
@@ -61,8 +29,89 @@ public class AFallingStar : Mission
         DefeatKingSlime = 8
     }
 
-    #region Event Registration
+    public AFallingStar() : base(MissionID.AFallingStar,
+      "Falling Star...",
+      @"""Well, that's one way to make an appearance..."""
+      + "\nBegin your Journey, exploring Terraria",
+      [
+        [("Talk to Guide", 1), ("Talk to Merchant", 1), ("Talk to Demolitionist", 1), ("Talk to Nurse", 1)],
 
+        [("Gather Wood", 50), ("Break Pots", 20)],
+
+        [("Harvest Ore", 30), ("Discover accessories", 2)],
+
+        [("Explore the Underground", 1),
+            ("Discover a Glowing Mushroom Biome", 1), ("Explore the Jungle", 1),
+            ("Explore the Underground Desert", 1),  ("Explore the Tundra", 1)],
+
+        [("Check in with the Guide", 1)],
+
+        [("Clear out slimes", 10)],
+
+        [("Defend the Town", 10)],
+
+        [("Clear slime infestation", 100)],
+
+        [("Defeat King Slime", 1)]
+      ],
+
+      [new Item(ItemID.RegenerationPotion),
+          new Item(ItemID.IronskinPotion),
+          new Item(ItemID.MagicMirror),
+          new Item(ItemID.GoldCoin, Main.rand.Next(4, 6))],
+      isMainline: true,
+      NPCID.Guide,
+      xpReward: 100)
+    {
+        ModContent.GetInstance<Reverie>().Logger.Info("[A Falling Star] Mission constructed");
+    }
+
+    private readonly List<Item> CopperItems =
+    [
+        new Item(ItemID.CopperShortsword),
+        new Item(ItemID.CopperPickaxe),
+        new Item(ItemID.CopperAxe)
+    ];
+
+    public override void OnMissionStart()
+    {
+        base.OnMissionStart(); // This now calls RegisterEventHandlers()
+        CutsceneSystem.PlayCutscene(new FallingStarCutscene());
+    }
+
+    public override void OnMissionComplete(bool giveRewards = true)
+    {
+        base.OnMissionComplete(giveRewards);
+
+        //MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+        //player.StartNextMission(...);
+    }
+
+    public override void Update()
+    {
+        base.Update();
+
+
+        if (CurrentIndex < (int)Objectives.ClearSlimeRain)
+        {
+            Main.slimeRain = false;
+            Main.slimeRainTime = 0;
+        }
+        else if (CurrentIndex == (int)Objectives.ClearSlimeRain)
+        {
+            if (!Main.slimeRain)
+            {
+                Main.StartSlimeRain();
+            }
+        }
+        if (CurrentIndex > (int)Objectives.TalkToTownies)
+        {
+            UpdateAmbientSound();
+        }
+        Main.bloodMoon = false;
+    }
+
+    #region Event Registration
     protected override void RegisterEventHandlers()
     {
         if (eventsRegistered) return;
@@ -98,6 +147,64 @@ public class AFallingStar : Mission
     #endregion
 
     #region Event Handlers
+    protected override void OnObjectiveIndexComplete(int setIndex, ObjectiveSet set)
+    {
+        try
+        {
+            var objective = (Objectives)setIndex;
+            if (!set.Objectives.All(o => o.IsCompleted)) return;
+
+            switch (objective)
+            {
+                case Objectives.CheckIn:
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCManager.GuideData,
+                    DialogueKeys.FallingStar.SlimeInfestation,
+                    lineCount: 2,
+                    zoomIn: true);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnObjectiveIndexComplete: {ex.Message}");
+        }
+    }
+
+    protected override void OnObjectiveComplete(int objectiveIndex)
+    {
+        try
+        {
+            var objective = (Objectives)CurrentIndex;
+            switch (objective)
+            {
+                case Objectives.CheckIn:
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCManager.GuideData,
+                    DialogueKeys.FallingStar.SlimeInfestation,
+                    lineCount: 2,
+                    zoomIn: true);
+                    break;
+                case Objectives.ClearSlimes:
+                    StartSlimeRain();
+                    break;
+                case Objectives.ClearSlimeRain:
+                    SpawnKingSlime();
+                    break;
+                case Objectives.DefeatKingSlime:
+                    DialogueManager.Instance.StartDialogueByKey(
+                    NPCManager.GuideData,
+                    DialogueKeys.FallingStar.KingSlimeDefeat,
+                    lineCount: 4,
+                    zoomIn: true);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnObjectiveComplete: {ex.Message}");
+        }
+    }
 
     private void OnNPCChatHandler(NPC npc, ref string chat)
     {
@@ -228,7 +335,6 @@ public class AFallingStar : Mission
         }
     }
 
-    private int potTileBreakCounter = 0;
     private void OnTileBreakHandler(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
     {
         if (Progress != MissionProgress.Active) return;
@@ -277,108 +383,7 @@ public class AFallingStar : Mission
                 break;
         }
     }
-
     #endregion
-
-    public override void OnMissionStart()
-    {
-        base.OnMissionStart(); // This now calls RegisterEventHandlers()
-        CutsceneSystem.PlayCutscene(new FallingStarCutscene());
-    }
-
-    public override void Update()
-    {
-        base.Update();
-
-
-        if (CurrentIndex < (int)Objectives.ClearSlimeRain)
-        {
-            Main.slimeRain = false;
-            Main.slimeRainTime = 0;
-        }
-        else if (CurrentIndex == (int)Objectives.ClearSlimeRain)
-        {
-            if (!Main.slimeRain)
-            {
-                Main.StartSlimeRain();
-            }
-        }
-
-        UpdateAmbientSound();
-        Main.bloodMoon = false;
-    }
-
-    private int reverieSFXtimer = 0;
-    private int nextChimeTime = 0;
-
-
-
-    protected override void OnObjectiveIndexComplete(int setIndex, ObjectiveSet set)
-    {
-        try
-        {
-            var objective = (Objectives)setIndex;
-            if (!set.Objectives.All(o => o.IsCompleted)) return;
-
-            switch (objective)
-            {
-                case Objectives.CheckIn:
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCManager.GuideData,
-                    DialogueKeys.FallingStar.SlimeInfestation,
-                    lineCount: 2,
-                    zoomIn: true);
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnObjectiveIndexComplete: {ex.Message}");
-        }
-    }
-
-    protected override void OnObjectiveComplete(int objectiveIndex)
-    {
-        try
-        {
-            var objective = (Objectives)CurrentIndex;
-            switch (objective)
-            {
-                case Objectives.CheckIn:
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCManager.GuideData,
-                    DialogueKeys.FallingStar.SlimeInfestation,
-                    lineCount: 2,
-                    zoomIn: true);
-                    break;
-                case Objectives.ClearSlimes:
-                    StartSlimeRain();
-                    break;
-                case Objectives.ClearSlimeRain:
-                    SpawnKingSlime();
-                    break;
-                case Objectives.DefeatKingSlime:
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCManager.GuideData,
-                    DialogueKeys.FallingStar.KingSlimeDefeat,
-                    lineCount: 4,
-                    zoomIn: true);
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnObjectiveComplete: {ex.Message}");
-        }
-    }
-
-    public override void OnMissionComplete(bool giveRewards = true)
-    {
-        base.OnMissionComplete(giveRewards);
-
-        //MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        //player.StartNextMission(...);
-    }
 
     #region Helper Methods
     /// <summary>
@@ -449,7 +454,7 @@ public class AFallingStar : Mission
 
     private void GiveStarterItems()
     {
-        foreach (var item in starterItems)
+        foreach (var item in CopperItems)
         {
             Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), item.type, item.stack);
         }

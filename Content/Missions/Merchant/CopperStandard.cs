@@ -6,6 +6,13 @@ namespace Reverie.Content.Missions.Merchant;
 
 public class CopperStandard : Mission
 {
+    internal enum Objectives
+    {
+        CopperCoins = 0,
+        MineCopper = 1,
+        SmeltCopper = 2,
+        ReturnToMerchant = 3
+    }
     public CopperStandard() : base(MissionID.CopperStandard,
       "The Copper Standard",
       @"""Copper's the cornerstone of civilization-durable! Plus, it's shiny, and appealing.""",
@@ -25,12 +32,23 @@ public class CopperStandard : Mission
         ModContent.GetInstance<Reverie>().Logger.Info("[Copper Standard] Mission constructed");
     }
 
-    internal enum Objectives
+    public override void OnMissionStart()
     {
-        CopperCoins = 0,
-        MineCopper = 1,
-        SmeltCopper = 2,
-        ReturnToMerchant = 3
+        base.OnMissionStart(); // This now calls RegisterEventHandlers()
+        DialogueManager.Instance.StartDialogueByKey(NPCManager.MerchantData, DialogueKeys.Merchant.CopperStandardStart,
+            lineCount: 5, zoomIn: true);
+    }
+
+    public override void OnMissionComplete(bool giveRewards = true)
+    {
+        base.OnMissionComplete(giveRewards); // This now calls UnregisterEventHandlers()
+        DialogueManager.Instance.StartDialogueByKey(
+            NPCManager.MerchantData, DialogueKeys.Merchant.CopperStandardComplete, lineCount: 4, zoomIn: true);
+    }
+
+    public override void Update()
+    {
+        base.Update();
     }
 
     #region Event Registration
@@ -66,7 +84,6 @@ public class CopperStandard : Mission
     #endregion
 
     #region Event Handlers
-
     private void OnItemPickupHandler(Item item, Player player)
     {
         if (Progress != MissionProgress.Active) return;
@@ -160,23 +177,4 @@ public class CopperStandard : Mission
         }
     }
     #endregion
-
-    public override void Update()
-    {
-        base.Update();
-    }
-
-    public override void OnMissionStart()
-    {
-        base.OnMissionStart(); // This now calls RegisterEventHandlers()
-        DialogueManager.Instance.StartDialogueByKey(NPCManager.MerchantData, DialogueKeys.Merchant.CopperStandardStart,
-            lineCount: 5, zoomIn: true);
-    }
-
-    public override void OnMissionComplete(bool giveRewards = true)
-    {
-        base.OnMissionComplete(giveRewards); // This now calls UnregisterEventHandlers()
-        DialogueManager.Instance.StartDialogueByKey(
-            NPCManager.MerchantData, DialogueKeys.Merchant.CopperStandardComplete, lineCount: 4, zoomIn: true);
-    }
 }

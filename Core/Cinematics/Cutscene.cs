@@ -143,7 +143,7 @@ public abstract class Cutscene
 
         DrawFade(spriteBatch);
 
-        if (UsesCinematicLetterbox())
+        if (UsesLetterbox())
         {
             Letterbox.DrawCinematic(spriteBatch);
         }
@@ -159,7 +159,7 @@ public abstract class Cutscene
     /// Whether to use the cinematic letterbox effect
     /// </summary>
     /// <returns>True to use cinematic letterbox, false for standard</returns>
-    protected virtual bool UsesCinematicLetterbox() => false;
+    protected virtual bool UsesLetterbox() => false;
 
     /// <summary>
     /// Draws the cutscene-specific elements

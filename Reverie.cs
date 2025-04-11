@@ -85,7 +85,6 @@ public sealed partial class Reverie : Mod
             loadCache[k].Load();
 
         }
-
     }
 
     public override void Unload()
