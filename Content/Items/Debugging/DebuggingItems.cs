@@ -35,6 +35,28 @@ public class DialogueTest : ModItem
     }
 }
 
+public class MissionCompleteIndicator : ModItem
+{
+    public override string Texture => PLACEHOLDER;
+    public override void SetDefaults()
+    {
+        Item.useTime = Item.useAnimation = 20;
+        Item.value = Item.buyPrice(0);
+        Item.rare = ItemRarityID.Quest;
+        Item.useStyle = ItemUseStyleID.HoldUp;
+    }
+    public override bool? UseItem(Player player)
+    {
+        if (Main.myPlayer == player.whoAmI)
+        {
+            var mplayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+            var bb = mplayer.GetMission(MissionID.BloomcapHunt);
+            InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(bb));
+        }
+        return true;
+    }
+}
+
 public class SpawnUserInterfaceEntity : ModItem
 {
     public override string Texture => PLACEHOLDER;

@@ -259,6 +259,11 @@ Items: {
 		DisplayName: Spawn User Interface Entity
 		Tooltip: ""
 	}
+
+	MissionCompleteIndicator: {
+		DisplayName: Mission Complete Indicator
+		Tooltip: ""
+	}
 }
 
 Projectiles: {

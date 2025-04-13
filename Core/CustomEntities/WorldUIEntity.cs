@@ -106,10 +106,10 @@ public class WorldUIEntity
 
         // Check if mouse is within bounds
         return new Rectangle(
-            (int)screenPos.X - Width / 2,
-            (int)screenPos.Y - Height / 2,
-            Width,
-            Height
+            (int)screenPos.X - scaledWidth / 2,
+            (int)screenPos.Y - scaledHeight / 2,
+            scaledWidth,
+            scaledHeight
         ).Contains(Main.MouseScreen.ToPoint());
     }
 
