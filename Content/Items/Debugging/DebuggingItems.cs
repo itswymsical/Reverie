@@ -50,8 +50,8 @@ public class MissionCompleteIndicator : ModItem
         if (Main.myPlayer == player.whoAmI)
         {
             var mplayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-            var bb = mplayer.GetMission(MissionID.BloomcapHunt);
-            InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(bb));
+            var mission = mplayer.GetMission(MissionID.LightEmUp);
+            InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(mission));
         }
         return true;
     }
@@ -70,13 +70,13 @@ public class SpawnUserInterfaceEntity : ModItem
     public override bool? UseItem(Player player)
     {
         var mplayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        var bb = mplayer.GetMission(MissionID.BloomcapHunt);
+        var mission = mplayer.GetMission(MissionID.LightEmUp);
 
         if (player.altFunctionUse != 0)
         {
             if (Main.myPlayer == player.whoAmI)
             {
-                MissionIndicatorManager.Instance.CreateIndicator(Main.MouseWorld, bb);
+                MissionIndicatorManager.Instance.CreateIndicator(Main.MouseWorld, mission);
                 Main.NewText($"Placed at position [X:{Main.MouseWorld.X} Y:{Main.MouseWorld.Y}]");
             }
            
@@ -94,7 +94,28 @@ public class SpawnUserInterfaceEntity : ModItem
         return true;
     }
 }
+public class StartMission : ModItem
+{
+    public override string Texture => PLACEHOLDER;
+    public override void SetDefaults()
+    {
+        Item.useTime = Item.useAnimation = 20;
+        Item.value = Item.buyPrice(0);
+        Item.rare = ItemRarityID.Quest;
+        Item.useStyle = ItemUseStyleID.HoldUp;
+    }
+    public override bool? UseItem(Player player)
+    {
+        var mplayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+        var mission = mplayer.GetMission(MissionID.LightEmUp);
+        if (Main.myPlayer == player.whoAmI)
+        {
+            mplayer.StartMission(mission.ID);
+        }
 
+        return true;
+    }
+}
 public class ObjTest : ModItem
 {
     public override string Texture => "Terraria/Images/UI/Bestiary/Icon_Locked";

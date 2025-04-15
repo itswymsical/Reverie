@@ -100,11 +100,9 @@ public class WorldUIEntity
         // Convert world position to screen position with proper zoom handling
         var screenPos = WorldToScreen(WorldPosition + Offset);
 
-        // Scale width and height based on zoom
         var scaledWidth = (int)(Width * zoom);
         var scaledHeight = (int)(Height * zoom);
 
-        // Check if mouse is within bounds
         return new Rectangle(
             (int)screenPos.X - scaledWidth / 2,
             (int)screenPos.Y - scaledHeight / 2,

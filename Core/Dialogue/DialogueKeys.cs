@@ -26,6 +26,18 @@ public static class DialogueKeys
         public static string MerchantIntro => $"{PREFIX}.MerchantIntro";
 
     }
+    public static class Demolitionist
+    {
+        private const string PREFIX = "Demolitionist";
+        public static string DemolitionistIntro => $"{PREFIX}.DemolitionistIntro";
+        public static string TorchGodStart => $"{PREFIX}.TorchGodStart";
+        public static string TorchGodComplete => $"{PREFIX}.TorchGodComplete";
+        public static string TorchPlacement_01 => $"{PREFIX}.TorchPlacement_01";
+        public static string TorchPlacement_02 => $"{PREFIX}.TorchPlacement_01";
+        public static string TorchPlacement_03 => $"{PREFIX}.TorchPlacement_01";
+        public static string TorchPlacement_04 => $"{PREFIX}.TorchPlacement_01";
+    }
+
     public static class ArgieDialogue
     {
         private const string PREFIX = "ArgieDialogue";

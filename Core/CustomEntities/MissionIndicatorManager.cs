@@ -109,6 +109,7 @@ public class MissionIndicatorManager : ModSystem
             indicator.Draw(spriteBatch);
         }
     }
+
     public void ClearAllNotifications()
     {
         indicators.Clear();

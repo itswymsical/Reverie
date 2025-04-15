@@ -4,7 +4,6 @@ using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
 using System.Collections.Generic;
 using System.Linq;
-using Terraria;
 using Terraria.DataStructures;
 
 namespace Reverie.Core.Missions;
@@ -19,6 +18,14 @@ public partial class MissionPlayer
             && merchantPresent && Player.HasItemInAnyInventory(ItemID.CopperBar))
         {
             UnlockMission(MissionID.CopperStandard, true);
+        }
+
+        bool demoPresent = NPC.AnyNPCs(NPCID.Demolitionist);
+        var lightEmUp = GetMission(MissionID.LightEmUp);
+        if (lightEmUp.Availability == MissionAvailability.Locked && lightEmUp.Progress == MissionProgress.Inactive
+            && demoPresent && Player.HasItemInAnyInventory(ItemID.Torch))
+        {
+            UnlockMission(MissionID.LightEmUp, true);
         }
     }
 }
@@ -59,12 +66,13 @@ public class ObjectiveEventItem : GlobalItem
 
     public override void UpdateInventory(Item item, Player player)
     {
+        base.UpdateInventory(item, player);
+
         if (MissionUtils.TryUpdateProgressForItem(item, player))
         {
             // The item is relevant and hasn't contributed yet, so fire the event
-            OnItemPickup?.Invoke(item, player);
+            OnItemUpdate?.Invoke(item, player);
         }
-        base.UpdateInventory(item, player);
     }
 }
 
@@ -187,13 +195,20 @@ public class ObjectiveEventNPC : GlobalNPC
 public class ObjectiveEventTile : GlobalTile
 {
     public delegate void TileBreakHandler(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem);
+    public delegate void TilePlaceHandler(int i, int j, int type);
 
     public static event TileBreakHandler OnTileBreak;
+    public static event TilePlaceHandler OnTilePlace;
 
     public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
     {
         base.KillTile(i, j, type, ref fail, ref effectOnly, ref noItem);
         OnTileBreak?.Invoke(i, j, type, ref fail, ref effectOnly, ref noItem);
+    }
+    public override void PlaceInWorld(int i, int j, int type, Item item)
+    {
+        base.PlaceInWorld(i, j, type, item);
+        OnTilePlace?.Invoke(i, j, type);
     }
 }
 

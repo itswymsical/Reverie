@@ -34,13 +34,13 @@ public static class TownNPCExtensions
 
         if (!IsNPCInActiveDialogue(npc))
         {
-            npc.immortal = false;
+            npc.dontTakeDamageFromHostiles = false;
             return;
         }
         else
         {
             npc.ai[0] = 3f;
-            npc.immortal = true;
+            npc.dontTakeDamageFromHostiles = true;
             npc.velocity = Vector2.Zero;
 
             Player player = Main.player[Main.myPlayer];

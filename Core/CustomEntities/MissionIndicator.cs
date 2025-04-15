@@ -273,8 +273,15 @@ public class MissionIndicator : WorldUIEntity
 
     private void HandleClick()
     {
-        var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        missionPlayer.StartMission(mission.ID);
-        IsVisible = false;
+        try
+        {
+            var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+            missionPlayer.StartMission(mission.ID);
+            IsVisible = false;
+        }
+        catch (Exception ex)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error starting mission: {ex.Message}");
+        }
     }
 }

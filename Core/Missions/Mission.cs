@@ -11,17 +11,6 @@ using Terraria.UI;
 
 namespace Reverie.Core.Missions;
 
-public static class MissionID
-{
-    #pragma warning disable IDE1006
-    public const int AFallingStar = 1;
-    public const int BloomcapHunt = 2;
-    public const int CopperStandard = 3;
-
-    public const int FungalFracas = 8;
-    #pragma warning restore IDE1006
-}
-
 public enum MissionProgress
 {
     Inactive,
@@ -72,13 +61,13 @@ public abstract class Mission
     #endregion
 
     #region Initialization
-    protected Mission(int id, string name, string description, List<List<(string, int)>> objectiveSetData,
+    protected Mission(int id, string name, string description, List<List<(string, int)>> objectiveList,
         List<Item> rewards, bool isMainline, int providerNPC, int nextMissionID = -1, int xpReward = 0)
     {
         ID = id;
         Name = name;
         Description = description;
-        Objective = objectiveSetData.Select(set =>
+        Objective = objectiveList.Select(set =>
             new ObjectiveSet(set.Select(o =>
                 new Objective(o.Item1, o.Item2)).ToList())).ToList();
         Rewards = rewards;
@@ -121,6 +110,9 @@ public abstract class Mission
         RegisterEventHandlers();
     }
 
+    protected virtual void OnObjectiveIndexComplete(int setIndex, ObjectiveSet completedSet) { }
+    protected virtual void OnObjectiveComplete(int objectiveIndexWithinCurrentSet) { }
+
     public void HandleObjectiveCompletion(int objectiveIndex)
     {
         try
@@ -128,21 +120,20 @@ public abstract class Mission
             var currentSet = Objective[CurrentIndex];
             var objective = currentSet.Objectives[objectiveIndex];
 
+            // First handle the specific objective completion
+            OnObjectiveComplete(objectiveIndex);
 
+            // Then check if the entire set is completed
             if (currentSet.IsCompleted)
             {
                 OnObjectiveIndexComplete(CurrentIndex, currentSet);
             }
-
-            OnObjectiveComplete(objectiveIndex);
         }
         catch (Exception ex)
         {
             ModContent.GetInstance<Reverie>().Logger.Error($"Error in HandleObjectiveCompletion for mission {Name}: {ex.Message}");
         }
     }
-    protected virtual void OnObjectiveIndexComplete(int setIndex, ObjectiveSet set) { }
-    protected virtual void OnObjectiveComplete(int objectiveIndex) { }
 
     #endregion
 

@@ -1,0 +1,31 @@
+DialogueLibrary: {
+	Demolitionist: {
+		DemolitionistIntro: {
+			Line1: Hahaha! What an explosive landing!
+			Line2: What would've been even better is if you landed on the Guide's house!
+			Line3: You and me? Friends, my brother. Anything you need, come to me!
+			Line4: I must focus now, I have explosives to create.
+		}
+
+		TorchGodStart: {
+			Line1: Bah! Light is supposed to help men, not attack them!
+			Line2: I go down into cavern, place torch, place another… then boom—fire god angry!
+			Line3: Torches start flying! I barely escape with beard intact!
+			Line4: Listen, friend—this... Torch God? He and I have unfinished business.
+			Line5: You? You go down there, summon this flaming freak, and show him we’re not afraid of little firelight!
+			Line6: Bring back whatever you find. I’ll make sure it explodes beautifully.
+		}
+
+		TorchPlacement_01.Line1: That's the spirit! Keep placing them!
+		TorchPlacement_02.Line1: Ohoho, I can feel it… he’s getting angry!
+		TorchPlacement_03.Line1: More! More! MORE!
+		TorchPlacement_04.Line1: 100 didn't do it eh? Place another, make him MAD!
+
+		TorchGodComplete: {
+			Line1: Haha! Good work, brother!
+			Line2: Did the flames dance like fools? Good. That’ll teach fire not to mess with us!
+			Line3: This relic you brought… very spicy. I make good use of it, da?
+			Line4: Maybe next time, we blow up the sun. You in?
+		}
+	}
+}

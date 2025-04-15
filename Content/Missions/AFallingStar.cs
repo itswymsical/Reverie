@@ -5,6 +5,7 @@ using Reverie.Core.Missions;
 using Reverie.Utilities;
 using System.Collections.Generic;
 using System.Linq;
+using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
 
@@ -15,7 +16,6 @@ public class AFallingStar : Mission
     private int reverieSFXtimer = 0;
     private int nextChimeTime = 0;
     private int potTileBreakCounter = 0;
-
     internal enum Objectives
     {
         TalkToTownies = 0,
@@ -63,7 +63,7 @@ public class AFallingStar : Mission
       NPCID.Guide,
       xpReward: 100)
     {
-        ModContent.GetInstance<Reverie>().Logger.Info("[A Falling Star] Mission constructed");
+        Instance.Logger.Info("[A Falling Star] Mission constructed");
     }
 
     private readonly List<Item> CopperItems =
@@ -126,6 +126,7 @@ public class AFallingStar : Mission
         ObjectiveEventPlayer.OnBiomeEnter += OnBiomeEnterHandler;
 
         ModContent.GetInstance<Reverie>().Logger.Debug($"[A Falling Star] Registered event handlers");
+
         eventsRegistered = true;
     }
 
@@ -152,16 +153,28 @@ public class AFallingStar : Mission
         try
         {
             var objective = (Objectives)setIndex;
-            if (!set.Objectives.All(o => o.IsCompleted)) return;
 
             switch (objective)
             {
                 case Objectives.CheckIn:
                     DialogueManager.Instance.StartDialogueByKey(
-                    NPCManager.GuideData,
-                    DialogueKeys.FallingStar.SlimeInfestation,
-                    lineCount: 2,
-                    zoomIn: true);
+                        NPCManager.GuideData,
+                        DialogueKeys.FallingStar.SlimeInfestation,
+                        lineCount: 2,
+                        zoomIn: true);
+                    break;
+                case Objectives.ClearSlimes:
+                    StartSlimeRain();
+                    break;
+                case Objectives.ClearSlimeRain:
+                    SpawnKingSlime();
+                    break;
+                case Objectives.DefeatKingSlime:
+                    DialogueManager.Instance.StartDialogueByKey(
+                        NPCManager.GuideData,
+                        DialogueKeys.FallingStar.KingSlimeDefeat,
+                        lineCount: 4,
+                        zoomIn: true);
                     break;
             }
         }
@@ -175,29 +188,11 @@ public class AFallingStar : Mission
     {
         try
         {
-            var objective = (Objectives)CurrentIndex;
-            switch (objective)
+            var currentObjectiveSet = (Objectives)CurrentIndex;
+
+            if (currentObjectiveSet == Objectives.TalkToTownies && objectiveIndex == 1)
             {
-                case Objectives.CheckIn:
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCManager.GuideData,
-                    DialogueKeys.FallingStar.SlimeInfestation,
-                    lineCount: 2,
-                    zoomIn: true);
-                    break;
-                case Objectives.ClearSlimes:
-                    StartSlimeRain();
-                    break;
-                case Objectives.ClearSlimeRain:
-                    SpawnKingSlime();
-                    break;
-                case Objectives.DefeatKingSlime:
-                    DialogueManager.Instance.StartDialogueByKey(
-                    NPCManager.GuideData,
-                    DialogueKeys.FallingStar.KingSlimeDefeat,
-                    lineCount: 4,
-                    zoomIn: true);
-                    break;
+                GiveStarterItems();
             }
         }
         catch (Exception ex)
@@ -234,7 +229,7 @@ public class AFallingStar : Mission
                 {
                     DialogueManager.Instance.StartDialogueByKey(
                         NPCManager.MerchantData,
-                        DialogueKeys.FallingStar.MerchantIntro,
+                        DialogueKeys.Merchant.MerchantIntro,
                         lineCount: 5,
                         zoomIn: false,
                         modifications:
@@ -243,15 +238,13 @@ public class AFallingStar : Mission
                             (line: 3, delay: 3, emote: 0),
                             (line: 4, delay: 3, emote: 0),
                             (line: 5, delay: 3, emote: 1)]);
-
                     UpdateProgress(1);
-                    GiveStarterItems();
                 }
                 if (npc.type == NPCID.Demolitionist)
                 {
                     DialogueManager.Instance.StartDialogueByKey(
                         NPCManager.DemolitionistData,
-                        DialogueKeys.FallingStar.DemolitionistIntro,
+                        DialogueKeys.Demolitionist.DemolitionistIntro,
                         lineCount: 4,
                         zoomIn: false,
                         modifications:
