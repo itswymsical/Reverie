@@ -22,5 +22,12 @@ public enum BiomeType
     PeaceCandle,
     WaterCandle,
     Forest,
-    Underground
+    Underground,
+    Granite,
+    Marble,
+    Underworld,
+    Graveyard,
+    Hive,
+    JungleTemple,
+    Shimmer,
 }

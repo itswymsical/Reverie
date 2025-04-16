@@ -19,9 +19,23 @@ public abstract class Otherworld : Subworld
 
     public override void SetStaticDefaults()
     {
-        LoadingScreen = (Texture2D)ModContent.Request<Texture2D>($"{nameof(Reverie)}/Assets/Textures/Backgrounds/ChronicleBG");
-        OtherworldTitle = TextureAssets.Logo.Value;
-        LoadingIcon = TextureAssets.LoadingSunflower.Value;
+        try
+        {
+            // Use null-conditional operators and proper error handling
+            LoadingScreen = ModContent.Request<Texture2D>($"{nameof(Reverie)}/Assets/Textures/Backgrounds/ChronicleBG")?.Value;
+            OtherworldTitle = TextureAssets.Logo?.Value;
+            LoadingIcon = TextureAssets.LoadingSunflower?.Value;
+        }
+        catch (Exception ex)
+        {
+            // Log the error but don't crash
+            ModContent.GetInstance<Reverie>()?.Logger.Error($"Error loading subworld textures: {ex.Message}");
+
+            // Set fallback values
+            LoadingScreen = null;
+            OtherworldTitle = null;
+            LoadingIcon = null;
+        }
     }
 
     public override void DrawSetup(GameTime gameTime)

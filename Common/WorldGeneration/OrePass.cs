@@ -1,111 +1,223 @@
 ﻿using Reverie.Content.Tiles;
+using System;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.ID;
 using Terraria.IO;
 using Terraria.WorldBuilding;
-using static Reverie.Utilities.WorldGenUtils;
-
 
 namespace Reverie.Common.WorldGeneration;
-public class OrePass(string name, double loadWeight) : GenPass(name, loadWeight)
+
+public class OrePass : GenPass
 {
-    #region Fields
-    private readonly int caveLayer = (int)(Main.rockLayer + Main.rockLayer * 0.35);
-    private readonly int underworldLayer = Main.UnderworldLayer;
+    private readonly Dictionary<string, OreConfiguration> _oreConfigs;
 
-    private static readonly OreConfig[] SurfaceOre =
-{
-        new(TileID.Copper, 7, 11, 5),
-        new(TileID.Tin, 7, 11, 5),
-        new(TileID.Iron, 7, 9, 5),
-        new(TileID.Lead, 7, 9, 5),
-
-        new(TileID.Topaz, 2, 3, 5),
-        new(TileID.Amethyst, 2, 3, 5),
-    };
-
-    private static readonly OreConfig[] CaveOre =
-{
-        new(TileID.Copper, 7, 11, 5),
-        new(TileID.Tin, 7, 11, 5),
-
-        new(TileID.Iron, 7, 9, 5),
-        new(TileID.Lead, 7, 9, 5),
-
-        new(TileID.Silver, 6, 9, 5),
-        new(TileID.Tungsten, 6, 9, 5),
-
-        new(TileID.Gold, 5, 9, 5),
-        new(TileID.Platinum, 4, 9, 4),
-
-        new(TileID.Diamond, 2, 3, 5),
-        new(TileID.Ruby, 2, 3, 5),
-        new(TileID.Sapphire, 2, 3, 5),
-        new(TileID.Emerald, 2, 3, 5),
-        new(TileID.Topaz, 2, 3, 5),
-        new(TileID.Amethyst, 2, 3, 5),
-
-        new((ushort)ModContent.TileType<LodestoneTile>(), 6, 9, 5)
-    };
-
-
-    private static void GenerateOreVein(int x, int y, OreConfig ore)
+    public OrePass() : base("Ores", 150f)
     {
-        WorldGen.TileRunner(
-            x, y,
-            WorldGen.genRand.Next(ore.MinSize, ore.MaxSize),
-            WorldGen.genRand.Next(ore.MinHeight, ore.MinHeight + 4),
-            ore.TileType
-        );
+        _oreConfigs = new Dictionary<string, OreConfiguration>();
+        InitializeAllOreConfigurations();
     }
-    private static readonly HashSet<ushort> ValidTiles =
-    [
-        TileID.Dirt,
-        TileID.Mud,
-        TileID.Stone,
-        TileID.HardenedSand,
-        TileID.Sandstone,
-        TileID.IceBlock,
-        TileID.SnowBlock,
-        TileID.Marble,
-        TileID.Granite
-    ];
-    #endregion
 
-    #region Tile Validation
-    private static bool IsValidTile(int x, int y)
+    private void InitializeAllOreConfigurations()
     {
-        var tile = Main.tile[x, y];
-        return tile.HasTile && ValidTiles.Contains(tile.TileType);
-    }
-    #endregion
-
-    #region Ore Generation
-    private void GenerateOres(GenerationProgress progress)
-    {
-        for (int x = 0; x < Main.maxTilesX; x++)
+        _oreConfigs["Copper"] = new OreConfiguration
         {
-            for (int y = caveLayer; y < underworldLayer; y++)
+            TileType = TileID.Copper,
+            Distribution = new List<LayerDistribution>
             {
-                float completionProgress = (float)x / Main.maxTilesX;
-
-                if (!IsValidTile(x, y)) continue;
-
-                if (Main.rand.NextBool(365))
-                {
-                    var ores = y < (int)Main.rockLayer ? SurfaceOre : CaveOre;
-                    GenerateOreVein(x, y, ores[WorldGen.genRand.Next(ores.Length)]);
-                }
-    
-                progress.Set(completionProgress);
+                new LayerDistribution(WorldLayer.Surface, 0.00006, 3, 6, 2, 6),
+                new LayerDistribution(WorldLayer.Dirt, 0.00008, 3, 7, 3, 7),
+                new LayerDistribution(WorldLayer.Rock, 0.0002, 4, 9, 4, 8)
             }
-        }
+        };
+
+        _oreConfigs["Tin"] = new OreConfiguration
+        {
+            TileType = TileID.Tin,
+            Distribution = new List<LayerDistribution>
+            {
+                new LayerDistribution(WorldLayer.Surface, 0.00006, 3, 6, 2, 6),
+                new LayerDistribution(WorldLayer.Dirt, 0.00008, 3, 7, 3, 7),
+                new LayerDistribution(WorldLayer.Rock, 0.0002, 4, 9, 4, 8)
+            }
+        };
+
+        _oreConfigs["Iron"] = new OreConfiguration
+        {
+            TileType = TileID.Iron,
+            Distribution = new List<LayerDistribution>
+            {
+                new LayerDistribution(WorldLayer.Surface, 0.00003, 3, 7, 2, 5),
+                new LayerDistribution(WorldLayer.Dirt, 0.00006, 3, 6, 3, 6),
+                new LayerDistribution(WorldLayer.Rock, 0.0002, 4, 9, 4, 8)
+            }
+        };
+
+        _oreConfigs["Lead"] = new OreConfiguration
+        {
+            TileType = TileID.Lead,
+            Distribution = new List<LayerDistribution>
+            {
+                new LayerDistribution(WorldLayer.Surface, 0.00003, 3, 7, 2, 5),
+                new LayerDistribution(WorldLayer.Dirt, 0.00008, 3, 6, 3, 6),
+                new LayerDistribution(WorldLayer.Rock, 0.0002, 4, 9, 4, 8)
+            }
+        };
+
+        _oreConfigs["Silver"] = new OreConfiguration
+        {
+            TileType = TileID.Silver,
+            Distribution = new List<LayerDistribution>
+            {
+                new LayerDistribution(WorldLayer.Dirt, 0.000026, 3, 6, 3, 6),
+                new LayerDistribution(WorldLayer.Rock, 0.0001, 4, 9, 4, 8),
+                new LayerDistribution(WorldLayer.Sky, 0.00017, 4, 9, 4, 8)
+            }
+        };
+
+        _oreConfigs["Tungsten"] = new OreConfiguration
+        {
+            TileType = TileID.Tungsten,
+            Distribution = new List<LayerDistribution>
+            {
+                new LayerDistribution(WorldLayer.Dirt, 0.000016, 3, 6, 3, 6),
+                new LayerDistribution(WorldLayer.Rock, 0.0001, 4, 9, 4, 8),
+                new LayerDistribution(WorldLayer.Sky, 0.00017, 4, 9, 4, 8)
+            }
+        };
+
+        _oreConfigs["Gold"] = new OreConfiguration
+        {
+            TileType = TileID.Gold,
+            Distribution = new List<LayerDistribution>
+            {
+                new LayerDistribution(WorldLayer.Rock, 0.00012, 4, 8, 4, 8),
+                new LayerDistribution(WorldLayer.Sky, 0.00012, 4, 8, 4, 8)
+            }
+        };
+
+        _oreConfigs["Platinum"] = new OreConfiguration
+        {
+            TileType = TileID.Platinum,
+            Distribution = new List<LayerDistribution>
+            {
+                new LayerDistribution(WorldLayer.Rock, 0.00012, 4, 8, 4, 8),
+                new LayerDistribution(WorldLayer.Sky, 0.00012, 4, 8, 4, 8)
+            }
+        };
+
+        _oreConfigs["Demonite"] = new OreConfiguration
+        {
+            TileType = TileID.Demonite,
+            Distribution = new List<LayerDistribution>
+            {
+                new LayerDistribution(WorldLayer.Dirt, 0.0000225, 3, 6, 4, 8),
+                new LayerDistribution(WorldLayer.Rock, 0.0000125, 3, 6, 4, 8)
+            }
+        };
+
+        _oreConfigs["Crimtane"] = new OreConfiguration
+        {
+            TileType = TileID.Crimtane,
+            Distribution = new List<LayerDistribution>
+            {
+                new LayerDistribution(WorldLayer.Dirt, 0.0000225, 3, 6, 4, 8),
+                new LayerDistribution(WorldLayer.Rock, 0.0000125, 3, 6, 4, 8)
+            }
+        };
+
+        _oreConfigs["Lodestone"] = new OreConfiguration
+        {
+            TileType = ModContent.TileType<LodestoneTile>(),
+            Distribution = new List<LayerDistribution>
+            {
+                new LayerDistribution(WorldLayer.Dirt, 0.00008, 3, 5, 3, 6),
+                new LayerDistribution(WorldLayer.Rock, 0.00008, 3, 5, 3, 6)
+            }
+        };
     }
-    #endregion
 
     protected override void ApplyPass(GenerationProgress progress, GameConfiguration configuration)
     {
-        progress.Message = "Generating ore patches";
-        GenerateOres(progress);
+        progress.Message = "Generating ores...";
+
+        foreach (var orePair in _oreConfigs)
+        {
+            GenerateOre(orePair.Value);
+        }
     }
+
+    private void GenerateOre(OreConfiguration config)
+    {
+        foreach (var distribution in config.Distribution)
+        {
+            int count = CalculateOreCount(distribution.Density);
+
+            for (int i = 0; i < count; i++)
+            {
+                int x = WorldGen.genRand.Next(0, Main.maxTilesX);
+                int y = GetYPositionForLayer(distribution.Layer);
+                int width = WorldGen.genRand.Next(distribution.MinWidth, distribution.MaxWidth + 1);
+                int height = WorldGen.genRand.Next(distribution.MinHeight, distribution.MaxHeight + 1);
+
+                WorldGen.TileRunner(x, y, width, height, config.TileType);
+            }
+        }
+    }
+
+    private int CalculateOreCount(double density)
+    {
+        return (int)((double)(Main.maxTilesX * Main.maxTilesY) * density);
+    }
+
+    private int GetYPositionForLayer(WorldLayer layer)
+    {
+        switch (layer)
+        {
+            case WorldLayer.Sky:
+                return WorldGen.genRand.Next(0, (int)GenVars.worldSurfaceLow - 20);
+            case WorldLayer.Surface:
+                return WorldGen.genRand.Next((int)GenVars.worldSurfaceLow, (int)GenVars.worldSurfaceHigh);
+            case WorldLayer.Dirt:
+                return WorldGen.genRand.Next((int)GenVars.worldSurfaceHigh, (int)GenVars.rockLayerHigh);
+            case WorldLayer.Rock:
+                return WorldGen.genRand.Next((int)GenVars.rockLayerLow, Main.maxTilesY);
+            default:
+                return WorldGen.genRand.Next(0, Main.maxTilesY);
+        }
+    }
+}
+
+public class OreConfiguration
+{
+    public int TileType { get; set; }
+    public List<LayerDistribution> Distribution { get; set; }
+}
+
+public class LayerDistribution
+{
+    public WorldLayer Layer { get; }
+    public double Density { get; }
+    public int MinWidth { get; }
+    public int MaxWidth { get; }
+    public int MinHeight { get; }
+    public int MaxHeight { get; }
+
+    public LayerDistribution(WorldLayer layer, double density, int minWidth, int maxWidth, int minHeight, int maxHeight)
+    {
+        Layer = layer;
+        Density = density;
+        MinWidth = minWidth;
+        MaxWidth = maxWidth;
+        MinHeight = minHeight;
+        MaxHeight = maxHeight;
+    }
+}
+
+public enum WorldLayer
+{
+    Sky,
+    Surface,
+    Dirt,
+    Rock
 }

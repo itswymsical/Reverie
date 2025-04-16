@@ -45,8 +45,8 @@ public class PlayerHeadRotation : ModPlayer
         }
         else
         {
-            Vector2 lookPosition = Main.MouseWorld;
-            Vector2 offset = lookPosition - Player.Center;
+            var lookPosition = Main.MouseWorld;
+            var offset = lookPosition - Player.Center;
 
             if (Math.Sign(offset.X) == Player.direction)
             {
@@ -64,10 +64,10 @@ public class PlayerHeadRotation : ModPlayer
                     Player.direction = 1;
                 else
                     Player.direction = -1;
-            }      
+            }
         }
-       
-        float lerpSpeed = 0.15f;
+
+        var lerpSpeed = 0.15f;
         headRotation = MathHelper.Lerp(headRotation, targetHeadRotation, lerpSpeed);
     }
 

@@ -1,27 +1,51 @@
 ﻿using Reverie.Common.Subworlds.Archaea;
-using Reverie.Common.Subworlds.Sylvanwalde;
-using Reverie.Content.Biomes.Sylvanwalde;
+using Reverie.Common.UI.Missions;
+
 using Reverie.Content.Dusts;
 using Reverie.Content.Tiles.Archaea;
+
 using Reverie.Core.Cinematics;
+using Reverie.Core.Dialogue;
+using Reverie.Core.Graphics;
+using Reverie.Core.Missions;
+
 using SubworldLibrary;
+
 using System.Collections.Generic;
-using Terraria;
+using System.Linq;
+using Terraria.DataStructures;
+using Terraria.GameContent;
+using Terraria.UI;
 
 namespace Reverie.Common.Players;
 
 public class ReveriePlayer : ModPlayer
 {
+    private bool inventoryInit = false;
+    private Mission currentMission;
+    public bool magnetizedFall;
+    public bool lodestoneKB;
+
     public override void PostUpdate()
     {
         if (Main.LocalPlayer.ZoneDesert || SubworldSystem.IsActive<ArchaeaSub>())
-                DrawSandHaze();
-        
+            DrawSandHaze();
+
         if (!Cutscene.IsPlayerVisible)
             Player.AddBuff(BuffID.Invisibility, 1, true);
-        
+
         if (Cutscene.NoFallDamage)
             Player.noFallDmg = true;
+
+        if (Main.playerInventory && !inventoryInit)
+        {
+            currentMission = Main.LocalPlayer.GetModPlayer<MissionPlayer>().ActiveMissions().FirstOrDefault();
+
+            InGameNotificationsTracker.AddNotification(new MissionNotification(currentMission));
+            inventoryInit = true;
+        }
+
+        DialogueManager.Instance.UpdateActive();
     }
 
     public override void SetControls()
@@ -39,13 +63,32 @@ public class ReveriePlayer : ModPlayer
             Player.controlUseTile = false;
         }
     }
+
+    public override void ResetEffects()
+    {
+        magnetizedFall = false;
+        lodestoneKB = false;
+    }
+    public override void ModifyDrawLayerOrdering(IDictionary<PlayerDrawLayer, PlayerDrawLayer.Position> positions)
+    {
+        base.ModifyDrawLayerOrdering(positions);
+
+        if (Main.gameMenu) return;
+
+        //if (positions.ContainsKey(ModContent.GetInstance<AuraLayer>()))
+        //{
+        //    positions[ModContent.GetInstance<AuraLayer>()] =
+        //        new PlayerDrawLayer.AfterParent(PlayerDrawLayers.BackAcc);
+        //}
+    }
+
     public override void ModifyStartingInventory(IReadOnlyDictionary<string, List<Item>> itemsByMod, bool mediumCoreDeath)
     {
         itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperShortsword);
         itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperPickaxe);
         itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperAxe);
     }
-    
+
     private const int SAND_HAZE_RANGE_X = 55;
     private const int SAND_HAZE_RANGE_Y = 30;
     private const int DUST_SPAWN_CHANCE = 95;

@@ -16,7 +16,6 @@
  */
 using Terraria.GameContent;
 using Terraria.UI.Chat;
-using static Reverie.Reverie;
 
 namespace Reverie.Utilities;
 
@@ -54,6 +53,28 @@ internal static class DrawUtils
             };
         }
     }
+
+    public static void DrawAdditive(Texture2D tex, Vector2 position, Color colour, float scale)
+    {
+        Main.spriteBatch.End();
+        Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, null, null, null, null, Main.GameViewMatrix.TransformationMatrix);
+
+        Main.spriteBatch.Draw(tex, position, tex.Bounds, colour, 0f, tex.TextureCenter(), scale, SpriteEffects.None, 0f);
+
+        Main.spriteBatch.RestartToDefault();
+    }   
+
+    /// <summary>
+    /// Ends & restarts the spriteBatch with default vanilla parameters.
+    /// </summary>
+    public static void RestartToDefault(this SpriteBatch batch)
+    {
+        batch.End();
+        batch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None,
+            Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+    }
+
+    public static Vector2 TextureCenter(this Texture2D texture) => new Vector2(texture.Width / 2, texture.Height / 2);
 
     public static void DrawLine(this SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color? color = null, int lineWidth = 1)
     {

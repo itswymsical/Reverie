@@ -19,9 +19,12 @@ public sealed class DialogueManager
 
     private readonly Dictionary<string, NPCData> _npcDialogueData = [];
 
+    // Cache for dialogues to avoid rebuilding frequently used ones
+    private readonly Dictionary<string, DialogueSequence> _dialogueCache = [];
+
     private DialogueBox _activeDialogue = null;
     private int? _currentMusic = null;
-    private DialogueID? _currentDialogue = null;
+    private string _currentDialogueKey = null;
     private int _previousMusic = -1;
 
     private const float ZOOM_LEVEL = 1.55f;
@@ -31,10 +34,6 @@ public sealed class DialogueManager
 
     public bool IsUIHidden { get; private set; }
 
-    private DialogueID? _nextDialogueId = null;
-    private NPCData _nextNpcData = null;
-    private bool _nextZoomIn = false;
-
     public void RegisterNPC(string npcId, NPCData npcData)
         => _npcDialogueData[npcId] = npcData;
 
@@ -42,28 +41,25 @@ public sealed class DialogueManager
 
     public NPCData GetNPCData(string npcId) => _npcDialogueData.TryGetValue(npcId, out var npcData) ? npcData : null;
 
-    public bool StartDialogue(NPCData npcData, DialogueID dialogueId, bool zoomIn = false,
-            DialogueID? nextDialogueId = null, NPCData nextNpcData = null, bool nextZoomIn = false)
+    /// <summary>
+    /// Start a dialogue directly using a DialogueSequence
+    /// </summary>
+    public bool StartDialogue(NPCData npcData, DialogueSequence dialogue, string dialogueKey, bool zoomIn = false,
+            string nextDialogueKey = null, NPCData nextNpcData = null, bool nextZoomIn = false)
     {
-        Main.CloseNPCChatOrSign();
-        Letterbox.Show();
+        Main.LocalPlayer.SetTalkNPC(-1);
+        //Letterbox.Show();
         IsUIHidden = true;
         if (IsAnyActive())
         {
             return false;
         }
 
-        var dialogue = DialogueList.GetDialogueById(dialogueId);
         if (dialogue != null)
         {
             _activeDialogue = DialogueBox.CreateNewSequence(npcData, dialogue, zoomIn);
             ChangeMusic(dialogue.MusicID);
-            _currentDialogue = dialogueId;
-
-            // Store next dialogue information
-            _nextDialogueId = nextDialogueId;
-            _nextNpcData = nextNpcData;
-            _nextZoomIn = nextZoomIn;
+            _currentDialogueKey = dialogueKey;
 
             return true;
         }
@@ -71,14 +67,65 @@ public sealed class DialogueManager
         return false;
     }
 
+    /// <summary>
+    /// Start a dialogue by its key, building it on demand
+    /// </summary>
+    public bool StartDialogueByKey(NPCData npcData, string dialogueKey, int lineCount, bool zoomIn = false, int defaultDelay = 2, int defaultEmote = 0, int? musicId = null,
+             bool letterbox = false, params(int line, int delay, int emote)[] modifications)
+    {
+        DialogueSequence dialogue;
+        if (letterbox)
+        {
+            Letterbox.Show();
+        }
+        // Check cache first
+        if (!_dialogueCache.TryGetValue(dialogueKey, out dialogue))
+        {
+            dialogue = DialogueBuilder.BuildByKey(dialogueKey, lineCount, defaultDelay, defaultEmote, musicId, modifications);
+
+            // Cache the dialogue for future use
+            _dialogueCache[dialogueKey] = dialogue;
+        }
+
+        return StartDialogue(npcData, dialogue, dialogueKey, zoomIn);
+    }
+
+    /// <summary>
+    /// Start a simple one-line dialogue
+    /// </summary>
+    public bool StartSimpleDialogue(NPCData npcData, string dialogueKey, bool zoomIn = false,
+            int delay = 2, int emote = 0, int? musicId = null)
+    {
+        DialogueSequence dialogue;
+
+        // Check cache first
+        if (!_dialogueCache.TryGetValue(dialogueKey, out dialogue))
+        {
+            dialogue = DialogueBuilder.SimpleLineByKey(dialogueKey, delay, emote, musicId);
+
+            // Cache the dialogue for future use
+            _dialogueCache[dialogueKey] = dialogue;
+        }
+
+        return StartDialogue(npcData, dialogue, dialogueKey, zoomIn);
+    }
+
+    /// <summary>
+    /// Clears the dialogue cache to free up memory
+    /// </summary>
+    public void ClearDialogueCache()
+    {
+        _dialogueCache.Clear();
+    }
+
     private void EndDialogue()
     {
         Letterbox.Hide();
         IsUIHidden = false;
 
-        if (_currentDialogue.HasValue)
+        if (_currentDialogueKey != null)
         {
-            _currentDialogue = null;
+            _currentDialogueKey = null;
         }
 
         if (_currentMusic.HasValue)
@@ -94,24 +141,7 @@ public sealed class DialogueManager
         }
 
         _activeDialogue = null;
-
-        // Check if we have a next dialogue to start
-        if (_nextDialogueId.HasValue && _nextNpcData != null)
-        {
-            var nextDialogueId = _nextDialogueId.Value;
-            var nextNpcData = _nextNpcData;
-            var nextZoomIn = _nextZoomIn;
-
-            // Clear the next dialogue data before starting new dialogue
-            _nextDialogueId = null;
-            _nextNpcData = null;
-            _nextZoomIn = false;
-
-            // Start the next dialogue
-            StartDialogue(nextNpcData, nextDialogueId, nextZoomIn);
-        }
     }
-
 
     public void UpdateActive()
     {
@@ -171,13 +201,13 @@ public sealed class DialogueManager
         _activeDialogue.DrawInGame(spriteBatch, adjustedPosition);
     }
 
-    public bool IsDialogueActive(DialogueID dialogueId)
-        => _activeDialogue != null && DialogueList.GetDialogueById(dialogueId) != null;
+    public bool IsDialogueActive(string dialogueKey)
+        => _activeDialogue != null && _currentDialogueKey == dialogueKey;
 
-    public bool EntryIsActive(DialogueID dialogueId, int entryIndex)
+    public bool EntryIsActive(string dialogueKey, int entryIndex)
     {
         return _activeDialogue != null &&
-               DialogueList.GetDialogueById(dialogueId) != null &&
+               _currentDialogueKey == dialogueKey &&
                _activeDialogue.IsCurrentEntry(entryIndex);
     }
 

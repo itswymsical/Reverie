@@ -1,4 +1,4 @@
 ﻿displayName = [c/73d5ff:Reverie]
-author = wymsical, ElectroManiac
+author = Reverie Team
 version = 0.1
 modReferences =  StructureHelper, SubworldLibrary

@@ -1,15 +1,13 @@
-﻿using ReLogic.Content;
-using static Reverie.Reverie;
-
-using Terraria.Audio;
+﻿using Terraria.Audio;
 using Terraria.GameContent;
+
 
 namespace Reverie.Content.Projectiles.Frostbark;
 
 public class FlailstormProj : ModProjectile
 {
-    private const string CHAIN_TEXTURE_PATH = $"Reverie/Assets/Textures/Projectiles/Frostbark/FlailstormChain";
-    private const string CHAIN_TEXTURE_EXTRA_PATH = CHAIN_TEXTURE_PATH;
+    private const string ChainTexturePath = "Reverie/Assets/Textures/Projectiles/Frostbark/FlailstormChain";
+    private const string ChainTextureExtraPath = ChainTexturePath;
 
     private enum AIState
     {
@@ -31,15 +29,15 @@ public class FlailstormProj : ModProjectile
     public ref float CollisionCounter => ref Projectile.localAI[0];
     public ref float SpinningStateTimer => ref Projectile.localAI[1];
 
-    private const int LAUNCH_TIME_LIMIT = 18;
-    private const float LAUNCH_SPEED = 14f;
-    private const float MAX_LAUNCH_LENGTH = 800f;
-    private const float RETRACT_ACCELERATION = 3f;
-    private const float MAX_RETRACT_SPEED = 10f;
-    private const float FORCED_RETRACT_ACCELERATION = 6f;
-    private const float MAX_FORCED_RETRACT_SPEED = 15f;
-    private const int SPIN_HIT_COOLDOWN = 20;
-    private const int MOVING_HIT_COOLDOWN = 10;
+    private const int LaunchTimeLimit = 18;
+    private const float LaunchSpeed = 14f;
+    private const float MaxLaunchLength = 800f;
+    private const float RetractAcceleration = 3f;
+    private const float MaxRetractSpeed = 10f;
+    private const float ForcedRetractAcceleration = 6f;
+    private const float MaxForcedRetractSpeed = 15f;
+    private const int SpinHitCooldown = 20;
+    private const int MovingHitCooldown = 10;
 
     public override void SetStaticDefaults()
     {
@@ -61,7 +59,7 @@ public class FlailstormProj : ModProjectile
     }
     public override void AI()
     {
-        Player player = Main.player[Projectile.owner];
+        var player = Main.player[Projectile.owner];
 
         if (!player.active || player.dead || player.noItems || player.CCed || Vector2.Distance(Projectile.Center, player.Center) > 900f)
         {
@@ -75,8 +73,8 @@ public class FlailstormProj : ModProjectile
             return;
         }
 
-        Vector2 mountedCenter = player.MountedCenter;
-        float meleeSpeedMultiplier = player.GetTotalAttackSpeed(DamageClass.Melee);
+        var mountedCenter = player.MountedCenter;
+        var meleeSpeedMultiplier = player.GetTotalAttackSpeed(DamageClass.Melee);
 
         switch (CurrentAIState)
         {
@@ -109,22 +107,22 @@ public class FlailstormProj : ModProjectile
     {
         if (Projectile.owner == Main.myPlayer)
         {
-            Vector2 unitVectorTowardsMouse = mountedCenter.DirectionTo(Main.MouseWorld).SafeNormalize(Vector2.UnitX * player.direction);
+            var unitVectorTowardsMouse = mountedCenter.DirectionTo(Main.MouseWorld).SafeNormalize(Vector2.UnitX * player.direction);
             player.ChangeDir((unitVectorTowardsMouse.X > 0f).ToDirectionInt());
             if (!player.channel)
             {
                 CurrentAIState = AIState.LaunchingForward;
                 StateTimer = 0f;
-                Projectile.velocity = unitVectorTowardsMouse * LAUNCH_SPEED + player.velocity;
+                Projectile.velocity = unitVectorTowardsMouse * LaunchSpeed + player.velocity;
                 Projectile.Center = mountedCenter;
                 Projectile.netUpdate = true;
                 Projectile.ResetLocalNPCHitImmunity();
-                Projectile.localNPCHitCooldown = MOVING_HIT_COOLDOWN;
+                Projectile.localNPCHitCooldown = MovingHitCooldown;
                 return;
             }
         }
         SpinningStateTimer += 1f;
-        Vector2 offsetFromPlayer = new Vector2(player.direction).RotatedBy((float)Math.PI * 10f * (SpinningStateTimer / 60f) * player.direction);
+        var offsetFromPlayer = new Vector2(player.direction).RotatedBy((float)Math.PI * 10f * (SpinningStateTimer / 60f) * player.direction);
         offsetFromPlayer.Y *= 0.8f;
         if (offsetFromPlayer.Y * player.gravDir > 0f)
         {
@@ -132,13 +130,13 @@ public class FlailstormProj : ModProjectile
         }
         Projectile.Center = mountedCenter + offsetFromPlayer * 30f + new Vector2(0, player.gfxOffY);
         Projectile.velocity = Vector2.Zero;
-        Projectile.localNPCHitCooldown = SPIN_HIT_COOLDOWN;
+        Projectile.localNPCHitCooldown = SpinHitCooldown;
     }
 
     private void HandleLaunchingForwardState(Player player, Vector2 mountedCenter, float meleeSpeedMultiplier)
     {
-        bool shouldSwitchToRetracting = StateTimer++ >= LAUNCH_TIME_LIMIT;
-        shouldSwitchToRetracting |= Projectile.Distance(mountedCenter) >= MAX_LAUNCH_LENGTH;
+        var shouldSwitchToRetracting = StateTimer++ >= LaunchTimeLimit;
+        shouldSwitchToRetracting |= Projectile.Distance(mountedCenter) >= MaxLaunchLength;
         if (player.controlUseItem)
         {
             CurrentAIState = AIState.Dropping;
@@ -154,13 +152,13 @@ public class FlailstormProj : ModProjectile
             Projectile.velocity *= 0.3f;
         }
         player.ChangeDir((player.Center.X < Projectile.Center.X).ToDirectionInt());
-        Projectile.localNPCHitCooldown = MOVING_HIT_COOLDOWN;
+        Projectile.localNPCHitCooldown = MovingHitCooldown;
     }
 
     private void HandleRetractingState(Player player, Vector2 mountedCenter, float meleeSpeedMultiplier)
     {
-        Vector2 unitVectorTowardsPlayer = Projectile.DirectionTo(mountedCenter).SafeNormalize(Vector2.Zero);
-        if (Projectile.Distance(mountedCenter) <= MAX_RETRACT_SPEED * meleeSpeedMultiplier)
+        var unitVectorTowardsPlayer = Projectile.DirectionTo(mountedCenter).SafeNormalize(Vector2.Zero);
+        if (Projectile.Distance(mountedCenter) <= MaxRetractSpeed * meleeSpeedMultiplier)
         {
             Projectile.Kill();
             return;
@@ -175,7 +173,7 @@ public class FlailstormProj : ModProjectile
         else
         {
             Projectile.velocity *= 0.98f;
-            Projectile.velocity = Projectile.velocity.MoveTowards(unitVectorTowardsPlayer * MAX_RETRACT_SPEED * meleeSpeedMultiplier, RETRACT_ACCELERATION * meleeSpeedMultiplier);
+            Projectile.velocity = Projectile.velocity.MoveTowards(unitVectorTowardsPlayer * MaxRetractSpeed * meleeSpeedMultiplier, RetractAcceleration * meleeSpeedMultiplier);
             player.ChangeDir((player.Center.X < Projectile.Center.X).ToDirectionInt());
         }
     }
@@ -183,16 +181,16 @@ public class FlailstormProj : ModProjectile
     private void HandleForcedRetractingState(Player player, Vector2 mountedCenter, float meleeSpeedMultiplier)
     {
         Projectile.tileCollide = false;
-        Vector2 unitVectorTowardsPlayer = Projectile.DirectionTo(mountedCenter).SafeNormalize(Vector2.Zero);
-        if (Projectile.Distance(mountedCenter) <= MAX_FORCED_RETRACT_SPEED * meleeSpeedMultiplier)
+        var unitVectorTowardsPlayer = Projectile.DirectionTo(mountedCenter).SafeNormalize(Vector2.Zero);
+        if (Projectile.Distance(mountedCenter) <= MaxForcedRetractSpeed * meleeSpeedMultiplier)
         {
             Projectile.Kill();
             return;
         }
         Projectile.velocity *= 0.98f;
-        Projectile.velocity = Projectile.velocity.MoveTowards(unitVectorTowardsPlayer * MAX_FORCED_RETRACT_SPEED * meleeSpeedMultiplier, FORCED_RETRACT_ACCELERATION * meleeSpeedMultiplier);
-        Vector2 target = Projectile.Center + Projectile.velocity;
-        Vector2 value = mountedCenter.DirectionFrom(target).SafeNormalize(Vector2.Zero);
+        Projectile.velocity = Projectile.velocity.MoveTowards(unitVectorTowardsPlayer * MaxForcedRetractSpeed * meleeSpeedMultiplier, ForcedRetractAcceleration * meleeSpeedMultiplier);
+        var target = Projectile.Center + Projectile.velocity;
+        var value = mountedCenter.DirectionFrom(target).SafeNormalize(Vector2.Zero);
         if (Vector2.Dot(unitVectorTowardsPlayer, value) < 0f)
         {
             Projectile.Kill();
@@ -203,7 +201,7 @@ public class FlailstormProj : ModProjectile
 
     private void HandleRicochetState(Player player)
     {
-        if (StateTimer++ >= LAUNCH_TIME_LIMIT + 5)
+        if (StateTimer++ >= LaunchTimeLimit + 5)
         {
             CurrentAIState = AIState.Dropping;
             StateTimer = 0f;
@@ -211,7 +209,7 @@ public class FlailstormProj : ModProjectile
         }
         else
         {
-            Projectile.localNPCHitCooldown = MOVING_HIT_COOLDOWN;
+            Projectile.localNPCHitCooldown = MovingHitCooldown;
             Projectile.velocity.Y += 0.6f;
             Projectile.velocity.X *= 0.95f;
             player.ChangeDir((player.Center.X < Projectile.Center.X).ToDirectionInt());
@@ -220,7 +218,7 @@ public class FlailstormProj : ModProjectile
 
     private void HandleDroppingState(Player player, Vector2 mountedCenter)
     {
-        if (!player.controlUseItem || Projectile.Distance(mountedCenter) > MAX_LAUNCH_LENGTH + 160f)
+        if (!player.controlUseItem || Projectile.Distance(mountedCenter) > MaxLaunchLength + 160f)
         {
             CurrentAIState = AIState.ForcedRetracting;
             StateTimer = 0f;
@@ -260,16 +258,16 @@ public class FlailstormProj : ModProjectile
     {
         if (Main.rand.NextBool(CurrentAIState == AIState.LaunchingForward ? 3 : 7))
         {
-            Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.FrostDaggerfish, 0f, 0f, 150, default(Color), 1.3f);
+            Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.FrostDaggerfish, 0f, 0f, 150, default, 1.3f);
         }
     }
 
     public override bool OnTileCollide(Vector2 oldVelocity)
     {
-        int defaultLocalNPCHitCooldown = 10;
-        int impactIntensity = 0;
-        Vector2 velocity = Projectile.velocity;
-        float bounceFactor = 0.4f;
+        var defaultLocalNPCHitCooldown = 10;
+        var impactIntensity = 0;
+        var velocity = Projectile.velocity;
+        var bounceFactor = 0.4f;
         if (CurrentAIState == AIState.LaunchingForward || CurrentAIState == AIState.Ricochet)
         {
             bounceFactor = 0.9f;
@@ -307,10 +305,10 @@ public class FlailstormProj : ModProjectile
             CurrentAIState = AIState.Ricochet;
             Projectile.localNPCHitCooldown = defaultLocalNPCHitCooldown;
             Projectile.netUpdate = true;
-            Point scanAreaStart = Projectile.TopLeft.ToTileCoordinates();
-            Point scanAreaEnd = Projectile.BottomRight.ToTileCoordinates();
+            var scanAreaStart = Projectile.TopLeft.ToTileCoordinates();
+            var scanAreaEnd = Projectile.BottomRight.ToTileCoordinates();
             impactIntensity = 2;
-            Projectile.CreateImpactExplosion(2, Projectile.Center, ref scanAreaStart, ref scanAreaEnd, Projectile.width, out bool causedShockwaves);
+            Projectile.CreateImpactExplosion(2, Projectile.Center, ref scanAreaStart, ref scanAreaEnd, Projectile.width, out var causedShockwaves);
             Projectile.CreateImpactExplosion2_FlailTileCollision(Projectile.Center, causedShockwaves, velocity);
             Projectile.position -= velocity;
         }
@@ -318,7 +316,7 @@ public class FlailstormProj : ModProjectile
         if (impactIntensity > 0)
         {
             Projectile.netUpdate = true;
-            for (int i = 0; i < impactIntensity; i++)
+            for (var i = 0; i < impactIntensity; i++)
             {
                 Collision.HitTiles(Projectile.position, velocity, Projectile.width, Projectile.height);
             }
@@ -347,15 +345,33 @@ public class FlailstormProj : ModProjectile
     {
         if (CurrentAIState == AIState.Spinning)
         {
-            Vector2 mountedCenter = Main.player[Projectile.owner].MountedCenter;
-            Vector2 shortestVectorFromPlayerToTarget = targetHitbox.ClosestPointInRect(mountedCenter) - mountedCenter;
+            var mountedCenter = Main.player[Projectile.owner].MountedCenter;
+            var shortestVectorFromPlayerToTarget = targetHitbox.ClosestPointInRect(mountedCenter) - mountedCenter;
             shortestVectorFromPlayerToTarget.Y /= 0.8f;
-            float hitRadius = 55f;
+            var hitRadius = 55f;
             return shortestVectorFromPlayerToTarget.Length() <= hitRadius;
         }
         return base.Colliding(projHitbox, targetHitbox);
     }
 
+    public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+    {
+        SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}HewerReturn")
+        {
+            MaxInstances = 1,
+            Volume = 0.4f,
+            Pitch = -0.9f,
+        }, Projectile.position);
+    }
+    public override void OnHitPlayer(Player target, Player.HurtInfo info)
+    {
+        SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}HewerReturn")
+        {
+            MaxInstances = 1,
+            Volume = 0.4f,
+            Pitch = -0.9f,
+        }, Projectile.position);
+    }
     public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
     {
         if (CurrentAIState == AIState.Spinning)
@@ -375,31 +391,31 @@ public class FlailstormProj : ModProjectile
 
     public override bool PreDraw(ref Color lightColor)
     {
-        Vector2 playerArmPosition = Main.GetPlayerArmPosition(Projectile);
+        var playerArmPosition = Main.GetPlayerArmPosition(Projectile);
 
         playerArmPosition.Y -= Main.player[Projectile.owner].gfxOffY;
 
-        Asset<Texture2D> chainTexture = ModContent.Request<Texture2D>(CHAIN_TEXTURE_PATH);
-        Asset<Texture2D> chainTextureExtra = ModContent.Request<Texture2D>(CHAIN_TEXTURE_EXTRA_PATH);
+        var chainTexture = ModContent.Request<Texture2D>(ChainTexturePath);
+        var chainTextureExtra = ModContent.Request<Texture2D>(ChainTextureExtraPath);
         Rectangle? chainSourceRectangle = null;
-        float chainHeightAdjustment = 0f;
+        var chainHeightAdjustment = 0f;
 
-        Vector2 chainOrigin = chainSourceRectangle.HasValue ? (chainSourceRectangle.Value.Size() / 2f) : (chainTexture.Size() / 2f);
-        Vector2 chainDrawPosition = Projectile.Center;
-        Vector2 vectorFromProjectileToPlayerArms = playerArmPosition.MoveTowards(chainDrawPosition, 4f) - chainDrawPosition;
-        Vector2 unitVectorFromProjectileToPlayerArms = vectorFromProjectileToPlayerArms.SafeNormalize(Vector2.Zero);
-        float chainSegmentLength = (chainSourceRectangle.HasValue ? chainSourceRectangle.Value.Height : chainTexture.Height()) + chainHeightAdjustment;
+        var chainOrigin = chainSourceRectangle.HasValue ? chainSourceRectangle.Value.Size() / 2f : chainTexture.Size() / 2f;
+        var chainDrawPosition = Projectile.Center;
+        var vectorFromProjectileToPlayerArms = playerArmPosition.MoveTowards(chainDrawPosition, 4f) - chainDrawPosition;
+        var unitVectorFromProjectileToPlayerArms = vectorFromProjectileToPlayerArms.SafeNormalize(Vector2.Zero);
+        var chainSegmentLength = (chainSourceRectangle.HasValue ? chainSourceRectangle.Value.Height : chainTexture.Height()) + chainHeightAdjustment;
         if (chainSegmentLength == 0)
         {
             chainSegmentLength = 10;
         }
-        float chainRotation = unitVectorFromProjectileToPlayerArms.ToRotation() + MathHelper.PiOver2;
-        int chainCount = 0;
-        float chainLengthRemainingToDraw = vectorFromProjectileToPlayerArms.Length() + chainSegmentLength / 2f;
+        var chainRotation = unitVectorFromProjectileToPlayerArms.ToRotation() + MathHelper.PiOver2;
+        var chainCount = 0;
+        var chainLengthRemainingToDraw = vectorFromProjectileToPlayerArms.Length() + chainSegmentLength / 2f;
 
         while (chainLengthRemainingToDraw > 0f)
         {
-            Color chainDrawColor = Lighting.GetColor((int)chainDrawPosition.X / 16, (int)(chainDrawPosition.Y / 16f));
+            var chainDrawColor = Lighting.GetColor((int)chainDrawPosition.X / 16, (int)(chainDrawPosition.Y / 16f));
 
             var chainTextureToDraw = chainTexture;
             if (chainCount >= 4)
@@ -434,13 +450,13 @@ public class FlailstormProj : ModProjectile
 
         if (CurrentAIState == AIState.LaunchingForward)
         {
-            Texture2D projectileTexture = TextureAssets.Projectile[Projectile.type].Value;
+            var projectileTexture = TextureAssets.Projectile[Projectile.type].Value;
             Vector2 drawOrigin = new(projectileTexture.Width * 0.5f, Projectile.height * 0.5f);
-            SpriteEffects spriteEffects = Projectile.spriteDirection == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-            for (int k = 0; k < Projectile.oldPos.Length && k < StateTimer; k++)
+            var spriteEffects = Projectile.spriteDirection == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+            for (var k = 0; k < Projectile.oldPos.Length && k < StateTimer; k++)
             {
-                Vector2 drawPos = Projectile.oldPos[k] - Main.screenPosition + drawOrigin + new Vector2(0f, Projectile.gfxOffY);
-                Color color = Projectile.GetAlpha(lightColor) * ((float)(Projectile.oldPos.Length - k) / (float)Projectile.oldPos.Length);
+                var drawPos = Projectile.oldPos[k] - Main.screenPosition + drawOrigin + new Vector2(0f, Projectile.gfxOffY);
+                var color = Projectile.GetAlpha(lightColor) * ((Projectile.oldPos.Length - k) / (float)Projectile.oldPos.Length);
                 Main.spriteBatch.Draw(projectileTexture, drawPos, null, color, Projectile.rotation, drawOrigin, Projectile.scale - k / (float)Projectile.oldPos.Length / 3, spriteEffects, 0f);
             }
         }

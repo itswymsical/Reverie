@@ -11,7 +11,17 @@ Items: {
 		Tooltip: ""
 	}
 
+	BorealHewer: {
+		DisplayName: Boreal Hewer
+		Tooltip: ""
+	}
+
 	FlailstormItem: {
+		DisplayName: Flailstorm
+		Tooltip: ""
+	}
+
+	Flailstorm: {
 		DisplayName: Flailstorm
 		Tooltip: ""
 	}
@@ -21,12 +31,27 @@ Items: {
 		Tooltip: ""
 	}
 
+	FrostbarkGreaves: {
+		DisplayName: Frostbark Greaves
+		Tooltip: ""
+	}
+
 	FrostbarkHauberkItem: {
 		DisplayName: Frostbark Hauberk
 		Tooltip: ""
 	}
 
+	FrostbarkHauberk: {
+		DisplayName: Frostbark Hauberk
+		Tooltip: ""
+	}
+
 	FrostbarkHelmItem: {
+		DisplayName: Frostbark Helm
+		Tooltip: ""
+	}
+
+	FrostbarkHelm: {
 		DisplayName: Frostbark Helm
 		Tooltip: ""
 	}
@@ -136,7 +161,7 @@ Items: {
 	}
 
 	PrimordialSandItem: {
-		DisplayName: Primordial Sand Item
+		DisplayName: Primordial Sand
 		Tooltip: ""
 	}
 
@@ -151,7 +176,102 @@ Items: {
 	}
 
 	ChronicleI: {
-		DisplayName: Chronicle I
+		DisplayName: Archiver Chronicle #01
+		Tooltip: "'Laine L.'"
+	}
+
+	BustedTranslocator: {
+		DisplayName: Busted Translocator
+		Tooltip: "'Use at your own descretion'"
+	}
+
+	ArchiverChronicleI: {
+		DisplayName: Archiver Chronicle I
+		Tooltip: ""
+	}
+
+	ObjTest: {
+		DisplayName: Obj Test
+		Tooltip: ""
+	}
+
+	WoodenShingle: {
+		DisplayName: Wooden Shingle
+		Tooltip: ""
+	}
+
+	WoodWickerBlock: {
+		DisplayName: Wood Wicker Block
+		Tooltip: ""
+	}
+
+	LodestoneChestplate: {
+		DisplayName: Lodestone Chestplate
+		Tooltip: ""
+	}
+
+	LodestoneHelmet: {
+		DisplayName: Lodestone Helmet
+		Tooltip: ""
+	}
+
+	LodestoneLeggings: {
+		DisplayName: Lodestone Leggings
+		Tooltip: ""
+	}
+
+	TombBrick: {
+		DisplayName: Tomb Brick
+		Tooltip: ""
+	}
+
+	TombBrickWall_Item: {
+		DisplayName: Tomb Brick Wall_ Item
+		Tooltip: ""
+	}
+
+	WoodWickerWall_Item: {
+		DisplayName: Wood Wicker Wall_ Item
+		Tooltip: ""
+	}
+
+	PeatBlock: {
+		DisplayName: Peat Block
+		Tooltip: ""
+	}
+
+	TaigaGrassSeeds: {
+		DisplayName: Taiga Grass Seeds
+		Tooltip: ""
+	}
+
+	BloomcapItem: {
+		DisplayName: Bloomcap Item
+		Tooltip: ""
+	}
+
+	WorldCoordUIPlacer: {
+		DisplayName: World Coord U I Placer
+		Tooltip: ""
+	}
+
+	SpawnUserInterfaceEntity: {
+		DisplayName: Spawn User Interface Entity
+		Tooltip: ""
+	}
+
+	MissionCompleteIndicator: {
+		DisplayName: Mission Complete Indicator
+		Tooltip: ""
+	}
+
+	StartMission: {
+		DisplayName: Start Mission
+		Tooltip: ""
+	}
+
+	SmoothCopperPlating: {
+		DisplayName: Smooth Copper Plating
 		Tooltip: ""
 	}
 }
@@ -307,6 +427,36 @@ NPCs: {
 	KingSlime.DisplayName: King Slime
 	WardenArm.DisplayName: Warden Arm
 	WoodenWarden.DisplayName: Wooden Warden
+
+	Tamer: {
+		DisplayName: Tamer
+
+		TownNPCMood: {
+			Content: I am content.
+			NoHome: I hate not having a home.
+			FarFromHome: I am too far from home.
+			LoveSpace: I love having so much space.
+			DislikeCrowded: I dislike how crowded I am.
+			HateCrowded: I hate how crowded I am.
+			LikeNPC_Princess: I like {NPCName}.
+			Princess_LovesNPC: I like {NPCName}.
+		}
+	}
+
+	Argie: {
+		DisplayName: Argie
+
+		TownNPCMood: {
+			Content: I am content.
+			NoHome: I hate not having a home.
+			FarFromHome: I am too far from home.
+			LoveSpace: I love having so much space.
+			DislikeCrowded: I dislike how crowded I am.
+			HateCrowded: I hate how crowded I am.
+			LikeNPC_Princess: I like {NPCName}.
+			Princess_LovesNPC: I like {NPCName}.
+		}
+	}
 }
 
 Biomes: {

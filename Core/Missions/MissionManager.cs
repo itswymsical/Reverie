@@ -1,240 +1,115 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Terraria.DataStructures;
+﻿using Reverie.Content.Missions;
+using Reverie.Content.Missions.Argie;
+using Reverie.Content.Missions.Demolitionist;
+using Reverie.Content.Missions.Merchant;
 using Reverie.Utilities;
-using Reverie.Content.Missions;
+using System.Collections.Generic;
 
 namespace Reverie.Core.Missions;
 
-public class MissionManager
+public partial class MissionManager
 {
-    private readonly object managerLock = new();
+    #region Properties and Fields
     private readonly Dictionary<int, Mission> activeMissions = [];
     private static MissionManager instance;
     public static MissionManager Instance => instance ??= new MissionManager();
+
+    private bool isWorldFullyLoaded = false;
+    private readonly HashSet<int> pendingRegistrations = [];
+    #endregion
+
+    #region Initialization & Registration
+    public void OnWorldLoad()
+    {
+        activeMissions.Clear();
+        pendingRegistrations.Clear();
+        isWorldFullyLoaded = false;
+        Reverie.Instance.Logger.Info("MissionManager reset for world load");
+    }
+
+    public void OnWorldFullyLoaded()
+    {
+        isWorldFullyLoaded = true;
+
+        // Register any pending missions
+        foreach (var missionId in pendingRegistrations)
+        {
+            var mission = MissionFactory.Instance.GetMissionData(missionId);
+            if (mission != null)
+            {
+                RegisterMissionInternal(mission);
+            }
+        }
+
+        pendingRegistrations.Clear();
+        Reverie.Instance.Logger.Info("MissionManager marked world as fully loaded");
+    }
+
+    private void RegisterMissionInternal(Mission mission)
+    {
+        try
+        {
+            Reverie.Instance.Logger.Debug($"Active mission count before registration: {activeMissions.Count}");
+
+            if (activeMissions.ContainsKey(mission.ID))
+            {
+                Reverie.Instance.Logger.Debug($"Mission already registered: {mission.ID}");
+                return;
+            }
+
+            activeMissions[mission.ID] = mission;
+            Reverie.Instance.Logger.Info($"Registered mission: {mission.Name}");
+            Reverie.Instance.Logger.Debug($"Active mission count after registration: {activeMissions.Count}");
+            Reverie.Instance.Logger.Debug($"Current active missions: {string.Join(", ", activeMissions.Keys)}");
+        }
+        catch (Exception ex)
+        {
+            Reverie.Instance.Logger.Error($"Failed to register mission: {ex.Message}");
+        }
+    }
 
     public void RegisterMission(Mission mission)
     {
         if (mission == null)
             return;
 
-        lock (managerLock)
+        if (!isWorldFullyLoaded)
         {
-            try
-            {
-                ModContent.GetInstance<Reverie>().Logger.Debug($"Active mission count before registration: {activeMissions.Count}");
-
-                if (activeMissions.ContainsKey(mission.ID))
-                {
-                    ModContent.GetInstance<Reverie>().Logger.Debug($"Mission already registered: {mission.ID}");
-                    return;
-                }
-
-                activeMissions[mission.ID] = mission;
-                ModContent.GetInstance<Reverie>().Logger.Info($"Registered mission: {mission.Name}");
-                ModContent.GetInstance<Reverie>().Logger.Debug($"Active mission count after registration: {activeMissions.Count}");
-                ModContent.GetInstance<Reverie>().Logger.Debug($"Current active missions: {string.Join(", ", activeMissions.Keys)}");
-            }
-            catch (Exception ex)
-            {
-                ModContent.GetInstance<Reverie>().Logger.Error($"Failed to register mission: {ex.Message}");
-            }
+            Reverie.Instance.Logger.Info($"Queueing mission {mission.ID} for registration after world load");
+            pendingRegistrations.Add(mission.ID);
+            return;
         }
+
+        RegisterMissionInternal(mission);
     }
+    #endregion
 
     public void Reset()
     {
-        lock (managerLock)
-        {
-            activeMissions.Clear();
-            ModContent.GetInstance<Reverie>().Logger.Info("All active missions reset");
-        }
-    }
-
-    private IEnumerable<Mission> ActiveMissions
-    {
-        get
-        {
-            lock (managerLock)
-            {
-                return activeMissions.Values
-                    .Where(m => m.Progress == MissionProgress.Active)
-                    .ToList();
-            }
-        }
+        activeMissions.Clear();
+        Reverie.Instance.Logger.Info("All active missions reset");
     }
 
     public void OnObjectiveComplete(Mission mission, int objectiveIndex)
     {
-        lock (managerLock)
+        try
         {
-            try
+            if (activeMissions.TryGetValue(mission.ID, out var activeMission))
             {
-                if (activeMissions.TryGetValue(mission.ID, out var activeMission))
-                {
-                    activeMission.OnObjectiveComplete(objectiveIndex);
-                }
+                activeMission.HandleObjectiveCompletion(objectiveIndex);
             }
-            catch (Exception ex)
-            {
-                ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnObjectiveComplete: {ex.Message}");
-            }
+        }
+        catch (Exception ex)
+        {
+            Reverie.Instance.Logger.Error($"Error in HandleObjectiveCompletion: {ex.Message}");
         }
     }
 
-    #region Event Handlers
-    public void OnItemCreated(Item item, ItemCreationContext context)
-    {
-        lock (managerLock)
-        {
-            try
-            {
-                foreach (var mission in ActiveMissions)
-                {
-                    mission.OnItemCreated(item, context);
-                }
-            }
-            catch (Exception ex)
-            {
-                ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnItemCreated: {ex.Message}");
-            }
-        }
-    }
-
-    public void OnItemObtained(Item item)
-    {
-        lock (managerLock)
-        {
-            try
-            {
-                foreach (var mission in ActiveMissions)
-                {
-                    mission.OnItemObtained(item);
-                }
-            }
-            catch (Exception ex)
-            {
-                ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnItemObtained: {ex.Message}");
-            }
-        }
-    }
-
-    public void OnNPCKill(NPC npc)
-    {
-        lock (managerLock)
-        {
-            try
-            {
-                foreach (var mission in ActiveMissions)
-                {
-                    mission.OnNPCKill(npc);
-                }
-            }
-            catch (Exception ex)
-            {
-                ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCKill: {ex.Message}");
-            }
-        }
-    }
-
-    public void OnNPCChat(NPC npc)
-    {
-        lock (managerLock)
-        {
-            try
-            {
-                foreach (var mission in ActiveMissions)
-                {
-                    mission.OnNPCChat(npc);
-                }
-            }
-            catch (Exception ex)
-            {
-                ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCChat: {ex.Message}");
-            }
-        }
-    }
-
-    public void OnNPCSpawn(NPC npc)
-    {
-        lock (managerLock)
-        {
-            try
-            {
-                foreach (var mission in ActiveMissions)
-                {
-                    mission.OnNPCSpawn(npc);
-                }
-            }
-            catch (Exception ex)
-            {
-                ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCSpawn: {ex.Message}");
-            }
-        }
-    }
-
-    public void OnNPCLoot(NPC npc)
-    {
-        lock (managerLock)
-        {
-            try
-            {
-                foreach (var mission in ActiveMissions)
-                {
-                    mission.OnNPCLoot(npc);
-                }
-            }
-            catch (Exception ex)
-            {
-                ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCLoot: {ex.Message}");
-            }
-        }
-    }
-
-    public void OnNPCHit(NPC npc, int damage)
-    {
-        lock (managerLock)
-        {
-            try
-            {
-                var missions = ActiveMissions.ToList();
-                ModContent.GetInstance<Reverie>().Logger.Debug($"Processing NPC hit with {missions.Count} active missions");
-
-                foreach (var mission in missions)
-                {
-                    mission.OnNPCHit(npc, damage);
-                }
-            }
-            catch (Exception ex)
-            {
-                ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCHit: {ex.Message}");
-            }
-        }
-    }
-
-    public void OnBiomeEnter(Player player, BiomeType biome)
-    {
-        lock (managerLock)
-        {
-            try
-            {
-                foreach (var mission in ActiveMissions)
-                {
-                    mission.OnBiomeEnter(player, biome);
-                    ModContent.GetInstance<Reverie>().Logger.Debug($"OnBiomeEnter: {biome}");
-                }
-            }
-            catch (Exception ex)
-            {
-                ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnBiomeEnter: {ex.Message}");
-            }
-        }
-    }
-    #endregion
 }
 
 public class MissionFactory : ModSystem
 {
+    #region Properties and Fields
     private readonly Dictionary<int, Type> missionTypes = [];
     private readonly Dictionary<int, Mission> missionCache = [];
     private static MissionFactory instance;
@@ -248,25 +123,27 @@ public class MissionFactory : ModSystem
                 instance = ModContent.GetInstance<MissionFactory>();
                 if (instance == null)
                 {
-                    ModContent.GetInstance<Reverie>().Logger.Error("Failed to get MissionFactory instance!");
+                    Reverie.Instance.Logger.Error("Failed to get MissionFactory instance!");
                 }
             }
             return instance;
         }
     }
+    #endregion
 
+    #region Initialization & Registration
     public override void Load()
     {
         instance = this;
         RegisterMissionTypes();
-        ModContent.GetInstance<Reverie>().Logger.Info("MissionFactory loaded and initialized");
+        Reverie.Instance.Logger.Info("MissionFactory loaded and initialized");
     }
 
     public override void OnWorldLoad()
     {
         // Clear cache when loading a world to ensure fresh mission instances
         missionCache.Clear();
-        ModContent.GetInstance<Reverie>().Logger.Info("MissionFactory cache cleared for world load");
+        Reverie.Instance.Logger.Info("MissionFactory cache cleared for world load");
     }
 
     public override void Unload()
@@ -280,23 +157,30 @@ public class MissionFactory : ModSystem
     {
         try
         {
-            ModContent.GetInstance<Reverie>().Logger.Info("Registering mission types...");
+            Reverie.Instance.Logger.Info("Registering mission types...");
 
-            // Register each mission type with its ID
-            missionTypes[MissionID.A_FALLING_STAR] = typeof(AFallingStar);
-            //missionTypes[MissionID.FUNGAL_FRACAS] = typeof(FungalFracas);
+            #region Missions
+            missionTypes[MissionID.AFallingStar] = typeof(AFallingStar);
+            missionTypes[MissionID.BloomcapHunt] = typeof(BloomcapHunt);
+            missionTypes[MissionID.CopperStandard] = typeof(CopperStandard);
+            missionTypes[MissionID.LightEmUp] = typeof(LightEmUp);
 
-            ModContent.GetInstance<Reverie>().Logger.Info($"Registered {missionTypes.Count} mission types");
+            #endregion
+
+            Reverie.Instance.Logger.Info($"Registered {missionTypes.Count} mission types");
 
             foreach (var (id, type) in missionTypes)
-                ModContent.GetInstance<Reverie>().Logger.Debug($"Registered mission type: {id} -> {type.Name}");
-            
+            {
+
+                Reverie.Instance.Logger.Debug($"Registered mission type: {id} -> {type.Name}");
+            }
         }
         catch (Exception ex)
         {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error registering mission types: {ex}");
+            Reverie.Instance.Logger.Error($"Error registering mission types: {ex}");
         }
     }
+    #endregion
 
     public Mission GetMissionData(int missionId)
     {
@@ -311,18 +195,18 @@ public class MissionFactory : ModSystem
             // Create new instance if type is registered
             if (missionTypes.TryGetValue(missionId, out var missionType))
             {
-                ModContent.GetInstance<Reverie>().Logger.Debug($"Creating new instance of mission type: {missionType.Name}");
+                Reverie.Instance.Logger.Debug($"Creating new instance of mission type: {missionType.Name}");
                 var mission = (Mission)Activator.CreateInstance(missionType);
                 missionCache[missionId] = mission;
                 return mission;
             }
 
-            ModContent.GetInstance<Reverie>().Logger.Warn($"No mission type registered for ID: {missionId}");
+            Reverie.Instance.Logger.Warn($"No mission type registered for ID: {missionId}");
             return null;
         }
         catch (Exception ex)
         {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error creating mission instance: {ex}");
+            Reverie.Instance.Logger.Error($"Error creating mission instance: {ex}");
             return null;
         }
     }

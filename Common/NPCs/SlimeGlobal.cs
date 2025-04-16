@@ -46,195 +46,198 @@ namespace Reverie.Common.NPCs
 
         public override void AI(NPC npc)
         {
-            if (npc.type != NPCAIStyleID.Slime) return;
-            var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+            base.AI(npc);
 
-            var AFallingStar = mPlayer.GetMission(MissionID.A_FALLING_STAR);
+            if (npc.type == NPCAIStyleID.Slime) 
+                HandleSquishScale(npc);
 
-            if (AFallingStar?.Progress == MissionProgress.Active)
-            {
-                var currentSet = AFallingStar.ObjectiveIndex[AFallingStar.CurObjectiveIndex];
-                if (AFallingStar.CurObjectiveIndex >= 3)
-                {
-                    UpdateState(npc);
-                }          
-            }
-            else if (npc.life < npc.lifeMax * .44f)
-            {
-                UpdateState(npc, postFallingStar: true);
-            }
+            //var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
 
-            HandleSquishScale(npc);
+            //var AFallingStar = mPlayer.GetMission(MissionID.A_FALLING_STAR);
+
+            //if (AFallingStar?.Progress == MissionProgress.Active)
+            //{
+            //    var currentSet = AFallingStar.Objective[AFallingStar.CurrentIndex];
+            //    if (AFallingStar.CurrentIndex >= 3)
+            //    {
+            //        UpdateState(npc);
+            //    }          
+            //}
+            //else if (npc.life < npc.lifeMax * .44f)
+            //{
+            //    UpdateState(npc, postFallingStar: true);
+            //}
+
         }
 
-        private void UpdateState(NPC npc, bool postFallingStar = false)
-        {
-            stateTimer++;
-            switch (currentState)
-            {
+        //private void UpdateState(NPC npc, bool postFallingStar = false)
+        //{
+        //    stateTimer++;
+        //    switch (currentState)
+        //    {
 
-                case SlimeState.Idle:
-                    if (!postFallingStar)
-                    {
-                        if (stateTimer > 540f)
-                        {
-                            npc.aiStyle = -1;
-                            currentState = SlimeState.PrepareSlamAttack;
-                            HandleSlamSetup(npc);
-                            stateTimer = 0;
-                        }
-                    }
-                    else
-                    {
-                        npc.aiStyle = -1;
-                        currentState = SlimeState.PrepareSlamAttack;
-                        HandleSlamSetup(npc);
-                    }
-                    break;
+        //        case SlimeState.Idle:
+        //            if (!postFallingStar)
+        //            {
+        //                if (stateTimer > 540f)
+        //                {
+        //                    npc.aiStyle = -1;
+        //                    currentState = SlimeState.PrepareSlamAttack;
+        //                    HandleSlamSetup(npc);
+        //                    stateTimer = 0;
+        //                }
+        //            }
+        //            else
+        //            {
+        //                npc.aiStyle = -1;
+        //                currentState = SlimeState.PrepareSlamAttack;
+        //                HandleSlamSetup(npc);
+        //            }
+        //            break;
 
-                case SlimeState.PrepareSlamAttack:
-                    if (HandleSlamSetup(npc))
-                    {
-                        HandleSlam(npc);
-                    }
-                    break;
+        //        case SlimeState.PrepareSlamAttack:
+        //            if (HandleSlamSetup(npc))
+        //            {
+        //                HandleSlam(npc);
+        //            }
+        //            break;
 
-                case SlimeState.SlamAttack:
-                    if (HandleSlam(npc))
-                    {
-                        consecutiveSlams++;
-                        if (consecutiveSlams >= MAX_CONSECUTIVE_SLAMS)
-                        {
-                            npc.aiStyle = NPCAIStyleID.Slime;
-                            currentState = SlimeState.Idle;
-                        }
-                        else
-                            HandleSlamSetup(npc);
-                    }
-                    break;
-            }
-        }
+        //        case SlimeState.SlamAttack:
+        //            if (HandleSlam(npc))
+        //            {
+        //                consecutiveSlams++;
+        //                if (consecutiveSlams >= MAX_CONSECUTIVE_SLAMS)
+        //                {
+        //                    npc.aiStyle = NPCAIStyleID.Slime;
+        //                    currentState = SlimeState.Idle;
+        //                }
+        //                else
+        //                    HandleSlamSetup(npc);
+        //            }
+        //            break;
+        //    }
+        //}
 
-        private bool HandleSlamSetup(NPC npc)
-        {
+        //private bool HandleSlamSetup(NPC npc)
+        //{
 
-            if (npc.velocity.Y == 0f)
-            {
-                if (!npc.localAI[1].Equals(1f))
-                {
-                    npc.localAI[1] = 1f;
-                }
+        //    if (npc.velocity.Y == 0f)
+        //    {
+        //        if (!npc.localAI[1].Equals(1f))
+        //        {
+        //            npc.localAI[1] = 1f;
+        //        }
 
-                npc.direction = npc.spriteDirection = npc.Center.X < Main.player[npc.target].Center.X ? 1 : -1;
+        //        npc.direction = npc.spriteDirection = npc.Center.X < Main.player[npc.target].Center.X ? 1 : -1;
 
-                float yVel = npc.velocity.Y = -6.74f;
-                float xVel = npc.velocity.X = .84f * npc.direction;
+        //        float yVel = npc.velocity.Y = -6.74f;
+        //        float xVel = npc.velocity.X = .84f * npc.direction;
 
-                if (Main.masterMode)
-                {
-                    xVel = xVel * -1.77f;
-                    yVel = yVel * -1.97f;
-                }
+        //        if (Main.masterMode)
+        //        {
+        //            xVel = xVel * -1.77f;
+        //            yVel = yVel * -1.97f;
+        //        }
 
-                else if (Main.expertMode)
-                {
-                    xVel = xVel * -1.77f;
-                    yVel = yVel * -1.47f;
-                }
+        //        else if (Main.expertMode)
+        //        {
+        //            xVel = xVel * -1.77f;
+        //            yVel = yVel * -1.47f;
+        //        }
 
-                for (int i = 0; i < 10; i++)
-                {
-                    int dust = Dust.NewDust(npc.position, npc.width, npc.height,
-                        DustID.t_Slime, npc.velocity.X * 0.4f, npc.velocity.Y * 0.4f,
-                        150, npc.color, 1.5f);
-                    Main.dust[dust].noGravity = true;
-                    Main.dust[dust].velocity *= 0.4f;
-                }
-            }
-            else // In air
-            {
-                npc.localAI[1] = 0f;
-                float maxSpeed = 3f;
-                if (Main.masterMode)
-                {
-                    maxSpeed = 6f;
-                }
-                else if (Main.expertMode)
-                {
-                    maxSpeed = 4.11f;
+        //        for (int i = 0; i < 10; i++)
+        //        {
+        //            int dust = Dust.NewDust(npc.position, npc.width, npc.height,
+        //                DustID.t_Slime, npc.velocity.X * 0.4f, npc.velocity.Y * 0.4f,
+        //                150, npc.color, 1.5f);
+        //            Main.dust[dust].noGravity = true;
+        //            Main.dust[dust].velocity *= 0.4f;
+        //        }
+        //    }
+        //    else // In air
+        //    {
+        //        npc.localAI[1] = 0f;
+        //        float maxSpeed = 3f;
+        //        if (Main.masterMode)
+        //        {
+        //            maxSpeed = 6f;
+        //        }
+        //        else if (Main.expertMode)
+        //        {
+        //            maxSpeed = 4.11f;
 
-                }
+        //        }
 
-                if ((npc.direction == 1 && npc.velocity.X < maxSpeed) ||
-                    (npc.direction == -1 && npc.velocity.X > -maxSpeed))
-                {
-                    npc.velocity.X += 0.1f * npc.direction;
-                }
-                if (npc.velocity.Y > 0f)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
+        //        if ((npc.direction == 1 && npc.velocity.X < maxSpeed) ||
+        //            (npc.direction == -1 && npc.velocity.X > -maxSpeed))
+        //        {
+        //            npc.velocity.X += 0.1f * npc.direction;
+        //        }
+        //        if (npc.velocity.Y > 0f)
+        //        {
+        //            return true;
+        //        }
+        //    }
+        //    return false;
+        //}
 
-        private bool HandleSlam(NPC npc)
-        {
+        //private bool HandleSlam(NPC npc)
+        //{
 
-            if (stateTimer == 0)
-            {
-                Player target = Main.player[npc.target];
-                Vector2 toTarget = target.Center - npc.Center;
-                float targetAngle = toTarget.ToRotation();
-                npc.velocity = new Vector2(
-                    target.Center.X > npc.Center.X ? 2f : -2f,
-                    SLAM_SPEED
-                );
-            }
+        //    if (stateTimer == 0)
+        //    {
+        //        Player target = Main.player[npc.target];
+        //        Vector2 toTarget = target.Center - npc.Center;
+        //        float targetAngle = toTarget.ToRotation();
+        //        npc.velocity = new Vector2(
+        //            target.Center.X > npc.Center.X ? 2f : -2f,
+        //            SLAM_SPEED
+        //        );
+        //    }
 
-            bool hitGround = false;
-            int tileX = (int)(npc.position.X / 16);
-            int tileEndX = (int)((npc.position.X + npc.width) / 16);
-            int tileY = (int)((npc.position.Y + npc.height) / 16);
+        //    bool hitGround = false;
+        //    int tileX = (int)(npc.position.X / 16);
+        //    int tileEndX = (int)((npc.position.X + npc.width) / 16);
+        //    int tileY = (int)((npc.position.Y + npc.height) / 16);
 
-            for (int i = tileX; i <= tileEndX; i++)
-            {
-                Tile tile = Framing.GetTileSafely(i, tileY);
-                if (tile.HasTile && Main.tileSolid[tile.TileType] && !Main.tileSolidTop[tile.TileType])
-                {
-                    hitGround = true;
-                    break;
-                }
-            }
+        //    for (int i = tileX; i <= tileEndX; i++)
+        //    {
+        //        Tile tile = Framing.GetTileSafely(i, tileY);
+        //        if (tile.HasTile && Main.tileSolid[tile.TileType] && !Main.tileSolidTop[tile.TileType])
+        //        {
+        //            hitGround = true;
+        //            break;
+        //        }
+        //    }
 
-            if (hitGround || npc.velocity.Y == 0f)
-            {
-                if (!npc.localAI[0].Equals(1f))
-                {
-                    npc.localAI[0] = 1f;
-                }
+        //    if (hitGround || npc.velocity.Y == 0f)
+        //    {
+        //        if (!npc.localAI[0].Equals(1f))
+        //        {
+        //            npc.localAI[0] = 1f;
+        //        }
 
-                stateTimer++;
-                npc.velocity *= 0.8f;
+        //        stateTimer++;
+        //        npc.velocity *= 0.8f;
 
-                if (stateTimer > 10f)
-                {
-                    npc.noTileCollide = false;
-                    npc.noGravity = false;
-                    npc.localAI[0] = 0f;
-                    return true;
-                }
-            }
-            else
-            {
-                npc.velocity.Y += 0.5f;
-                if (npc.velocity.Y > SLAM_SPEED)
-                    npc.velocity.Y = SLAM_SPEED;
+        //        if (stateTimer > 10f)
+        //        {
+        //            npc.noTileCollide = false;
+        //            npc.noGravity = false;
+        //            npc.localAI[0] = 0f;
+        //            return true;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        npc.velocity.Y += 0.5f;
+        //        if (npc.velocity.Y > SLAM_SPEED)
+        //            npc.velocity.Y = SLAM_SPEED;
 
-            }
+        //    }
 
-            return false;
-        }
+        //    return false;
+        //}
 
         private void HandleSquishScale(NPC npc)
         {
@@ -242,6 +245,15 @@ namespace Reverie.Common.NPCs
             const float MIN_SQUISH = 0.7f;
 
             float yVelocityFactor = MathHelper.Clamp(npc.velocity.Y / 16f, -1f, 1f);
+
+            if (npc.velocity.Y == 0f && npc.ai[0] >= -30f)
+            {
+                // Progressively squish horizontally and stretch vertically as it prepares to jump
+                float preparationProgress = Math.Min(1f, (npc.ai[0] + 30f) / 30f);
+                squishScale.X = MathHelper.Lerp(1f, 1.3f, preparationProgress);
+                squishScale.Y = MathHelper.Lerp(1f, 0.92f, preparationProgress);
+                return;
+            }
 
             if (npc.velocity.Y != 0)
             {
@@ -268,12 +280,17 @@ namespace Reverie.Common.NPCs
 
             Texture2D texture = TextureAssets.Npc[npc.type].Value;
 
-            int frameHeight = texture.Height / 2;
+            int frameCount = 2;
+            int frameHeight = texture.Height / frameCount;
             int frameWidth = texture.Width;
 
-            int frameY = (int)npc.frameCounter / 8 % 2 * frameHeight;
+            if (npc.ai[0] == -999f)
+            {
+                npc.frame.Y = 0;
+                npc.frameCounter = 0.0;
+            }
 
-            Rectangle sourceRectangle = new(0, frameY, frameWidth, frameHeight);
+            Rectangle sourceRectangle = new(0, npc.frame.Y, frameWidth, frameHeight);
 
             Color finalColor = npc.color;
             finalColor.R = (byte)((finalColor.R * drawColor.R) / 255);
@@ -284,12 +301,20 @@ namespace Reverie.Common.NPCs
             Vector2 drawPos = npc.Center - Main.screenPosition;
             SpriteEffects spriteEffects = npc.spriteDirection == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
+            // Calculate rotation based on X velocity when falling
+            float spriteRotation = 0f;
+            if (npc.velocity.Y > 0f)
+            {
+                // Scale rotation with X velocity, cap at ±π/2 (90 degrees)
+                spriteRotation = MathHelper.Clamp(npc.velocity.X * 0.04f, -MathHelper.PiOver2, MathHelper.PiOver2);
+            }
+
             Main.EntitySpriteDraw(
                 texture,
                 drawPos,
                 sourceRectangle,
                 finalColor,
-                rotation,
+                spriteRotation,
                 new Vector2(frameWidth / 2, frameHeight / 2),
                 squishScale * npc.scale,
                 spriteEffects

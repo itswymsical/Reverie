@@ -1,4 +1,4 @@
-﻿using Reverie.Common.Systems;
+﻿using Reverie.Common.Systems.Camera;
 using Reverie.Utilities;
 using Terraria.Audio;
 

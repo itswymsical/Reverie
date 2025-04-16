@@ -7,6 +7,20 @@
 	<PropertyGroup>
 		
 	</PropertyGroup>
+	<ItemGroup>
+	  <AdditionalFiles Remove="Common\Items\Configs\**" />
+	  <AdditionalFiles Remove="Common\Projectiles\**" />
+	  <AdditionalFiles Remove="Dialouge\**" />
+	  <Compile Remove="Common\Items\Configs\**" />
+	  <Compile Remove="Common\Projectiles\**" />
+	  <Compile Remove="Dialouge\**" />
+	  <EmbeddedResource Remove="Common\Items\Configs\**" />
+	  <EmbeddedResource Remove="Common\Projectiles\**" />
+	  <EmbeddedResource Remove="Dialouge\**" />
+	  <None Remove="Common\Items\Configs\**" />
+	  <None Remove="Common\Projectiles\**" />
+	  <None Remove="Dialouge\**" />
+	</ItemGroup>
 
 	<!-- References -->
 	<ItemGroup>
@@ -14,7 +28,7 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <Reference Include="StructureHelper">
-	    <HintPath>lib\StructureHelper.dll</HintPath>
+	    <HintPath>lib\StructureHelper2.dll</HintPath>
 	  </Reference>
 	  <Reference Include="SubworldLibrary">
 	    <HintPath>..\ReverieMod\Utilities\SubworldLibrary.dll</HintPath>

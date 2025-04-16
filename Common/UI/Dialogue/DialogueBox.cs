@@ -59,8 +59,8 @@ public class DialogueBox : IInGameNotification
             CurrentPortrait = npcData.Portrait,
             npcData = npcData,
             NpcName = npcData.NpcName,
-            Color = npcData.DialogueColor,
-            CharacterSound = npcData.CharacterSound,
+            Color = npcData.BoxColor,
+            CharacterSound = npcData.TalkSFX,
             ShouldZoom = zoomIn
         };
 
@@ -185,7 +185,7 @@ public class DialogueBox : IInGameNotification
         var panelRectangle = Utils.CenteredRectangle(panelPosition, panelSize);
 
         var isHovering = panelRectangle.Contains(Main.MouseScreen.ToPoint());
-        DrawUtils.DrawPanel(spriteBatch, panelRectangle, currentSpeakingNPC.DialogueColor * (isHovering ? 0.75f : 0.5f) * Opacity);
+        DrawUtils.DrawPanel(spriteBatch, panelRectangle, currentSpeakingNPC.BoxColor * (isHovering ? 0.75f : 0.5f) * Opacity);
 
         if (isHovering) OnMouseOver();
     }

@@ -1,6 +1,4 @@
-﻿using Reverie.Common.Items.Components;
-using Reverie.Core.Items.Components;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Reverie.Utilities;
 
@@ -21,6 +19,10 @@ public static class ItemUtils
     {
         return item.pick > 0 || item.Name.Contains("Shovel");
     }
+    public static bool IsOre(this Item item)
+           => item.Name.Contains("Ore") || item.Name.EndsWith("ium")
+           || item.Name.EndsWith("ite") || item.Name.EndsWith("yte");
+
 
     private static readonly HashSet<string> MetalKeywords =
     [
@@ -40,12 +42,7 @@ public static class ItemUtils
         return false;
     }
 
-    public static bool IsWeapon(this Item item) => (item.DamageType == DamageClass.Magic
-        || item.DamageType == DamageClass.Summon || item.DamageType == DamageClass.Melee
-        || item.DamageType == DamageClass.Throwing);
-    public static bool IsOre(this Item item) 
-        => item.Name.Contains("Ore") || item.Name.EndsWith("ium") 
-        || item.Name.EndsWith("ite") || item.Name.EndsWith("yte");
+    public static bool DealsDamage(this Item item) => item.DamageType != DamageClass.Default;
 
     public static bool IsWood(this Item item)
     {

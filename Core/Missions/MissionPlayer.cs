@@ -1,30 +1,30 @@
-﻿using Reverie.Common.Players;
-using Reverie.Common.Systems;
-using Reverie.Core.Cinematics.Cutscenes;
-
+﻿using Reverie.Common.UI.Missions;
 using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
 
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 using Terraria.ModLoader.IO;
+using Terraria.UI;
 
 namespace Reverie.Core.Missions;
 
-// located in core for namespace convenience.
 public partial class MissionPlayer : ModPlayer
 {
     #region Properties & Fields
     public readonly Dictionary<int, Mission> missionDict = [];
 
-    public readonly Dictionary<int, List<int>> npcMissionsDict = [];
-
     private readonly HashSet<int> notifiedMissions = [];
 
     private readonly HashSet<int> dirtyMissions = [];
+
     private int check = 0;
+
+    private TagCompound savedMissionData = null;
+    private bool isWorldFullyLoaded = false;
+    private bool hasDeferredLoadRun = false;
+
     #endregion
 
     #region Mission Logic
@@ -41,7 +41,7 @@ public partial class MissionPlayer : ModPlayer
 
             var container = mission.ToState();
 
-            ModContent.GetInstance<Reverie>().Logger.Debug($"Mission {mission.Name} progress updated: Set {mission.CurObjectiveIndex}");
+            ModContent.GetInstance<Reverie>().Logger.Debug($"Mission {mission.Name} progress updated: Set {mission.CurrentIndex}");
         }
         catch (Exception ex)
         {
@@ -79,7 +79,6 @@ public partial class MissionPlayer : ModPlayer
     private void ResetToCleanState()
     {
         missionDict.Clear();
-        npcMissionsDict.Clear();
         notifiedMissions.Clear();
         MissionManager.Instance.Reset();
     }
@@ -93,13 +92,6 @@ public partial class MissionPlayer : ModPlayer
             Main.NewText($"  Progress: {mission.Progress}");
             Main.NewText($"  NextMissionID: {mission.NextMissionID}");
         }
-    }
-
-    public override void ResetEffects()
-    {
-        base.ResetEffects();
-
-        notifiedMissions.Clear();
     }
     #endregion
 
@@ -119,7 +111,7 @@ public partial class MissionPlayer : ModPlayer
             foreach (var mission in missionDict.Values.Where(m => m.Progress != MissionProgress.Completed))
             {
                 var state = mission.ToState();
-                var MissionAvailability = new TagCompound
+                var missionData = new TagCompound
                 {
                     ["ID"] = mission.ID,
                     ["State"] = new TagCompound
@@ -127,133 +119,261 @@ public partial class MissionPlayer : ModPlayer
                         ["Progress"] = (int)mission.Progress,
                         ["Availability"] = (int)mission.Availability,
                         ["Unlocked"] = mission.Unlocked,
-                        ["CurObjectiveIndex"] = mission.CurObjectiveIndex,
-                        ["ObjectiveIndex"] = SerializeObjectives(mission.ObjectiveIndex)
+                        ["CurrentIndex"] = mission.CurrentIndex,
+                        ["Objective"] = SerializeObjectives(mission.Objective)
                     }
                 };
-                activeMissionData.Add(MissionAvailability);
+                activeMissionData.Add(missionData);
             }
             tag["ActiveMissions"] = activeMissionData;
 
-            foreach (var mission in missionDict.Values.Where(m => m.Progress != MissionProgress.Completed))
-            {
-                var MissionAvailability = new TagCompound
-                {
-                    ["ID"] = mission.ID,
-                    ["State"] = new TagCompound
-                    {
-                        ["Progress"] = (int)mission.Progress,
-                        ["Availability"] = (int)mission.Availability,
-                        ["Unlocked"] = mission.Unlocked,
-                        ["CurObjectiveIndex"] = mission.CurObjectiveIndex,
-                        ["ObjectiveIndex"] = SerializeObjectives(mission.ObjectiveIndex)
-                    }
-                };
-                activeMissionData.Add(MissionAvailability);
-            }
-            tag["ActiveMissions"] = activeMissionData;
+            // Remove the duplicate loop
 
-            tag["CompletedMissionIDs"] = GetCompletedMissions().Select(m => m.ID).ToList();
-
+            tag["CompletedMissionIDs"] = CompletedMissions().Select(m => m.ID).ToList();
             tag["NotifiedMissions"] = notifiedMissions.ToList();
 
-            var npcMissionData = npcMissionsDict.Select(kvp => new TagCompound
-            {
-                ["NpcType"] = kvp.Key,
-                ["MissionIDs"] = kvp.Value
-            }).ToList();
-            tag["NPCMissions"] = npcMissionData;
+            ModContent.GetInstance<Reverie>().Logger.Info($"Successfully saved mission data for {activeMissionData.Count} active missions");
         }
         catch (Exception ex)
         {
             ModContent.GetInstance<Reverie>().Logger.Error($"Failed to save mission data: {ex}");
         }
     }
+
     public override void LoadData(TagCompound tag)
     {
+        // Only store the data, don't process it yet
+        savedMissionData = tag;
+
+        // Reset to clean state to avoid any partial loading issues
+        ResetToCleanState();
+
+        ModContent.GetInstance<Reverie>().Logger.Info("Mission data stored for deferred loading");
+    }
+
+    // New method for deferred loading
+    private void ProcessDeferredLoad()
+    {
+        if (hasDeferredLoadRun || savedMissionData == null)
+        {
+            return;
+        }
+
+        hasDeferredLoadRun = true;
+
         try
         {
-            ResetToCleanState();
+            ModContent.GetInstance<Reverie>().Logger.Info("Starting deferred mission data loading");
 
             // Load completed missions first
-            var completedMissionIds = tag.GetList<int>("CompletedMissionIDs");
+            var completedMissionIds = savedMissionData.GetList<int>("CompletedMissionIDs");
+            int completedMissionsLoaded = 0;
+
             foreach (var missionId in completedMissionIds)
             {
-                LoadCompletedMission(missionId);
+                try
+                {
+                    LoadCompletedMission(missionId);
+                    completedMissionsLoaded++;
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Failed to load completed mission {missionId}: {ex.Message}");
+                }
             }
+
+            ModContent.GetInstance<Reverie>().Logger.Info($"Loaded {completedMissionsLoaded}/{completedMissionIds.Count} completed missions");
 
             // Load active missions
-            var activeMissionData = tag.GetList<TagCompound>("ActiveMissions").ToList();
+            int activeMissionsLoaded = 0;
+            var activeMissionData = savedMissionData.GetList<TagCompound>("ActiveMissions").ToList();
+
             foreach (var missionTag in activeMissionData)
             {
-                LoadActiveMission(missionTag);
+                try
+                {
+                    LoadActiveMission(missionTag);
+                    activeMissionsLoaded++;
+                }
+                catch (Exception ex)
+                {
+                    int missionId = missionTag.ContainsKey("ID") ? missionTag.GetInt("ID") : -1;
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Failed to load active mission {missionId}: {ex.Message}");
+                }
             }
 
-            notifiedMissions.UnionWith([.. tag.GetList<int>("NotifiedMissions")]);
+            ModContent.GetInstance<Reverie>().Logger.Info($"Loaded {activeMissionsLoaded}/{activeMissionData.Count} active missions");
 
-            var npcMissionData = tag.GetList<TagCompound>("NPCMissions").ToList();
-            foreach (var npcTag in npcMissionData)
+            // Load notified missions
+            try
             {
-                var npcType = npcTag.GetInt("NpcType");
-                var missionIds = npcTag.GetList<int>("MissionIDs").ToList();
-                npcMissionsDict[npcType] = missionIds;
+                notifiedMissions.UnionWith([.. savedMissionData.GetList<int>("NotifiedMissions")]);
+            }
+            catch (Exception ex)
+            {
+                ModContent.GetInstance<Reverie>().Logger.Error($"Failed to load notified missions: {ex.Message}");
             }
 
             // Re-register active missions
-            foreach (var mission in GetActiveMissions())
+            int missionsRegistered = 0;
+            foreach (var mission in ActiveMissions())
             {
-                MissionManager.Instance.RegisterMission(mission);
+                try
+                {
+                    MissionManager.Instance.RegisterMission(mission);
+                    missionsRegistered++;
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Failed to register active mission {mission.ID}: {ex.Message}");
+                }
             }
+            ModContent.GetInstance<Reverie>().Logger.Info($"Registered {missionsRegistered} active missions with manager");
+
+            // Validate mission state consistency
+            ValidateStates();
+
+            // Clear saved data to free memory
+            savedMissionData = null;
+
+            // Mark world as fully loaded
+            isWorldFullyLoaded = true;
+
+            ModContent.GetInstance<Reverie>().Logger.Info("Completed deferred mission loading successfully");
         }
         catch (Exception ex)
         {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Failed to load mission data: {ex}");
+            ModContent.GetInstance<Reverie>().Logger.Error($"Critical failure in deferred mission loading: {ex}");
             ResetToCleanState();
+        }
+    }
+
+    private void ValidateStates()
+    {
+        foreach (var mission in missionDict.Values)
+        {
+            try
+            {
+                // Ensure current index is valid
+                if (mission.CurrentIndex < 0 || mission.CurrentIndex >= mission.Objective.Count)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Warn($"Fixing invalid CurrentIndex for mission {mission.ID}");
+                    mission.CurrentIndex = 0;
+                }
+
+                // Validate objective completion states
+                foreach (var set in mission.Objective)
+                {
+                    bool allCompleted = set.Objectives.All(o => o.IsCompleted);
+                    bool anyIncomplete = set.Objectives.Any(o => !o.IsCompleted);
+
+                    // If all objectives are complete but the set isn't marked complete
+                    if (allCompleted && !set.IsCompleted)
+                    {
+                        ModContent.GetInstance<Reverie>().Logger.Warn($"Found completed objective set not marked as complete");
+                        // The IsCompleted implementation is a computed property, so this is just for logging
+                    }
+
+                    // Validate counts are within bounds
+                    foreach (var objective in set.Objectives)
+                    {
+                        if (objective.CurrentCount > objective.RequiredCount)
+                        {
+                            ModContent.GetInstance<Reverie>().Logger.Warn($"Objective count exceeds required count, clamping");
+                            objective.CurrentCount = objective.RequiredCount;
+                        }
+
+                        if (objective.IsCompleted && objective.CurrentCount < objective.RequiredCount)
+                        {
+                            ModContent.GetInstance<Reverie>().Logger.Warn($"Objective marked complete but count is insufficient");
+                            objective.CurrentCount = objective.RequiredCount;
+                        }
+                    }
+                }
+
+                // Check if the mission progress state is valid
+                if (mission.Progress == MissionProgress.Completed)
+                {
+                    // Ensure all objectives are actually complete
+                    bool allSetsComplete = mission.Objective.All(set => set.IsCompleted);
+                    if (!allSetsComplete)
+                    {
+                        ModContent.GetInstance<Reverie>().Logger.Warn($"Mission {mission.ID} marked complete but has incomplete objectives");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ModContent.GetInstance<Reverie>().Logger.Error($"Error validating mission {mission.ID}: {ex.Message}");
+            }
         }
     }
 
     private static List<TagCompound> SerializeObjectives(List<ObjectiveSet> ObjectiveIndex)
     {
         var serializedSets = new List<TagCompound>();
+
         foreach (var set in ObjectiveIndex)
         {
-            using var ms = new MemoryStream();
-            using var writer = new BinaryWriter(ms);
-            set.WriteData(writer);
+            var objectiveData = new List<TagCompound>();
+
+            foreach (var objective in set.Objectives)
+            {
+                objectiveData.Add(new TagCompound
+                {
+                    ["Description"] = objective.Description,
+                    ["IsCompleted"] = objective.IsCompleted,
+                    ["RequiredCount"] = objective.RequiredCount,
+                    ["CurrentCount"] = objective.CurrentCount
+                });
+            }
+
             serializedSets.Add(new TagCompound
             {
-                ["SetData"] = ms.ToArray()
+                ["Objectives"] = objectiveData,
+                ["HasCheckedInventory"] = set.HasCheckedInitialInventory
             });
         }
+
         return serializedSets;
     }
+
     private static List<ObjectiveIndexState> DeserializeObjectives(IList<TagCompound> serializedSets)
     {
         var objectiveStates = new List<ObjectiveIndexState>();
 
         foreach (var setTag in serializedSets)
         {
-            var setData = setTag.GetByteArray("SetData");
-            using var ms = new MemoryStream(setData);
-            using var reader = new BinaryReader(ms);
-
-            var objectiveSet = new ObjectiveIndexState();
-            int count = reader.ReadInt32();
-            bool hasCheckedInventory = reader.ReadBoolean();
-
-            for (int i = 0; i < count; i++)
+            try
             {
-                var objective = new ObjectiveState
-                {
-                    Description = reader.ReadString(),
-                    IsCompleted = reader.ReadBoolean(),
-                    RequiredCount = reader.ReadInt32(),
-                    CurrentCount = reader.ReadInt32()
-                };
-                objectiveSet.Objectives.Add(objective);
-            }
+                var objectiveSet = new ObjectiveIndexState();
+                var objectiveTags = setTag.GetList<TagCompound>("Objectives");
 
-            objectiveStates.Add(objectiveSet);
+                foreach (var objTag in objectiveTags)
+                {
+                    try
+                    {
+                        var objective = new ObjectiveState
+                        {
+                            Description = objTag.GetString("Description"),
+                            IsCompleted = objTag.GetBool("IsCompleted"),
+                            RequiredCount = objTag.GetInt("RequiredCount"),
+                            CurrentCount = objTag.GetInt("CurrentCount")
+                        };
+                        objectiveSet.Objectives.Add(objective);
+                    }
+                    catch (Exception ex)
+                    {
+                        ModContent.GetInstance<Reverie>().Logger.Error($"Error deserializing objective: {ex.Message}");
+                    }
+                }
+
+                objectiveStates.Add(objectiveSet);
+            }
+            catch (Exception ex)
+            {
+                ModContent.GetInstance<Reverie>().Logger.Error($"Error deserializing objective set: {ex.Message}");
+            }
         }
 
         return objectiveStates;
@@ -266,36 +386,96 @@ public partial class MissionPlayer : ModPlayer
             var missionId = missionTag.GetInt("ID");
             var stateTag = missionTag.GetCompound("State");
 
+            // Validate that we can create this mission
+            var mission = MissionFactory.Instance.GetMissionData(missionId);
+            if (mission == null)
+            {
+                ModContent.GetInstance<Reverie>().Logger.Error($"Failed to create mission with ID {missionId}");
+                return;
+            }
+
+            // Gather state data
+            var progress = (MissionProgress)stateTag.GetInt("Progress");
+            var availability = (MissionAvailability)stateTag.GetInt("Availability");
+            var unlocked = stateTag.GetBool("Unlocked");
+            var currentIndex = stateTag.GetInt("CurrentIndex");
+
+            // Validate state data
+            if (!Enum.IsDefined(typeof(MissionProgress), progress))
+            {
+                ModContent.GetInstance<Reverie>().Logger.Warn($"Invalid mission progress value {(int)progress} for mission {missionId}, defaulting to Inactive");
+                progress = MissionProgress.Inactive;
+            }
+
+            if (!Enum.IsDefined(typeof(MissionAvailability), availability))
+            {
+                ModContent.GetInstance<Reverie>().Logger.Warn($"Invalid mission availability value {(int)availability} for mission {missionId}, defaulting to Locked");
+                availability = MissionAvailability.Locked;
+            }
+
+            if (currentIndex < 0 || currentIndex >= mission.Objective.Count)
+            {
+                ModContent.GetInstance<Reverie>().Logger.Warn($"Invalid currentIndex {currentIndex} for mission {missionId}, defaulting to 0");
+                currentIndex = 0;
+            }
+
             // Create container from saved state
             var container = new MissionDataContainer
             {
                 ID = missionId,
-                Progress = (MissionProgress)stateTag.GetInt("Progress"),
-                Availability = (MissionAvailability)stateTag.GetInt("Availability"),
-                Unlocked = stateTag.GetBool("Unlocked"),
-                CurObjectiveIndex = stateTag.GetInt("CurObjectiveIndex"),
-                ObjectiveIndex = DeserializeObjectives(stateTag.GetList<TagCompound>("ObjectiveIndex"))
+                Progress = progress,
+                Availability = availability,
+                Unlocked = unlocked,
+                CurObjectiveIndex = currentIndex
             };
 
-            // Get or create mission instance and load state
-            var mission = MissionFactory.Instance.GetMissionData(missionId);
-            if (mission != null)
+            // Load objective data with validation
+            try
             {
-                mission.LoadState(container);
-                missionDict[missionId] = mission;
-
-                // Register with handler manager if active
-                if (mission.Progress == MissionProgress.Active)
-                {
-                    MissionManager.Instance.RegisterMission(mission);
-                }
+                container.ObjectiveIndex = DeserializeObjectives(stateTag.GetList<TagCompound>("Objective"));
             }
+            catch (Exception ex)
+            {
+                ModContent.GetInstance<Reverie>().Logger.Error($"Failed to deserialize objectives for mission {missionId}: {ex.Message}");
+                container.ObjectiveIndex = new List<ObjectiveIndexState>();
+
+                // Create placeholder empty states
+                for (int i = 0; i < mission.Objective.Count; i++)
+                {
+                    var set = new ObjectiveIndexState();
+                    foreach (var obj in mission.Objective[i].Objectives)
+                    {
+                        set.Objectives.Add(new ObjectiveState
+                        {
+                            Description = obj.Description,
+                            IsCompleted = false,
+                            RequiredCount = obj.RequiredCount,
+                            CurrentCount = 0
+                        });
+                    }
+                    container.ObjectiveIndex.Add(set);
+                }
+
+                // Mark as inactive if we couldn't load objectives
+                container.Progress = MissionProgress.Inactive;
+            }
+
+            // Load state with enhanced recovery
+            mission.LoadState(container);
+            missionDict[missionId] = mission;
+
+            // Mark mission as dirty to ensure proper sync
+            dirtyMissions.Add(missionId);
+
+            ModContent.GetInstance<Reverie>().Logger.Info($"Successfully loaded mission {mission.Name} (ID: {missionId}) with state {mission.Progress}");
         }
         catch (Exception ex)
         {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Failed to load active mission: {ex.Message}");
+            var idString = missionTag.ContainsKey("ID") ? missionTag.GetInt("ID").ToString() : "unknown";
+            ModContent.GetInstance<Reverie>().Logger.Error($"Failed to load active mission {idString}: {ex.Message}");
         }
     }
+
     private void LoadCompletedMission(int missionId)
     {
         var mission = GetMission(missionId);
@@ -306,12 +486,12 @@ public partial class MissionPlayer : ModPlayer
             missionDict[missionId] = mission;
         }
     }
+
     #endregion
 
     #region Mission Access
     public Mission GetMission(int missionId)
     {
-        // Check local cache first
         if (missionDict.TryGetValue(missionId, out var mission))
         {
             return mission;
@@ -335,26 +515,6 @@ public partial class MissionPlayer : ModPlayer
         }
     }
 
-    public void StartNextMission(Mission completedMission)
-    {
-        var nextMissionID = completedMission.NextMissionID;
-        if (nextMissionID != -1)
-        {
-            var nextMission = GetMission(nextMissionID);
-            if (nextMission != null)
-            {
-                if (nextMission.Progress != MissionProgress.Completed &&
-                    nextMission.Progress != MissionProgress.Active)
-                {
-                    nextMission.Availability = MissionAvailability.Unlocked;
-                    nextMission.Progress = MissionProgress.Active;
-                    StartMission(nextMissionID);
-                    Main.NewText($"New mission available: {nextMission.Name}", Color.Yellow);
-                }
-            }
-        }
-    }
-
     public void CompleteMission(int missionId)
     {
         var mission = GetMission(missionId);
@@ -373,10 +533,16 @@ public partial class MissionPlayer : ModPlayer
             mission.Progress = MissionProgress.Active;
             MissionManager.Instance.RegisterMission(mission);
             SyncMissionState(mission);
+
+            mission.OnMissionStart();
+
+            if (!mission.IsMainline)
+            {
+                InGameNotificationsTracker.AddNotification(new MissionAcceptNotification(mission));
+            }
         }
     }
-
-    public void UnlockMission(int missionId)
+    public void UnlockMission(int missionId, bool broadcast = false)
     {
         var mission = GetMission(missionId);
         if (mission != null)
@@ -385,18 +551,25 @@ public partial class MissionPlayer : ModPlayer
             mission.Progress = MissionProgress.Inactive;
             mission.Unlocked = true;
             SyncMissionState(mission);
+
+            // Add broadcast notification if specified
+            if (broadcast && mission.ProviderNPC > 0)
+            {
+                var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
+                Main.NewText($"{npcName} has a job opportunity!", Color.CornflowerBlue);
+                notifiedMissions.Add(mission.ID);
+            }
         }
     }
 
-    public IEnumerable<Mission> GetAvailableMissions()
+    public IEnumerable<Mission> AvailableMissions()
         => missionDict.Values.Where
         (m => m.Availability == MissionAvailability.Unlocked && m.Progress == MissionProgress.Inactive);
 
-    public IEnumerable<Mission> GetActiveMissions()
+    public IEnumerable<Mission> ActiveMissions()
     {
         foreach (var mission in missionDict.Values.Where(m => m.Progress == MissionProgress.Active))
         {
-            // Ensure we're working with the most up-to-date mission state
             if (dirtyMissions.Contains(mission.ID))
             {
                 mission.LoadState(mission.ToState());
@@ -405,115 +578,101 @@ public partial class MissionPlayer : ModPlayer
         }
     }
 
-    public IEnumerable<Mission> GetCompletedMissions()
+    public IEnumerable<Mission> CompletedMissions()
         => missionDict.Values.Where
         (m => m.Progress == MissionProgress.Completed);
-    #endregion
 
-    #region NPC Mission Logic    
     public void AssignMissionToNPC(int npcType, int missionId)
     {
-        if (!npcMissionsDict.TryGetValue(npcType, out var missionIds))
+        var mission = GetMission(missionId);
+        if (mission != null)
         {
-            missionIds = [];
-            npcMissionsDict[npcType] = missionIds;
-        }
-
-        if (!missionIds.Contains(missionId))
-        {
-            missionIds.Add(missionId);
+            mission.ProviderNPC = npcType;
+            missionDict[missionId] = mission;
+            SyncMissionState(mission);
         }
     }
 
     public void RemoveMissionFromNPC(int npcType, int missionId)
     {
-        if (npcMissionsDict.TryGetValue(npcType, out var missionIds))
+        var mission = GetMission(missionId);
+        if (mission != null && mission.ProviderNPC == npcType)
         {
-            missionIds.Remove(missionId);
+            mission.ProviderNPC = 0;
+            missionDict[missionId] = mission;
+            SyncMissionState(mission);
+        }
+    }
+    public void BroadcastAvailableMissionsForNPC(int npcType)
+    {
+        NPCHasAvailableMission(npcType, true);
+    }
+
+    public void CheckAndBroadcastAllAvailableMissions()
+    {
+        var npcTypesWithMissions = missionDict.Values
+            .Where(m => m.ProviderNPC > 0 && m.Availability == MissionAvailability.Unlocked)
+            .Select(m => m.ProviderNPC)
+            .Distinct();
+
+        foreach (var npcType in npcTypesWithMissions)
+        {
+            NPCHasAvailableMission(npcType, true);
         }
     }
 
-    public static bool NPCHasAvailableMission(MissionPlayer missionPlayer, int npcType)
+    public bool NPCHasAvailableMission(int npcType, bool broadcast = false)
     {
-        if (missionPlayer.npcMissionsDict.TryGetValue(npcType, out var missionIds))
+        bool hasAvailableMission = false;
+
+        foreach (var mission in missionDict.Values.Where(m =>
+            m.ProviderNPC == npcType &&
+            m.Availability == MissionAvailability.Unlocked)) // Only show for inactive missions
         {
-            foreach (var missionId in missionIds)
+            hasAvailableMission = true;
+
+            if (!mission.IsMainline && !notifiedMissions.Contains(mission.ID) && broadcast)
             {
-                var mission = missionPlayer.GetMission(missionId);
-                if (mission != null && mission.Availability == MissionAvailability.Unlocked && mission.Progress != MissionProgress.Completed)
-                {
-                    return true;
-                }
+                var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
+                Main.NewText($"{npcName} has a job opportunity!", Color.CornflowerBlue);
+                notifiedMissions.Add(mission.ID);
             }
         }
-        return false;
+
+        return hasAvailableMission;
     }
 
-    public bool NPCHasAvailableMission(int npcType)
-    {
-        if (npcMissionsDict.TryGetValue(npcType, out var missionIds))
-        {
-            foreach (var missionId in missionIds)
-            {
-                var mission = GetMission(missionId);
-                if (mission != null && mission.Availability == MissionAvailability.Unlocked && mission.Progress == MissionProgress.Inactive)
-                {
-                    if (!mission.IsMainline)
-                    {
-                        var npcName = Lang.GetNPCNameValue(mission.Employer);
-                        Main.NewText($"{npcName} has a job opportunity!", Color.Yellow);
-                        notifiedMissions.Add(missionId);
-                    }
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
     #endregion
 
-    #region Objective Tracking & Mission Handlers
+    #region Init & Update
+    public override void OnEnterWorld()
+    {
+        ProcessDeferredLoad();
+        notifiedMissions.Clear();
+
+        var fallingStar = GetMission(MissionID.AFallingStar);
+
+        if (fallingStar != null && fallingStar.Availability != MissionAvailability.Completed 
+            && fallingStar.Progress != MissionProgress.Active)
+        {
+            UnlockMission(MissionID.AFallingStar);
+            StartMission(MissionID.AFallingStar);
+        }
+    }
 
     public override void PostUpdate()
     {
+        base.PostUpdate();
+
+        if (!hasDeferredLoadRun)
+        {
+            ProcessDeferredLoad();
+        }
+
         if (dirtyMissions.Count > 0)
         {
             dirtyMissions.Clear();
         }
-        check++;
-        if (check > 300)
-        {
-            foreach (var biome in Enum.GetValues<BiomeType>())
-            {
-                if (biome.IsPlayerInBiome(Player))
-                {
-                    MissionManager.Instance.OnBiomeEnter(Player, biome);
-                }
-            }
-            check = 0;
-        }
-    }
-
-    public override void OnEnterWorld()
-    {
-        //var AFallingStar = GetMission(MissionID.A_FALLING_STAR);
-        //var player = Main.LocalPlayer.GetModPlayer<ReveriePlayer>();
-
-        //if (AFallingStar != null &&
-        //    AFallingStar.Availability != MissionAvailability.Completed &&
-        //    AFallingStar.Progress != MissionProgress.Active)
-        //{
-        //    CutsceneSystem.PlayCutscene(new FallingStarCutscene());
-        //    UnlockMission(MissionID.A_FALLING_STAR);
-        //    StartMission(MissionID.A_FALLING_STAR);
-        //}
-    }
-
-    public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
-    {
-        base.OnHitNPC(target, hit, damageDone);
-
-        MissionManager.Instance.OnNPCHit(target, damageDone);
     }
 
     #endregion

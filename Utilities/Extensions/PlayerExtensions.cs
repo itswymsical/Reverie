@@ -1,5 +1,6 @@
 ﻿using static Terraria.Player;
 using Terraria.DataStructures;
+using System.Collections.Generic;
 
 namespace Reverie.Utilities.Extensions;
 
@@ -86,12 +87,6 @@ public static class PlayerExtensions
 
     /// 
     /// <summary>
-    ///     Checks if the <see cref="Player"/> is actively using a grappling hook. Used for animations.
-    /// </summary>
-    public static bool IsGrappling(this Player player) => player.controlHook && !player.releaseHook;
-
-    /// 
-    /// <summary>
     ///     Checks if the <see cref="Player"/> is actively jumping. Used for animations.
     /// </summary>
     public static bool IsJumping(this Player player)
@@ -117,137 +112,5 @@ public static class PlayerExtensions
         if (!consideredUsing && player.ItemAnimationEndingOrEnded) return false;
 
         return true;
-    }
-
-    /// 
-    /// <summary>
-    ///     Attempts to create an arm swaying animation with <see cref="Player.SetCompositeArmBack(bool, CompositeArmStretchAmount, float)"/> 
-    ///     and <see cref="Player.SetCompositeArmFront(bool, CompositeArmStretchAmount, float)"/>. Used for animations.
-    /// </summary>
-    public static void ArmSway(this Player player, ref PlayerDrawSet drawInfo, float speed, float amplitude)
-    {
-        float currentTime = Main.GameUpdateCount / 60f;
-        float animationTime = currentTime - Main.GameUpdateCount / 60f;
-        float cycle = (float)Math.Sin(animationTime * speed);
-        float frontArmOffset = (float)Math.Sin((animationTime + 0.1f) * speed);
-
-        float backArmRotation = cycle * amplitude;
-        float frontArmRotation = frontArmOffset * amplitude;
-        if (player.direction == -1)
-        {
-            drawInfo.drawPlayer.SetCompositeArmBack(true, CompositeArmStretchAmount.Full, backArmRotation);
-            drawInfo.drawPlayer.SetCompositeArmFront(true, CompositeArmStretchAmount.Full, -frontArmRotation);
-        }
-        else
-        {
-            drawInfo.drawPlayer.SetCompositeArmBack(true, CompositeArmStretchAmount.Full, -backArmRotation);
-            drawInfo.drawPlayer.SetCompositeArmFront(true, CompositeArmStretchAmount.Full, frontArmRotation);
-        }
-    }
-    /// 
-    /// <summary>
-    ///     Attempts to create an grappling animation with <see cref="Player.SetCompositeArmBack(bool, CompositeArmStretchAmount, float)"/> 
-    ///     and <see cref="Player.SetCompositeArmFront(bool, CompositeArmStretchAmount, float)"/>. Used for animations.
-    /// </summary>
-    public static void GrappleAnimation(this Player player, ref PlayerDrawSet drawInfo)
-    {
-        float armRotation = -MathHelper.PiOver2 + 0.2f;
-
-        if (player.direction == -1)
-        {
-            drawInfo.drawPlayer.SetCompositeArmFront(true, CompositeArmStretchAmount.Full, -(armRotation + 0.2f));
-            drawInfo.drawPlayer.SetCompositeArmBack(true, CompositeArmStretchAmount.Full, -(armRotation - 0.2f));
-        }
-        else
-        {
-            drawInfo.drawPlayer.SetCompositeArmFront(true, CompositeArmStretchAmount.Full, armRotation - 0.2f);
-            drawInfo.drawPlayer.SetCompositeArmBack(true, CompositeArmStretchAmount.Full, armRotation + 0.2f);
-        }
-    }
-
-    /// 
-    /// <summary>
-    ///     Attempts to draw the <see cref="Player.HeldItem"/> behind the  <see cref="Player"/>, whilst holstered. Used for animations.
-    /// </summary>
-    public static void DrawItemBehindPlayer(this Player player, ref PlayerDrawSet drawInfo)
-    {
-        if (player.HeldItem == null || player.HeldItem.IsAir) return;
-
-        Item item = player.HeldItem;
-        Main.instance.LoadItem(item.type);
-        Texture2D itemTexture = ModContent.Request<Texture2D>(item.ModItem?.Texture ?? $"Terraria/Images/Item_{item.type}").Value;
-        Vector2 itemPosition = player.Center - Main.screenPosition;
-        itemPosition.X -= itemTexture.Width / 16;
-        itemPosition.Y -= itemTexture.Height / 16;
-        float tilt = player.velocity.X * 0.125f;
-        float currentTime = Main.GameUpdateCount / 60f;
-        float animationTime = currentTime - Main.GameUpdateCount / 60f;
-
-        float dir = MathHelper.ToRadians(182) * player.direction;
-        SpriteEffects flip = player.direction == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-
-        Color lightColor = Lighting.GetColor(
-            (int)((player.Center.X) / 16f),
-            (int)((player.Center.Y) / 16f)
-        );
-
-        Color itemColor = item.GetAlpha(lightColor);
-
-        DrawData itemDrawData = new(
-            itemTexture,
-            itemPosition,
-            null,
-            itemColor,
-            player.bodyRotation + dir,
-            new Vector2(itemTexture.Width / 2, itemTexture.Height / 2),
-            1.07f,
-            flip,
-            0
-        );
-
-        drawInfo.DrawDataCache.Insert(0, itemDrawData);
-    }
-
-    /// 
-    /// <summary>
-    ///     Attempts to draw the <see cref="Player.HeldItem"/> in the <see cref="Player"/> offhand. Used for animations.
-    /// </summary>
-    public static void DrawItemInFrontHand(this Player player, ref PlayerDrawSet drawInfo)
-    {
-        if (player.HeldItem == null || player.HeldItem.IsAir || player.HeldItem.damage > 0) return;
-
-        Item item = player.HeldItem;
-        Main.instance.LoadItem(item.type);
-
-        Texture2D itemTexture = ModContent.Request<Texture2D>(
-            item.ModItem?.Texture ?? $"Terraria/Images/Item_{item.type}"
-        ).Value;
-
-        Vector2 itemPosition = player.HandPosition.Value - Main.screenPosition;
-
-        float rotation = player.bodyRotation;
-
-        SpriteEffects flip = player.direction == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-
-        Color lightColor = Lighting.GetColor(
-            (int)((player.Center.X) / 16f),
-            (int)((player.Center.Y) / 16f)
-        );
-
-        Color itemColor = item.GetAlpha(lightColor);
-
-        DrawData itemDrawData = new(
-            itemTexture,
-            itemPosition,
-            null,
-            itemColor,
-            rotation,
-            new Vector2(itemTexture.Width / 2, itemTexture.Height / 2),
-            1f,
-            flip,
-            0
-        );
-
-        drawInfo.DrawDataCache.Add(itemDrawData);
     }
 }

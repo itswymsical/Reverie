@@ -1,19 +1,19 @@
 ﻿using Reverie.Core.Graphics;
 using Reverie.Core.Interfaces;
 using Reverie.Utilities;
-using static Reverie.Reverie;
-
 using System.Collections.Generic;
 
 using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.Graphics.Effects;
 
+
 namespace Reverie.Content.Projectiles.Frostbark;
 
 public class BorealHewerProj : ModProjectile, IDrawPrimitive
 {
 
+    public override string Texture => $"Reverie/Assets/Textures/Items/Frostbark/BorealHewer";
     public int MaxStickies => 1;
     private bool isStuck = false;
     private bool isReturning = false;
@@ -90,9 +90,10 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
         if (stickingToTile || stickingToNPC)
             Projectile.rotation = oldRotation;
 
-        Player player = Main.player[Projectile.owner];
-        float distanceToPlayer = Vector2.Distance(Projectile.Center, player.Center);
+        var player = Main.player[Projectile.owner];
+        var distanceToPlayer = Vector2.Distance(Projectile.Center, player.Center);
         soundTimer++;
+        //DealTreeDamage(player);
 
         Projectile.spriteDirection = Projectile.direction;
         if (!isStuck && !isReturning)
@@ -131,7 +132,7 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
 
     private void InitiateReturn()
     {
-        SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}Freezing")
+        SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}HewerReturn")
         {
             MaxInstances = 1,
             Volume = 0.4f,
@@ -161,9 +162,9 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
         }
         else
         {
-            Vector2 directionToPlayer = player.Center - Projectile.Center;
+            var directionToPlayer = player.Center - Projectile.Center;
             directionToPlayer.Normalize();
-            float speed = 15f;
+            var speed = 15f;
             Projectile.velocity = directionToPlayer * speed;
 
             Projectile.rotation += 0.4f;
@@ -182,8 +183,8 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
 
     private void DealTreeDamage(Player player)
     {
-        int x = (int)(Projectile.Center.X / 16);
-        int y = (int)(Projectile.Center.Y / 16);
+        var x = (int)(Projectile.Center.X / 16);
+        var y = (int)(Projectile.Center.Y / 16);
 
         // Check if the tile is a tree
         if (Main.tile[x, y].TileType == TileID.Trees)
@@ -200,7 +201,7 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
 
             oldRotation = Projectile.rotation;
 
-            offset = target.Center - Projectile.Center + (Projectile.velocity * 0.75f);
+            offset = target.Center - Projectile.Center + Projectile.velocity * 0.75f;
 
             stickingToNPC = true;
 
@@ -233,7 +234,7 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
         SoundEngine.PlaySound(SoundID.Item50, target.position);
         if (hit.Crit)
         {
-            target.AddBuff(BuffID.Frostburn, 40 + (damageDone / 10));
+            target.AddBuff(BuffID.Frostburn, 40 + damageDone / 10);
         }
         isStuck = true;
     }
@@ -241,13 +242,13 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
     public override bool PreDraw(ref Color lightColor)
     {
         Main.instance.LoadProjectile(Projectile.type);
-        Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
+        var texture = TextureAssets.Projectile[Projectile.type].Value;
 
-        Vector2 drawOrigin = new Vector2(texture.Width * 0.5f, Projectile.height * 0.5f);
-        for (int k = 0; k < Projectile.oldPos.Length; k++)
+        var drawOrigin = new Vector2(texture.Width * 0.5f, Projectile.height * 0.5f);
+        for (var k = 0; k < Projectile.oldPos.Length; k++)
         {
-            Vector2 drawPos = (Projectile.oldPos[k] - Main.screenPosition) + drawOrigin + new Vector2(0f, Projectile.gfxOffY);
-            Color color = Projectile.GetAlpha(lightColor) * ((Projectile.oldPos.Length - k) / (float)Projectile.oldPos.Length);
+            var drawPos = Projectile.oldPos[k] - Main.screenPosition + drawOrigin + new Vector2(0f, Projectile.gfxOffY);
+            var color = Projectile.GetAlpha(lightColor) * ((Projectile.oldPos.Length - k) / (float)Projectile.oldPos.Length);
             Main.EntitySpriteDraw(texture, drawPos, null, color, Projectile.rotation, drawOrigin, Projectile.scale, SpriteEffects.None, 0);
         }
 
@@ -257,11 +258,11 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
     protected void RemoveStackProjectiles()
     {
         var sticking = new Point[MaxStickies];
-        int index = 0;
+        var index = 0;
 
-        for (int i = 0; i < Main.maxProjectiles; i++)
+        for (var i = 0; i < Main.maxProjectiles; i++)
         {
-            Projectile currentProjectile = Main.projectile[i];
+            var currentProjectile = Main.projectile[i];
 
             if (i != Projectile.whoAmI
                 && currentProjectile.active
@@ -280,9 +281,9 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
 
         if (index >= sticking.Length)
         {
-            int oldIndex = 0;
+            var oldIndex = 0;
 
-            for (int i = 1; i < sticking.Length; i++)
+            for (var i = 1; i < sticking.Length; i++)
                 if (sticking[i].Y < sticking[oldIndex].Y)
                     oldIndex = i;
 
@@ -292,14 +293,14 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
 
     private void ManageCaches()
     {
-        Player player = Main.LocalPlayer;
-        Vector2 pos = Projectile.Center + (player.DirectionTo(Projectile.Center) * (Size.Length() * Main.rand.NextFloat(0.5f, 1.1f))) + (Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.0f, 4.0f));
+        var player = Main.LocalPlayer;
+        var pos = Projectile.Center + player.DirectionTo(Projectile.Center) * (Size.Length() * Main.rand.NextFloat(0.5f, 1.1f)) + Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.0f, 4.0f);
 
         if (cache == null)
         {
             cache = [];
 
-            for (int i = 0; i < 15; i++)
+            for (var i = 0; i < 15; i++)
             {
                 cache.Add(pos);
             }
@@ -315,8 +316,8 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
 
     private void ManageTrail()
     {
-        Player player = Main.LocalPlayer;
-        Vector2 pos = Projectile.Center + (player.DirectionTo(Projectile.Center) * (Size.Length() * Main.rand.NextFloat(0.5f, 1.1f))) + (Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.0f, 4.0f));
+        var player = Main.LocalPlayer;
+        var pos = Projectile.Center + player.DirectionTo(Projectile.Center) * (Size.Length() * Main.rand.NextFloat(0.5f, 1.1f)) + Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.0f, 4.0f);
 
         trail ??= new Trail(Main.instance.GraphicsDevice, 15, new TriangularTip(5), factor => factor * 16, factor =>
         {
@@ -343,22 +344,22 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
         var primitiveShader = Filters.Scene["LightningTrail"];
         if (primitiveShader != null)
         {
-            Effect effect = primitiveShader.GetShader().Shader;
+            var effect = primitiveShader.GetShader().Shader;
             if (effect != null)
             {
                 var world = Matrix.CreateTranslation(-Main.screenPosition.ToVector3());
-                Matrix view = Main.GameViewMatrix.TransformationMatrix;
+                var view = Main.GameViewMatrix.TransformationMatrix;
                 var projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
 
-                effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.09f);
+                effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.07f); //was originally 0.02, did not pop up as much. see if this change does anything
                 effect.Parameters["repeats"]?.SetValue(8f);
                 effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
-                effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail").Value);
-                effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Bloom").Value);
+                effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/Textures/VFX/EnergyTrail").Value);
+                effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/Textures/VFX/BloomcapHunt").Value);
 
                 trail?.Render(effect);
 
-                effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail").Value);
+                effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/Textures/VFX/EnergyTrail").Value);
 
                 trail2?.Render(effect);
             }

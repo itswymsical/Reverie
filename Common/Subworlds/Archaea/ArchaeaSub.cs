@@ -1,5 +1,4 @@
 ﻿using Reverie.Common.Subworlds.Archaea.Generation;
-using Reverie.Common.WorldGeneration;
 
 using SubworldLibrary;
 using System.Collections.Generic;
@@ -24,14 +23,22 @@ public class ArchaeaSub : Otherworld
         new DesertPass(),
         new PlantPass(),
         new RubblePass(),
-        new SmoothPass()
+        //new SmoothPass()
 
     ];
 
     public override void SetStaticDefaults()
     {
-        base.SetStaticDefaults();
-        OtherworldTitle = TextureAssets.Logo.Value;
+        try
+        {
+            base.SetStaticDefaults();
+            OtherworldTitle = TextureAssets.Logo?.Value;
+        }
+        catch (Exception ex)
+        {
+            ModContent.GetInstance<Reverie>()?.Logger.Error($"Error in ArchaeaSub.SetStaticDefaults: {ex.Message}");
+            OtherworldTitle = null;
+        }
     }
     public override void Update()
     {

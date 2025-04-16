@@ -31,8 +31,19 @@ public class MissionCompleteNotification(Mission mission) : IInGameNotification
     {
         get
         {
+            // Scale up during animation phase
             var introScale = MathHelper.SmoothStep(0.1f, 1f, AnimationProgress);
+            // Scale down during fadeout
             return introScale * MathHelper.Lerp(0.5f, 1f, FadeoutProgress);
+        }
+    }
+
+    private float TextOpacity
+    {
+        get
+        {
+            // Match opacity to the scaling animation (fade in + fade out)
+            return AnimationProgress * FadeoutProgress;
         }
     }
 
@@ -54,7 +65,7 @@ public class MissionCompleteNotification(Mission mission) : IInGameNotification
             var baseColor = Color.Gold;
             var glowColor = Color.White;
             var currentColor = Color.Lerp(glowColor, baseColor, AnimationProgress);
-            return currentColor * FadeoutProgress;
+            return currentColor * TextOpacity;
         }
     }
 
@@ -64,15 +75,16 @@ public class MissionCompleteNotification(Mission mission) : IInGameNotification
 
         var fadeoutOffset = MathHelper.Lerp(30f, 0f, FadeoutProgress);
         Vector2 screenCenter = new(Main.screenWidth / 2f, Main.screenHeight / 3f - fadeoutOffset);
-        var sunburstTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Sunburst").Value;
 
+        // Draw sunburst
+        var sunburstTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Sunburst").Value;
         var rotation = SunburstRotation;
         Vector2 origin = new(sunburstTexture.Width / 2f);
         spriteBatch.Draw(
             sunburstTexture,
             screenCenter,
             null,
-            TextColor * 0.2f * FadeoutProgress,
+            TextColor * 0.2f,
             rotation,
             origin,
             SunburstScale,
@@ -80,56 +92,121 @@ public class MissionCompleteNotification(Mission mission) : IInGameNotification
             0f
         );
 
-        var title = "Mission Complete!";
-        var titleScale = TextScale * 1.05f;
+        // Draw title and measure for positioning other elements
+        var title = $"{completedMission.Name}";
+        var titleScale = TextScale * 0.75f;
         var titleSize = FontAssets.DeathText.Value.MeasureString(title) * titleScale;
-        var titlePos = screenCenter - titleSize / 2f;
+        var titlePos = screenCenter - titleSize / 2f; // Center alignment
 
+        // Draw accent texture
+        var accentTexture = ModContent.Request<Texture2D>($"Reverie/Assets/Textures/UI/Missions/Accent").Value;
+        Vector2 accentOrigin = new(accentTexture.Width / 2f, 0); // Origin at top-center
+        Vector2 accentPosition = new(screenCenter.X, titlePos.Y - 20); // Under the title
+        float accentScale = (titleSize.X / accentTexture.Width) * 1f; // Scale to match title width
+
+        spriteBatch.Draw(
+            accentTexture,
+            accentPosition,
+            null,
+            TextColor * 0.8f,
+            0f, // No rotation
+            accentOrigin,
+            1f, // Different X and Y scaling
+            SpriteEffects.None,
+            0f
+        );
+
+        // Draw title text
         Utils.DrawBorderStringFourWay(
             spriteBatch,
             FontAssets.DeathText.Value,
             title,
             titlePos.X,
-            titlePos.Y,
+            titlePos.Y - 10,
             TextColor,
-            Color.Black * FadeoutProgress,
+            Color.Black * TextOpacity,
             Vector2.Zero,
             titleScale
         );
 
-        var missionName = completedMission.Name;
-        var nameScale = TextScale * 1f;
-        var nameSize = FontAssets.MouseText.Value.MeasureString(missionName) * nameScale;
-        var namePos = screenCenter + new Vector2(-nameSize.X / 2f, titleSize.Y / 2f);
+        // Draw reward items
+        DrawRewardItems(spriteBatch, screenCenter, titlePos.Y + titleSize.Y + 20);
+    }
 
-        Utils.DrawBorderStringFourWay(
-            spriteBatch,
-            FontAssets.MouseText.Value,
-            missionName,
-            namePos.X,
-            namePos.Y,
-            TextColor,
-            Color.Black * FadeoutProgress,
-            Vector2.Zero,
-            nameScale
-        );
+    private void DrawRewardItems(SpriteBatch spriteBatch, Vector2 screenCenter, float yPosition)
+    {
+        // Get rewards from mission
+        var rewards = completedMission.Rewards;
+        if (rewards == null || rewards.Count == 0) return;
 
-        var rewards = $"Rewards: {string.Join(", ", completedMission.Rewards.Select(r => $"{r.stack} {r.Name}"))}";
-        var rewardScale = TextScale * 0.6f;
-        var rewardSize = FontAssets.MouseText.Value.MeasureString(rewards) * rewardScale;
-        var rewardPos = namePos + new Vector2(-32, rewardSize.Y + 24);
+        // Calculate total width needed for all items
+        const float ITEM_SPACING = 10f;
+        const float ITEM_SIZE = 16f;
+        float totalWidth = (rewards.Count * ITEM_SIZE) + ((rewards.Count - 1) * ITEM_SPACING);
 
-        Utils.DrawBorderStringFourWay(
-            spriteBatch,
-            FontAssets.MouseText.Value,
-            rewards,
-            rewardPos.X,
-            rewardPos.Y,
-            Color.White * FadeoutProgress,
-            Color.Black * FadeoutProgress,
-            Vector2.Zero,
-            rewardScale
-        );
+        // Start position (centered)
+        Vector2 currentPos = new(screenCenter.X - totalWidth / 2f, yPosition);
+
+        // Draw each item
+        foreach (var reward in rewards)
+        {
+            // Get item texture
+            Main.instance.LoadItem(reward.type);
+            var itemTexture = TextureAssets.Item[reward.type].Value;
+            Rectangle? sourceRect = null;
+
+            // If using item animation frames, get the correct frame
+            if (Main.itemAnimations[reward.type] != null)
+            {
+                Main.itemAnimations[reward.type].Update();
+                sourceRect = Main.itemAnimations[reward.type].GetFrame(itemTexture);
+            }
+
+            // Calculate scale to fit in ITEM_SIZE
+            float scale = ITEM_SIZE / Math.Max(itemTexture.Width, itemTexture.Height) * 1.25f;
+
+            // Calculate origin (center of texture)
+            Vector2 origin = sourceRect.HasValue
+                ? new Vector2(sourceRect.Value.Width / 2f, sourceRect.Value.Height / 2f)
+                : new Vector2(itemTexture.Width / 2f, itemTexture.Height / 2f);
+
+            // Draw item with centered origin
+            spriteBatch.Draw(
+                itemTexture,
+                currentPos + new Vector2(ITEM_SIZE / 2f),
+                sourceRect,
+                Color.White * TextOpacity,
+                0f,
+                origin,
+                scale,
+                SpriteEffects.None,
+                0f
+            );
+
+            // Draw stack count if more than 1
+            if (reward.stack > 1)
+            {
+                var stackText = reward.stack.ToString();
+                var stackScale = 0.8f;
+                var stackSize = FontAssets.ItemStack.Value.MeasureString(stackText) * stackScale;
+                var stackPos = currentPos + new Vector2(ITEM_SIZE - stackSize.X / 2f, ITEM_SIZE - stackSize.Y / 2f);
+
+                Utils.DrawBorderStringFourWay(
+                    spriteBatch,
+                    FontAssets.ItemStack.Value,
+                    stackText,
+                    stackPos.X,
+                    stackPos.Y,
+                    Color.White * TextOpacity,
+                    Color.Black * TextOpacity,
+                    Vector2.Zero,
+                    stackScale
+                );
+            }
+
+            // Move to next position
+            currentPos.X += ITEM_SIZE + ITEM_SPACING;
+        }
     }
 
     public void Update()
@@ -140,5 +217,6 @@ public class MissionCompleteNotification(Mission mission) : IInGameNotification
         timeLeft--;
         timeLeft = Math.Max(0, timeLeft);
     }
+
     public void PushAnchor(ref Vector2 positionAnchorBottom) { }
 }
