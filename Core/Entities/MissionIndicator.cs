@@ -3,16 +3,16 @@ using Reverie.Utilities;
 using Terraria.Audio;
 using Terraria.GameContent;
 
-namespace Reverie.Core.CustomEntities;
+namespace Reverie.Core.Entities;
 
 /// <summary>
 /// A mission indicator that appears in the world and shows mission details on hover
 /// </summary>
-public class MissionIndicator : WorldUIEntity
+public class MissionIndicator : UIEntity
 {
     private readonly Mission mission;
 
-    private Texture2D iconTexture;
+    private readonly Texture2D iconTexture;
 
     private float hoverFadeIn = 0f;
     private const float HOVER_FADE_SPEED = 0.1f;

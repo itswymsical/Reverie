@@ -663,7 +663,6 @@ public partial class MissionPlayer : ModPlayer
     public override void PostUpdate()
     {
         base.PostUpdate();
-        PlayerTriggerEvents();
 
         if (!hasDeferredLoadRun)
         {

@@ -45,7 +45,7 @@ public class AFallingStar : Mission
             ("Explore the Underground Desert", 1),  ("Explore the Tundra", 1)],
 
         [("Check in with the Guide", 1)],
-
+          //TODO: Mission objectives tied to the Archiver Chronicles, Reverie, and Guide's research.
         [("Clear out slimes", 10)],
 
         [("Defend the Town", 10)],

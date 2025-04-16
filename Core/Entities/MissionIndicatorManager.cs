@@ -1,7 +1,7 @@
 ﻿using Reverie.Core.Missions;
 using System.Collections.Generic;
 
-namespace Reverie.Core.CustomEntities;
+namespace Reverie.Core.Entities;
 
 /// <summary>
 /// Manages the creation and tracking of mission indicators in the world

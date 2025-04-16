@@ -269,6 +269,11 @@ Items: {
 		DisplayName: Start Mission
 		Tooltip: ""
 	}
+
+	SmoothCopperPlating: {
+		DisplayName: Smooth Copper Plating
+		Tooltip: ""
+	}
 }
 
 Projectiles: {

@@ -1,9 +1,9 @@
-﻿namespace Reverie.Core.CustomEntities;
+﻿namespace Reverie.Core.Entities;
 
 /// <summary>
 /// A world entity that acts as a UI element, allowing for both world positioning and UI interactions
 /// </summary>
-public class WorldUIEntity
+public class UIEntity
 {
     #region Properties
     public Vector2 WorldPosition { get; set; }
@@ -29,7 +29,7 @@ public class WorldUIEntity
     public delegate void DrawDelegate(SpriteBatch spriteBatch, Vector2 screenPos, float opacity);
     public DrawDelegate OnDraw;
 
-    public WorldUIEntity(Vector2 worldPosition, int width, int height)
+    public UIEntity(Vector2 worldPosition, int width, int height)
     {
         WorldPosition = worldPosition;
         Width = width;

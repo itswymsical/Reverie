@@ -1,44 +1,27 @@
-﻿using Reverie.Core.CustomEntities;
-using Reverie.Core.Dialogue;
-using Reverie.Utilities;
-using Reverie.Utilities.Extensions;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+
 using Terraria.DataStructures;
 
+using Reverie.Core.Entities;
+using Reverie.Core.Dialogue;
+
+using Reverie.Utilities;
+using Reverie.Utilities.Extensions;
+
 namespace Reverie.Core.Missions;
-
-public partial class MissionPlayer
-{
-    public void PlayerTriggerEvents()
-    {
-        bool merchantPresent = NPC.AnyNPCs(NPCID.Merchant);
-        var copperStandard = GetMission(MissionID.CopperStandard);
-        if (copperStandard.Availability == MissionAvailability.Locked && copperStandard.Progress == MissionProgress.Inactive
-            && merchantPresent && Player.HasItemInAnyInventory(ItemID.CopperBar))
-        {
-            UnlockMission(MissionID.CopperStandard, true);
-        }
-
-        bool demoPresent = NPC.AnyNPCs(NPCID.Demolitionist);
-        var lightEmUp = GetMission(MissionID.LightEmUp);
-        if (lightEmUp.Availability == MissionAvailability.Locked && lightEmUp.Progress == MissionProgress.Inactive
-            && demoPresent && Player.HasItemInAnyInventory(ItemID.Torch))
-        {
-            UnlockMission(MissionID.LightEmUp, true);
-        }
-    }
-}
 
 public class ObjectiveEventItem : GlobalItem
 {
     public delegate void ItemCreatedHandler(Item item, ItemCreationContext context);
     public delegate void ItemPickupHandler(Item item, Player player);
     public delegate void ItemUpdateHandler(Item item, Player player);
+    public delegate void ItemConsumeHandler(Item item, Player player);
 
     public static event ItemCreatedHandler OnItemCreated;
     public static event ItemPickupHandler OnItemPickup;
     public static event ItemUpdateHandler OnItemUpdate;
+    public static event ItemConsumeHandler OnItemConsume;
 
     public override void OnCreated(Item item, ItemCreationContext context)
     {
@@ -74,6 +57,17 @@ public class ObjectiveEventItem : GlobalItem
             OnItemUpdate?.Invoke(item, player);
         }
     }
+
+    public override void OnConsumeItem(Item item, Player player)
+    {
+        base.OnConsumeItem(item, player);
+        OnItemConsume?.Invoke(item, player);
+    }
+
+    public override void OnStack(Item destination, Item source, int numToTransfer)
+    {
+        base.OnStack(destination, source, numToTransfer);
+    }
 }
 
 public class ObjectiveEventNPC : GlobalNPC
@@ -82,12 +76,13 @@ public class ObjectiveEventNPC : GlobalNPC
     public delegate void NPCKillHandler(NPC npc);
     public delegate void NPCHitHandler(NPC npc, int damage);
     public delegate void NPCSpawnHandler(NPC npc);
+    public delegate void NPCCatchHandler(NPC npc, Player player, Item item, bool failed);
 
     public static event NPCChatHandler OnNPCChat;
     public static event NPCKillHandler OnNPCKill;
     public static event NPCHitHandler OnNPCHit;
     public static event NPCSpawnHandler OnNPCSpawn;
-
+    public static event NPCCatchHandler OnNPCCatch;
     public override bool InstancePerEntity => true;
 
     public override bool? CanChat(NPC npc) => (npc.isLikeATownNPC || npc.townNPC)
@@ -184,22 +179,31 @@ public class ObjectiveEventNPC : GlobalNPC
         base.OnHitByItem(npc, player, item, hit, damageDone);
         OnNPCHit?.Invoke(npc, damageDone);
     }
+
     public override void OnHitByProjectile(NPC npc, Projectile projectile, NPC.HitInfo hit, int damageDone)
     {
         base.OnHitByProjectile(npc, projectile, hit, damageDone);
         OnNPCHit?.Invoke(npc, damageDone);
     }
 
+    public override void OnCaughtBy(NPC npc, Player player, Item item, bool failed)
+    {
+        base.OnCaughtBy(npc, player, item, failed);
+        OnNPCCatch?.Invoke(npc, player, item, failed);
+    }
 }
 
 public class ObjectiveEventTile : GlobalTile
 {
     public delegate void TileBreakHandler(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem);
     public delegate void TilePlaceHandler(int i, int j, int type);
+    public delegate void TileFloorVisualsHandler(int type, Player player);
+    public delegate void TileRightClickHandler(int i, int j, int type);
 
     public static event TileBreakHandler OnTileBreak;
     public static event TilePlaceHandler OnTilePlace;
-
+    public static event TileFloorVisualsHandler OnFloorVisuals;
+    public static event TileRightClickHandler OnTileRightClick;
     public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
     {
         base.KillTile(i, j, type, ref fail, ref effectOnly, ref noItem);
@@ -210,6 +214,16 @@ public class ObjectiveEventTile : GlobalTile
         base.PlaceInWorld(i, j, type, item);
         OnTilePlace?.Invoke(i, j, type);
     }
+    public override void FloorVisuals(int type, Player player)
+    {
+        base.FloorVisuals(type, player);
+        OnFloorVisuals?.Invoke(type, player);
+    }
+    public override void RightClick(int i, int j, int type)
+    {
+        base.RightClick(i, j, type);
+        OnTileRightClick?.Invoke(i, j, type);
+    }
 }
 
 public class ObjectiveEventPlayer : ModPlayer
@@ -218,9 +232,12 @@ public class ObjectiveEventPlayer : ModPlayer
 
     public static event BiomeEnterHandler OnBiomeEnter;
     private int timer = 0;
+
     public override void PostUpdate()
     {
         base.PostUpdate();
+        TriggerEvents();
+
         timer++;
         if (timer > 7 * 60)
         {
@@ -232,6 +249,26 @@ public class ObjectiveEventPlayer : ModPlayer
                 }
             }
             timer = 0;
+        }
+    }
+
+    private void TriggerEvents()
+    {
+        var p = ModContent.GetInstance<MissionPlayer>();
+        bool merchantPresent = NPC.AnyNPCs(NPCID.Merchant);
+        var copperStandard = p.GetMission(MissionID.CopperStandard);
+        if (copperStandard.Availability == MissionAvailability.Locked && copperStandard.Progress == MissionProgress.Inactive
+            && merchantPresent && Player.HasItemInAnyInventory(ItemID.CopperBar))
+        {
+            p.UnlockMission(MissionID.CopperStandard, true);
+        }
+
+        bool demoPresent = NPC.AnyNPCs(NPCID.Demolitionist);
+        var lightEmUp = p.GetMission(MissionID.LightEmUp);
+        if (lightEmUp.Availability == MissionAvailability.Locked && lightEmUp.Progress == MissionProgress.Inactive
+            && demoPresent && Player.HasItemInAnyInventory(ItemID.Torch))
+        {
+            p.UnlockMission(MissionID.LightEmUp, true);
         }
     }
 }

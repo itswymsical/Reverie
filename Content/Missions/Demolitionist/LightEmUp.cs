@@ -9,18 +9,21 @@ public class LightEmUp : Mission
     {
         CollectTorches = 0,
         PlaceTorches = 1,
-        DefeatTG = 2,
+        TGFavor = 2,
+        CheckIn = 3
     }
+
     public LightEmUp() : base(
         id: MissionID.LightEmUp,
         name: "Light 'Em Up",
-        description: @"""I need you to take care of a flaming freak, one with too many eyes and not enough respect.""",
+        description: @"""Bah! Light is supposed to help man, not attack him!""",
         objectiveList: [
             [("Collect torches", 101), ],
             [("Place torches", 101)],
-            [("Defeat the Torch God", 1)]
+            [("Gain the Torch God's Favor", 1)],
+            [("Check in with Demolitionist", 1)]
         ],
-        rewards: [new Item(ItemID.GoldCoin, 5), new Item(ItemID.SpelunkerGlowstick, 25)],
+        rewards: [new Item(ItemID.GoldCoin, 2), new Item(ItemID.SpelunkerGlowstick, 25)],
         isMainline: false,
         providerNPC: NPCID.Demolitionist,
         xpReward: 50)
@@ -46,15 +49,6 @@ public class LightEmUp : Mission
            DialogueKeys.Demolitionist.TorchGodComplete,
            lineCount: 4);
     }
-    public override void Update()
-    {
-        base.Update();
-        if (Main.LocalPlayer.HasItemInAnyInventory(ItemID.TorchGodsFavor) 
-            && !NPC.AnyNPCs(NPCID.TorchGod) && CurrentIndex == (int)Objectives.DefeatTG)
-        {
-            NPC.NewNPCDirect(default, Main.LocalPlayer.position, NPCID.TorchGod);
-        }
-    }
     #endregion
 
     #region Event Registration
@@ -65,8 +59,9 @@ public class LightEmUp : Mission
         base.RegisterEventHandlers();
 
         ObjectiveEventItem.OnItemPickup += OnItemPickupHandler;
-        ObjectiveEventNPC.OnNPCKill += OnNPCKillHandler;
+        ObjectiveEventItem.OnItemUpdate += OnItemUpdateHandler;
         ObjectiveEventTile.OnTilePlace += OnTilePlaceHandler;
+        ObjectiveEventNPC.OnNPCChat += OnNPCChatHandler;
 
         ModContent.GetInstance<Reverie>().Logger.Debug($"[Light 'Em Up] Registered event handlers");
 
@@ -78,8 +73,9 @@ public class LightEmUp : Mission
         if (!eventsRegistered) return;
 
         ObjectiveEventItem.OnItemPickup -= OnItemPickupHandler;
-        ObjectiveEventNPC.OnNPCKill -= OnNPCKillHandler;
+        ObjectiveEventItem.OnItemUpdate -= OnItemUpdateHandler;
         ObjectiveEventTile.OnTilePlace -= OnTilePlaceHandler;
+        ObjectiveEventNPC.OnNPCChat -= OnNPCChatHandler;
 
         ModContent.GetInstance<Reverie>().Logger.Debug($"[Light 'Em Up] Unregistered event handlers");
 
@@ -98,6 +94,15 @@ public class LightEmUp : Mission
                 UpdateProgress(0, item.stack);
     }
 
+    private void OnItemUpdateHandler(Item item, Player player)
+    {
+        if (Progress != MissionProgress.Active) return;
+
+        if (CurrentIndex == (int)Objectives.TGFavor)
+            if (item.type == ItemID.TorchGodsFavor)
+                UpdateProgress(0, 1);
+    }
+
     private void OnTilePlaceHandler(int i, int j, int type)
     {
         if (Progress != MissionProgress.Active) return;
@@ -109,15 +114,16 @@ public class LightEmUp : Mission
         TorchDialouge();
     }
 
-    private void OnNPCKillHandler(NPC npc)
+    private void OnNPCChatHandler(NPC npc, ref string chat)
     {
         if (Progress != MissionProgress.Active) return;
 
-        if (CurrentIndex == (int)Objectives.DefeatTG)
-            if (npc.type == NPCID.TorchGod)
+        if (CurrentIndex == (int)Objectives.CheckIn)
+        {
+            if (npc.type == ProviderNPC) 
                 UpdateProgress(0);
+        }
     }
-
     #endregion
 
     #region Helpers

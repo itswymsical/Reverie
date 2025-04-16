@@ -1,4 +1,4 @@
-DialogueLibrary: {
+﻿DialogueLibrary: {
 	Demolitionist: {
 		DemolitionistIntro: {
 			Line1: Hahaha! What an explosive landing!
@@ -8,7 +8,7 @@ DialogueLibrary: {
 		}
 
 		TorchGodStart: {
-			Line1: Bah! Light is supposed to help men, not attack them!
+			Line1: Bah! Light is supposed to help man, not attack him!
 			Line2: I go down into cavern, place torch, place another… then boom—fire god angry!
 			Line3: Torches start flying! I barely escape with beard intact!
 			Line4: Listen, friend—this... Torch God? He and I have unfinished business.

@@ -1,5 +1,5 @@
 ﻿using Reverie.Common.UI;
-using Reverie.Core.CustomEntities;
+using Reverie.Core.Entities;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Utilities;
