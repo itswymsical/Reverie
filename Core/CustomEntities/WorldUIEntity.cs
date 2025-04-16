@@ -27,7 +27,7 @@ public class WorldUIEntity
     #endregion
 
     public delegate void DrawDelegate(SpriteBatch spriteBatch, Vector2 screenPos, float opacity);
-    public DrawDelegate CustomDraw;
+    public DrawDelegate OnDraw;
 
     public WorldUIEntity(Vector2 worldPosition, int width, int height)
     {
@@ -123,7 +123,7 @@ public class WorldUIEntity
         var screenPos = WorldToScreen(WorldPosition + Offset);
 
         // Call custom draw method if provided
-        CustomDraw?.Invoke(spriteBatch, screenPos, 1f);
+        OnDraw?.Invoke(spriteBatch, screenPos, 1f);
     }
 
     /// <summary>

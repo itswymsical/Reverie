@@ -46,7 +46,15 @@ public class LightEmUp : Mission
            DialogueKeys.Demolitionist.TorchGodComplete,
            lineCount: 4);
     }
-
+    public override void Update()
+    {
+        base.Update();
+        if (Main.LocalPlayer.HasItemInAnyInventory(ItemID.TorchGodsFavor) 
+            && !NPC.AnyNPCs(NPCID.TorchGod) && CurrentIndex == (int)Objectives.DefeatTG)
+        {
+            NPC.NewNPCDirect(default, Main.LocalPlayer.position, NPCID.TorchGod);
+        }
+    }
     #endregion
 
     #region Event Registration
@@ -107,7 +115,7 @@ public class LightEmUp : Mission
 
         if (CurrentIndex == (int)Objectives.DefeatTG)
             if (npc.type == NPCID.TorchGod)
-                UpdateProgress(1);
+                UpdateProgress(0);
     }
 
     #endregion

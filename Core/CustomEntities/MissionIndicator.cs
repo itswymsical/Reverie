@@ -12,7 +12,8 @@ public class MissionIndicator : WorldUIEntity
 {
     private readonly Mission mission;
 
-    private readonly Texture2D iconTexture;
+    private Texture2D iconTexture;
+
     private float hoverFadeIn = 0f;
     private const float HOVER_FADE_SPEED = 0.1f;
 
@@ -26,7 +27,7 @@ public class MissionIndicator : WorldUIEntity
     {
         this.mission = mission;
 
-        iconTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/Indicator").Value;
+        iconTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/Indicator", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
 
         if (iconTexture != null)
         {
@@ -34,8 +35,7 @@ public class MissionIndicator : WorldUIEntity
             Height = iconTexture.Height;
         }
 
-        // Set up custom draw delegate
-        CustomDraw = DrawIndicator;
+        OnDraw = DrawIndicator;
 
         OnClick += HandleClick;
     }
@@ -49,6 +49,7 @@ public class MissionIndicator : WorldUIEntity
 
     protected override void CustomUpdate()
     {
+        // Only proceed with normal update if not loading texture
         if (IsHovering && hoverFadeIn < 1f)
         {
             hoverFadeIn += HOVER_FADE_SPEED;
@@ -70,6 +71,7 @@ public class MissionIndicator : WorldUIEntity
     {
         if (iconTexture == null)
             return;
+        
 
         var scale = IsHovering ? 1.1f : 1f;
 

@@ -20,7 +20,7 @@ public class MissionIndicatorManager : ModSystem
     {
         if (!Main.dedServ)
         {
-            Instance ??= null;
+            Instance = null;
         }
         indicators.Clear();
         npcIndicators.Clear();
