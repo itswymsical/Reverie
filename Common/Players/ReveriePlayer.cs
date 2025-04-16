@@ -6,13 +6,15 @@ using Reverie.Content.Tiles.Archaea;
 
 using Reverie.Core.Cinematics;
 using Reverie.Core.Dialogue;
+using Reverie.Core.Graphics;
 using Reverie.Core.Missions;
 
 using SubworldLibrary;
 
 using System.Collections.Generic;
 using System.Linq;
-
+using Terraria.DataStructures;
+using Terraria.GameContent;
 using Terraria.UI;
 
 namespace Reverie.Common.Players;
@@ -66,6 +68,18 @@ public class ReveriePlayer : ModPlayer
     {
         magnetizedFall = false;
         lodestoneKB = false;
+    }
+    public override void ModifyDrawLayerOrdering(IDictionary<PlayerDrawLayer, PlayerDrawLayer.Position> positions)
+    {
+        base.ModifyDrawLayerOrdering(positions);
+
+        if (Main.gameMenu) return;
+
+        //if (positions.ContainsKey(ModContent.GetInstance<AuraLayer>()))
+        //{
+        //    positions[ModContent.GetInstance<AuraLayer>()] =
+        //        new PlayerDrawLayer.AfterParent(PlayerDrawLayers.BackAcc);
+        //}
     }
 
     public override void ModifyStartingInventory(IReadOnlyDictionary<string, List<Item>> itemsByMod, bool mediumCoreDeath)

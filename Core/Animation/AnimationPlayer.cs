@@ -58,11 +58,11 @@ namespace Reverie.Core.Animation
             try
             {
                 // Apply animations to each segment
-                _animationController.ApplySegmentTransformation(AnimationSegment.HEAD, drawInfo);
-                _animationController.ApplySegmentTransformation(AnimationSegment.BODY, drawInfo);
-                _animationController.ApplySegmentTransformation(AnimationSegment.LEGS, drawInfo);
-                _animationController.ApplySegmentTransformation(AnimationSegment.ARM_FRONT, drawInfo);
-                _animationController.ApplySegmentTransformation(AnimationSegment.ARM_BACK, drawInfo);
+                _animationController.ApplySegmentTransformation(AnimationSegment.HEAD, ref drawInfo);
+                _animationController.ApplySegmentTransformation(AnimationSegment.BODY, ref drawInfo);
+                _animationController.ApplySegmentTransformation(AnimationSegment.LEGS, ref drawInfo);
+                _animationController.ApplySegmentTransformation(AnimationSegment.ARM_FRONT,ref drawInfo);
+                _animationController.ApplySegmentTransformation(AnimationSegment.ARM_BACK, ref drawInfo);
 
                 // Safety check for NaN values which could crash the game
                 SafetyCheckDrawValues(ref drawInfo);

@@ -6,11 +6,36 @@
 /// </summary>
 public static class DialogueKeys
 {
+
     public static class Chronicle
     {
         private const string PREFIX = "Chronicle_01";
 
         public static string Chapter1 => $"{PREFIX}.Chapter1";
+    }
+    public static class Merchant
+    {
+        private const string PREFIX = "Merchant";
+
+        public static string CopperStandardStart => $"{PREFIX}.CopperStandardStart";
+        public static string CopperStandardComplete => $"{PREFIX}.CopperStandardComplete";
+        public static string CopperCoinsInProgress => $"{PREFIX}.CopperCoinsInProgress";
+        public static string CopperCoinsInProgress_Alt => $"{PREFIX}.CopperCoinsInProgress_Alt";
+        public static string MineCopperInProgress => $"{PREFIX}.MineCopperInProgress";
+        public static string SmeltCopperInProgress => $"{PREFIX}.SmeltCopperInProgress";
+        public static string MerchantIntro => $"{PREFIX}.MerchantIntro";
+
+    }
+    public static class Demolitionist
+    {
+        private const string PREFIX = "Demolitionist";
+        public static string DemolitionistIntro => $"{PREFIX}.DemolitionistIntro";
+        public static string TorchGodStart => $"{PREFIX}.TorchGodStart";
+        public static string TorchGodComplete => $"{PREFIX}.TorchGodComplete";
+        public static string TorchPlacement_01 => $"{PREFIX}.TorchPlacement_01";
+        public static string TorchPlacement_02 => $"{PREFIX}.TorchPlacement_01";
+        public static string TorchPlacement_03 => $"{PREFIX}.TorchPlacement_01";
+        public static string TorchPlacement_04 => $"{PREFIX}.TorchPlacement_01";
     }
 
     public static class ArgieDialogue
@@ -34,7 +59,7 @@ public static class DialogueKeys
 
     public static class FallingStar
     {
-        private const string PREFIX = "FallingStar";
+        private const string PREFIX = "AFallingStar";
 
         public static string Intro => $"{PREFIX}.Intro";
         public static string MerchantIntro => $"{PREFIX}.MerchantIntro";
@@ -49,7 +74,8 @@ public static class DialogueKeys
         public static string SlimeInfestationCommentary => $"{PREFIX}.SlimeInfestation_Commentary";
         public static string SlimeRain => $"{PREFIX}.SlimeRain";
         public static string SlimeRainCommentary => $"{PREFIX}.SlimeRain_Commentary";
-
+        public static string ChimeResponse => $"{PREFIX}.ChimeResponse";
+        public static string ChimeResponse_Merchant => $"{PREFIX}.ChimeResponse_Merchant";
         public static string SlimeRainWarning => $"{PREFIX}.SlimeRain_Warning";
         public static string KSEncounter => $"{PREFIX}.KS_Encounter";
         public static string KingSlimeDefeat => $"{PREFIX}.KingSlimeDefeat";

@@ -18,6 +18,7 @@ public abstract class WorldNPCActor : ModNPC
         NPC.damage = 15;
         NPC.friendly = true;
         NPC.townNPC = true;
+        NPC.dontTakeDamageFromHostiles = true;
     }
     public override void SetChatButtons(ref string button, ref string button2)
     {

@@ -1,48 +1,92 @@
 DialogueLibrary: {
-	FallingStar: {
-		Cutscene: {
-		}
+	AFallingStar: {
+		Cutscene.Line1: Hey! Do you guys hear that?
+		Intro.Line1: WHAT THE HELL?!?!
 
 		CrashLanding: {
+			Line1: That's one way to make an entrance...
+			Line2: Are you... glowing...?
+			Line3: Just what are you?
+			Line4: Sorry... that was a little rude.
+			Line5: Hey uh, how about you come meet the townsfolk?
+			Line6: Tools? Oh, right. The merchant can help you out with that.
 		}
 
-		MerchantIntro: {
+		ChimeResponse: {
+			Line1: Did you hear that?
+			Line2: Sounded like... a dream remembering itself.
 		}
 
-		DemolitionistIntro: {
-		}
+		ChimeResponse_Merchant.Line1: What the hell does that even mean?
 
 		NurseIntro: {
+			Line1: Hey there sunshine, that aura of yours is looking a little worn.
+			Line2: How about you let me patch you up?
+			Line3: Don't worry, I don't bite... much.
+			Line4: I'm just kidding! I don't bite at all. I'm a nurse, not a monster.
 		}
 
 		GatheringResources: {
+			Line1: where did you fall from exactly?
+			Line2: That was a pretty gnarly landing, I'll assume your no normal Terrarian judging how you survived that fall.
+			Line3: It's odd though. you look like us, yet you give off am otherworldy presence...
+			Line4: Anyways...
+			Line5: Around here everyone works for themselves. If you want to survive, you'll have to gather resources.
+			Line6: Explore around the area a bit, there's a lot to see in this world of ours.
 		}
 
 		BuildShelter: {
+			Line1: Nice base. You're a natural at this.
+			Line2: We're always welcome to new faces here, no matter how odd they may be.
+			Line3: You should interact with some of the folks here, get to know 'em a bit.
+			Line4: While you do that, I'm gonna investigate that emmanating energy you left in the crater.
+			Line5: I've never seen anything like it...
 		}
 
 		WildlifeWoes: {
+			Line1: Hey, we've got a lot of slimes prancing about.
+			Line2: Nothing to worry about! they're pretty feeble.
+			Line3: Clear them out, we'll be able to explore the area more safely.
 		}
 
 		SlimeInfestation: {
+			Line1: There's definitely something going on with these slimes.
+			Line2: I've never seen this aggressive before... something must be agitating the ecosystem.
 		}
 
 		SlimeInfestation_Commentary: {
+			Line1: Hey, i'm kind of in some trouble here with the slimes, hehe...
+			Line2: I could really use your help!
 		}
 
 		SlimeRain: {
+			Line1: You've gotta be kidding me...
+			Line2: I've never seen anything like it... the slimes are raining from the sky!
 		}
 
 		SlimeRain_Commentary: {
+			Line1: Slimes falling from the sky? What's next, flying pigs?
+			// Reminder: Add a callback in the future to this line when a pigron is discovered.
+			
+			Line2: I thought I'd seen it all, but this takes the cake!
 		}
 
 		SlimeRain_Warning: {
+			Line1: This is getting kind of out of hand...
+			Line2: Maybe you should build an arena to fight them off?
 		}
 
 		KS_Encounter: {
+			Line1: That's one big ass slime... Must be there king, or something.
+			Line2: I think you pissed it off by killing so many of it's servants.
+			Line3: Heh, didn't know that would cause this to happen. My bad.
 		}
 
 		KingSlimeDefeat: {
+			Line1: That was too much to handle...
+			Line2: I don't have a good feeling about the nature of the creature aggression.
+			Line3: They've been like this since you arrived...
+			Line4: and you do have that glowy aura...
 		}
 	}
 }

@@ -25,17 +25,23 @@ public static class MissionUtils
 
         var missionPlayer = player.GetModPlayer<MissionPlayer>();
         var progressUpdated = false;
-        var currentStack = 0;
 
         foreach (var mission in missionPlayer.ActiveMissions())
         {
+            if (mission.Progress != MissionProgress.Active)
+                continue;
+
             var currentSet = mission.Objective[mission.CurrentIndex];
 
-            if (item.stack > 0 && !currentSet.IsCompleted)
-            {
-                MissionManager.Instance.OnItemObtained(item);
-                progressUpdated = true;
-            }
+            if (currentSet.IsCompleted)
+                continue;
+
+            // At this point, we have an active mission with an incomplete objective set
+            // The item is relevant and will contribute to progress
+            progressUpdated = true;
+
+            // No need to update progress here - we'll let the event handler do that
+            // This method is just for checking if the item should be processed
         }
 
         if (progressUpdated)

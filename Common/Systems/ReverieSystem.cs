@@ -1,5 +1,11 @@
-﻿using Reverie.Core.Dialogue;
+﻿using Reverie.Common.UI;
+using Reverie.Core.Entities;
+using Reverie.Core.Dialogue;
+using Reverie.Core.Missions;
 using Reverie.Utilities;
+using System.Linq;
+using System.Reflection;
+using Terraria;
 using Terraria.GameContent;
 using Terraria.Localization;
 using Terraria.UI.Chat;
@@ -12,14 +18,27 @@ namespace Reverie.Common.Systems
 
         public override void Load()
         {
-            NPCDataManager.Initialize();
-            Reverie.Instance.Logger.Info("NPCDataManager for dialogue initialized...");
+            NPCManager.Initialize();
+            Reverie.Instance.Logger.Info("NPCManager for dialogue initialized...");
         }
 
         public override void ModifyTimeRate(ref double timeRate, ref double tileUpdateRate, ref double eventUpdateRate)
         {
             base.ModifyTimeRate(ref timeRate, ref tileUpdateRate, ref eventUpdateRate);
             timeRate /= 2;
+        }
+
+        public override void PostUpdateWorld()
+        {
+            base.PostUpdateWorld();
+            if (Main.LocalPlayer?.active == true && !Main.gameMenu)
+            {
+                var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+                foreach (var mission in missionPlayer.ActiveMissions())
+                {
+                    mission.Update();
+                }
+            }
         }
 
         public override void AddRecipeGroups()

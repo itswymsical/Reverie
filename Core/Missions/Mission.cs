@@ -11,14 +11,6 @@ using Terraria.UI;
 
 namespace Reverie.Core.Missions;
 
-public static class MissionID
-{
-    public const int FallingStar = 1;
-    public const int BLOOMCAP = 2;
-
-    public const int FUNGAL_FRACAS = 8;
-}
-
 public enum MissionProgress
 {
     Inactive,
@@ -48,6 +40,7 @@ public abstract class Mission
     #region Fields
     protected Player player = Main.LocalPlayer;
     protected bool isDirty = false;
+    protected bool eventsRegistered = false;
     #endregion
 
     #region Properties
@@ -57,7 +50,7 @@ public abstract class Mission
     public List<ObjectiveSet> Objective { get; protected set; }
     public List<Item> Rewards { get; private set; }
     public bool IsMainline { get; }
-    public int Employer { get; set; }
+    public int ProviderNPC { get; set; }
     public int Experience { get; private set; }
     public int NextMissionID { get; private set; }
     public MissionProgress Progress { get; set; } = MissionProgress.Inactive;
@@ -68,25 +61,58 @@ public abstract class Mission
     #endregion
 
     #region Initialization
-    protected Mission(int id, string name, string description, List<List<(string, int)>> objectiveSetData,
-        List<Item> rewards, bool isMainline, int npc, int nextMissionID = -1, int xpReward = 0)
+    protected Mission(int id, string name, string description, List<List<(string, int)>> objectiveList,
+        List<Item> rewards, bool isMainline, int providerNPC, int nextMissionID = -1, int xpReward = 0)
     {
         ID = id;
         Name = name;
         Description = description;
-        Objective = objectiveSetData.Select(set =>
+        Objective = objectiveList.Select(set =>
             new ObjectiveSet(set.Select(o =>
                 new Objective(o.Item1, o.Item2)).ToList())).ToList();
         Rewards = rewards;
         IsMainline = isMainline;
-        Employer = npc;
+        ProviderNPC = providerNPC;
         Experience = xpReward;
         NextMissionID = nextMissionID;
     }
     #endregion
 
+    #region Event Registration
+
+    /// <summary>
+    /// Registers event handlers specific to this mission
+    /// </summary>
+    protected virtual void RegisterEventHandlers()
+    {
+        if (eventsRegistered) return;
+        eventsRegistered = true;
+
+        ModContent.GetInstance<Reverie>().Logger.Info($"Mission {Name} registered event handlers");
+    }
+
+    /// <summary>
+    /// Unregisters event handlers specific to this mission
+    /// </summary>
+    protected virtual void UnregisterEventHandlers()
+    {
+        if (!eventsRegistered) return;
+        eventsRegistered = false;
+
+        ModContent.GetInstance<Reverie>().Logger.Info($"Mission {Name} unregistered event handlers");
+    }
+
+    #endregion
+
     #region Virtual Event Handlers
-    public virtual void OnMissionStart() { }
+    public virtual void OnMissionStart()
+    {
+        RegisterEventHandlers();
+    }
+
+    protected virtual void OnObjectiveIndexComplete(int setIndex, ObjectiveSet completedSet) { }
+    protected virtual void OnObjectiveComplete(int objectiveIndexWithinCurrentSet) { }
+
     public void HandleObjectiveCompletion(int objectiveIndex)
     {
         try
@@ -94,143 +120,20 @@ public abstract class Mission
             var currentSet = Objective[CurrentIndex];
             var objective = currentSet.Objectives[objectiveIndex];
 
-            if (objective.IsCompleted)
-            {
-                HandleSpecificObjectiveComplete(CurrentIndex, objectiveIndex, objective);
-            }
+            // First handle the specific objective completion
+            OnObjectiveComplete(objectiveIndex);
 
+            // Then check if the entire set is completed
             if (currentSet.IsCompleted)
             {
-                OnIndexComplete(CurrentIndex, currentSet);
+                OnObjectiveIndexComplete(CurrentIndex, currentSet);
             }
-
-            OnObjectiveComplete(objectiveIndex);
         }
         catch (Exception ex)
         {
             ModContent.GetInstance<Reverie>().Logger.Error($"Error in HandleObjectiveCompletion for mission {Name}: {ex.Message}");
         }
     }
-
-    public virtual void OnHousingFound() { }
-
-    protected virtual void OnIndexComplete(int setIndex, ObjectiveSet set) { }
-    protected virtual void HandleSpecificObjectiveComplete(int setIndex, int objectiveIndex, Objective objective) { }
-
-    protected virtual void OnObjectiveComplete(int objectiveIndex) { }
-
-    public virtual void OnCollected(Item item)
-    {
-        try
-        {
-            HandleCollected(item);
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnCollected for mission {Name}: {ex.Message}");
-        }
-    }
-
-    protected virtual void HandleCollected(Item item) { }
-
-    public virtual void OnBreakTile(int type, ref bool fail, ref bool effectOnly)
-    {
-        try
-        {
-            HandleBreakTile(type, ref fail, ref effectOnly);
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnBreakTile for mission {Name}: {ex.Message}");
-        }
-    }
-
-    protected virtual void HandleBreakTile(int type, ref bool fail, ref bool effectOnly) { }
-
-    public virtual void OnItemCreated(Item item, ItemCreationContext context)
-    {
-        try
-        {
-            HandleItemCreated(item, context);
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnItemCreated for mission {Name}: {ex.Message}");
-        }
-    }
-
-    protected virtual void HandleItemCreated(Item item, ItemCreationContext context) { }
-
-    public virtual void OnKill(NPC npc)
-    {
-        try
-        {
-            HandleKill(npc);
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnKill for mission {Name}: {ex.Message}");
-        }
-    }
-
-    protected virtual void HandleKill(NPC npc) { }
-
-    public virtual void OnChat(NPC npc)
-    {
-        try
-        {
-            HandleChat(npc);
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnChat for mission {Name}: {ex.Message}");
-        }
-    }
-
-    protected virtual void HandleChat(NPC npc) { }
-
-    public virtual void OnNPCSpawn(NPC npc)
-    {
-        try
-        {
-            HandleNPCSpawn(npc);
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnNPCSpawn for mission {Name}: {ex.Message}");
-        }
-    }
-
-    protected virtual void HandleNPCSpawn(NPC npc) { }
-
-    public virtual void OnHitTarget(NPC npc, int damage)
-    {
-        try
-        {
-            ModContent.GetInstance<Reverie>().Logger.Debug($"NPC Hit detected in mission {Name}: Type={npc.type}, Damage={damage}");
-            HandleHitTarget(npc, damage);
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnHitTarget for mission {Name}: {ex.Message}");
-        }
-    }
-
-    protected virtual void HandleHitTarget(NPC npc, int damage) { }
-
-    public virtual void OnBiomeEnter(Player player, BiomeType biome)
-    {
-        try
-        {
-            HandleBiomeEnter(player, biome);
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnBiomeEnter for mission {Name}: {ex.Message}");
-        }
-    }
-
-    protected virtual void HandleBiomeEnter(Player player, BiomeType biome) { }
 
     #endregion
 
@@ -277,6 +180,7 @@ public abstract class Mission
 
     public void Reset()
     {
+        UnregisterEventHandlers();
         Progress = MissionProgress.Inactive;
         CurrentIndex = 0;
         foreach (var set in Objective)
@@ -288,15 +192,13 @@ public abstract class Mission
     public void Complete()
     {
         if (Progress == MissionProgress.Active && Objective.All(set => set.IsCompleted))
-        {          
+        {
+            UnregisterEventHandlers();
             Progress = MissionProgress.Completed;
             Availability = MissionAvailability.Completed;
             isDirty = true;
 
             OnMissionComplete();
-
-            //MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-            //player.StartNextMission(this);
         }
     }
 
@@ -319,6 +221,11 @@ public abstract class Mission
     public virtual void Update()
     {
         if (Progress != MissionProgress.Active && Availability != MissionAvailability.Unlocked) return;
+
+        if (Progress == MissionProgress.Active && !eventsRegistered)
+        {
+            RegisterEventHandlers();
+        }
     }
     #endregion
 

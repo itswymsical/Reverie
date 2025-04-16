@@ -301,12 +301,20 @@ namespace Reverie.Common.NPCs
             Vector2 drawPos = npc.Center - Main.screenPosition;
             SpriteEffects spriteEffects = npc.spriteDirection == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
+            // Calculate rotation based on X velocity when falling
+            float spriteRotation = 0f;
+            if (npc.velocity.Y > 0f)
+            {
+                // Scale rotation with X velocity, cap at ±π/2 (90 degrees)
+                spriteRotation = MathHelper.Clamp(npc.velocity.X * 0.04f, -MathHelper.PiOver2, MathHelper.PiOver2);
+            }
+
             Main.EntitySpriteDraw(
                 texture,
                 drawPos,
                 sourceRectangle,
                 finalColor,
-                rotation,
+                spriteRotation,
                 new Vector2(frameWidth / 2, frameHeight / 2),
                 squishScale * npc.scale,
                 spriteEffects

@@ -1,7 +1,4 @@
-﻿using Reverie.Common.Players;
-using Reverie.Common.Systems;
-using Reverie.Common.UI.Missions;
-using Reverie.Core.Cinematics.Cutscenes;
+﻿using Reverie.Common.UI.Missions;
 using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
 
@@ -495,7 +492,6 @@ public partial class MissionPlayer : ModPlayer
     #region Mission Access
     public Mission GetMission(int missionId)
     {
-        // Check local cache first
         if (missionDict.TryGetValue(missionId, out var mission))
         {
             return mission;
@@ -537,6 +533,7 @@ public partial class MissionPlayer : ModPlayer
             mission.Progress = MissionProgress.Active;
             MissionManager.Instance.RegisterMission(mission);
             SyncMissionState(mission);
+
             mission.OnMissionStart();
 
             if (!mission.IsMainline)
@@ -545,8 +542,7 @@ public partial class MissionPlayer : ModPlayer
             }
         }
     }
-
-    public void UnlockMission(int missionId)
+    public void UnlockMission(int missionId, bool broadcast = false)
     {
         var mission = GetMission(missionId);
         if (mission != null)
@@ -555,6 +551,14 @@ public partial class MissionPlayer : ModPlayer
             mission.Progress = MissionProgress.Inactive;
             mission.Unlocked = true;
             SyncMissionState(mission);
+
+            // Add broadcast notification if specified
+            if (broadcast && mission.ProviderNPC > 0)
+            {
+                var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
+                Main.NewText($"{npcName} has a job opportunity!", Color.CornflowerBlue);
+                notifiedMissions.Add(mission.ID);
+            }
         }
     }
 
@@ -566,7 +570,6 @@ public partial class MissionPlayer : ModPlayer
     {
         foreach (var mission in missionDict.Values.Where(m => m.Progress == MissionProgress.Active))
         {
-            // Ensure we're working with the most up-to-date mission state
             if (dirtyMissions.Contains(mission.ID))
             {
                 mission.LoadState(mission.ToState());
@@ -584,7 +587,7 @@ public partial class MissionPlayer : ModPlayer
         var mission = GetMission(missionId);
         if (mission != null)
         {
-            mission.Employer = npcType;
+            mission.ProviderNPC = npcType;
             missionDict[missionId] = mission;
             SyncMissionState(mission);
         }
@@ -593,46 +596,67 @@ public partial class MissionPlayer : ModPlayer
     public void RemoveMissionFromNPC(int npcType, int missionId)
     {
         var mission = GetMission(missionId);
-        if (mission != null && mission.Employer == npcType)
+        if (mission != null && mission.ProviderNPC == npcType)
         {
-            mission.Employer = 0;
+            mission.ProviderNPC = 0;
             missionDict[missionId] = mission;
             SyncMissionState(mission);
         }
     }
-
-    public bool NPCHasAvailableMission(int npcType)
+    public void BroadcastAvailableMissionsForNPC(int npcType)
     {
+        NPCHasAvailableMission(npcType, true);
+    }
+
+    public void CheckAndBroadcastAllAvailableMissions()
+    {
+        var npcTypesWithMissions = missionDict.Values
+            .Where(m => m.ProviderNPC > 0 && m.Availability == MissionAvailability.Unlocked)
+            .Select(m => m.ProviderNPC)
+            .Distinct();
+
+        foreach (var npcType in npcTypesWithMissions)
+        {
+            NPCHasAvailableMission(npcType, true);
+        }
+    }
+
+    public bool NPCHasAvailableMission(int npcType, bool broadcast = false)
+    {
+        bool hasAvailableMission = false;
+
         foreach (var mission in missionDict.Values.Where(m =>
-            m.Employer == npcType &&
+            m.ProviderNPC == npcType &&
             m.Availability == MissionAvailability.Unlocked)) // Only show for inactive missions
         {
-            if (!mission.IsMainline && !notifiedMissions.Contains(mission.ID))
+            hasAvailableMission = true;
+
+            if (!mission.IsMainline && !notifiedMissions.Contains(mission.ID) && broadcast)
             {
-                var npcName = Lang.GetNPCNameValue(mission.Employer);
-                Main.NewText($"{npcName} has a job opportunity!", Color.Yellow);
+                var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
+                Main.NewText($"{npcName} has a job opportunity!", Color.CornflowerBlue);
                 notifiedMissions.Add(mission.ID);
             }
-            return true;
         }
-        return false;
+
+        return hasAvailableMission;
     }
 
     #endregion
 
-    #region Objective Tracking & Mission Handlers
+    #region Init & Update
     public override void OnEnterWorld()
     {
         ProcessDeferredLoad();
         notifiedMissions.Clear();
 
-        var fallingStar = GetMission(MissionID.FallingStar);
+        var fallingStar = GetMission(MissionID.AFallingStar);
 
         if (fallingStar != null && fallingStar.Availability != MissionAvailability.Completed 
             && fallingStar.Progress != MissionProgress.Active)
         {
-            UnlockMission(MissionID.FallingStar);
-            StartMission(MissionID.FallingStar);
+            UnlockMission(MissionID.AFallingStar);
+            StartMission(MissionID.AFallingStar);
         }
     }
 
@@ -645,31 +669,10 @@ public partial class MissionPlayer : ModPlayer
             ProcessDeferredLoad();
         }
 
-        MissionManager.Instance.OnUpdate();
-
         if (dirtyMissions.Count > 0)
         {
             dirtyMissions.Clear();
         }
-        check++;
-        if (check > 300)
-        {
-            foreach (var biome in Enum.GetValues<BiomeType>())
-            {
-                if (biome.IsPlayerInBiome(Player))
-                {
-                    MissionManager.Instance.OnBiomeEnter(Player, biome);
-                }
-            }
-            check = 0;
-        }
-    }
-
-    public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
-    {
-        base.OnHitNPC(target, hit, damageDone);
-
-        MissionManager.Instance.OnNPCHit(target, damageDone);
     }
 
     #endregion

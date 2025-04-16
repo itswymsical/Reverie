@@ -249,6 +249,31 @@ Items: {
 		DisplayName: Bloomcap Item
 		Tooltip: ""
 	}
+
+	WorldCoordUIPlacer: {
+		DisplayName: World Coord U I Placer
+		Tooltip: ""
+	}
+
+	SpawnUserInterfaceEntity: {
+		DisplayName: Spawn User Interface Entity
+		Tooltip: ""
+	}
+
+	MissionCompleteIndicator: {
+		DisplayName: Mission Complete Indicator
+		Tooltip: ""
+	}
+
+	StartMission: {
+		DisplayName: Start Mission
+		Tooltip: ""
+	}
+
+	SmoothCopperPlating: {
+		DisplayName: Smooth Copper Plating
+		Tooltip: ""
+	}
 }
 
 Projectiles: {

@@ -119,14 +119,14 @@ public class NPCData
     }
 }
 
-public static class NPCDataManager
+public static class NPCManager
 {
     public static NPCData Default { get; private set; } = null!;
     public static NPCData GuideData { get; private set; } = null!;
     public static NPCData MerchantData { get; private set; } = null!;
     public static NPCData DemolitionistData { get; private set; } = null!;
     public static NPCData NurseData { get; private set; } = null!;
-    static NPCDataManager()
+    static NPCManager()
     {
         Initialize();
     }

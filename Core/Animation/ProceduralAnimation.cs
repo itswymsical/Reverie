@@ -277,7 +277,7 @@ namespace Reverie.Core.Animation
         /// </summary>
         /// <param name="segment">The segment to animate.</param>
         /// <param name="drawInfo">The drawing information.</param>
-        public void ApplySegmentTransformation(AnimationSegment segment, PlayerDrawSet drawInfo)
+        public void ApplySegmentTransformation(AnimationSegment segment, ref PlayerDrawSet drawInfo)
         {
             try
             {
