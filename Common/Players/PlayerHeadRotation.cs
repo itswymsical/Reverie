@@ -39,7 +39,7 @@ public class PlayerHeadRotation : ModPlayer
     {
         const float LOOK_STRENGTH = 0.55f;
 
-        if (Player.sleeping.isSleeping || DialogueManager.Instance.IsAnyActive())
+        if (Player.sleeping.isSleeping || DialogueManager.Instance.IsAnyActive() || Player.pulley)
         {
             targetHeadRotation = 0f;
         }

@@ -19,7 +19,7 @@ public class CopperPlatingTile : ModTile
         Main.tileBlockLight[Type] = true;
 
         DustType = DustID.CopperCoin;
-        HitSound = SoundID.Dig;
+        HitSound = SoundID.Tink;
 
         AddMapEntry(Color.Orange);
     }
