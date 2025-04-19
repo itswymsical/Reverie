@@ -274,6 +274,11 @@ Items: {
 		DisplayName: Smooth Copper Plating
 		Tooltip: ""
 	}
+
+	SlimeMetaballDebugger: {
+		DisplayName: Slime Metaball Debugger
+		Tooltip: ""
+	}
 }
 
 Projectiles: {

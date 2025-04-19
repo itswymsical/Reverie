@@ -1,34 +1,32 @@
-﻿using Reverie.Core.Interfaces;
+﻿using ReLogic.Content;
+using Reverie.Core.Interfaces;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-
-using Terraria.Graphics.Effects;
-using Terraria.Graphics.Shaders;
 using Terraria.ModLoader.Core;
-
-using static Terraria.ModLoader.Core.TmodFile;
 
 namespace Reverie.Core.Loaders;
 
 class ShaderLoader : IOrderedLoadable
 {
+    private static readonly Dictionary<string, Lazy<Asset<Effect>>> Shaders = [];
+
     public float Priority => 0.9f;
 
-    [Obsolete]
     public void Load()
     {
         if (Main.dedServ)
             return;
 
-        MethodInfo info = typeof(Mod).GetProperty("File", BindingFlags.NonPublic | BindingFlags.Instance).GetGetMethod(true);
-        var file = (TmodFile)info.Invoke(Reverie.Instance, null);
+        var info = typeof(Mod).GetProperty("File", BindingFlags.NonPublic | BindingFlags.Instance).GetGetMethod(true);
+        var file = (TmodFile)info.Invoke(Instance, null);
 
-        System.Collections.Generic.IEnumerable<FileEntry> shaders = file.Where(n => n.Name.StartsWith("Effects/") && n.Name.EndsWith(".xnb"));
+        var shaders = file.Where(n => n.Name.StartsWith("Effects/") && n.Name.EndsWith(".xnb"));
 
-        foreach (FileEntry entry in shaders)
+        foreach (var entry in shaders)
         {
-            string name = entry.Name.Replace(".xnb", "").Replace("Effects/", "");
-            string path = entry.Name.Replace(".xnb", "");
+            var name = entry.Name.Replace(".xnb", "").Replace("Effects/", "");
+            var path = entry.Name.Replace(".xnb", "");
             LoadShader(name, path);
         }
     }
@@ -38,11 +36,22 @@ class ShaderLoader : IOrderedLoadable
 
     }
 
-    [Obsolete]
+    public static Asset<Effect> GetShader(string key)
+    {
+        if (Shaders.ContainsKey(key))
+        {
+            return Shaders[key].Value;
+        }
+        else
+        {
+            LoadShader(key, $"Effects/{key}");
+            return Shaders[key].Value;
+        }
+    }
+
     public static void LoadShader(string name, string path)
     {
-        var screenRef = new Ref<Effect>(Reverie.Instance.Assets.Request<Effect>(path, ReLogic.Content.AssetRequestMode.ImmediateLoad).Value);
-        Filters.Scene[name] = new Filter(new ScreenShaderData(screenRef, name + "Pass"), EffectPriority.High);
-        Filters.Scene[name].Load();
+        if (!Shaders.ContainsKey(name))
+            Shaders.Add(name, new(() => Instance.Assets.Request<Effect>(path)));
     }
 }

@@ -1,6 +1,8 @@
 ﻿using Reverie.Common.Systems.Camera;
 using Reverie.Utilities;
+using System.IO;
 using Terraria.Audio;
+using Terraria.ModLoader.IO;
 
 namespace Reverie.Common.NPCs;
 

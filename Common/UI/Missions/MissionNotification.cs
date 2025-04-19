@@ -44,7 +44,6 @@ public class MissionNotification : IInGameNotification
     private bool isHoveringToggleButton = false;
     private bool isHoveringPrevButton = false;
     private bool isHoveringNextButton = false;
-    private int hoveredMissionIndex = -1; // Track which mission in the list is being hovered
     private float hoverFadeIn = 0f;
     private const float HOVER_FADE_SPEED = 0.1f;
     private Vector2 iconPos;
@@ -270,7 +269,6 @@ public class MissionNotification : IInGameNotification
                 isHoveringPrevButton = false;
                 isHoveringNextButton = false;
                 isHoveringMission = false;
-                hoveredMissionIndex = -1;
             }
 
             if (isHoveringToggleButton)
@@ -433,7 +431,6 @@ public class MissionNotification : IInGameNotification
         }
 
         int yOffset = PANEL_HEIGHT;
-        hoveredMissionIndex = -1; // Reset hovered mission
 
         if (showingAvailableMissions)
         {
@@ -549,14 +546,12 @@ public class MissionNotification : IInGameNotification
     {
         int maxPages = (int)Math.Ceiling(availableMissions.Count / (float)MISSIONS_PER_PAGE);
         currentAvailablePage = (currentAvailablePage + 1) % maxPages;
-        hoveredMissionIndex = -1;
     }
 
     private void NavigateToPreviousPage()
     {
         int maxPages = (int)Math.Ceiling(availableMissions.Count / (float)MISSIONS_PER_PAGE);
         currentAvailablePage = (currentAvailablePage - 1 + maxPages) % maxPages;
-        hoveredMissionIndex = -1;
     }
 
     public void PushAnchor(ref Vector2 positionAnchorBottom) { }
@@ -589,7 +584,6 @@ public class MissionNotification : IInGameNotification
                 isHoveringToggleButton = false;
                 isHoveringPrevButton = false;
                 isHoveringNextButton = false;
-                hoveredMissionIndex = -1;
             }
 
             wasInventoryOpen = isInventoryOpen;
