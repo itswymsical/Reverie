@@ -92,14 +92,15 @@ public class MissionIndicatorManager : ModSystem
         }
     }
 
-    public override void PostDrawTiles()
+    public override void PostDrawInterface(SpriteBatch spriteBatch)
     {
-        Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp,
-            DepthStencilState.None, RasterizerState.CullNone, null);
+        //spriteBatch.End();
+        //Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp,
+        //DepthStencilState.None, RasterizerState.CullNone, null);
 
-        Instance.Draw(Main.spriteBatch);
+        Instance.Draw(spriteBatch);
 
-        Main.spriteBatch.End();
+        //Main.spriteBatch.End();
     }
 
     public void Draw(SpriteBatch spriteBatch)

@@ -1,4 +1,4 @@
-using Terraria.ModLoader.Config;
+﻿using Terraria.ModLoader.Config;
 using Microsoft.Xna.Framework;
 
 namespace Reverie.Common.Configs
@@ -8,9 +8,12 @@ namespace Reverie.Common.Configs
         public override ConfigScope Mode => ConfigScope.ClientSide;
 
         [Header("ExperienceMeterColors")]
-
+#pragma warning disable CS0618 // Type or member is obsolete
         [Label("ExperienceColors")]
+#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
         [Tooltip("Customize the RGB color of the Experience Meter")]
+#pragma warning restore CS0618 // Type or member is obsolete
         public ColorSetting BarColor { get; set; }
 
         public ExperienceMeterConfig()

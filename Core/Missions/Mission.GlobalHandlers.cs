@@ -191,6 +191,12 @@ public class ObjectiveEventNPC : GlobalNPC
         base.OnCaughtBy(npc, player, item, failed);
         OnNPCCatch?.Invoke(npc, player, item, failed);
     }
+
+    public override void OnSpawn(NPC npc, IEntitySource source)
+    {
+        base.OnSpawn(npc, source);
+        OnNPCSpawn?.Invoke(npc);
+    }
 }
 
 public class ObjectiveEventTile : GlobalTile

@@ -24,9 +24,6 @@
 
 	<!-- References -->
 	<ItemGroup>
-        <PackageReference Include="tModLoader.CodeAssist" Version="0.1.5" />
-	</ItemGroup>
-	<ItemGroup>
 	  <Reference Include="StructureHelper">
 	    <HintPath>lib\StructureHelper2.dll</HintPath>
 	  </Reference>

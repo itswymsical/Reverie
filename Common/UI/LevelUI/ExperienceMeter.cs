@@ -28,16 +28,16 @@ internal class ExperienceMeter : UIState
         barFrame.Width.Set(142, 0f);
         barFrame.Height.Set(40, 0f);
 
-        text = new UIText("0/0", 0.8f);
+        text = new UIText("0/0", 0.92f);
         text.Width.Set(142, 0f);
         text.Height.Set(40, 0f);
         text.Top.Set(-8, 0f);
-        text.Left.Set(17, 0f);
+        text.Left.Set(16.75f, 0f);
         area.Append(text);
 
-        level = new UIText("0", 0.8f);
+        level = new UIText("0", 0.75f);
         level.Width.Set(142, 0f);
-        level.Height.Set(40, 0f);
+        level.Height.Set(41.5f, 0f);
         level.Top.Set(9.65f, 0f);
         level.Left.Set(78f, 0f);         
 
@@ -95,8 +95,8 @@ internal class ExperienceMeter : UIState
     public override void Update(GameTime gameTime)
     {
         var modPlayer = Main.LocalPlayer.GetModPlayer<ExperiencePlayer>();
-        text.SetText($"Experience: {modPlayer.experienceValue} / {ExperiencePlayer.GetNextExperienceThreshold(modPlayer.experienceLevel)}", 0.6f, false);
-        level.SetText($"{modPlayer.experienceLevel}", 0.8f, false);
+        text.SetText($"Experience: {modPlayer.experienceValue} / {ExperiencePlayer.GetNextExperienceThreshold(modPlayer.experienceLevel)}", 0.7f, false);
+        level.SetText($"{modPlayer.experienceLevel}", 0.72f, false);
 
         base.Update(gameTime);
     }

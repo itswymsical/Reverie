@@ -7,8 +7,6 @@ namespace Reverie.Common.WorldGeneration.Taiga;
 
 public class TaigaPlantPass : GenPass
 {
-    private static int grassSpread;
-
     public TaigaPlantPass() : base("Spreading Tundra Grass", 247.5f) { }
 
     protected override void ApplyPass(GenerationProgress progress, GameConfiguration configuration)
@@ -25,7 +23,6 @@ public class TaigaPlantPass : GenPass
         PlaceDecorations(leftEdge, rightEdge, snowCoreStart, snowCoreEnd, progress);
     }
     
-
     private static void PlaceDecorations(int left, int right, int snowCoreStart, int snowCoreEnd, GenerationProgress progress)
     {
         progress.Message = "Growing Plants";

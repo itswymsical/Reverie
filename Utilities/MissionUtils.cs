@@ -11,7 +11,7 @@ namespace Reverie.Utilities;
 public static class MissionUtils
 {
     /// <summary>
-    ///     Updates mission progress for an item if it hasn't already contributed.
+    ///     Checks if an item should update progress for a mission.
     /// </summary>
     /// <param name="item">The item to process.</param>
     /// <param name="player">The player who picked up or has the item.</param>
@@ -36,12 +36,7 @@ public static class MissionUtils
             if (currentSet.IsCompleted)
                 continue;
 
-            // At this point, we have an active mission with an incomplete objective set
-            // The item is relevant and will contribute to progress
             progressUpdated = true;
-
-            // No need to update progress here - we'll let the event handler do that
-            // This method is just for checking if the item should be processed
         }
 
         if (progressUpdated)

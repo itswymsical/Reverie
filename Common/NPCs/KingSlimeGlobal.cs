@@ -23,13 +23,10 @@ public class KingSlimeGlobal : GlobalNPC
     public override bool AppliesToEntity(NPC entity, bool lateInstantiation) => entity.type == NPCID.KingSlime;
 
     private Vector2 squishScale = Vector2.One;
-    private readonly float rotation;
 
-    // State management
     private KingSlimeState currentState = KingSlimeState.Idle;
     private KingSlimeState previousState;
     private float stateTimer;
-    private float jumpTimer;
     private int consecutiveSlams;
 
     // Constants
@@ -187,12 +184,7 @@ public class KingSlimeGlobal : GlobalNPC
 
     private void OnStateEnter(KingSlimeState state)
     {
-        switch (state)
-        {
-            case KingSlimeState.Jumping:
-                jumpTimer = 0f;
-                break;
-        }
+
     }
 
     private void HandleState(NPC npc)
@@ -604,7 +596,7 @@ public class KingSlimeGlobal : GlobalNPC
             drawPos,
             sourceRectangle,
             finalColor,
-            rotation,
+            0,
             sourceRectangle.Size() * 0.5f,
             squishScale * npc.scale,
             spriteEffects

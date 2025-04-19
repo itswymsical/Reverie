@@ -19,10 +19,8 @@ public partial class MissionPlayer : ModPlayer
 
     private readonly HashSet<int> dirtyMissions = [];
 
-    private int check = 0;
-
     private TagCompound savedMissionData = null;
-    private bool isWorldFullyLoaded = false;
+    //private bool isWorldFullyLoaded = false;
     private bool hasDeferredLoadRun = false;
 
     #endregion
@@ -235,9 +233,6 @@ public partial class MissionPlayer : ModPlayer
 
             // Clear saved data to free memory
             savedMissionData = null;
-
-            // Mark world as fully loaded
-            isWorldFullyLoaded = true;
 
             ModContent.GetInstance<Reverie>().Logger.Info("Completed deferred mission loading successfully");
         }

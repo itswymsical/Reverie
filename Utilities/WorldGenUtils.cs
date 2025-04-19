@@ -17,7 +17,7 @@ public static class WorldGenUtils
     /// <summary>
     /// Checks if a location is valid for ore placement.
     /// </summary>
-    public static bool IsValidOreLocation(int x, int y, HashSet<ushort>? validBlocks = null)
+    public static bool IsValidOreLocation(int x, int y, HashSet<ushort> validBlocks = null)
     {
         var tile = Main.tile[x, y];
         if (!tile.HasTile) return false;

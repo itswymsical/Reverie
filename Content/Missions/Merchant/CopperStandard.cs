@@ -24,7 +24,7 @@ public class CopperStandard : Mission
       ],
 
       rewards: [new Item(ItemID.SilverCoin, Main.rand.Next(75, 150)),
-          new Item(ItemID.SilverWatch), new Item(ItemID.SilverBar, 20)],
+          new Item(ItemID.SilverWatch), new Item(ItemID.SilverBar, 18)],
       isMainline: false,
       providerNPC: NPCID.Merchant,
       xpReward: 150)
@@ -59,7 +59,6 @@ public class CopperStandard : Mission
 
         base.RegisterEventHandlers();
 
-        // Register only the events this mission cares about
         ObjectiveEventItem.OnItemPickup += OnItemPickupHandler;
         ObjectiveEventItem.OnItemCreated += OnItemCreatedHandler;
         ObjectiveEventNPC.OnNPCChat += OnNPCChatHandler;
@@ -72,7 +71,6 @@ public class CopperStandard : Mission
     {
         if (!eventsRegistered) return;
 
-        // Unregister all event handlers
         ObjectiveEventItem.OnItemPickup -= OnItemPickupHandler;
         ObjectiveEventItem.OnItemCreated -= OnItemCreatedHandler;
         ObjectiveEventNPC.OnNPCChat -= OnNPCChatHandler;
@@ -122,10 +120,6 @@ public class CopperStandard : Mission
             var objective = (Objectives)CurrentIndex;
             switch (objective)
             {
-                case Objectives.CopperCoins:
-                    if (item.type == ItemID.CopperCoin)
-                        UpdateProgress(0, item.stack);
-                    break;
                 case Objectives.SmeltCopper:
                     if (item.type == ItemID.CopperBar)
                         UpdateProgress(0, item.stack);

@@ -10,7 +10,7 @@ namespace Reverie.Core.Items.Components;
 /// </remarks>
 public static class ItemComponentExtensions
 {
-    public static bool TryEnable<T>(this Item npc, [NotNullWhen(true)] out T? component) where T : ItemComponent
+    public static bool TryEnable<T>(this Item npc, [NotNullWhen(true)] out T component) where T : ItemComponent
     {
         if (!npc.TryGetGlobalItem(out component))
         {

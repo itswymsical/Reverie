@@ -10,7 +10,7 @@ namespace Reverie.Core.NPCs.Components;
 /// </remarks>
 public static class NPCComponentExtensions
 {
-    public static bool TryEnable<T>(this NPC npc, [NotNullWhen(true)] out T? component) where T : NPCComponent
+    public static bool TryEnable<T>(this NPC npc, [NotNullWhen(true)] out T component) where T : NPCComponent
     {
         if (!npc.TryGetGlobalNPC(out component))
         {

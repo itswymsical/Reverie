@@ -1,11 +1,12 @@
 ﻿using Terraria.ModLoader.IO;
 using Reverie.Core.Items.Components;
+using Terraria.DataStructures;
 
 namespace Reverie.Common.Items.Components;
 
 /// <summary>
-///     Component that marks items as having contributed to mission progress,
-///     preventing duplicate progress updates when the same item is picked up multiple times.
+/// Component that marks items as having contributed to mission progress,
+/// preventing duplicate progress updates when the same item is picked up multiple times.
 /// </summary>
 public class MissionItemComponent : ItemComponent
 {
@@ -13,17 +14,17 @@ public class MissionItemComponent : ItemComponent
     /// <summary>
     ///     Indicates whether this item has already contributed to mission progress.
     /// </summary>
-    private bool hasContributedToProgress;
+    private bool hasContributed;
     #endregion
 
     #region Properties
     /// <summary>
-    ///     Gets or sets whether this item has already contributed to mission progress.
+    /// Gets or sets whether this item has already contributed to mission progress.
     /// </summary>
     public bool HasContributedToProgress
     {
-        get => hasContributedToProgress;
-        set => hasContributedToProgress = value;
+        get => hasContributed;
+        set => hasContributed = value;
     }
     #endregion
 
@@ -38,18 +39,18 @@ public class MissionItemComponent : ItemComponent
     public override GlobalItem Clone(Item from, Item to)
     {
         var clone = (MissionItemComponent)base.Clone(from, to);
-        clone.hasContributedToProgress = hasContributedToProgress;
+        clone.hasContributed = hasContributed;
         return clone;
     }
 
     public override void SaveData(Item item, TagCompound tag)
     {
-        tag["HasContributedToProgress"] = hasContributedToProgress;
+        tag["hasContributed"] = hasContributed;
     }
 
     public override void LoadData(Item item, TagCompound tag)
     {
-        hasContributedToProgress = tag.GetBool("HasContributedToProgress");
+        hasContributed = tag.GetBool("hasContributed");
     }
     #endregion
 
@@ -70,9 +71,16 @@ public class MissionItemComponent : ItemComponent
         var component = GetOrCreate(item);
         component.HasContributedToProgress = true;
     }
+    public override void OnCreated(Item item, ItemCreationContext context)
+    {
+        // prevent pickup from triggering when you craft shit
+        base.OnCreated(item, context);
+        var component = GetOrCreate(item);
+        component.HasContributedToProgress = true;
+    }
 
     /// <summary>
-    ///     Checks if an item has already contributed to mission progress.
+    /// Checks if an item has already contributed to mission progress.
     /// </summary>
     public static bool HasItemContributed(Item item)
     {

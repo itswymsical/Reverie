@@ -14,6 +14,7 @@ class ShaderLoader : IOrderedLoadable
 {
     public float Priority => 0.9f;
 
+    [Obsolete]
     public void Load()
     {
         if (Main.dedServ)
@@ -37,6 +38,7 @@ class ShaderLoader : IOrderedLoadable
 
     }
 
+    [Obsolete]
     public static void LoadShader(string name, string path)
     {
         var screenRef = new Ref<Effect>(Reverie.Instance.Assets.Request<Effect>(path, ReLogic.Content.AssetRequestMode.ImmediateLoad).Value);

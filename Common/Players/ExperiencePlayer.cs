@@ -10,6 +10,7 @@ public class ExperiencePlayer : ModPlayer
     public int experienceLevel;
     public int experienceValue;
     public int skillPoints;
+
     public bool TryUseSkillPoint()
     {
         if (skillPoints > 0)

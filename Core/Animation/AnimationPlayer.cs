@@ -52,7 +52,7 @@ namespace Reverie.Core.Animation
 
         public override void ModifyDrawInfo(ref PlayerDrawSet drawInfo)
         {
-            if (!AnimationsEnabled)
+            if (!AnimationsEnabled || Main.gameMenu)
                 return;
 
             try
