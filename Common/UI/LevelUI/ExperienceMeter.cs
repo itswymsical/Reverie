@@ -46,7 +46,7 @@ internal class ExperienceMeter : UIState
         Append(area);
     }
 
-    public override void Draw(SpriteBatch spriteBatch) => base.Draw(spriteBatch);    
+    public override void Draw(SpriteBatch spriteBatch) => base.Draw(spriteBatch);
 
     protected override void DrawSelf(SpriteBatch spriteBatch)
     {
@@ -55,7 +55,6 @@ internal class ExperienceMeter : UIState
         var config = ModContent.GetInstance<ExperienceMeterConfig>();
         var xpPercentage = (float)modPlayer.experienceValue / ExperiencePlayer.GetNextExperienceThreshold(modPlayer.experienceLevel);
         xpPercentage = MathHelper.Clamp(xpPercentage, 0f, 1f);
-
         var hitbox = barFrame.GetInnerDimensions().ToRectangle();
 
         spriteBatch.Draw(
@@ -64,21 +63,33 @@ internal class ExperienceMeter : UIState
             config.BarColor
         );
 
+        int fillableWidth = hitbox.Width - 20;
+        int fillableHeight = 12;
+        int fillWidth = (int)(fillableWidth * xpPercentage);
+
+        int xOffset = 6;
+        int yOffset = hitbox.Height - fillableHeight - 16;
+
+        Rectangle fillRect = new Rectangle(hitbox.X + xOffset, hitbox.Y + yOffset, fillWidth, fillableHeight);
+
+        for (int i = 0; i < fillWidth; i += 12)
+        {
+            int segmentWidth = Math.Min(12, fillWidth - i);
+            Rectangle sourceRect = new Rectangle(0, 0, segmentWidth, 12);
+            Rectangle destRect = new Rectangle(hitbox.X + xOffset + i, hitbox.Y + yOffset, segmentWidth, 12);
+            spriteBatch.Draw(
+                ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}LevelSystem/XP_Fill").Value,
+                destRect,
+                sourceRect,
+                config.BarColor
+            );
+        }
+
         spriteBatch.Draw(
             ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}LevelSystem/XP_Star").Value,
             hitbox,
             config.BarColor
         );
-
-        var fillWidth = (int)(hitbox.Width * xpPercentage - 25f);
-        for (var i = 0; i < fillWidth; i++)
-        {
-            spriteBatch.Draw(
-                ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}LevelSystem/XP_Fill").Value,
-                new Rectangle(hitbox.X + i, hitbox.Y + hitbox.Height - 28, 1, 12),
-                config.BarColor
-            );
-        }
     }
 
     public override void Update(GameTime gameTime)
@@ -112,7 +123,7 @@ internal class ExperienceUISystem : ModSystem
         if (resourceBarIndex != -1)
         {
             layers.Insert(resourceBarIndex, new LegacyGameInterfaceLayer(
-                "ReverieMod: Experience Meter",
+                "Reverie: Experience Meter",
                 delegate
                 {
                     ExperienceMeterUserInterface.Draw(Main.spriteBatch, new GameTime());
