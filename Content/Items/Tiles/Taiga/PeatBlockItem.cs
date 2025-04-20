@@ -2,7 +2,7 @@
 
 namespace Reverie.Content.Items.Tiles.Taiga;
 
-public class PeatBlock : ModItem
+public class PeatBlockItem : ModItem
 {
     public override void SetDefaults()
     {

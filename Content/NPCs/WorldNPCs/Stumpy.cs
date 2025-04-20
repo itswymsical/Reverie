@@ -9,8 +9,7 @@ using Terraria.DataStructures;
 
 namespace Reverie.Content.NPCs.WorldNPCs;
 
-[AutoloadHead]
-public class Argie : WorldNPCActor
+public class Stumpy : WorldNPCActor
 {
     public override void SetStaticDefaults()
     {
@@ -34,25 +33,12 @@ public class Argie : WorldNPCActor
         NPC.DeathSound = SoundID.NPCDeath1;
         NPC.knockBackResist = 0f;
     }
-    public override void OnSpawn(IEntitySource source)
-    {
-        base.OnSpawn(source);
-        var player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        var bloomCap = player.GetMission(MissionID.BloomcapHunt);
-
-        if (bloomCap != null &&
-            bloomCap.Availability != MissionAvailability.Completed &&
-            bloomCap.Progress != MissionProgress.Active)
-        {
-            player.UnlockMission(MissionID.BloomcapHunt);
-        }
-    }
 
     public override string GetChat()
     {
         return Main.rand.Next() switch
         {
-            _ => "Hi!!! I'm Argie.",
+            _ => "...",
         };
     }
 
@@ -61,16 +47,5 @@ public class Argie : WorldNPCActor
         button = "Chat";
 
         button2 = "Missions";
-    }
-    public override void OnChatButtonClicked(bool firstButton, ref string shopName)
-    {
-        if (firstButton)
-        {
-            DialogueManager.Instance.StartDialogueByKey(
-                    NPCManager.Default,
-                    DialogueKeys.ArgieDialogue.Introduction,
-                    lineCount: 4,
-                    zoomIn: false, musicId: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}ArgiesTheme"));
-        }
     }
 }

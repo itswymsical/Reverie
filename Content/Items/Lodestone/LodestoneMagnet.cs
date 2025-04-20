@@ -40,7 +40,7 @@ public class LodestoneMagnet : ModItem
     public override void AddRecipes()
     {
         var recipe = CreateRecipe();
-        recipe.AddIngredient<Lodestone>(25);
+        recipe.AddIngredient<LodestoneItem>(25);
         recipe.AddIngredient<MagnetizedCoil>(15);
         recipe.AddRecipeGroup(nameof(ItemID.SilverBar), 10);
         recipe.AddTile(TileID.Anvils);

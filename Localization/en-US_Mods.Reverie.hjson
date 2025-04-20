@@ -279,6 +279,41 @@ Items: {
 		DisplayName: Slime Metaball Debugger
 		Tooltip: ""
 	}
+
+	LodestoneItem: {
+		DisplayName: Lodestone Item
+		Tooltip: ""
+	}
+
+	SmoothCopperPlatingItem: {
+		DisplayName: Smooth Copper Plating Item
+		Tooltip: ""
+	}
+
+	PeatBlockItem: {
+		DisplayName: Peat Block Item
+		Tooltip: ""
+	}
+
+	TaigaGrassSeedsItem: {
+		DisplayName: Taiga Grass Seeds Item
+		Tooltip: ""
+	}
+
+	TombBrickItem: {
+		DisplayName: Tomb Brick Item
+		Tooltip: ""
+	}
+
+	WoodWickerBlockItem: {
+		DisplayName: Wood Wicker Block Item
+		Tooltip: ""
+	}
+
+	WoodWickerWallItem: {
+		DisplayName: Wood Wicker Wall Item
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
@@ -450,6 +485,21 @@ NPCs: {
 
 	Argie: {
 		DisplayName: Argie
+
+		TownNPCMood: {
+			Content: I am content.
+			NoHome: I hate not having a home.
+			FarFromHome: I am too far from home.
+			LoveSpace: I love having so much space.
+			DislikeCrowded: I dislike how crowded I am.
+			HateCrowded: I hate how crowded I am.
+			LikeNPC_Princess: I like {NPCName}.
+			Princess_LovesNPC: I like {NPCName}.
+		}
+	}
+
+	Stumpy: {
+		DisplayName: Stumpy
 
 		TownNPCMood: {
 			Content: I am content.

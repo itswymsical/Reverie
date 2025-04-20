@@ -1,6 +1,4 @@
 ﻿using ReLogic.Utilities;
-using Reverie.Content.Tiles;
-using Reverie.lib;
 using System.Collections.Generic;
 
 namespace Reverie.Utilities;
@@ -119,6 +117,7 @@ public static class WorldGenUtils
 
         return false;
     }
+    
     public static bool GenerateCanopyShape(int x, int y, int centerX, int centerY, int width, int height, float curveFrequency, int curveAmplitude, int thornHeight, int thornWidth)
     {
         int relativeY = y - centerY;
@@ -265,5 +264,127 @@ public static class WorldGenUtils
 
         return s >= 0 && t >= 0 && (s + t) <= 1;
     }
+
+    public static void GenerateCellNoise(int cX, int cY, int hR, int vR, int density, int iterations, bool killTile, int type, bool forced)
+    {
+        var caveMap = new bool[hR * 2, vR * 2];
+        for (var x = 0; x < hR * 2; x++)
+        {
+            for (var y = 0; y < vR * 2; y++)
+            {
+                caveMap[x, y] = Main.rand.Next(100) < density;
+
+            }
+        }
+        for (var iteration = 0; iteration < iterations; iteration++)
+        {
+            caveMap = PerformStep(caveMap, hR * 2, vR * 2);
+        }
+        for (var x = 0; x < hR * 2; x++)
+        {
+            for (var y = 0; y < vR * 2; y++)
+            {
+                if (caveMap[x, y])
+                {
+                    var worldX = cX - hR + x;
+                    var worldY = cY - vR + y;
+                    if (killTile)
+                    {
+                        WorldGen.KillTile(worldX, worldY);
+                    }
+                    else
+                    {
+                        WorldGen.PlaceTile(worldX, worldX, type, forced: forced);
+                    }
+                }
+            }
+        }
+
+    }
+
+    public static void GenerateCellNoise_Walls(int cX, int cY, int hR, int vR, int density, int iterations)
+    {
+        var caveMap = new bool[hR * 2, vR * 2];
+        for (var x = 0; x < hR * 2; x++)
+        {
+            for (var y = 0; y < vR * 2; y++)
+            {
+
+                caveMap[x, y] = Main.rand.Next(100) < density;
+            }
+        }
+        for (var iteration = 0; iteration < iterations; iteration++)
+        {
+            caveMap = PerformStep(caveMap, hR * 2, vR * 2);
+        }
+        for (var x = 0; x < hR * 2; x++)
+        {
+            for (var y = 0; y < vR * 2; y++)
+            {
+                if (caveMap[x, y])
+                {
+                    var worldX = cX - hR + x;
+                    var worldY = cY - vR + y;
+                    var tile = Main.tile[worldX, worldY];
+                    tile.WallType = 0;
+                }
+            }
+        }
+    }
+    
+    private static int CountSolidNeighbors(bool[,] map, int x, int y, int width, int height)
+    {
+        int count = 0;
+
+        for (int i = -1; i <= 1; i++)
+        {
+            for (int j = -1; j <= 1; j++)
+            {
+                if (i == 0 && j == 0)
+                {
+                    continue;
+                }
+
+                int neighborX = x + i;
+                int neighborY = y + j;
+
+                if (neighborX >= 0 && neighborX < width && neighborY >= 0 && neighborY < height)
+                {
+                    if (map[neighborX, neighborY])
+                    {
+                        count++;
+                    }
+                }
+                else
+                {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+
+    private static bool[,] PerformStep(bool[,] map, int width, int height)
+    {
+        var newMap = new bool[width, height];
+        for (var x = 0; x < width; x++)
+        {
+            for (var y = 0; y < height; y++)
+            {
+                int solidNeighbors = CountSolidNeighbors(map, x, y, width, height);
+
+                if (solidNeighbors > 4)
+                    newMap[x, y] = true;
+                else if (solidNeighbors < 4)
+                    newMap[x, y] = false;
+                else
+                    newMap[x, y] = map[x, y];
+            }
+        }
+
+        return newMap;
+    }
+
     #endregion
 }

@@ -2,7 +2,7 @@
 
 namespace Reverie.Content.Items.Tiles;
 
-public class SmoothCopperPlating : ModItem
+public class WoodWickerWallItem : ModItem
 {
     public override void SetDefaults()
     {
@@ -10,7 +10,7 @@ public class SmoothCopperPlating : ModItem
 
         Item.value = Item.sellPrice(copper: 4);
 
-        Item.DefaultToPlaceableTile(ModContent.TileType<CopperPlatingTile>());
+        Item.DefaultToPlaceableWall(ModContent.WallType<WoodWickerWall>());
 
         Item.rare = ItemRarityID.White;
     }
@@ -19,8 +19,8 @@ public class SmoothCopperPlating : ModItem
         base.AddRecipes();
 
         CreateRecipe(4)
-        .AddIngredient(ItemID.CopperBar)
-        .AddTile(TileID.HeavyWorkBench)
+        .AddIngredient(ModContent.ItemType<WoodWickerBlockItem>(), 1)
+        .AddTile(TileID.WorkBenches)
         .Register();
     }
 }

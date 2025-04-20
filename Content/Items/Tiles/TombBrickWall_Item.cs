@@ -20,7 +20,7 @@ public class TombBrickWall_Item : ModItem
         base.AddRecipes();
 
         CreateRecipe(4)
-        .AddIngredient(ModContent.ItemType<TombBrick>(), 1)
+        .AddIngredient(ModContent.ItemType<TombBrickItem>(), 1)
         .AddTile(TileID.WorkBenches)
         .Register();
     }

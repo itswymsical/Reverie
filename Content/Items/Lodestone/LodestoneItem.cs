@@ -3,7 +3,7 @@ using Reverie.Utilities;
 
 namespace Reverie.Content.Items.Lodestone;
 
-public class Lodestone : ModItem
+public class LodestoneItem : ModItem
 {
 
     private const float BASE_MAGNET_RANGE = 95f;

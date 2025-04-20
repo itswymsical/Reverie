@@ -5,7 +5,7 @@ using Reverie.Content.Tiles.Taiga;
 
 namespace Reverie.Content.Items.Tiles.Taiga;
 
-public class TaigaGrassSeeds : ModItem
+public class TaigaGrassSeedsItem : ModItem
 {
     public override void SetStaticDefaults()
     {

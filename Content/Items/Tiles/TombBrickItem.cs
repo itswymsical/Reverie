@@ -2,7 +2,7 @@
 
 namespace Reverie.Content.Items.Tiles;
 
-public class TombBrick : ModItem
+public class TombBrickItem : ModItem
 {
     public override void SetDefaults()
     {
