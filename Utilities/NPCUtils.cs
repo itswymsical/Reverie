@@ -1,4 +1,6 @@
 ﻿
+using Terraria.GameContent;
+
 namespace Reverie.Utilities;
 
 /// <summary>
@@ -26,6 +28,7 @@ public static class NPCUtils
         else
             npc.noTileCollide = false;
     }
+
     public static void SlopedCollision(NPC npc)
     {
         var velocityDirection = Math.Sign(npc.velocity.X);
@@ -80,4 +83,112 @@ public static class NPCUtils
             }
         }
     }
+
+    private static void ApplyJump(NPC npc, bool canJump, float jumpHeightModifier)
+    {
+        int tileX = (int)((npc.Center.X + 15 * npc.direction) / 16f);
+        int tileY = (int)((npc.position.Y + npc.height - 15f) / 16f);
+
+        Tile tile1 = Framing.GetTileSafely(tileX, tileY);
+        Tile tile2 = Framing.GetTileSafely(tileX, tileY - 1);
+        Tile tile3 = Framing.GetTileSafely(tileX, tileY + 1);
+        Tile tile4 = Framing.GetTileSafely(tileX + npc.direction, tileY + 1);
+
+        tile3.IsHalfBlock = true;
+
+        if (npc.spriteDirection == Math.Sign(npc.velocity.X))
+        {
+            if (tile2.HasTile && Main.tileSolid[tile2.TileType])
+            {
+                npc.netUpdate = true;
+                npc.velocity.Y = -6f;
+            }
+            else if (npc.position.Y + npc.height - (tileY * 16) > 20f && tile1.HasTile && !tile1.TopSlope && Main.tileSolid[tile1.TileType])
+            {
+                npc.netUpdate = true;
+                npc.velocity.Y = -5f;
+            }
+            else if (npc.directionY < 0 &&
+                (!tile3.HasTile || !Main.tileSolid[tile3.TileType]) &&
+                (!tile4.HasTile || !Main.tileSolid[tile4.TileType]))
+            {
+                npc.netUpdate = true;
+                npc.velocity.Y = -8f;
+                npc.velocity.X *= 1.5f;
+            }
+
+            if (npc.velocity.Y == 0f && canJump && npc.ai[1] == 1f)
+                npc.velocity.Y = -5f;
+
+            if (npc.velocity.Y < 0f)
+                npc.velocity.Y *= jumpHeightModifier;
+        }
+    }
+
+    public static bool HoleBelow(this NPC npc)
+    {
+        int tileWidth = (int)Math.Round(npc.width / 16f);
+
+        int tileX = (int)(npc.Center.X / 16f) - tileWidth;
+
+        if (npc.velocity.X > 0f)
+            tileX += tileWidth;
+
+        int tileY = (int)((npc.position.Y + npc.height) / 16f);
+
+        for (int j = tileY; j < tileY + 2; j++)
+        {
+            for (int i = tileX; i < tileX + tileWidth; i++)
+            {
+                if (!WorldGen.InWorld(i, j))
+                    continue;
+
+                Tile tile = Framing.GetTileSafely(i, j);
+
+                if (tile.HasTile)
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static bool DrawNPCCenteredWithTexture(this NPC npc, Texture2D texture, SpriteBatch spriteBatch, Color color)
+    {
+        Vector2 origin = npc.frame.Size() / 2f + new Vector2(0f, npc.ModNPC.DrawOffsetY);
+
+        SpriteEffects effects = npc.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+
+        Vector2 drawPosition = npc.Center.ToDrawPosition() + new Vector2(0f, npc.gfxOffY);
+
+        spriteBatch.Draw(texture, drawPosition, npc.frame, color, npc.rotation, origin, npc.scale, effects, 0f);
+
+        return false;
+    }
+    public static bool DrawNPCCentered(this NPC npc, Texture2D texture, SpriteBatch spriteBatch, Color color)
+    {
+        return npc.DrawNPCCenteredWithTexture(texture, spriteBatch, npc.GetAlpha(color));
+    }
+    public static void DrawNPCTrailCenteredWithTexture(this NPC npc, Texture2D texture, SpriteBatch spriteBatch, Color color, float initialOpacity = 0.8f, float opacityDegrade = 0.2f, int stepSize = 1)
+    {
+        Vector2 origin = npc.frame.Size() / 2f;
+
+        SpriteEffects effects = npc.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+
+        for (int i = 0; i < NPCID.Sets.TrailCacheLength[npc.type]; i += stepSize)
+        {
+            float opacity = initialOpacity - opacityDegrade * i;
+
+            Vector2 position = npc.oldPos[i].ToDrawPosition() + npc.Hitbox.Size() / 2f + new Vector2(0f, npc.gfxOffY);
+
+            spriteBatch.Draw(texture, position, npc.frame, color * opacity, npc.oldRot[i], origin, npc.scale, effects, 0f);
+        }
+    }
+    public static void DrawNPCTrailCentered(this NPC npc, SpriteBatch spriteBatch, Color color, float initialOpacity = 0.8f, float opacityDegrade = 0.2f, int stepSize = 1)
+    {
+        Texture2D texture = TextureAssets.Npc[npc.type].Value;
+
+        npc.DrawNPCTrailCenteredWithTexture(texture, spriteBatch, npc.GetAlpha(color), initialOpacity, opacityDegrade, stepSize);
+    }
+
 }
