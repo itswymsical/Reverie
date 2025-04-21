@@ -3,6 +3,8 @@ using Reverie.Core.Entities;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Terraria.UI;
+using Reverie.Common.Systems;
+using Reverie.Content.Cutscenes;
 
 namespace Reverie.Content.Items.Debugging;
 
@@ -31,6 +33,23 @@ public class DialogueTest : ModItem
                 (line: 4, delay: 3, emote: 0),
                 (line: 5, delay: 3, emote: 1)]);
 
+        return true;
+    }
+}
+public class PlayCutscene : ModItem
+{
+    public override string Texture => PLACEHOLDER;
+    public override void SetDefaults()
+    {
+        Item.useTime = Item.useAnimation = 20;
+        Item.value = Item.buyPrice(0);
+        Item.rare = ItemRarityID.Quest;
+        Item.useStyle = ItemUseStyleID.HoldUp;
+    }
+    public override bool? UseItem(Player player)
+    {
+        if (Main.myPlayer == player.whoAmI)
+            CutsceneSystem.PlayCutscene(new FallingStarCutscene());
         return true;
     }
 }

@@ -3,7 +3,7 @@
 using MonoMod.Cil;
 using Reverie.Content;
 
-namespace Reverie.Common.ILDetour;
+namespace Reverie.Common.MonoMod;
 
 public class ModifyMenuButtonsSystem : ModSystem
 {

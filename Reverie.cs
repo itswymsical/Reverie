@@ -44,6 +44,8 @@ public sealed partial class Reverie : Mod
     ///     Directory for music soundtracks.
     /// </summary>
     public const string MUSIC_DIRECTORY = nameof(Reverie) + "/Assets/Music/";
+    public const string CUTSCENE_MUSIC_DIRECTORY = MUSIC_DIRECTORY + "Cutscene/";
+    public const string CUTSCENE_TEXTURE_DIRECTORY = nameof(Reverie) + "/Assets/Textures/Cutscene/";
     /// <summary>
     ///     Directory for logo textures.
     /// </summary>

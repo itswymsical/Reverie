@@ -447,7 +447,7 @@ public class MissionNotification : IInGameNotification
                 var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
                 if (mission.ProviderNPC > 0)
                 {
-                    employer = $"{mission.Name} [{npcName}]";
+                    employer = $"{mission.Name} - {npcName}";
                 }
 
                 Vector2 textPos = new Vector2(posX + TEXT_PADDING, posY + yOffset + PANEL_HEIGHT / (float)Math.PI);
@@ -471,7 +471,7 @@ public class MissionNotification : IInGameNotification
                     0.8f
                 );
 
-                yOffset += PANEL_HEIGHT;
+                yOffset += 22;
             }
         }
         else

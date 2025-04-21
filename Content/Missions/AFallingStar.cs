@@ -1,5 +1,5 @@
 ﻿using Reverie.Common.Systems;
-using Reverie.Core.Cinematics.Cutscenes;
+using Reverie.Content.Cutscenes;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Utilities;

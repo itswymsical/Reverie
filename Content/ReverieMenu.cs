@@ -1,4 +1,5 @@
-﻿using ReLogic.Content;
+﻿using Microsoft.Xna.Framework.Graphics.PackedVector;
+using ReLogic.Content;
 using System.Collections.Generic;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -13,14 +14,14 @@ public class ReverieMenu : ModMenu
     private bool starsInitialized = false;
 
     private float spaceDriftSpeed = 0.05f;
-    private List<Vector2> clickPositions = new();
-    private List<float> clickTimes = new();
+    private List<Vector2> clickPositions = [];
+    private List<float> clickTimes = [];
     private const float CLICK_LIFETIME = 60f;
     private const float BURST_RADIUS = 120f;
     private const float BURST_FORCE = 3f;
     private const float COLLISION_THRESHOLD = 8f;
 
-    private Dictionary<Star, Vector2> starVelocities = new();
+    private Dictionary<Star, Vector2> starVelocities = [];
 
     private const float EASTER_EGG_CHANCE = 0.05f;
     private const float EASTER_EGG_ROTATION_SPEED = 0.005f;
@@ -80,7 +81,6 @@ public class ReverieMenu : ModMenu
         clickTimes = [];
         starVelocities = [];
         easterEggObjects = [];
-
     }
 
     public override void Unload()
@@ -127,7 +127,7 @@ public class ReverieMenu : ModMenu
 
     private bool TryCreateEasterEgg(Vector2 position)
     {
-        if (easterEggObjects.Count > 1)
+        if (easterEggObjects.Count >= 3)
             return false;
 
         if (Main.rand.NextFloat() > EASTER_EGG_CHANCE && position.X < 0)
@@ -256,6 +256,11 @@ public class ReverieMenu : ModMenu
 
     public override bool PreDrawLogo(SpriteBatch spriteBatch, ref Vector2 logoDrawCenter, ref float logoRotation, ref float logoScale, ref Color drawColor)
     {
+        drawColor = Color.White;
+        logoScale = 1.12f;
+        logoRotation = 0f;
+        logoDrawCenter = logoDrawCenter + new Vector2(0, 20);
+
         if (!InMenu || !Main.gameMenu)
         {
             // If we're not in the menu, clear resources to save memory
@@ -274,7 +279,6 @@ public class ReverieMenu : ModMenu
         if (!starsInitialized)
             InitializeStars();
 
-        drawColor = Color.White;
         spriteBatch.Draw(
             ModContent.Request<Texture2D>($"{VFX_DIRECTORY}SpaceOverlay").Value,
             new Rectangle(0, 0, Main.screenWidth, Main.screenHeight),
@@ -284,8 +288,21 @@ public class ReverieMenu : ModMenu
         Texture2D glowTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Glow").Value;
         Texture2D starTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Star").Value;
 
+        // scren glow
+        spriteBatch.Draw(
+            glowTexture,
+            logoDrawCenter,
+            null,
+            drawColor * 0.02f,
+            0f,
+            new Vector2(glowTexture.Width / 2, glowTexture.Height / 2),
+            new Vector2(Logo.Width(), Logo.Height()),
+            SpriteEffects.None,
+            0f
+        );
+
         spriteBatch.End();
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearWrap, DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
 
         Color colorStart = new Color(143, 244, 255);
         Color colorEnd = Color.White;
@@ -510,7 +527,6 @@ public class ReverieMenu : ModMenu
                 if (starVelocities.ContainsKey(star))
                     starVelocities.Remove(star);
 
-                // Create a new star
                 CreateNewStar();
             }
         }
@@ -532,16 +548,13 @@ public class ReverieMenu : ModMenu
             star.fallSpeed.X = (float)Main.rand.Next(-100, 101) * 0.001f;
         }
 
-        // Occasionally add a new star to keep good density
         if (Main.rand.NextBool(160))
         {
             CreateNewStar();
         }
 
-        // End this SpriteBatch and restore normal blending for the logo
         spriteBatch.End();
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
         return true;
     }
 }
-

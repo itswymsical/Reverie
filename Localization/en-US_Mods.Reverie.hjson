@@ -314,6 +314,11 @@ Items: {
 		DisplayName: Wood Wicker Wall Item
 		Tooltip: ""
 	}
+
+	PlayCutscene: {
+		DisplayName: Play Cutscene
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
