@@ -45,6 +45,10 @@ public sealed partial class Reverie : Mod
     /// </summary>
     public const string MUSIC_DIRECTORY = nameof(Reverie) + "/Assets/Music/";
     /// <summary>
+    ///     Directory for logo textures.
+    /// </summary>
+    public const string LOGO_DIRECTORY = nameof(Reverie) + "/Assets/Textures/Logo/";
+    /// <summary>
     ///     The prefix to use for the name of this mod.
     /// </summary>
     public const string NAME_PREFIX = NAME + ": ";

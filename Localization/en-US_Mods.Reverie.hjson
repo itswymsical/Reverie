@@ -512,6 +512,8 @@ NPCs: {
 			Princess_LovesNPC: I like {NPCName}.
 		}
 	}
+
+	Fungore.DisplayName: Fungore
 }
 
 Biomes: {
