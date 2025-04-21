@@ -23,8 +23,8 @@ public class ReverieMenu : ModMenu
     private Dictionary<Star, Vector2> starVelocities = new();
 
     private const float EASTER_EGG_CHANCE = 0.05f;
-    private const float EASTER_EGG_ROTATION_SPEED = 0.007f;
-    private const float EASTER_EGG_DRIFT_SPEED = 0.5f;
+    private const float EASTER_EGG_ROTATION_SPEED = 0.005f;
+    private const float EASTER_EGG_DRIFT_SPEED = 0.2f;
 
     private class EasterEggObject
     {
@@ -81,6 +81,16 @@ public class ReverieMenu : ModMenu
         starVelocities = [];
         easterEggObjects = [];
 
+    }
+
+    public override void Unload()
+    {
+        menuStars.Clear();
+        easterEggObjects.Clear();
+        clickPositions.Clear();
+        clickTimes.Clear();
+        starVelocities.Clear();
+        starsInitialized = false;
     }
 
     public override int Music => MusicID.Space /*MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}Resurgence")*/;
