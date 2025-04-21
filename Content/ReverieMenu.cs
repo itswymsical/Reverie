@@ -1,12 +1,15 @@
 ﻿using ReLogic.Content;
 using System.Collections.Generic;
 using Terraria.Audio;
+using Terraria.GameContent;
 
 namespace Reverie.Content;
 
 public class ReverieMenu : ModMenu
 {
     private List<Star> menuStars;
+    private List<EasterEggObject> easterEggObjects;
+
     private bool starsInitialized = false;
 
     private float spaceDriftSpeed = 0.05f;
@@ -19,12 +22,65 @@ public class ReverieMenu : ModMenu
 
     private Dictionary<Star, Vector2> starVelocities = new();
 
+    private const float EASTER_EGG_CHANCE = 0.05f;
+    private const float EASTER_EGG_ROTATION_SPEED = 0.007f;
+    private const float EASTER_EGG_DRIFT_SPEED = 0.5f;
+
+    private class EasterEggObject
+    {
+        public Vector2 Position;
+        public Vector2 Velocity;
+        public float Rotation;
+        public float Scale;
+        public float Alpha;
+        public int Type;
+
+        public EasterEggObject(Vector2 position, Vector2 velocity, float scale)
+        {
+            Position = position;
+            Velocity = velocity;
+            Rotation = Main.rand.NextFloat(0, MathHelper.TwoPi);
+            Scale = scale;
+            Alpha = 0f;
+            Type = Main.rand.Next(6);
+        }
+
+        public void Update()
+        {
+            Position += Velocity;
+
+            Rotation += EASTER_EGG_ROTATION_SPEED;
+            if (Rotation > MathHelper.TwoPi)
+                Rotation -= MathHelper.TwoPi;
+
+            if (Alpha < 1f)
+                Alpha += 0.01f;
+        }
+
+        public Texture2D GetTexture()
+        {
+            return Type switch
+            {
+                0 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostMartian").Value,
+                1 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostMeteorHead").Value,
+                2 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}SpaceDolphin").Value,
+                3 => TextureAssets.Item[ItemID.FirstFractal].Value,
+                4 => TextureAssets.Item[ItemID.SDMG].Value,
+                5 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostTree").Value,
+
+                _ => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostMartian").Value
+            };
+        }
+    }
+
     public override void Load()
     {
         menuStars = [];
         clickPositions = [];
         clickTimes = [];
-        starVelocities = new();
+        starVelocities = [];
+        easterEggObjects = [];
+
     }
 
     public override int Music => MusicID.Space /*MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}Resurgence")*/;
@@ -46,6 +102,7 @@ public class ReverieMenu : ModMenu
     private void InitializeStars()
     {
         menuStars.Clear();
+        easterEggObjects.Clear();
 
         int starCount = Main.rand.Next(130, 200);
         for (int i = 0; i < starCount; i++)
@@ -53,7 +110,75 @@ public class ReverieMenu : ModMenu
             CreateNewStar(true);
         }
 
+        // Add a couple easter eggs to start
+        TryCreateEasterEgg(new Vector2(Main.rand.Next(Main.screenWidth), Main.rand.Next(Main.screenHeight)));
+        TryCreateEasterEgg(new Vector2(Main.rand.Next(Main.screenWidth), Main.rand.Next(Main.screenHeight)));
+
         starsInitialized = true;
+    }
+    private bool TryCreateEasterEgg(Vector2 position)
+    {
+        if (easterEggObjects.Count > 1)
+            return false;
+
+        if (Main.rand.NextFloat() > EASTER_EGG_CHANCE && position.X < 0)
+            return false;
+
+        Vector2 velocity = new Vector2(
+            -EASTER_EGG_DRIFT_SPEED * Main.rand.NextFloat(0.9f, 1.3f),
+            Main.rand.NextFloat(-0.01f, 0.01f)
+        );
+
+        float scale = Main.rand.NextFloat(0.3f, 0.7f);
+
+        easterEggObjects.Add(new EasterEggObject(position, velocity, scale));
+        return true;
+    }
+
+    private void CreateNewStar(bool initialSetup = false)
+    {
+        if (!initialSetup && Main.rand.NextFloat() < EASTER_EGG_CHANCE)
+        {
+            // Try to create an easter egg at the right edge of the screen
+            if (TryCreateEasterEgg(new Vector2(Main.screenWidth + 20, Main.rand.Next(100, Main.screenHeight - 100))))
+                return;
+        }
+
+        Star star = new Star();
+
+        star.position = new Vector2(
+            Main.rand.Next(0, Main.screenWidth),
+            Main.rand.Next(0, Main.screenHeight)
+        );
+
+        star.rotation = Main.rand.NextFloat(0, MathHelper.TwoPi);
+        star.scale = Main.rand.NextFloat(0.2f, 0.72f);
+        if (Main.rand.NextBool(20))
+            star.scale *= 0.8f;
+
+        star.type = Main.rand.Next(0, 4);
+        star.twinkle = Main.rand.NextFloat(0.6f, 1f);
+        star.twinkleSpeed = Main.rand.NextFloat(0.0005f, 0.004f);
+
+        if (Main.rand.NextBool(5))
+            star.twinkleSpeed *= 2f;
+
+        if (Main.rand.NextBool())
+            star.twinkleSpeed *= -1f;
+
+        star.rotationSpeed = Main.rand.NextFloat(0.000001f, 0.00001f);
+
+        if (Main.rand.NextBool())
+            star.rotationSpeed *= -0.05f;
+
+        star.fadeIn = 0.5f;
+
+        starVelocities[star] = new Vector2(
+            -spaceDriftSpeed * (0.5f + star.scale),
+            0f
+        );
+
+        menuStars.Add(star);
     }
 
     private void CreateStardustBurst(Vector2 position, float scale, Color color)
@@ -62,91 +187,30 @@ public class ReverieMenu : ModMenu
         int dustCount = Main.rand.Next(8, 16);
         for (int i = 0; i < dustCount; i++)
         {
-            // Calculate random velocity for the dust particle
             Vector2 dustVelocity = new Vector2(
                 Main.rand.NextFloat(-2f, 2f),
                 Main.rand.NextFloat(-2f, 2f)
             );
 
-            // Create the dust particle
             Dust dust = Dust.NewDustPerfect(
                 position,
-                DustID.AncientLight, // Use AncientLight for the stardust effect
+                DustID.AncientLight,
                 dustVelocity,
-                0, // Alpha
-                color, // Match the star's color
-                scale * Main.rand.NextFloat(0.5f, 1.0f) // Vary the size
+                0,
+                color,
+                scale * Main.rand.NextFloat(1f, 1.7f)
             );
 
-            // Configure dust properties
             dust.noGravity = true;
             dust.fadeIn = 0.1f;
             dust.noLight = false;
         }
     }
 
-    private void CreateNewStar(bool initialSetup = false)
-    {
-        // Create a new Star instance
-        Star star = new Star();
-
-        // Position the star randomly across the entire screen
-        // (We now use the same positioning logic for both initial and replacement stars)
-        star.position = new Vector2(
-            Main.rand.Next(0, Main.screenWidth),
-            Main.rand.Next(0, Main.screenHeight)
-        );
-
-        // Set random rotation
-        star.rotation = Main.rand.NextFloat(0, MathHelper.TwoPi);
-
-        // Vary star sizes
-        star.scale = Main.rand.NextFloat(0.2f, 0.72f);
-        if (Main.rand.NextBool(20))
-            star.scale *= 0.8f;
-
-        // Set star type (affects appearance)
-        star.type = Main.rand.Next(0, 4);
-
-        // Configure twinkling properties
-        star.twinkle = Main.rand.NextFloat(0.6f, 1f);
-        star.twinkleSpeed = Main.rand.NextFloat(0.0005f, 0.004f);
-
-        // Some stars twinkle faster
-        if (Main.rand.NextBool(5))
-            star.twinkleSpeed *= 2f;
-
-        // Randomize twinkle direction
-        if (Main.rand.NextBool())
-            star.twinkleSpeed *= -1f;
-
-        // Configure rotation speed
-        star.rotationSpeed = Main.rand.NextFloat(0.000001f, 0.00001f);
-
-        // Randomize rotation direction
-        if (Main.rand.NextBool())
-            star.rotationSpeed *= -0.05f;
-
-        // Set fade-in effect - always fade in new stars
-        // (No special case for initial setup anymore)
-        star.fadeIn = 0.5f;
-
-        // Initialize velocity in the dictionary
-        // Even for randomly positioned stars, we still want the leftward drift
-        starVelocities[star] = new Vector2(
-            -spaceDriftSpeed * (0.5f + star.scale),
-            0f
-        );
-
-        // Add the star to our collection
-        menuStars.Add(star);
-    }
-
     public override void Update(bool isOnTitleScreen)
     {
         base.Update(isOnTitleScreen);
 
-        // Check for mouse clicks
         if (Main.mouseLeft && Main.mouseLeftRelease)
         {
             Vector2 clickPosition = new Vector2(Main.mouseX, Main.mouseY);
@@ -186,13 +250,54 @@ public class ReverieMenu : ModMenu
 
         Color colorStart = new Color(143, 244, 255);
         Color colorEnd = Color.White;
+
+        for (int i = easterEggObjects.Count - 1; i >= 0; i--)
+        {
+            EasterEggObject easterEgg = easterEggObjects[i];
+
+            easterEgg.Update();
+
+            Texture2D texture = easterEgg.GetTexture();
+
+            spriteBatch.Draw(
+                glowTexture,
+                easterEgg.Position,
+                null,
+                Color.White * 0.5f * easterEgg.Alpha,
+                0f,
+                new Vector2(glowTexture.Width / 2, glowTexture.Height / 2),
+                easterEgg.Scale * 2f,
+                SpriteEffects.None,
+                0f
+            );
+
+            spriteBatch.Draw(
+                texture,
+                easterEgg.Position,
+                null,
+                Color.White * easterEgg.Alpha,
+                easterEgg.Rotation,
+                new Vector2(texture.Width / 2, texture.Height / 2),
+                easterEgg.Scale,
+                SpriteEffects.None,
+                0f
+            );
+
+            // Remove if off-screen
+            if (easterEgg.Position.X < -50 ||
+                easterEgg.Position.Y < -50 ||
+                easterEgg.Position.Y > Main.screenHeight + 50)
+            {
+                easterEggObjects.RemoveAt(i);
+            }
+        }
+
         // Process any click bursts
         for (int i = 0; i < clickPositions.Count; i++)
         {
             Vector2 clickPos = clickPositions[i];
             float clickAge = clickTimes[i];
 
-            // Draw click burst effect
             float burstScale = (clickAge / 15f) * 3f;
             float alpha = 1f - (clickAge / CLICK_LIFETIME);
             spriteBatch.Draw(
@@ -207,7 +312,6 @@ public class ReverieMenu : ModMenu
                 0f
             );
 
-            // Only apply force to stars when the click is new
             if (clickAge < 2f)
             {
                 foreach (Star star in menuStars)
@@ -382,7 +486,6 @@ public class ReverieMenu : ModMenu
             if (starVelocities.ContainsKey(menuStars[starIndex]))
                 starVelocities.Remove(menuStars[starIndex]);
 
-            // Customize falling speed
             Star star = menuStars[starIndex];
             star.rotationSpeed = 0.1f;
             star.rotation = 0.01f;
@@ -390,7 +493,7 @@ public class ReverieMenu : ModMenu
             star.fallSpeed.X = (float)Main.rand.Next(-100, 101) * 0.001f;
         }
 
-        // Occasionally add a new star to maintain density
+        // Occasionally add a new star to keep good density
         if (Main.rand.NextBool(160))
         {
             CreateNewStar();
@@ -402,3 +505,4 @@ public class ReverieMenu : ModMenu
         return true;
     }
 }
+
