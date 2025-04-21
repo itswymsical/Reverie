@@ -110,12 +110,11 @@ public class ReverieMenu : ModMenu
             CreateNewStar(true);
         }
 
-        // Add a couple easter eggs to start
-        TryCreateEasterEgg(new Vector2(Main.rand.Next(Main.screenWidth), Main.rand.Next(Main.screenHeight)));
         TryCreateEasterEgg(new Vector2(Main.rand.Next(Main.screenWidth), Main.rand.Next(Main.screenHeight)));
 
         starsInitialized = true;
     }
+
     private bool TryCreateEasterEgg(Vector2 position)
     {
         if (easterEggObjects.Count > 1)
@@ -211,6 +210,21 @@ public class ReverieMenu : ModMenu
     {
         base.Update(isOnTitleScreen);
 
+        if (!InMenu)
+        {
+            // If we were initialized but now we're not in the menu, clean up resources
+            if (starsInitialized)
+            {
+                menuStars.Clear();
+                easterEggObjects.Clear();
+                clickPositions.Clear();
+                clickTimes.Clear();
+                starVelocities.Clear();
+                starsInitialized = false;
+            }
+            return;
+        }
+
         if (Main.mouseLeft && Main.mouseLeftRelease)
         {
             Vector2 clickPosition = new Vector2(Main.mouseX, Main.mouseY);
@@ -232,6 +246,21 @@ public class ReverieMenu : ModMenu
 
     public override bool PreDrawLogo(SpriteBatch spriteBatch, ref Vector2 logoDrawCenter, ref float logoRotation, ref float logoScale, ref Color drawColor)
     {
+        if (!InMenu || !Main.gameMenu)
+        {
+            // If we're not in the menu, clear resources to save memory
+            if (starsInitialized)
+            {
+                menuStars.Clear();
+                easterEggObjects.Clear();
+                clickPositions.Clear();
+                clickTimes.Clear();
+                starVelocities.Clear();
+                starsInitialized = false;
+            }
+            return true; // Skip all the drawing but allow the logo to be drawn normally
+        }
+
         if (!starsInitialized)
             InitializeStars();
 
