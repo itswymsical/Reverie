@@ -140,7 +140,7 @@ public static class NPCManager
 
         Default = new NPCData(
             basicPortrait,
-            "You",
+            "Unknown NPC",
             -1,
              new Color(64, 109, 164),
             SoundID.MenuTick
@@ -159,7 +159,7 @@ public static class NPCManager
             new SoundStyle($"{SFX_DIRECTORY}Dialogue/Guide/Speech")
             {
                 MaxInstances = 4,
-                Volume = 0.2f
+                Volume = 0.4f
             }
         );
 
@@ -175,7 +175,7 @@ public static class NPCManager
             new SoundStyle($"{SFX_DIRECTORY}Dialogue/Merchant/Speech")
             {
                 MaxInstances = 4,
-                Volume = 0.2f
+                Volume = 0.4f
             }
         );
 
@@ -187,7 +187,7 @@ public static class NPCManager
             new SoundStyle($"{SFX_DIRECTORY}Dialogue/Demolitionist/Speech")
             {
                 MaxInstances = 4,
-                Volume = 0.2f
+                Volume = 0.4f
             }
         );
 
@@ -199,7 +199,7 @@ public static class NPCManager
             new SoundStyle($"{SFX_DIRECTORY}Dialogue/Nurse/Speech")
             {
                 MaxInstances = 4,
-                Volume = 0.2f
+                Volume = 0.4f
             }
         );
 

@@ -42,8 +42,13 @@ public class ReverieMenu : ModMenu
             Velocity = velocity;
             Rotation = Main.rand.NextFloat(0, MathHelper.TwoPi);
             Scale = scale;
+
             Alpha = 0f;
-            Type = Main.rand.Next(6);
+            Type = Main.rand.Next(7);
+            if (Type == 6)
+            {
+                Scale = 0.2f;
+            }
         }
 
         public void Update()
@@ -68,6 +73,7 @@ public class ReverieMenu : ModMenu
                 3 => TextureAssets.Item[ItemID.FirstFractal].Value,
                 4 => TextureAssets.Item[ItemID.SDMG].Value,
                 5 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostTree").Value,
+                6 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}DeadEye").Value,
 
                 _ => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostMartian").Value
             };
@@ -93,7 +99,7 @@ public class ReverieMenu : ModMenu
         starsInitialized = false;
     }
 
-    public override int Music => MusicID.Space /*MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}Resurgence")*/;
+    public override int Music => MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}Meditation");
 
     public override string DisplayName => "Reverie";
 

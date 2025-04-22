@@ -31,5 +31,8 @@
 	    <HintPath>..\ReverieMod\Utilities\SubworldLibrary.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Content\Missions\Stylist\" />
+	</ItemGroup>
 
 </Project>

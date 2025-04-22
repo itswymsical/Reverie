@@ -1,0 +1,37 @@
+﻿DialogueLibrary: {
+	Argie: {
+		Introduction: {
+			Line1: Hello!
+			Line2: Nice to meet you, I'm Argentina Pholiota!
+			Line3: You can just call me Argie.
+			Line4: I'm in need of service, do you think you can help me?
+		}
+
+		BloomcapIntro: {
+			Line1: Oh! Oh! Have you seen any Bloomcap Buttons?
+			Line2: They're these soft, squeaky little mushroom caps that grow near Living Trees.
+			Line3: I’m redecorating my stump, and I *need* something adorable!
+			Line4: Could you bring me some? Just a handful will do!
+			Line5: (Whispering) They giggle if you tickle them... but don’t tell them I said that.
+		}
+
+		BloomcapCollected: {
+			Line1: You found some! Yay!
+			Line2: Keep them safe! I can hear them giggling already.
+		}
+
+		BloomcapCollectedHalf.Line1: Even more? Oh, you’re so sweet!
+
+		BloomcapCollectedAll: {
+			Line1: You got them all! Wow, you’re amazing!
+			Line2: Hurry! Get them back to my stump before they start giggling too much.
+		}
+
+		BloomcapComplete: {
+			Line1: Hooray! Good job, friend!
+			Line2: Look at these little darlings—so plump! So bouncy!
+			Line3: You’ve got a good eye. I think my stump’s gonna feel real special now.
+			Line4: Here, take this! I brewed a thank-you potion in a teacup.
+		}
+	}
+}

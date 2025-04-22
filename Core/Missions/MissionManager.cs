@@ -164,7 +164,6 @@ public class MissionFactory : ModSystem
             missionTypes[MissionID.BloomcapHunt] = typeof(BloomcapHunt);
             missionTypes[MissionID.CopperStandard] = typeof(CopperStandard);
             missionTypes[MissionID.LightEmUp] = typeof(LightEmUp);
-
             #endregion
 
             Reverie.Instance.Logger.Info($"Registered {missionTypes.Count} mission types");

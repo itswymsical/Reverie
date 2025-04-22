@@ -408,7 +408,8 @@ public class AFallingStar : Mission
             {
                 Volume = 7.5f,
                 Pitch = 0f,
-                PitchVariance = 1f
+                PitchVariance = 1f,
+                MaxInstances = 0
             }, Main.LocalPlayer.position);
 
             reverieSFXtimer = 0;

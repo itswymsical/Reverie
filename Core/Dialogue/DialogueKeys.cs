@@ -6,13 +6,13 @@
 /// </summary>
 public static class DialogueKeys
 {
-
     public static class Chronicle
     {
         private const string PREFIX = "Chronicle_01";
 
         public static string Chapter1 => $"{PREFIX}.Chapter1";
     }
+
     public static class Merchant
     {
         private const string PREFIX = "Merchant";
@@ -26,6 +26,14 @@ public static class DialogueKeys
         public static string MerchantIntro => $"{PREFIX}.MerchantIntro";
 
     }
+
+    public static class Stylist
+    {
+        private const string PREFIX = "Stylist";
+
+        public static string StylistRescue => $"{PREFIX}.StylistRescue";
+    }
+
     public static class Demolitionist
     {
         private const string PREFIX = "Demolitionist";
@@ -38,9 +46,9 @@ public static class DialogueKeys
         public static string TorchPlacement_04 => $"{PREFIX}.TorchPlacement_01";
     }
 
-    public static class ArgieDialogue
+    public static class Argie
     {
-        private const string PREFIX = "ArgieDialogue";
+        private const string PREFIX = "Argie";
 
         public static string Introduction => $"{PREFIX}.Introduction";
         public static string BloomcapIntro => $"{PREFIX}.BloomcapIntro";

@@ -1,4 +1,5 @@
 ﻿using Reverie.Common.UI.Missions;
+using Reverie.Core.Entities;
 using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
 
@@ -537,6 +538,7 @@ public partial class MissionPlayer : ModPlayer
             }
         }
     }
+
     public void UnlockMission(int missionId, bool broadcast = false)
     {
         var mission = GetMission(missionId);
@@ -547,7 +549,20 @@ public partial class MissionPlayer : ModPlayer
             mission.Unlocked = true;
             SyncMissionState(mission);
 
-            // Add broadcast notification if specified
+            if (mission.ProviderNPC > 0 && MissionIndicatorManager.Instance != null)
+            {
+                for (int i = 0; i < Main.npc.Length; i++)
+                {
+                    NPC npc = Main.npc[i];
+                    if (npc.active && npc.type == mission.ProviderNPC)
+                    {
+                        ModContent.GetInstance<Reverie>().Logger.Info($"Creating indicator for {npc.TypeName} for mission {mission.Name}");
+                        MissionIndicatorManager.Instance.CreateIndicatorForNPC(npc, mission);
+                        break;
+                    }
+                }
+            }
+
             if (broadcast && mission.ProviderNPC > 0)
             {
                 var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);

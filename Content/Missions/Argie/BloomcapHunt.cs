@@ -72,7 +72,7 @@ public class BloomcapHunt : Mission
             {
                 DialogueManager.Instance.StartDialogueByKey(
                     NPCManager.Default,
-                    DialogueKeys.ArgieDialogue.BloomcapCollected,
+                    DialogueKeys.Argie.BloomcapCollected,
                     lineCount: 2,
                     zoomIn: true);
             }
@@ -81,7 +81,7 @@ public class BloomcapHunt : Mission
             {
                 DialogueManager.Instance.StartDialogueByKey(
                     NPCManager.Default,
-                    DialogueKeys.ArgieDialogue.BloomcapCollectedHalf,
+                    DialogueKeys.Argie.BloomcapCollectedHalf,
                     lineCount: 1,
                     zoomIn: true);
             }
@@ -107,7 +107,7 @@ public class BloomcapHunt : Mission
 
         DialogueManager.Instance.StartDialogueByKey(
             NPCManager.Default,
-            DialogueKeys.ArgieDialogue.BloomcapIntro,
+            DialogueKeys.Argie.BloomcapIntro,
             lineCount: 5,
             zoomIn: true);
     }
@@ -118,7 +118,7 @@ public class BloomcapHunt : Mission
 
         DialogueManager.Instance.StartDialogueByKey(
             NPCManager.Default,
-            DialogueKeys.ArgieDialogue.BloomcapComplete,
+            DialogueKeys.Argie.BloomcapComplete,
             lineCount: 4,
             zoomIn: true);
     }
@@ -130,7 +130,7 @@ public class BloomcapHunt : Mission
         {
             DialogueManager.Instance.StartDialogueByKey(
                 NPCManager.Default,
-                DialogueKeys.ArgieDialogue.BloomcapCollectedAll,
+                DialogueKeys.Argie.BloomcapCollectedAll,
                 lineCount: 2,
                 zoomIn: true);
         }

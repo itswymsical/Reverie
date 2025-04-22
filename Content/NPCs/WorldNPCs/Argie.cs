@@ -64,7 +64,7 @@ public class Argie : WorldNPCActor
         {
             DialogueManager.Instance.StartDialogueByKey(
                     NPCManager.Default,
-                    DialogueKeys.ArgieDialogue.Introduction,
+                    DialogueKeys.Argie.Introduction,
                     lineCount: 4,
                     zoomIn: false, musicId: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}ArgiesTheme"));
         }

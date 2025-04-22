@@ -8,6 +8,8 @@ using Reverie.Core.Dialogue;
 
 using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
+using Terraria;
+using Reverie.Common.NPCs;
 
 namespace Reverie.Core.Missions;
 
@@ -85,8 +87,10 @@ public class ObjectiveEventNPC : GlobalNPC
     public static event NPCCatchHandler OnNPCCatch;
     public override bool InstancePerEntity => true;
 
-    public override bool? CanChat(NPC npc) => (npc.isLikeATownNPC || npc.townNPC)
-        && !DialogueManager.Instance.IsAnyActive();
+    public override bool? CanChat(NPC npc)
+    {
+        return (npc.friendly || npc.CanBeTalkedTo || npc.townNPC) && !DialogueManager.Instance.IsAnyActive();
+    }
 
     public override void GetChat(NPC npc, ref string chat)
     {
@@ -260,7 +264,7 @@ public class ObjectiveEventPlayer : ModPlayer
 
     private void TriggerEvents()
     {
-        var p = ModContent.GetInstance<MissionPlayer>();
+        var p = Player.GetModPlayer<MissionPlayer>();
         bool merchantPresent = NPC.AnyNPCs(NPCID.Merchant);
         var copperStandard = p.GetMission(MissionID.CopperStandard);
         if (copperStandard.Availability == MissionAvailability.Locked && copperStandard.Progress == MissionProgress.Inactive
@@ -272,7 +276,7 @@ public class ObjectiveEventPlayer : ModPlayer
         bool demoPresent = NPC.AnyNPCs(NPCID.Demolitionist);
         var lightEmUp = p.GetMission(MissionID.LightEmUp);
         if (lightEmUp.Availability == MissionAvailability.Locked && lightEmUp.Progress == MissionProgress.Inactive
-            && demoPresent && Player.HasItemInAnyInventory(ItemID.Torch))
+            && demoPresent && Player.HasItemInAnyInventory(ItemID.Torch) && Player.statLifeMax >= 140)
         {
             p.UnlockMission(MissionID.LightEmUp, true);
         }

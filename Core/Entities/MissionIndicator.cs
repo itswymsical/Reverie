@@ -27,7 +27,7 @@ public class MissionIndicator : UIEntity
     {
         this.mission = mission;
 
-        iconTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/Indicator", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
+        iconTexture = ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Missions/Indicator", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
 
         if (iconTexture != null)
         {
