@@ -1,5 +1,4 @@
-﻿using Microsoft.Xna.Framework.Graphics.PackedVector;
-using ReLogic.Content;
+﻿using ReLogic.Content;
 using System.Collections.Generic;
 using Terraria.Audio;
 using Terraria.GameContent;

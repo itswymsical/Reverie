@@ -519,6 +519,8 @@ NPCs: {
 	}
 
 	Fungore.DisplayName: Fungore
+	EchoKnight.DisplayName: Echo Knight
+	Echo.DisplayName: Echo
 }
 
 Biomes: {

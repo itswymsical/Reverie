@@ -549,20 +549,6 @@ public partial class MissionPlayer : ModPlayer
             mission.Unlocked = true;
             SyncMissionState(mission);
 
-            if (mission.ProviderNPC > 0 && MissionIndicatorManager.Instance != null)
-            {
-                for (int i = 0; i < Main.npc.Length; i++)
-                {
-                    NPC npc = Main.npc[i];
-                    if (npc.active && npc.type == mission.ProviderNPC)
-                    {
-                        ModContent.GetInstance<Reverie>().Logger.Info($"Creating indicator for {npc.TypeName} for mission {mission.Name}");
-                        MissionIndicatorManager.Instance.CreateIndicatorForNPC(npc, mission);
-                        break;
-                    }
-                }
-            }
-
             if (broadcast && mission.ProviderNPC > 0)
             {
                 var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);

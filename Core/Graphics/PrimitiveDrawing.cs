@@ -22,6 +22,7 @@ namespace Reverie.Core.Graphics;
 
 public class PrimitiveDrawing : HookGroup
 {
+    // Should not interfere with anything.
     public override void Load()
     {
         if (Main.dedServ)
@@ -39,16 +40,16 @@ public class PrimitiveDrawing : HookGroup
 
         Main.graphics.GraphicsDevice.BlendState = BlendState.AlphaBlend;
 
-        for (var k = 0; k < Main.maxProjectiles; k++)
+        for (var k = 0; k < Main.maxProjectiles; k++) // Projectiles.
         {
             if (Main.projectile[k].active && Main.projectile[k].ModProjectile != null && Main.projectile[k].ModProjectile is IDrawPrimitive)
-                ((IDrawPrimitive)Main.projectile[k].ModProjectile).DrawPrimitives();
+                (Main.projectile[k].ModProjectile as IDrawPrimitive).DrawPrimitives();
         }
 
-        for (var k = 0; k < Main.maxNPCs; k++)
+        for (var k = 0; k < Main.maxNPCs; k++) // NPCs.
         {
             if (Main.npc[k].active && Main.npc[k].ModNPC is IDrawPrimitive)
-                ((IDrawPrimitive)Main.npc[k].ModNPC).DrawPrimitives();
+                (Main.npc[k].ModNPC as IDrawPrimitive).DrawPrimitives();
         }
     }
 }

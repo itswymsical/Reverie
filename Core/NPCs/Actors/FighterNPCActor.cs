@@ -155,8 +155,6 @@ public abstract class FighterNPCActor : ModNPC
            Framing.GetTileSafely(tileX + NPC.direction, tileY + 1) // tile4
        };
 
-        tiles[2].IsHalfBlock = true;
-
         if (NPC.spriteDirection == Math.Sign(NPC.velocity.X))
         {
             if (tiles[1].HasUnactuatedTile && Main.tileSolid[tiles[1].TileType])
