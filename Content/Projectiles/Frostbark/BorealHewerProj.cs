@@ -1,5 +1,6 @@
 ﻿using Reverie.Core.Graphics;
 using Reverie.Core.Interfaces;
+using Reverie.Core.Loaders;
 using Reverie.Utilities;
 using System.Collections.Generic;
 
@@ -44,8 +45,8 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
 
     public override void SetStaticDefaults()
     {
-        ProjectileID.Sets.TrailCacheLength[Type] = 4;
-        ProjectileID.Sets.TrailingMode[Type] = 4;
+        ProjectileID.Sets.TrailCacheLength[Type] = 3;
+        ProjectileID.Sets.TrailingMode[Type] = 1;
     }
     public override void SetDefaults()
     {
@@ -148,6 +149,8 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
         originalPosition = Projectile.position;
     }
 
+
+    private Vector2 shakeOffset = Vector2.Zero;
     private void HandleReturn(Player player)
     {
         Projectile.tileCollide = false;
@@ -157,11 +160,15 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
 
         if (shakeTimer > 0)
         {
-            Projectile.position = originalPosition + new Vector2(Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(-2f, 2f));
+            // Update the shake offset instead of the actual position
+            shakeOffset = new Vector2(Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(-2f, 2f));
             shakeTimer--;
         }
         else
         {
+            // Reset shake offset when shaking is done
+            shakeOffset = Vector2.Zero;
+
             var directionToPlayer = player.Center - Projectile.Center;
             directionToPlayer.Normalize();
             var speed = 15f;
@@ -245,9 +252,16 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
         var texture = TextureAssets.Projectile[Projectile.type].Value;
 
         var drawOrigin = new Vector2(texture.Width * 0.5f, Projectile.height * 0.5f);
+
+        // Apply the shake offset to the drawing position, not the actual position
         for (var k = 0; k < Projectile.oldPos.Length; k++)
         {
             var drawPos = Projectile.oldPos[k] - Main.screenPosition + drawOrigin + new Vector2(0f, Projectile.gfxOffY);
+
+            // Apply shake offset only to the current position (k==0), not to trail positions
+            if (k == 0 && shakeTimer > 0)
+                drawPos += shakeOffset;
+
             var color = Projectile.GetAlpha(lightColor) * ((Projectile.oldPos.Length - k) / (float)Projectile.oldPos.Length);
             Main.EntitySpriteDraw(texture, drawPos, null, color, Projectile.rotation, drawOrigin, Projectile.scale, SpriteEffects.None, 0);
         }
@@ -293,13 +307,12 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
 
     private void ManageCaches()
     {
-        var player = Main.LocalPlayer;
-        var pos = Projectile.Center + player.DirectionTo(Projectile.Center) * (Size.Length() * Main.rand.NextFloat(0.5f, 1.1f)) + Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.0f, 4.0f);
+        // Get the actual projectile position without random offsets
+        var pos = Projectile.Center;
 
         if (cache == null)
         {
             cache = [];
-
             for (var i = 0; i < 15; i++)
             {
                 cache.Add(pos);
@@ -307,7 +320,6 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
         }
 
         cache.Add(pos);
-
         while (cache.Count > 15)
         {
             cache.RemoveAt(0);
@@ -316,53 +328,56 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
 
     private void ManageTrail()
     {
-        var player = Main.LocalPlayer;
-        var pos = Projectile.Center + player.DirectionTo(Projectile.Center) * (Size.Length() * Main.rand.NextFloat(0.5f, 1.1f)) + Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.0f, 4.0f);
+        // Use the actual projectile position
+        var pos = Projectile.Center;
 
-        trail ??= new Trail(Main.instance.GraphicsDevice, 15, new TriangularTip(5), factor => factor * 16, factor =>
+        // Change color to an ice blue
+        Color iceColor = new Color(120, 200, 255);
+
+        trail ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(5), factor => factor * 50, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
-            return new Color(color.R, color.G, color.B) * 0.4f * (float)Math.Pow(factor.X, 2) * (float)Math.Sin(Projectile.timeLeft / 150f * 4);
+            // Use a blue ice color that fades out
+            return iceColor * 0.6f * (float)Math.Pow(factor.X, 2);
         });
         trail.Positions = [.. cache];
 
-        trail2 ??= new Trail(Main.instance.GraphicsDevice, 15, new TriangularTip(5), factor => factor * 16, factor =>
+        trail2 ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(5), factor => factor * 30, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
-            return new Color(color.R, color.G, color.B) * 0.4f * (float)Math.Pow(factor.X, 2) * (float)Math.Sin(Projectile.timeLeft / 150f * 4);
+            // Create a whiter center for the ice trail
+            return Color.Lerp(iceColor, Color.White, 0.6f) * 0.7f * (float)Math.Pow(factor.X, 2);
         });
         trail2.Positions = [.. cache];
 
-        trail.NextPosition = pos + Projectile.velocity;
-        trail2.NextPosition = pos + Projectile.velocity;
+        trail.NextPosition = pos;
+        trail2.NextPosition = pos;
     }
 
     public void DrawPrimitives()
     {
-        var primitiveShader = Filters.Scene["LightningTrail"];
-        if (primitiveShader != null)
+        // Use ShaderLoader.GetShader() to load the pixel trail shader
+        var effect = ShaderLoader.GetShader("pixelTrail").Value;
+
+        if (effect != null)
         {
-            var effect = primitiveShader.GetShader().Shader;
-            if (effect != null)
-            {
-                var world = Matrix.CreateTranslation(-Main.screenPosition.ToVector3());
-                var view = Main.GameViewMatrix.TransformationMatrix;
-                var projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
+            var world = Matrix.CreateTranslation(-Main.screenPosition.ToVector3());
+            var view = Main.GameViewMatrix.TransformationMatrix;
+            var projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
 
-                effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.07f); //was originally 0.02, did not pop up as much. see if this change does anything
-                effect.Parameters["repeats"]?.SetValue(8f);
-                effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
-                effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/Textures/VFX/EnergyTrail").Value);
-                effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/Textures/VFX/BloomcapHunt").Value);
+            effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.07f);
+            effect.Parameters["repeats"]?.SetValue(8f);
+            effect.Parameters["pixelation"]?.SetValue(4f);
+            effect.Parameters["resolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
+            effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
+            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}StormTrail").Value);
 
-                trail?.Render(effect);
+            trail?.Render(effect);
 
-                effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>("Reverie/Assets/Textures/VFX/EnergyTrail").Value);
-
-                trail2?.Render(effect);
-            }
+            effect.Parameters["pixelation"]?.SetValue(6f);
+            trail2?.Render(effect);
         }
     }
 }

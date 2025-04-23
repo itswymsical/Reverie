@@ -1,7 +1,9 @@
 ﻿using Reverie.Core.Graphics;
 using Reverie.Core.Interfaces;
+using Reverie.Core.Loaders;
 using Reverie.Utilities;
 using System.Collections.Generic;
+using System.Linq;
 using Terraria.Graphics.Effects;
 using static Reverie.Reverie;
 
@@ -90,69 +92,159 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
         }
     }
 
-    private void ManageTrail()
+    private List<List<Vector2>> fieldLines;
+    private readonly int FIELD_LINE_COUNT = 6;
+    private readonly int POINTS_PER_LINE = 20;
+    private float magnetStrength = 0.8f;
+    private float gravityStrength = 0.2f;
+
+    private void InitializeFieldLines()
     {
-        var start = Projectile.Center;
-        var end = Main.MouseWorld;
-        var direction = Vector2.Normalize(end - start);
-        var distance = Math.Min(Vector2.Distance(start, end), MAGNET_RANGE);
-
-        var trailSegments = 15;
-        var segmentLength = distance / trailSegments;
-
-        var trailWidth = MAGNET_RANGE * (float)Math.Tan(ARC_ANGLE / 2) * 1.2f;
-
-        trail ??= new Trail(Main.instance.GraphicsDevice, trailSegments, new RoundedTip(5), factor => factor * trailWidth, factor =>
+        fieldLines = new List<List<Vector2>>();
+        for (int i = 0; i < FIELD_LINE_COUNT; i++)
         {
-            if (factor.X >= 0.98f)
-                return Color.White * 0;
-            return new Color(color.R, color.G, color.B) * 0.03f;
-        });
+            var line = new List<Vector2>();
+            // Spread lines in a semicircle pattern from projectile front
+            float angle = MathHelper.Lerp(-MathHelper.PiOver2, MathHelper.PiOver2, i / (float)(FIELD_LINE_COUNT - 1));
+            Vector2 dir = Projectile.rotation.ToRotationVector2().RotatedBy(angle);
+            Vector2 startPos = Projectile.Center;
 
-        trail2 ??= new Trail(Main.instance.GraphicsDevice, trailSegments, new RoundedTip(5), factor => factor * trailWidth, factor =>
-        {
-            if (factor.X >= 0.98f)
-                return Color.White * 0;
-            return new Color(color.R, color.G, color.B) * 0.03f;
-        });
+            for (int j = 0; j < POINTS_PER_LINE; j++)
+            {
+                line.Add(startPos);
+            }
+            fieldLines.Add(line);
+        }
+    }
 
-        var trailPositions = new Vector2[trailSegments];
-        for (var i = 0; i < trailSegments; i++)
+    private void UpdateFieldLines()
+    {
+        if (fieldLines == null || fieldLines.Count == 0)
         {
-            var progress = (float)i / (trailSegments - 1);
-            trailPositions[i] = Vector2.Lerp(start, start + direction * distance, progress);
+            InitializeFieldLines();
+            return;
         }
 
-        trail.Positions = trailPositions;
-        trail2.Positions = trailPositions;
+        Vector2 targetPos = Main.MouseWorld;
 
-        trail.NextPosition = start + direction * distance;
-        trail2.NextPosition = start + direction * distance;
+        for (int i = 0; i < fieldLines.Count; i++)
+        {
+            var line = fieldLines[i];
+
+            // Calculate base angle for this field line
+            float baseAngle = MathHelper.Lerp(-MathHelper.PiOver2, MathHelper.PiOver2, i / (float)(FIELD_LINE_COUNT - 1));
+
+            // Start from the projectile position
+            line[0] = Projectile.Center;
+
+            // Update each point in the line 
+            for (int j = 1; j < line.Count; j++)
+            {
+                // Previous position affects next position (continuity)
+                Vector2 prevPos = line[j - 1];
+
+                // Direction to target (magnetic pull)
+                Vector2 dirToTarget = Vector2.Normalize(targetPos - prevPos);
+
+                // Direction based on projectile facing (magnetic field direction)  
+                Vector2 fieldDir = Projectile.rotation.ToRotationVector2().RotatedBy(baseAngle * (1f - (float)j / line.Count));
+
+                // Combined direction with weights
+                Vector2 direction = (fieldDir * (1f - (float)j / line.Count) +
+                                   dirToTarget * ((float)j / line.Count) * magnetStrength);
+                direction.Normalize();
+
+                // Add some gravity effect for fluidity
+                direction.Y += gravityStrength * ((float)j / line.Count);
+                direction.Normalize();
+
+                // Calculate new position
+                float stepLength = 6f + (j * 0.5f); // Lines extend further as they progress  
+                Vector2 newPos = prevPos + direction * stepLength;
+
+                // Add some noise for a more fluid look
+                newPos += Main.rand.NextVector2Circular(0.5f, 0.5f) * ((float)j / line.Count);
+
+                line[j] = newPos;
+            }
+        }
+    }
+
+    private void ManageTrail()
+    {
+        UpdateFieldLines();
+
+        // Use colors that suggest magnetism - blue/purple tones
+        Color magnetColor1 = new Color(75, 105, 255); // Blue  
+        Color magnetColor2 = new Color(180, 100, 255); // Purple
+
+        if (trail == null || trail2 == null)
+        {
+            trail = new Trail(Main.instance.GraphicsDevice, POINTS_PER_LINE, new RoundedTip(8),
+                factor => 25f * (1f - factor), // Thicker near the magnet, thinner at the ends
+                factor => {
+                    if (factor.X >= 0.98f) return Color.White * 0;
+                    // Fade from blue to purple
+                    return Color.Lerp(magnetColor1, magnetColor2, factor.X) * 0.5f * (1f - factor.X);
+                });
+
+            trail2 = new Trail(Main.instance.GraphicsDevice, POINTS_PER_LINE, new RoundedTip(8),
+                factor => 15f * (1f - factor), // Inner trail is thinner  
+                factor => {
+                    if (factor.X >= 0.98f) return Color.White * 0;
+                    // Brighter inner core
+                    return Color.Lerp(Color.White, magnetColor1, factor.X * 0.5f) * 0.7f * (1f - factor.X);
+                });
+        }
+
+        // Only update trail positions if we have valid field lines
+        if (fieldLines != null && fieldLines.Count > 0)
+        {
+            // Alternate rendering different field lines 
+            int lineToRender = (int)(Main.GameUpdateCount / 5) % fieldLines.Count;
+
+            trail.Positions = fieldLines[lineToRender].ToArray();
+            trail2.Positions = fieldLines[lineToRender].ToArray();
+
+            // Set the next positions for smooth animation
+            trail.NextPosition = fieldLines[lineToRender].Last();
+            trail2.NextPosition = fieldLines[lineToRender].Last();
+        }
     }
 
     public void DrawPrimitives()
     {
-        var primitiveShader = Filters.Scene["LightningTrail"];
-        if (primitiveShader != null)
+        var effect = ShaderLoader.GetShader("pixelTrail").Value;
+
+        if (effect != null && fieldLines != null)
         {
-            var effect = primitiveShader.GetShader().Shader;
-            if (effect != null)
+            var world = Matrix.CreateTranslation(-Main.screenPosition.ToVector3());
+            var view = Main.GameViewMatrix.TransformationMatrix;
+            var projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
+
+            effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.01f);
+            effect.Parameters["repeats"]?.SetValue(5f);
+            effect.Parameters["pixelation"]?.SetValue(3f); // Lower pixelation for smoother look
+            effect.Parameters["resolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
+            effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
+            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Star09").Value);
+
+            // Draw all the field lines one after another
+            for (int i = 0; i < fieldLines.Count; i++)
             {
-                var world = Matrix.CreateTranslation(-Main.screenPosition.ToVector3());
-                var view = Main.GameViewMatrix.TransformationMatrix;
-                var projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
+                // Skip some frames for performance
+                if (i % 2 == Main.GameUpdateCount % 2)
+                {
+                    trail.Positions = fieldLines[i].ToArray();
+                    trail2.Positions = fieldLines[i].ToArray();
 
-                effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.2f);
-                effect.Parameters["repeats"]?.SetValue(8f);
-                effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
-                effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}WaterTrail").Value);
-                effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}BloomcapHunt").Value);
+                    // Apply slight variations to make each line unique  
+                    effect.Parameters["pixelation"]?.SetValue(3f + (i * 0.2f));
+                    effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.05f + (i * 0.1f));
 
-                trail?.Render(effect);
-
-                effect.Parameters["sampleTexture2"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}WaterTrail").Value);
-
-                trail2?.Render(effect);
+                    trail?.Render(effect);
+                    trail2?.Render(effect);
+                }
             }
         }
     }

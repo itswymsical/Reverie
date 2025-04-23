@@ -1,29 +1,33 @@
-﻿using Reverie.Core.NPCs.Actors;
+﻿using Reverie.Core.Graphics;
+using Reverie.Core.Interfaces;
+using Reverie.Core.Loaders;
+using Reverie.Core.NPCs.Actors;
+using Reverie.Utilities;
+using System.Collections.Generic;
 using Terraria.Audio;
 using Terraria.GameContent;
 
 namespace Reverie.Content.NPCs.Assailants;
 
-public class EchoKnight : FighterNPCActor
+public class EchoKnight : FighterNPCActor, IDrawPrimitive
 {
     public override float MaxSpeed => 1.46f;
     private float TeleportCooldown = Main.rand.NextFloat(120f, 180f);
-    private int MaxTeleportDistance = 140;
-    private int MinTeleportDistance = 60;
-    private int ChargeDuration = 45;
-    private int SlashDuration = 40;
-    private int ProximityThreshold = 44;
-    private float DamageMultiplier = 1.5f;
-    private int HitboxExtension = 44;
+    private readonly int MaxTeleportDistance = 140;
+    private readonly int MinTeleportDistance = 60;
+    private readonly int ChargeDuration = 45;
+    private readonly int SlashDuration = 40;
+    private readonly int ProximityThreshold = 44;
+    private readonly float DamageMultiplier = 1.5f;
+    private readonly int HitboxExtension = 44;
 
-    private int RetreatDuration = 60;
-    private float RetreatMoveSpeedMultiplier = 0.6f;
-    private int FastTeleportChargeDuration = 15;
-    private float RetreatTeleportDistanceMultiplier = 1.5f;
-    private float RetreatThreshold = 75f;
-    private float RetreatProbability = 0.6f;
+    private readonly int RetreatDuration = 60;
+    private readonly float RetreatMoveSpeedMultiplier = 0.6f;
+    private readonly int FastTeleportChargeDuration = 15;
+    private readonly float RetreatThreshold = 75f;
+    private readonly float RetreatProbability = 0.6f;
 
-    private int SlashHitboxDuration = 5;
+    private readonly int SlashHitboxDuration = 5;
 
     private Rectangle originalHitbox;
     private bool hitboxExtended = false;
@@ -57,10 +61,15 @@ public class EchoKnight : FighterNPCActor
         NPC.knockBackResist = 0.22f;
         NPC.value = Item.sellPrice(copper: Main.rand.Next(92, 170));
     }
-
+    private List<Vector2> cache;
+    private Trail trail;
+    private Trail trail2;
     public override void AI()
     {
+        ManageCaches();
+        ManageTrail();
         Player target = Main.player[NPC.target];
+        NPC.velocity.Y = NPC.velocity.Y * 0.97f;
         if (target.active && !target.dead)
         {
             NPC.direction = target.Center.X > NPC.Center.X ? 1 : -1;
@@ -82,13 +91,13 @@ public class EchoKnight : FighterNPCActor
                 {
                     NPC.ai[3] = STATE_CHARGING;
                     NPC.ai[2] = 0;
-                    NPC.velocity = Vector2.Zero;
+                    NPC.velocity.X = 0f;
                     NPC.netUpdate = true;
                 }
                 break;
 
             case STATE_CHARGING:
-                NPC.velocity = Vector2.Zero;
+                NPC.velocity.X = 0f;
                 DoChargingFX();
                 NPC.ai[2]++;
 
@@ -112,7 +121,7 @@ public class EchoKnight : FighterNPCActor
                 break;
 
             case STATE_SLASHING:
-                NPC.velocity = Vector2.Zero;
+                NPC.velocity.X = 0f;
 
                 PerformSlash();
                 ManageHitboxExtension();
@@ -147,13 +156,13 @@ public class EchoKnight : FighterNPCActor
                     // Transition to fast charging teleport
                     NPC.ai[3] = STATE_FAST_CHARGING;
                     NPC.ai[2] = 0;
-                    NPC.velocity = Vector2.Zero;
+                    NPC.velocity.X = 0f;
                     NPC.netUpdate = true;
                 }
                 break;
 
             case STATE_FAST_CHARGING:
-                NPC.velocity = Vector2.Zero;
+                NPC.velocity.X = 0f;
                 DoFastChargingFX();
                 NPC.ai[2]++;
 
@@ -168,7 +177,81 @@ public class EchoKnight : FighterNPCActor
                 break;
         }
     }
+    private void ManageCaches()
+    {
+        // Get the actual projectile position without random offsets
+        var pos = NPC.Center;
 
+        if (cache == null)
+        {
+            cache = [];
+            for (var i = 0; i < 15; i++)
+            {
+                cache.Add(pos);
+            }
+        }
+
+        cache.Add(pos);
+        while (cache.Count > 15)
+        {
+            cache.RemoveAt(0);
+        }
+    }
+
+    private void ManageTrail()
+    {
+        // Use the actual projectile position
+        var pos = NPC.Center;
+
+        // Change color to an ice blue
+        Color purple = new Color(73, 48, 137);
+
+        trail ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(12), factor => factor * 74, factor =>
+        {
+            if (factor.X >= 0.98f)
+                return Color.MediumPurple * 0;
+            // Use a blue ice color that fades out
+            return purple * 0.6f * (float)Math.Pow(factor.X, 2);
+        });
+        trail.Positions = [.. cache];
+
+        trail2 ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(12), factor => factor * 46, factor =>
+        {
+            if (factor.X >= 0.98f)
+                return Color.White * 0;
+            // Create a whiter center for the ice trail
+            return Color.Lerp(purple, Color.DimGray, 0.6f) * 0.7f * (float)Math.Pow(factor.X, 2);
+        });
+        trail2.Positions = [.. cache];
+
+        trail.NextPosition = pos;
+        trail2.NextPosition = pos;
+    }
+
+    public void DrawPrimitives()
+    {
+        // Use ShaderLoader.GetShader() to load the pixel trail shader
+        var effect = ShaderLoader.GetShader("pixelTrail").Value;
+
+        if (effect != null)
+        {
+            var world = Matrix.CreateTranslation(-Main.screenPosition.ToVector3());
+            var view = Main.GameViewMatrix.TransformationMatrix;
+            var projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
+
+            effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.02f);
+            effect.Parameters["repeats"]?.SetValue(8f);
+            effect.Parameters["pixelation"]?.SetValue(4f);
+            effect.Parameters["resolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
+            effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
+            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail").Value);
+
+            trail?.Render(effect);
+
+            effect.Parameters["pixelation"]?.SetValue(6f);
+            trail2?.Render(effect);
+        }
+    }
     private void PerformRetreat()
     {
         Player target = Main.player[NPC.target];

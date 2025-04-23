@@ -1,4 +1,5 @@
 ﻿using ReLogic.Content;
+using Reverie.Core.Loaders;
 using System.Collections.Generic;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -559,7 +560,20 @@ public class ReverieMenu : ModMenu
         }
 
         spriteBatch.End();
+
+        Effect effect = ShaderLoader.GetShader("ShineShader").Value;
+
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointWrap,
+                          DepthStencilState.None, Main.Rasterizer, effect, Main.UIScaleMatrix);
+
+        if (effect != null)
+        {
+            effect.Parameters["uTime"]?.SetValue((float)Main.time * 0.0005f);
+            effect.Parameters["uOpacity"]?.SetValue(1.2f);
+        }
+        spriteBatch.Draw(Logo.Value, new Vector2(logoDrawCenter.X / 1.24f, logoDrawCenter.Y * 0.08f), null, drawColor, logoRotation, Vector2.Zero, logoScale, SpriteEffects.None, 0f);
+        spriteBatch.End();
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
-        return true;
+        return false;
     }
 }

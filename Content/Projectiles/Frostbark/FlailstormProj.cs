@@ -1,14 +1,25 @@
-﻿using Terraria.Audio;
+﻿using Reverie.Core.Graphics;
+using Reverie.Core.Interfaces;
+using Reverie.Core.Loaders;
+using Reverie.Utilities;
+using System.Collections.Generic;
+using Terraria.Audio;
 using Terraria.GameContent;
 
 
 namespace Reverie.Content.Projectiles.Frostbark;
 
-public class FlailstormProj : ModProjectile
+public class FlailstormProj : ModProjectile, IDrawPrimitive
 {
     private const string ChainTexturePath = "Reverie/Assets/Textures/Projectiles/Frostbark/FlailstormChain";
     private const string ChainTextureExtraPath = ChainTexturePath;
+    private Vector2 offset;
 
+    private float oldRotation;
+
+    private List<Vector2> cache;
+    private Trail trail;
+    private Trail trail2;
     private enum AIState
     {
         Spinning,
@@ -59,6 +70,8 @@ public class FlailstormProj : ModProjectile
     }
     public override void AI()
     {
+        ManageCaches();
+        ManageTrail();
         var player = Main.player[Projectile.owner];
 
         if (!player.active || player.dead || player.noItems || player.CCed || Vector2.Distance(Projectile.Center, player.Center) > 900f)
@@ -388,7 +401,81 @@ public class FlailstormProj : ModProjectile
         else if (CurrentAIState == AIState.Dropping)
             modifiers.Knockback *= 0.5f;
     }
+    private void ManageCaches()
+    {
+        // Get the actual projectile position without random offsets
+        var pos = Projectile.Center;
 
+        if (cache == null)
+        {
+            cache = [];
+            for (var i = 0; i < 15; i++)
+            {
+                cache.Add(pos);
+            }
+        }
+
+        cache.Add(pos);
+        while (cache.Count > 15)
+        {
+            cache.RemoveAt(0);
+        }
+    }
+
+    private void ManageTrail()
+    {
+        // Use the actual projectile position
+        var pos = Projectile.Center;
+
+        // Change color to an ice blue
+        Color iceColor = new Color(120, 200, 255);
+
+        trail ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(12), factor => factor * 24, factor =>
+        {
+            if (factor.X >= 0.98f)
+                return Color.White * 0;
+            // Use a blue ice color that fades out
+            return iceColor * 0.6f * (float)Math.Pow(factor.X, 2);
+        });
+        trail.Positions = [.. cache];
+
+        trail2 ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(12), factor => factor * 16, factor =>
+        {
+            if (factor.X >= 0.98f)
+                return Color.White * 0;
+            // Create a whiter center for the ice trail
+            return Color.Lerp(iceColor, Color.White, 0.6f) * 0.7f * (float)Math.Pow(factor.X, 2);
+        });
+        trail2.Positions = [.. cache];
+
+        trail.NextPosition = pos;
+        trail2.NextPosition = pos;
+    }
+
+    public void DrawPrimitives()
+    {
+        // Use ShaderLoader.GetShader() to load the pixel trail shader
+        var effect = ShaderLoader.GetShader("pixelTrail").Value;
+
+        if (effect != null)
+        {
+            var world = Matrix.CreateTranslation(-Main.screenPosition.ToVector3());
+            var view = Main.GameViewMatrix.TransformationMatrix;
+            var projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
+
+            effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.07f);
+            effect.Parameters["repeats"]?.SetValue(8f);
+            effect.Parameters["pixelation"]?.SetValue(12f);
+            effect.Parameters["resolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
+            effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
+            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Star06").Value);
+
+            trail?.Render(effect);
+
+            effect.Parameters["pixelation"]?.SetValue(6f);
+            trail2?.Render(effect);
+        }
+    }
     public override bool PreDraw(ref Color lightColor)
     {
         var playerArmPosition = Main.GetPlayerArmPosition(Projectile);
