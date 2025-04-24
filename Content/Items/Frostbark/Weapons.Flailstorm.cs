@@ -6,7 +6,7 @@ public class Flailstorm : ModItem
 {
     public override void SetDefaults()
     {
-        Item.damage = 10;
+        Item.damage = 14;
         Item.width = Item.height = 38;
         Item.useTime = Item.useAnimation = 38;
         Item.knockBack = 2.8f;

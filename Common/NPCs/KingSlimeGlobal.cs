@@ -1,48 +1,62 @@
 ﻿using Reverie.Common.Systems.Camera;
 using Reverie.Utilities;
-using System.IO;
 using Terraria.Audio;
-using Terraria.ModLoader.IO;
 
 namespace Reverie.Common.NPCs;
 
-public enum KingSlimeState
-{
-    Idle,
-    Strolling,
-    Jumping,
-    Shooting,
-    PrepareSlamAttack,
-    SlamAttack,
-    PrepareTeleport,
-    Teleporting,
-    Reappearing,
-    Despawning
-}
 public class KingSlimeGlobal : GlobalNPC
 {
     public override bool InstancePerEntity => true;
     public override bool AppliesToEntity(NPC entity, bool lateInstantiation) => entity.type == NPCID.KingSlime;
 
+    #region Constants & Fields
     private Vector2 squishScale = Vector2.One;
 
-    private KingSlimeState currentState = KingSlimeState.Idle;
-    private KingSlimeState previousState;
+    private AIPhase currentState = AIPhase.Idle;
+    private AIPhase previousState;
     private float stateTimer;
     private int consecutiveSlams;
 
-    // Constants
-    private const float PHASE_2_THRESHOLD = 0.65f;
-    private const int MAX_CONSECUTIVE_SLAMS = 3;
-    private const float JUMP_DURATION = 5 * 60f;
-    private const float SHOOT_DURATION = 5 * 60f;
-    private const float STROLL_SPEED = .65f;
-    private const float IDLE_DURATION = 3.5f * 60f;
-    private const float SLAM_SPEED = 13f;
+    private readonly float PHASE_2_THRESHOLD = 0.55f;
+    private readonly int MAX_CONSECUTIVE_SLAMS = 3;
 
+    private float JUMP_DURATION = 1.8f * 60f;
+    private float SHOOT_DURATION = 4f * 60f;
+    private float STROLL_SPEED = .65f;
+    private float IDLE_DURATION = 2.5f * 60f;
+    private float SLAM_SPEED = 11.6f;
+    private float CONSUME_SLIMES_DURATION = 6.5f * 60f;
+
+    private readonly float CONSUME_HEALTH_THRESHOLD = 0.8f;
+    private readonly float CONSUME_DETECTION_RANGE = 1100f;
+    private float BASE_SCALE = 1.38f;
+    private float MAX_CONSUME_SCALE = 1.38f;
+    private float SCALE_PER_SLIME = 0.095f;
+
+    private int baseDefense = 9;
+    private int projectileDamage = 8;
+    private int currentJumps = 0;
+
+    private float teleportCooldown = 0f;
+    private readonly float TELEPORT_COOLDOWN = 120f;
+    #endregion
+
+    internal enum AIPhase
+    {
+        Idle,
+        Strolling,
+        Jumping,
+        Shooting,
+        PrepareSlamAttack,
+        SlamAttack,
+        Teleporting,
+        Despawning,
+        ConsumingSlimes
+    }
 
     public override void SetStaticDefaults()
     {
+        base.SetStaticDefaults();
         Main.npcFrameCount[Main.npc[NPCID.KingSlime].type] = 5;
     }
 
@@ -54,25 +68,73 @@ public class KingSlimeGlobal : GlobalNPC
         npc.width = 158;
         npc.height = 100;
         npc.damage = 16;
-        npc.defense = 8;
-        npc.lifeMax = 950;
+        npc.defense = baseDefense;
+        npc.lifeMax = 780;
         npc.value = Item.buyPrice(gold: 2);
         npc.knockBackResist = 0f;
         npc.boss = true;
         npc.noGravity = false;
         npc.noTileCollide = false;
-        npc.scale = 1.35f;
+        npc.scale = BASE_SCALE;
         npc.alpha = 35;
         npc.HitSound = new SoundStyle($"{SFX_DIRECTORY}KingSlimeHit") with { PitchVariance = 0.3f };
         npc.DeathSound = new SoundStyle($"{SFX_DIRECTORY}KingSlimeDeath") with { PitchVariance = 0.2f };
     }
-    
+    public override void ApplyDifficultyAndPlayerScaling(NPC npc, int numPlayers, float balance, float bossAdjustment)
+    {
+        base.ApplyDifficultyAndPlayerScaling(npc, numPlayers, balance, bossAdjustment);
+
+        if (npc.type != NPCID.KingSlime) return;
+
+        npc.lifeMax = (int)(npc.lifeMax * 1.1f * bossAdjustment);
+        npc.damage = (int)(npc.damage * 1.15f * bossAdjustment);
+
+        baseDefense = (int)(baseDefense * (1f + 0.15f * bossAdjustment));
+
+        projectileDamage = (int)(projectileDamage * (1f + 0.25f * bossAdjustment));
+
+        if (Main.expertMode)
+        {
+            JUMP_DURATION *= 0.85f;
+            SHOOT_DURATION *= 0.75f;
+            IDLE_DURATION *= 0.7f;
+            SLAM_SPEED *= 1.2f;
+            STROLL_SPEED *= 1.2f;
+        }
+
+        if (Main.masterMode)
+        {
+            SLAM_SPEED *= 1.1f;
+            STROLL_SPEED *= 1.1f;
+            CONSUME_SLIMES_DURATION *= 0.75f;
+            BASE_SCALE = 1.47f;
+            SCALE_PER_SLIME = 0.105f;
+        }
+
+        //if (numPlayers > 1)
+        //{
+        //    float multiplayerScaling = 1f + (numPlayers - 1) * 0.35f;
+        //    npc.lifeMax = (int)(npc.lifeMax * multiplayerScaling);
+        //    baseDefense = (int)(baseDefense * (1f + 0.1f * (numPlayers - 1)));
+        //}
+    }
+
     public override void AI(NPC npc)
     {
         if (npc.type != NPCID.KingSlime) return;
 
-        Main.musicBox2 = MusicLoader.GetMusicSlot(Reverie.Instance, "Assets/Music/GelatinousJoust");
-        UpdateHealthBasedScale(npc);
+        if (teleportCooldown > 0)
+            teleportCooldown--;
+
+        if (currentState != AIPhase.Teleporting && ShouldForceTelepot(npc))
+        {
+            ChangeState(AIPhase.Teleporting);
+        }
+        Main.musicBox2 = MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}GelatinousJoust");
+
+        MaintainSlimePopulation(npc);
+
+        UpdateScale(npc);
 
         UpdateState(npc);
         HandleState(npc);
@@ -81,16 +143,100 @@ public class KingSlimeGlobal : GlobalNPC
         NPCUtils.SlopedCollision(npc);
         NPCUtils.CheckPlatform(npc, Main.player[npc.target]);
     }
+    private bool ShouldForceTelepot(NPC npc)
+    {
+        if (teleportCooldown > 0)
+            return false;
 
-    private void UpdateHealthBasedScale(NPC npc)
+        // Ensure target is valid
+        if (npc.target < 0 || npc.target >= Main.maxPlayers || !Main.player[npc.target].active || Main.player[npc.target].dead)
+        {
+            npc.TargetClosest(true);
+            return false; // Don't teleport if we can't find a valid target
+        }
+
+        Player target = Main.player[npc.target];
+        float distanceToPlayer = Vector2.Distance(npc.Center, target.Center);
+
+        // Force teleport if player is far
+        if (distanceToPlayer > 800f)
+            return true;
+
+        // or if line of sight is broken for too long
+        bool lineOfSightBroken = !Collision.CanHitLine(npc.Center, 1, 1, target.Center, 1, 1);
+        if (lineOfSightBroken && currentState != AIPhase.Jumping)
+        {
+            return Main.rand.NextBool(30); // 1/30 chance per frame when LOS broken (~2 second average)
+        }
+
+        return false;
+    }
+
+    public override void HitEffect(NPC npc, NPC.HitInfo hit)
+    {
+        base.HitEffect(npc, hit);
+
+        if (npc.type != NPCID.KingSlime) return;
+
+        for (int i = 0; i < 10; i++)
+        {
+            int dust = Dust.NewDust(npc.position, npc.width, npc.height,
+                DustID.t_Slime, npc.velocity.X * 0.4f, npc.velocity.Y * 0.4f,
+                150, new Color(78, 136, 255, 150), 1.5f);
+            Main.dust[dust].noGravity = true;
+            Main.dust[dust].velocity *= 0.4f;
+        }
+        if (Main.rand.NextBool(18) && currentState != AIPhase.ConsumingSlimes)
+        {
+            if (Main.rand.NextBool(3))
+            {
+                NPC.NewNPC(npc.GetSource_FromThis(), (int)npc.Center.X, (int)npc.Center.Y, NPCID.BlueSlime);
+            }
+            else if (Main.rand.NextBool(3))
+            {
+                NPC.NewNPC(npc.GetSource_FromThis(), (int)npc.Center.X, (int)npc.Center.Y, NPCID.GreenSlime);
+            }
+            else
+            {
+                NPC.NewNPC(npc.GetSource_FromThis(), (int)npc.Center.X, (int)npc.Center.Y, NPCID.PurpleSlime);
+            }
+        }
+    }
+
+
+    #region State Management
+    private void UpdateScale(NPC npc)
     {
         float healthPercentage = (float)npc.life / npc.lifeMax;
-        npc.scale = MathHelper.Lerp(0.65f, 1.35f, healthPercentage);
+        float scaleRatio = npc.scale = MathHelper.Lerp(0.65f, 1.35f, healthPercentage);
 
         if (npc.scale < 0.45f)
         {
             npc.scale = 0.45f;
         }
+
+        UpdateDefenseBasedOnScale(npc);
+    }
+
+    private void UpdateDefenseBasedOnScale(NPC npc)
+    {
+        const int MIN_DEFENSE = 8; 
+        const int MAX_DEFENSE = 22;
+
+        float normalizedScale = (npc.scale - 0.45f) / (MAX_CONSUME_SCALE - 0.45f);
+        normalizedScale = MathHelper.Clamp(normalizedScale, 0f, 1f);
+
+        float defenseFactor = normalizedScale * normalizedScale * (3 - 2 * normalizedScale);
+
+        int calculatedDefense = (int)(MIN_DEFENSE + (baseDefense - MIN_DEFENSE) * defenseFactor);
+
+        int consumptionBonus = npc.defense - (int)(baseDefense * npc.scale);
+        if (consumptionBonus > 0)
+        {
+            calculatedDefense += consumptionBonus;
+        }
+
+        npc.defense = (int)MathHelper.Clamp(calculatedDefense, MIN_DEFENSE, MAX_DEFENSE);
     }
 
     private void UpdateHitbox(NPC npc)
@@ -109,104 +255,182 @@ public class KingSlimeGlobal : GlobalNPC
         npc.position = center - new Vector2(npc.width / 2, npc.height / 2);
     }
 
-    private const int MAX_JUMPS = 2;
-    private int currentJumps = 0;
     private void UpdateState(NPC npc)
     {
         stateTimer++;
         HandleStrolling(npc);
         float healthPercentage = (float)npc.life / npc.lifeMax;
-
         switch (currentState)
         {
-            case KingSlimeState.Idle:
+            case AIPhase.Idle:
                 if (stateTimer >= IDLE_DURATION)
                 {
-                    if (healthPercentage <= PHASE_2_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) <= 9)
+                    if (ShouldTeleport(npc))
+                    {
+                        ChangeState(AIPhase.Teleporting);
+                    }
+
+                    if (healthPercentage <= CONSUME_HEALTH_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) > 3
+                        && Main.rand.NextBool(2))
+                    {
+                        ChangeState(AIPhase.ConsumingSlimes);
+                    }
+
+                    else if (healthPercentage <= PHASE_2_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) <= 9)
                     {
                         consecutiveSlams = 0;
-                        ChangeState(KingSlimeState.PrepareSlamAttack);
+                        ChangeState(AIPhase.PrepareSlamAttack);
                     }
+                    else if (Main.rand.NextBool(2))
+                        ChangeState(AIPhase.Shooting);
                     else
-                        ChangeState(KingSlimeState.Shooting);       
+                        ChangeState(AIPhase.Jumping);
                 }
                 break;
 
-            case KingSlimeState.Shooting:
+            case AIPhase.Shooting:
                 if (stateTimer >= SHOOT_DURATION)
                 {
+                    if (ShouldTeleport(npc))
+                    {
+                        ChangeState(AIPhase.Teleporting);
+                    }
                     if (healthPercentage <= PHASE_2_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) <= 9)
                     {
                         consecutiveSlams = 0;
-                        ChangeState(KingSlimeState.PrepareSlamAttack);
+                        ChangeState(AIPhase.PrepareSlamAttack);
                     }
                     else
-                        ChangeState(KingSlimeState.Jumping);                
+                        ChangeState(AIPhase.Jumping);                
                 }
                 break;
 
-            case KingSlimeState.Jumping:
+            case AIPhase.Jumping:
                 if (stateTimer >= JUMP_DURATION || npc.velocity.Y == 0f)
                 {
-                    ChangeState(KingSlimeState.PrepareSlamAttack);
                     stateTimer = 0f;
-                    currentJumps++;
+
+                    if (currentJumps >= 3)
+                    {
+                        currentJumps = 0;
+                    }
+
+                    if (previousState == AIPhase.PrepareSlamAttack ||
+                        (healthPercentage <= PHASE_2_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) <= 9))
+                    {
+                        ChangeState(AIPhase.PrepareSlamAttack);
+                        currentJumps++;
+                    }
+                    else if (healthPercentage <= CONSUME_HEALTH_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) > 3
+                        && Main.rand.NextBool(3))
+                    {
+                        ChangeState(AIPhase.ConsumingSlimes);
+                    }
+                    else if (Main.rand.NextBool(2))
+                    {
+                        ChangeState(AIPhase.PrepareSlamAttack);
+                        currentJumps++;
+                    }
+                    else
+                    {
+                        ChangeState(AIPhase.Strolling);
+                    }
                 }
                 break;
 
-            case KingSlimeState.PrepareSlamAttack:
+            case AIPhase.PrepareSlamAttack:
                 if (HandleSlamSetup(npc))
                 {
-                    ChangeState(KingSlimeState.SlamAttack);
+                    ChangeState(AIPhase.SlamAttack);
                 }
                 break;
 
-            case KingSlimeState.SlamAttack:
+            case AIPhase.SlamAttack:
                 if (HandleSlam(npc))
                 {
                     consecutiveSlams++;
                     if (consecutiveSlams >= MAX_CONSECUTIVE_SLAMS)
                     {
-                        ChangeState(KingSlimeState.Idle);
+                        ChangeState(AIPhase.Idle);
                     }
                     else
-                        ChangeState(KingSlimeState.PrepareSlamAttack);       
+                        ChangeState(AIPhase.PrepareSlamAttack);       
+                }
+                break;
+
+            case AIPhase.ConsumingSlimes:
+                if (stateTimer >= CONSUME_SLIMES_DURATION)
+                {   
+                    if (Main.rand.NextBool(2))
+                        ChangeState(AIPhase.Jumping);      
+                    else
+                        ChangeState(AIPhase.Strolling);   
+                }
+                break;
+
+            case AIPhase.Strolling:         
+                if (stateTimer >= 2f * 60f)
+                {
+                    if (ShouldTeleport(npc))
+                    {
+                        ChangeState(AIPhase.Teleporting);
+                    }
+                    if (healthPercentage <= CONSUME_HEALTH_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) > 3
+                         && Main.rand.NextBool(3))
+                    {
+                        ChangeState(AIPhase.ConsumingSlimes);
+                    }
+                    else if (healthPercentage <= PHASE_2_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) <= 9)
+                    {
+                        consecutiveSlams = 0;
+                        ChangeState(AIPhase.PrepareSlamAttack);
+                    }
+                    else if (Main.rand.NextBool(2))
+                        ChangeState(AIPhase.Shooting);
+                    else
+                        ChangeState(AIPhase.Jumping);
+                }
+                break;
+
+            case AIPhase.Teleporting:
+                if (HandleTeleporting(npc))
+                {
+                    ChangeState(AIPhase.Idle);
                 }
                 break;
         }
     }
 
-    private void ChangeState(KingSlimeState newState)
+    private void ChangeState(AIPhase newState)
     {
         previousState = currentState;
         currentState = newState;
         stateTimer = 0f;
-        OnStateEnter(newState);
     }
+    #endregion
 
-    private void OnStateEnter(KingSlimeState state)
-    {
-
-    }
-
+    #region Attack Handlers
     private void HandleState(NPC npc)
     {
         switch (currentState)
         {
-            case KingSlimeState.Strolling:
+            case AIPhase.Strolling:
                 HandleStrolling(npc);
                 break;
-            case KingSlimeState.Jumping:
+            case AIPhase.Jumping:
                 HandleJumping(npc);
                 break;
-            case KingSlimeState.Shooting:
+            case AIPhase.Shooting:
                 HandleShooting(npc);
+                break;
+            case AIPhase.ConsumingSlimes:
+                HandleConsumingSlimes(npc);
                 break;
         }
         UpdateVisualEffects(npc);
     }
 
-    private static void HandleStrolling(NPC npc)
+    private void HandleStrolling(NPC npc)
     {
         if (npc.target < 0 || npc.target == 255 || Main.player[npc.target].dead)
             npc.TargetClosest();
@@ -214,6 +438,12 @@ public class KingSlimeGlobal : GlobalNPC
         Player target = Main.player[npc.target];
 
         npc.direction = npc.spriteDirection = npc.Center.X < target.Center.X ? 1 : -1;
+
+        if (currentState == AIPhase.ConsumingSlimes)
+            STROLL_SPEED = 0.85f; 
+        else
+            STROLL_SPEED = 0.65f;
+        
 
         if (npc.velocity.X < -STROLL_SPEED || npc.velocity.X > STROLL_SPEED)
         {
@@ -233,6 +463,102 @@ public class KingSlimeGlobal : GlobalNPC
                 npc.velocity.X -= 0.03f;
             }
             npc.velocity.X = MathHelper.Clamp(npc.velocity.X, -STROLL_SPEED, STROLL_SPEED);
+        }
+    }
+
+    private void HandleConsumingSlimes(NPC npc)
+    {
+        if (stateTimer == 1)
+        {
+            CameraSystem.shake = 8;
+            SoundEngine.PlaySound(SoundID.Roar, npc.Center);
+
+            for (int i = 0; i < 20; i++)
+            {
+                Vector2 dustVel = Vector2.One.RotatedBy(MathHelper.ToRadians(i * 18)) * 5f;
+                int dust = Dust.NewDust(npc.Center, 0, 0, DustID.t_Slime, dustVel.X, dustVel.Y,
+                    newColor: new Color(78, 136, 255, 150));
+                Main.dust[dust].noGravity = true;
+                Main.dust[dust].scale = 1.8f;
+            }
+        }
+
+        if (stateTimer % 15 == 0)
+        {
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC target = Main.npc[i];
+
+                if (target.active && target.aiStyle == NPCAIStyleID.Slime
+                    && target.type != NPCID.KingSlime && !target.boss)
+                {
+                    if (Vector2.Distance(npc.Center, target.Center) <= CONSUME_DETECTION_RANGE)
+                    {
+                        if (!npc.Hitbox.Intersects(target.Hitbox))
+                        {
+                            Vector2 toKingSlime = npc.Center - target.Center;
+                            toKingSlime.Normalize();
+                            target.velocity = toKingSlime * 4f;
+
+                            if (Main.rand.NextBool(3))
+                            {
+                                Dust.NewDust(target.position, target.width, target.height,
+                                    DustID.t_Slime, toKingSlime.X, toKingSlime.Y,
+                                    150, new Color(78, 136, 255, 150), 1.2f);
+                            }
+                        }
+                        else if (npc.Hitbox.Intersects(target.Hitbox))
+                        {
+                            for (int d = 0; d < 15; d++)
+                            {
+                                Vector2 velocity = new Vector2(Main.rand.NextFloat(-3f, 3f), Main.rand.NextFloat(-3f, 3f));
+                                int dust = Dust.NewDust(target.Center, 0, 0,
+                                    DustID.t_Slime, velocity.X, velocity.Y,
+                                    150, new Color(78, 136, 255, 200), 1.5f);
+                                Main.dust[dust].noGravity = true;
+                            }
+
+                            float newScale = npc.scale + SCALE_PER_SLIME;
+                            npc.scale = MathHelper.Min(newScale, MAX_CONSUME_SCALE);
+                            npc.life += target.life / 8;
+                            npc.HealEffect(target.life / 8);
+                            if (npc.life >= npc.lifeMax)
+                            {
+                                npc.life = npc.lifeMax;
+                            }
+
+                            SoundEngine.PlaySound(new SoundStyle(
+                                $"{SFX_DIRECTORY}SlimeConsume")
+                                {
+                                    PitchVariance = 0.3f,
+                                    MaxInstances = 3
+                                }, target.Center);
+
+                            target.life = 0;
+                            target.HitEffect();
+                            target.active = false;
+
+                            UpdateHitbox(npc);
+                        }
+                    }
+                }
+            }
+        }
+
+        float pulse = (float)Math.Sin(stateTimer * 0.05f) * 0.1f;
+        squishScale = new Vector2(1f + pulse, 1f - pulse);
+
+        if (Main.rand.NextBool(10))
+        {
+            Vector2 offset = new Vector2(Main.rand.NextFloat(-npc.width * 0.5f, npc.width * 0.5f),
+                Main.rand.NextFloat(-npc.height * 0.5f, npc.height * 0.5f));
+            Vector2 position = npc.Center + offset;
+
+            int dust = Dust.NewDust(position, 0, 0, DustID.t_Slime, 0f, 0f,
+                150, new Color(78, 136, 255, 150), 1.3f);
+            Main.dust[dust].noGravity = true;
+            Main.dust[dust].velocity = Vector2.Zero;
+            Main.dust[dust].fadeIn = 1.2f;
         }
     }
 
@@ -265,7 +591,7 @@ public class KingSlimeGlobal : GlobalNPC
         Player player = Main.player[npc.target];
         float projectileSpeed = 6.8f;
         int projectileType = ProjectileID.SpikedSlimeSpike;
-        int damage = 8;
+        int damage = npc.damage / 4;
 
         int numProjectiles = 5;
         float arcSpread = 60f;
@@ -292,6 +618,61 @@ public class KingSlimeGlobal : GlobalNPC
         }
     }
 
+    private void MaintainSlimePopulation(NPC npc)
+    {
+        if (npc.ai[3]++ % 180 == 0)
+        {
+            float healthPercentage = (float)npc.life / npc.lifeMax;
+            if (healthPercentage <= CONSUME_HEALTH_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) < 4)
+            {
+                int slimesToSpawn = Main.rand.Next(2, 4);
+                for (int i = 0; i < slimesToSpawn; i++)
+                {
+                    int spawnX = (int)npc.Center.X + Main.rand.Next(-400, 400);
+                    int spawnY = (int)npc.Center.Y;
+
+                    bool foundSurface = false;
+                    for (int y = 0; y < 200; y++)
+                    {
+                        int tileX = spawnX / 16;
+                        int tileY = (spawnY + y) / 16;
+
+                        Tile tile = Framing.GetTileSafely(tileX, tileY);
+                        if (tile.HasTile && Main.tileSolid[tile.TileType] && !Main.tileSolidTop[tile.TileType])
+                        {
+                            spawnY = (tileY * 16) - 24;
+                            foundSurface = true;
+                            break;
+                        }
+                    }
+
+                    if (foundSurface)
+                    {
+                        int slimeType = Main.rand.NextBool(2) ? NPCID.BlueSlime :
+                                      (Main.rand.NextBool() ? NPCID.GreenSlime : NPCID.PurpleSlime);
+
+                        for (int d = 0; d < 15; d++)
+                        {
+                            Vector2 velocity = new Vector2(Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(-3f, -0.5f));
+                            int dust = Dust.NewDust(new Vector2(spawnX, spawnY), 16, 8,
+                                DustID.t_Slime, velocity.X, velocity.Y,
+                                150, new Color(78, 136, 255, 200), 1f);
+                            Main.dust[dust].noGravity = true;
+                            Main.dust[dust].fadeIn = 1.2f;
+                        }
+
+                        int newSlime = NPC.NewNPC(npc.GetSource_FromAI(), spawnX, spawnY, slimeType);
+                        if (newSlime >= 0 && newSlime < Main.maxNPCs)
+                        {
+                            Main.npc[newSlime].scale = 0.2f;
+                            Main.npc[newSlime].alpha = 125;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private void HandleJumping(NPC npc)
     {
         if (npc.velocity.Y == 0f)
@@ -313,16 +694,20 @@ public class KingSlimeGlobal : GlobalNPC
                 npc.TargetClosest();
                 npc.direction = npc.spriteDirection = npc.Center.X < Main.player[npc.target].Center.X ? 1 : -1;
 
-                float baseJumpHeight = -8f - (currentJumps * 2f);
+                // Cap the jump count
+                currentJumps = Math.Min(currentJumps, 3);
+
+                // Limit base jump height to a maximum of -14f
+                float baseJumpHeight = Math.Max(-14f, -8f - (currentJumps * 2f));
                 float baseXVelocity = 2f + (currentJumps * 0.5f);
 
-                if (currentState == KingSlimeState.Jumping && stateTimer >= JUMP_DURATION * 0.8f)
+                if (currentState == AIPhase.Jumping && stateTimer >= JUMP_DURATION * 0.8f)
                 {
-                    npc.velocity.Y = baseJumpHeight * 1.6f;
+                    npc.velocity.Y = baseJumpHeight * 1.5f; // Reduced from 1.6f
                     npc.velocity.X += baseXVelocity * 0.875f * npc.direction;
                     stateTimer = -320f;
                 }
-                else if (currentState == KingSlimeState.Jumping && stateTimer >= JUMP_DURATION * 0.5f)
+                else if (currentState == AIPhase.Jumping && stateTimer >= JUMP_DURATION * 0.5f)
                 {
                     npc.velocity.Y = baseJumpHeight * 0.75f;
                     npc.velocity.X += baseXVelocity * 1.125f * npc.direction;
@@ -338,7 +723,7 @@ public class KingSlimeGlobal : GlobalNPC
                 squishScale = new Vector2(0.8f, 1.2f);
             }
         }
-    
+
         else if (npc.target < 255)
         {
             float maxSpeed = Main.getGoodWorld ? 6f : 3f;
@@ -505,52 +890,213 @@ public class KingSlimeGlobal : GlobalNPC
         return false;
     }
 
-    private void UpdateVisualEffects(NPC npc)
+    private bool HandleTeleporting(NPC npc)
     {
-        HandleSquishScale(npc);
-
-    }
-
-    private void HandleSquishScale(NPC npc)
-    {
-        const float MAX_STRETCH = 1.3f;
-        const float MIN_SQUISH = 0.9f;
-
-        float yVelocityFactor = MathHelper.Clamp(npc.velocity.Y / 16f, -1f, 1f);
-
-        if (npc.velocity.Y != 0)
+        // Phase 1: Fade out and scale down (first 60 frames)
+        if (stateTimer < 60)
         {
-            if (npc.velocity.Y < 0)
+            // Calculate fade out progress (0 to 1)
+            float fadeOutProgress = stateTimer / 60f;
+            npc.alpha = (int)MathHelper.Lerp(35, 255, fadeOutProgress);
+
+            // Get current health-based scale that would normally apply
+            float healthPercentage = (float)npc.life / npc.lifeMax;
+            float baseScale = MathHelper.Lerp(0.65f, 1.35f, healthPercentage);
+
+            // Scale down as we fade out (minimum 0.3f)
+            float scaleReduction = 1f - (fadeOutProgress * 0.7f); // At most reduce to 30% of original
+            npc.scale = baseScale * scaleReduction;
+            npc.scale = Math.Max(npc.scale, 0.3f); // Safety minimum
+
+            // Update hitbox for new scale
+            UpdateHitbox(npc);
+
+            // Slow down movement while vanishing
+            npc.velocity *= 0.95f;
+
+            // Create dust effects while fading out
+            if (stateTimer % 5 == 0)
             {
-                squishScale.Y = MathHelper.Lerp(1f, MAX_STRETCH, -yVelocityFactor);
-                squishScale.X = MathHelper.Lerp(1f, MIN_SQUISH, -yVelocityFactor);
+                for (int i = 0; i < 2; i++)
+                {
+                    Vector2 dustPos = npc.position + new Vector2(Main.rand.Next(npc.width), Main.rand.Next(npc.height));
+                    int dust = Dust.NewDust(dustPos, 4, 4, DustID.t_Slime, 0f, 0f,
+                        150, new Color(78, 136, 255, 80), 2f);
+                    Main.dust[dust].noGravity = true;
+                    Main.dust[dust].velocity *= 0.5f;
+                }
+            }
+
+            // Dust burst at the end of fade out
+            if (stateTimer == 59)
+            {
+                SoundEngine.PlaySound(SoundID.Item8, npc.Center);
+
+                for (int i = 0; i < 50; i++)
+                {
+                    Vector2 velocity = Vector2.One.RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(2f, 8f);
+                    int dust = Dust.NewDust(npc.Center, 0, 0, DustID.t_Slime,
+                        velocity.X, velocity.Y, 150, new Color(78, 136, 255, 200), 2f);
+                    Main.dust[dust].noGravity = true;
+                }
+            }
+        }
+        // Phase 2: Teleport (frame 60)
+        else if (stateTimer == 60)
+        {
+            // Stay completely invisible and small
+            npc.alpha = 255;
+
+            // Get current health-based scale that would normally apply
+            float healthPercentage = (float)npc.life / npc.lifeMax;
+            float baseScale = MathHelper.Lerp(0.65f, 1.35f, healthPercentage);
+
+            // Maintain small scale during teleport
+            npc.scale = baseScale * 0.3f; // 30% of normal scale
+            UpdateHitbox(npc);
+
+            // Ensure target is valid before teleporting
+            if (npc.target < 0 || npc.target >= Main.maxPlayers || !Main.player[npc.target].active)
+                npc.TargetClosest(true);
+
+            // Get teleport position above the player
+            Player target = Main.player[npc.target];
+            Vector2 teleportPos = target.Center;
+            teleportPos.Y -= 580; // More consistent height
+            
+            teleportPos.X += Main.rand.Next(-40, 41); // Smaller horizontal variance
+
+            // Set position and reset velocity
+            npc.Center = teleportPos;
+            npc.velocity = Vector2.Zero;
+
+            // Always flag for immediate slam in Master Mode
+            if (Main.masterMode)
+            {
+                npc.localAI[3] = 1f; // Flag for slam attack after teleport
+            }
+            // 50% chance in Expert Mode
+            else if (Main.expertMode && Main.rand.NextBool())
+            {
+                npc.localAI[3] = 1f;
+            }
+        }
+
+        // Phase 3: Fade in and scale up (frames 61-90)
+        else if (stateTimer < 90)
+        {
+            // Calculate fade in progress (0 to 1)
+            float fadeInProgress = (stateTimer - 60) / 30f;
+            npc.alpha = (int)MathHelper.Lerp(255, 35, fadeInProgress);
+
+            // Get current health-based scale that would normally apply
+            float healthPercentage = (float)npc.life / npc.lifeMax;
+            float baseScale = MathHelper.Lerp(0.65f, 1.35f, healthPercentage);
+
+            // Scale back up as we fade in (from 30% to 100% of base scale)
+            float scaleIncrease = 0.3f + (fadeInProgress * 0.7f);
+            npc.scale = baseScale * scaleIncrease;
+
+            // Update hitbox for new scale
+            UpdateHitbox(npc);
+
+            // Create dust effects while fading in
+            if (stateTimer % 5 == 0)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    Vector2 dustPos = npc.position + new Vector2(Main.rand.Next(npc.width), Main.rand.Next(npc.height));
+                    int dust = Dust.NewDust(dustPos, 4, 4, DustID.t_Slime, 0f, 0f,
+                        150, new Color(78, 136, 255, 80), 2f);
+                    Main.dust[dust].noGravity = true;
+                    Main.dust[dust].velocity *= 2f;
+                }
+            }
+
+            // Sound when reappearing
+            if (stateTimer == 61)
+            {
+                SoundEngine.PlaySound(SoundID.Item8, npc.Center);
+            }
+        }
+        // Phase 4: Teleport complete
+        else
+        {
+            npc.TargetClosest();
+            npc.direction = npc.spriteDirection = npc.Center.X < Main.player[npc.target].Center.X ? 1 : -1;
+
+            // Restore normal scale based on health
+            float healthPercentage = (float)npc.life / npc.lifeMax;
+            npc.scale = MathHelper.Lerp(0.65f, 1.35f, healthPercentage);
+            UpdateHitbox(npc);
+
+            teleportCooldown = TELEPORT_COOLDOWN;
+
+            if (npc.localAI[3] == 1f)
+            {
+                npc.localAI[3] = 0f;
+                ChangeState(AIPhase.SlamAttack);
+                npc.velocity.Y = SLAM_SPEED * 1.2f;
+
+                for (int i = 0; i < 20; i++)
+                {
+                    int dust = Dust.NewDust(npc.position, npc.width, npc.height,
+                        DustID.t_Slime, 0f, npc.velocity.Y * 0.4f,
+                        150, new Color(78, 136, 255, 150), 2f);
+                    Main.dust[dust].noGravity = true;
+                }
             }
             else
             {
-                squishScale.Y = MathHelper.Lerp(1f, MIN_SQUISH, yVelocityFactor);
-                squishScale.X = MathHelper.Lerp(1f, MAX_STRETCH, yVelocityFactor);
+                ChangeState(AIPhase.PrepareSlamAttack);
             }
+
+            return true;
         }
-        else
+
+        if (stateTimer >= 60 && npc.Distance(Main.LocalPlayer.Center) > 10f)
         {
-            squishScale = Vector2.Lerp(squishScale, Vector2.One, 0.15f);
+            CameraSystem.shake = 3;
+           
         }
+        return false;
     }
 
-    public override void OnHitNPC(NPC npc, NPC target, NPC.HitInfo hit)
+    private bool ShouldTeleport(NPC npc)
     {
-        if (npc.type != NPCID.KingSlime) return;
+        if (teleportCooldown > 0f || currentState == AIPhase.Teleporting)
+            return false;
 
-        for (int i = 0; i < 10; i++)
-        {
-            int dust = Dust.NewDust(npc.position, npc.width, npc.height,
-                DustID.t_Slime, npc.velocity.X * 0.4f, npc.velocity.Y * 0.4f,
-                150, new Color(78, 136, 255, 150), 1.5f);
-            Main.dust[dust].noGravity = true;
-            Main.dust[dust].velocity *= 0.4f;
-        }
+        float healthPercentage = (float)npc.life / npc.lifeMax;
+        Player target = Main.player[npc.target];
+
+        // If player is dead or not active, don't teleport
+        if (target.dead || !target.active)
+            return false;
+
+        // Random chance based on health - MUCH more frequent
+        int teleportChance;
+        if (healthPercentage <= 0.3f)
+            teleportChance = 60; // 1.67% chance per frame
+        else if (healthPercentage <= 0.6f)
+            teleportChance = 90; // 1.11% chance per frame
+        else
+            teleportChance = 120; // 0.83% chance per frame
+
+        // Check trigger conditions (but don't use the extreme ones handled by ShouldForceTelepot)
+        bool playerFarAway = Vector2.Distance(npc.Center, target.Center) > 350f && Vector2.Distance(npc.Center, target.Center) <= 800f;
+        bool playerAbove = target.Center.Y < npc.Center.Y - 100f;
+
+        // If ANY of these are true, increase chance of teleport
+        if (playerFarAway || playerAbove)
+            teleportChance /= 2; // Double the chance
+
+        // Return true if we pass the random check
+        return Main.rand.NextBool(teleportChance);
     }
+    #endregion
 
+    #region Animation
     private int frame;
     private float frameCounter;
     private const int TOTAL_FRAMES = 5;
@@ -580,6 +1126,38 @@ public class KingSlimeGlobal : GlobalNPC
             npc.frame.Y = frame * FRAME_HEIGHT;
         }
     }
+
+    private void UpdateVisualEffects(NPC npc)
+    {
+        HandleSquishScale(npc);
+    }
+
+    private void HandleSquishScale(NPC npc)
+    {
+        const float MAX_STRETCH = 1.3f;
+        const float MIN_SQUISH = 0.9f;
+
+        float yVelocityFactor = MathHelper.Clamp(npc.velocity.Y / 16f, -1f, 1f);
+
+        if (npc.velocity.Y != 0)
+        {
+            if (npc.velocity.Y < 0)
+            {
+                squishScale.Y = MathHelper.Lerp(1f, MAX_STRETCH, -yVelocityFactor);
+                squishScale.X = MathHelper.Lerp(1f, MIN_SQUISH, -yVelocityFactor);
+            }
+            else
+            {
+                squishScale.Y = MathHelper.Lerp(1f, MIN_SQUISH, yVelocityFactor);
+                squishScale.X = MathHelper.Lerp(1f, MAX_STRETCH, yVelocityFactor);
+            }
+        }
+        else
+        {
+            squishScale = Vector2.Lerp(squishScale, Vector2.One, 0.15f);
+        }
+    }
+
     public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
         if (npc.type != NPCID.KingSlime) return base.PreDraw(npc, spriteBatch, screenPos, drawColor);
@@ -606,4 +1184,5 @@ public class KingSlimeGlobal : GlobalNPC
 
         return false;
     }
+    #endregion
 }
