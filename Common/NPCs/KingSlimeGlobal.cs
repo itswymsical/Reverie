@@ -12,8 +12,8 @@ public class KingSlimeGlobal : GlobalNPC
     #region Constants & Fields
     private Vector2 squishScale = Vector2.One;
 
-    private AIPhase currentState = AIPhase.Idle;
-    private AIPhase previousState;
+    private KingSlimeAI currentState = KingSlimeAI.Idle;
+    private KingSlimeAI previousState;
     private float stateTimer;
     private int consecutiveSlams;
 
@@ -41,7 +41,7 @@ public class KingSlimeGlobal : GlobalNPC
     private readonly float TELEPORT_COOLDOWN = 120f;
     #endregion
 
-    internal enum AIPhase
+    internal enum KingSlimeAI
     {
         Idle,
         Strolling,
@@ -126,9 +126,9 @@ public class KingSlimeGlobal : GlobalNPC
         if (teleportCooldown > 0)
             teleportCooldown--;
 
-        if (currentState != AIPhase.Teleporting && ShouldForceTelepot(npc))
+        if (currentState != KingSlimeAI.Teleporting && ShouldForceTelepot(npc))
         {
-            ChangeState(AIPhase.Teleporting);
+            ChangeState(KingSlimeAI.Teleporting);
         }
         Main.musicBox2 = MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}GelatinousJoust");
 
@@ -164,7 +164,7 @@ public class KingSlimeGlobal : GlobalNPC
 
         // or if line of sight is broken for too long
         bool lineOfSightBroken = !Collision.CanHitLine(npc.Center, 1, 1, target.Center, 1, 1);
-        if (lineOfSightBroken && currentState != AIPhase.Jumping)
+        if (lineOfSightBroken && currentState != KingSlimeAI.Jumping)
         {
             return Main.rand.NextBool(30); // 1/30 chance per frame when LOS broken (~2 second average)
         }
@@ -186,7 +186,7 @@ public class KingSlimeGlobal : GlobalNPC
             Main.dust[dust].noGravity = true;
             Main.dust[dust].velocity *= 0.4f;
         }
-        if (Main.rand.NextBool(18) && currentState != AIPhase.ConsumingSlimes)
+        if (Main.rand.NextBool(18) && currentState != KingSlimeAI.ConsumingSlimes)
         {
             if (Main.rand.NextBool(3))
             {
@@ -262,50 +262,50 @@ public class KingSlimeGlobal : GlobalNPC
         float healthPercentage = (float)npc.life / npc.lifeMax;
         switch (currentState)
         {
-            case AIPhase.Idle:
+            case KingSlimeAI.Idle:
                 if (stateTimer >= IDLE_DURATION)
                 {
                     if (ShouldTeleport(npc))
                     {
-                        ChangeState(AIPhase.Teleporting);
+                        ChangeState(KingSlimeAI.Teleporting);
                     }
 
                     if (healthPercentage <= CONSUME_HEALTH_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) > 3
                         && Main.rand.NextBool(2))
                     {
-                        ChangeState(AIPhase.ConsumingSlimes);
+                        ChangeState(KingSlimeAI.ConsumingSlimes);
                     }
 
                     else if (healthPercentage <= PHASE_2_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) <= 9)
                     {
                         consecutiveSlams = 0;
-                        ChangeState(AIPhase.PrepareSlamAttack);
+                        ChangeState(KingSlimeAI.PrepareSlamAttack);
                     }
                     else if (Main.rand.NextBool(2))
-                        ChangeState(AIPhase.Shooting);
+                        ChangeState(KingSlimeAI.Shooting);
                     else
-                        ChangeState(AIPhase.Jumping);
+                        ChangeState(KingSlimeAI.Jumping);
                 }
                 break;
 
-            case AIPhase.Shooting:
+            case KingSlimeAI.Shooting:
                 if (stateTimer >= SHOOT_DURATION)
                 {
                     if (ShouldTeleport(npc))
                     {
-                        ChangeState(AIPhase.Teleporting);
+                        ChangeState(KingSlimeAI.Teleporting);
                     }
                     if (healthPercentage <= PHASE_2_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) <= 9)
                     {
                         consecutiveSlams = 0;
-                        ChangeState(AIPhase.PrepareSlamAttack);
+                        ChangeState(KingSlimeAI.PrepareSlamAttack);
                     }
                     else
-                        ChangeState(AIPhase.Jumping);                
+                        ChangeState(KingSlimeAI.Jumping);                
                 }
                 break;
 
-            case AIPhase.Jumping:
+            case KingSlimeAI.Jumping:
                 if (stateTimer >= JUMP_DURATION || npc.velocity.Y == 0f)
                 {
                     stateTimer = 0f;
@@ -315,93 +315,93 @@ public class KingSlimeGlobal : GlobalNPC
                         currentJumps = 0;
                     }
 
-                    if (previousState == AIPhase.PrepareSlamAttack ||
+                    if (previousState == KingSlimeAI.PrepareSlamAttack ||
                         (healthPercentage <= PHASE_2_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) <= 9))
                     {
-                        ChangeState(AIPhase.PrepareSlamAttack);
+                        ChangeState(KingSlimeAI.PrepareSlamAttack);
                         currentJumps++;
                     }
                     else if (healthPercentage <= CONSUME_HEALTH_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) > 3
                         && Main.rand.NextBool(3))
                     {
-                        ChangeState(AIPhase.ConsumingSlimes);
+                        ChangeState(KingSlimeAI.ConsumingSlimes);
                     }
                     else if (Main.rand.NextBool(2))
                     {
-                        ChangeState(AIPhase.PrepareSlamAttack);
+                        ChangeState(KingSlimeAI.PrepareSlamAttack);
                         currentJumps++;
                     }
                     else
                     {
-                        ChangeState(AIPhase.Strolling);
+                        ChangeState(KingSlimeAI.Strolling);
                     }
                 }
                 break;
 
-            case AIPhase.PrepareSlamAttack:
+            case KingSlimeAI.PrepareSlamAttack:
                 if (HandleSlamSetup(npc))
                 {
-                    ChangeState(AIPhase.SlamAttack);
+                    ChangeState(KingSlimeAI.SlamAttack);
                 }
                 break;
 
-            case AIPhase.SlamAttack:
+            case KingSlimeAI.SlamAttack:
                 if (HandleSlam(npc))
                 {
                     consecutiveSlams++;
                     if (consecutiveSlams >= MAX_CONSECUTIVE_SLAMS)
                     {
-                        ChangeState(AIPhase.Idle);
+                        ChangeState(KingSlimeAI.Idle);
                     }
                     else
-                        ChangeState(AIPhase.PrepareSlamAttack);       
+                        ChangeState(KingSlimeAI.PrepareSlamAttack);       
                 }
                 break;
 
-            case AIPhase.ConsumingSlimes:
+            case KingSlimeAI.ConsumingSlimes:
                 if (stateTimer >= CONSUME_SLIMES_DURATION)
                 {   
                     if (Main.rand.NextBool(2))
-                        ChangeState(AIPhase.Jumping);      
+                        ChangeState(KingSlimeAI.Jumping);      
                     else
-                        ChangeState(AIPhase.Strolling);   
+                        ChangeState(KingSlimeAI.Strolling);   
                 }
                 break;
 
-            case AIPhase.Strolling:         
+            case KingSlimeAI.Strolling:         
                 if (stateTimer >= 2f * 60f)
                 {
                     if (ShouldTeleport(npc))
                     {
-                        ChangeState(AIPhase.Teleporting);
+                        ChangeState(KingSlimeAI.Teleporting);
                     }
                     if (healthPercentage <= CONSUME_HEALTH_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) > 3
                          && Main.rand.NextBool(3))
                     {
-                        ChangeState(AIPhase.ConsumingSlimes);
+                        ChangeState(KingSlimeAI.ConsumingSlimes);
                     }
                     else if (healthPercentage <= PHASE_2_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) <= 9)
                     {
                         consecutiveSlams = 0;
-                        ChangeState(AIPhase.PrepareSlamAttack);
+                        ChangeState(KingSlimeAI.PrepareSlamAttack);
                     }
                     else if (Main.rand.NextBool(2))
-                        ChangeState(AIPhase.Shooting);
+                        ChangeState(KingSlimeAI.Shooting);
                     else
-                        ChangeState(AIPhase.Jumping);
+                        ChangeState(KingSlimeAI.Jumping);
                 }
                 break;
 
-            case AIPhase.Teleporting:
+            case KingSlimeAI.Teleporting:
                 if (HandleTeleporting(npc))
                 {
-                    ChangeState(AIPhase.Idle);
+                    ChangeState(KingSlimeAI.Idle);
                 }
                 break;
         }
     }
 
-    private void ChangeState(AIPhase newState)
+    private void ChangeState(KingSlimeAI newState)
     {
         previousState = currentState;
         currentState = newState;
@@ -414,16 +414,16 @@ public class KingSlimeGlobal : GlobalNPC
     {
         switch (currentState)
         {
-            case AIPhase.Strolling:
+            case KingSlimeAI.Strolling:
                 HandleStrolling(npc);
                 break;
-            case AIPhase.Jumping:
+            case KingSlimeAI.Jumping:
                 HandleJumping(npc);
                 break;
-            case AIPhase.Shooting:
+            case KingSlimeAI.Shooting:
                 HandleShooting(npc);
                 break;
-            case AIPhase.ConsumingSlimes:
+            case KingSlimeAI.ConsumingSlimes:
                 HandleConsumingSlimes(npc);
                 break;
         }
@@ -439,7 +439,7 @@ public class KingSlimeGlobal : GlobalNPC
 
         npc.direction = npc.spriteDirection = npc.Center.X < target.Center.X ? 1 : -1;
 
-        if (currentState == AIPhase.ConsumingSlimes)
+        if (currentState == KingSlimeAI.ConsumingSlimes)
             STROLL_SPEED = 0.85f; 
         else
             STROLL_SPEED = 0.65f;
@@ -701,13 +701,13 @@ public class KingSlimeGlobal : GlobalNPC
                 float baseJumpHeight = Math.Max(-14f, -8f - (currentJumps * 2f));
                 float baseXVelocity = 2f + (currentJumps * 0.5f);
 
-                if (currentState == AIPhase.Jumping && stateTimer >= JUMP_DURATION * 0.8f)
+                if (currentState == KingSlimeAI.Jumping && stateTimer >= JUMP_DURATION * 0.8f)
                 {
                     npc.velocity.Y = baseJumpHeight * 1.5f; // Reduced from 1.6f
                     npc.velocity.X += baseXVelocity * 0.875f * npc.direction;
                     stateTimer = -320f;
                 }
-                else if (currentState == AIPhase.Jumping && stateTimer >= JUMP_DURATION * 0.5f)
+                else if (currentState == KingSlimeAI.Jumping && stateTimer >= JUMP_DURATION * 0.5f)
                 {
                     npc.velocity.Y = baseJumpHeight * 0.75f;
                     npc.velocity.X += baseXVelocity * 1.125f * npc.direction;
@@ -1035,7 +1035,7 @@ public class KingSlimeGlobal : GlobalNPC
             if (npc.localAI[3] == 1f)
             {
                 npc.localAI[3] = 0f;
-                ChangeState(AIPhase.SlamAttack);
+                ChangeState(KingSlimeAI.SlamAttack);
                 npc.velocity.Y = SLAM_SPEED * 1.2f;
 
                 for (int i = 0; i < 20; i++)
@@ -1048,7 +1048,7 @@ public class KingSlimeGlobal : GlobalNPC
             }
             else
             {
-                ChangeState(AIPhase.PrepareSlamAttack);
+                ChangeState(KingSlimeAI.PrepareSlamAttack);
             }
 
             return true;
@@ -1064,7 +1064,7 @@ public class KingSlimeGlobal : GlobalNPC
 
     private bool ShouldTeleport(NPC npc)
     {
-        if (teleportCooldown > 0f || currentState == AIPhase.Teleporting)
+        if (teleportCooldown > 0f || currentState == KingSlimeAI.Teleporting)
             return false;
 
         float healthPercentage = (float)npc.life / npc.lifeMax;

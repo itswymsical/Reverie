@@ -180,7 +180,7 @@ public class EchoKnight : FighterNPCActor, IDrawPrimitive
     private void ManageCaches()
     {
         // Get the actual projectile position without random offsets
-        var pos = NPC.Center;
+        var pos = NPC.Top;
 
         if (cache == null)
         {
@@ -200,17 +200,14 @@ public class EchoKnight : FighterNPCActor, IDrawPrimitive
 
     private void ManageTrail()
     {
-        // Use the actual projectile position
         var pos = NPC.Center;
 
-        // Change color to an ice blue
         Color purple = new Color(73, 48, 137);
 
         trail ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(12), factor => factor * 74, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.MediumPurple * 0;
-            // Use a blue ice color that fades out
             return purple * 0.6f * (float)Math.Pow(factor.X, 2);
         });
         trail.Positions = [.. cache];
@@ -219,7 +216,6 @@ public class EchoKnight : FighterNPCActor, IDrawPrimitive
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
-            // Create a whiter center for the ice trail
             return Color.Lerp(purple, Color.DimGray, 0.6f) * 0.7f * (float)Math.Pow(factor.X, 2);
         });
         trail2.Positions = [.. cache];
@@ -230,7 +226,6 @@ public class EchoKnight : FighterNPCActor, IDrawPrimitive
 
     public void DrawPrimitives()
     {
-        // Use ShaderLoader.GetShader() to load the pixel trail shader
         var effect = ShaderLoader.GetShader("pixelTrail").Value;
 
         if (effect != null)
