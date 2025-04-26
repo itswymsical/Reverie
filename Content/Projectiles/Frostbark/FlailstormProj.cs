@@ -11,11 +11,7 @@ namespace Reverie.Content.Projectiles.Frostbark;
 
 public class FlailstormProj : ModProjectile, IDrawPrimitive
 {
-    private const string ChainTexturePath = "Reverie/Assets/Textures/Projectiles/Frostbark/FlailstormChain";
-    private const string ChainTextureExtraPath = ChainTexturePath;
-    private Vector2 offset;
-
-    private float oldRotation;
+    private const string CHAIN_TEXTURE_PATH = "Reverie/Assets/Textures/Projectiles/Frostbark/FlailstormChain";
 
     private List<Vector2> cache;
     private Trail trail;
@@ -40,15 +36,15 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
     public ref float CollisionCounter => ref Projectile.localAI[0];
     public ref float SpinningStateTimer => ref Projectile.localAI[1];
 
-    private const int LaunchTimeLimit = 18;
-    private const float LaunchSpeed = 14f;
-    private const float MaxLaunchLength = 800f;
-    private const float RetractAcceleration = 3f;
-    private const float MaxRetractSpeed = 10f;
-    private const float ForcedRetractAcceleration = 6f;
-    private const float MaxForcedRetractSpeed = 15f;
-    private const int SpinHitCooldown = 20;
-    private const int MovingHitCooldown = 10;
+    private const int LAUNCH_TIME_LIMIT = 18;
+    private const float LAUNCH_SPEED = 14f;
+    private const float MAX_LAUNCH_LENGTH = 800f;
+    private const float RETRACT_ACCELERATION = 2.22f;
+    private const float MAX_RETRACT_SPEED = 10f;
+    private const float FORCED_RETRACT_ACCELERATION = 6f;
+    private const float MAX_FORCED_RETRACT_SPEED = 15f;
+    private const int SPIN_HIT_COOLDOWN = 20;
+    private const int MOVING_HIT_COOLDOWN = 10;
 
     public override void SetStaticDefaults()
     {
@@ -126,11 +122,11 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
             {
                 CurrentAIState = AIState.LaunchingForward;
                 StateTimer = 0f;
-                Projectile.velocity = unitVectorTowardsMouse * LaunchSpeed + player.velocity;
+                Projectile.velocity = unitVectorTowardsMouse * LAUNCH_SPEED + player.velocity;
                 Projectile.Center = mountedCenter;
                 Projectile.netUpdate = true;
                 Projectile.ResetLocalNPCHitImmunity();
-                Projectile.localNPCHitCooldown = MovingHitCooldown;
+                Projectile.localNPCHitCooldown = MOVING_HIT_COOLDOWN;
                 return;
             }
         }
@@ -143,13 +139,13 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
         }
         Projectile.Center = mountedCenter + offsetFromPlayer * 30f + new Vector2(0, player.gfxOffY);
         Projectile.velocity = Vector2.Zero;
-        Projectile.localNPCHitCooldown = SpinHitCooldown;
+        Projectile.localNPCHitCooldown = SPIN_HIT_COOLDOWN;
     }
 
     private void HandleLaunchingForwardState(Player player, Vector2 mountedCenter, float meleeSpeedMultiplier)
     {
-        var shouldSwitchToRetracting = StateTimer++ >= LaunchTimeLimit;
-        shouldSwitchToRetracting |= Projectile.Distance(mountedCenter) >= MaxLaunchLength;
+        var shouldSwitchToRetracting = StateTimer++ >= LAUNCH_TIME_LIMIT;
+        shouldSwitchToRetracting |= Projectile.Distance(mountedCenter) >= MAX_LAUNCH_LENGTH;
         if (player.controlUseItem)
         {
             CurrentAIState = AIState.Dropping;
@@ -165,13 +161,13 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
             Projectile.velocity *= 0.3f;
         }
         player.ChangeDir((player.Center.X < Projectile.Center.X).ToDirectionInt());
-        Projectile.localNPCHitCooldown = MovingHitCooldown;
+        Projectile.localNPCHitCooldown = MOVING_HIT_COOLDOWN;
     }
 
     private void HandleRetractingState(Player player, Vector2 mountedCenter, float meleeSpeedMultiplier)
     {
         var unitVectorTowardsPlayer = Projectile.DirectionTo(mountedCenter).SafeNormalize(Vector2.Zero);
-        if (Projectile.Distance(mountedCenter) <= MaxRetractSpeed * meleeSpeedMultiplier)
+        if (Projectile.Distance(mountedCenter) <= MAX_RETRACT_SPEED * meleeSpeedMultiplier)
         {
             Projectile.Kill();
             return;
@@ -186,7 +182,7 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
         else
         {
             Projectile.velocity *= 0.98f;
-            Projectile.velocity = Projectile.velocity.MoveTowards(unitVectorTowardsPlayer * MaxRetractSpeed * meleeSpeedMultiplier, RetractAcceleration * meleeSpeedMultiplier);
+            Projectile.velocity = Projectile.velocity.MoveTowards(unitVectorTowardsPlayer * MAX_RETRACT_SPEED * meleeSpeedMultiplier, RETRACT_ACCELERATION * meleeSpeedMultiplier);
             player.ChangeDir((player.Center.X < Projectile.Center.X).ToDirectionInt());
         }
     }
@@ -195,13 +191,13 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
     {
         Projectile.tileCollide = false;
         var unitVectorTowardsPlayer = Projectile.DirectionTo(mountedCenter).SafeNormalize(Vector2.Zero);
-        if (Projectile.Distance(mountedCenter) <= MaxForcedRetractSpeed * meleeSpeedMultiplier)
+        if (Projectile.Distance(mountedCenter) <= MAX_FORCED_RETRACT_SPEED * meleeSpeedMultiplier)
         {
             Projectile.Kill();
             return;
         }
         Projectile.velocity *= 0.98f;
-        Projectile.velocity = Projectile.velocity.MoveTowards(unitVectorTowardsPlayer * MaxForcedRetractSpeed * meleeSpeedMultiplier, ForcedRetractAcceleration * meleeSpeedMultiplier);
+        Projectile.velocity = Projectile.velocity.MoveTowards(unitVectorTowardsPlayer * MAX_FORCED_RETRACT_SPEED * meleeSpeedMultiplier, FORCED_RETRACT_ACCELERATION * meleeSpeedMultiplier);
         var target = Projectile.Center + Projectile.velocity;
         var value = mountedCenter.DirectionFrom(target).SafeNormalize(Vector2.Zero);
         if (Vector2.Dot(unitVectorTowardsPlayer, value) < 0f)
@@ -214,7 +210,7 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
 
     private void HandleRicochetState(Player player)
     {
-        if (StateTimer++ >= LaunchTimeLimit + 5)
+        if (StateTimer++ >= LAUNCH_TIME_LIMIT + 5)
         {
             CurrentAIState = AIState.Dropping;
             StateTimer = 0f;
@@ -222,7 +218,7 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
         }
         else
         {
-            Projectile.localNPCHitCooldown = MovingHitCooldown;
+            Projectile.localNPCHitCooldown = MOVING_HIT_COOLDOWN;
             Projectile.velocity.Y += 0.6f;
             Projectile.velocity.X *= 0.95f;
             player.ChangeDir((player.Center.X < Projectile.Center.X).ToDirectionInt());
@@ -231,7 +227,7 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
 
     private void HandleDroppingState(Player player, Vector2 mountedCenter)
     {
-        if (!player.controlUseItem || Projectile.Distance(mountedCenter) > MaxLaunchLength + 160f)
+        if (!player.controlUseItem || Projectile.Distance(mountedCenter) > MAX_LAUNCH_LENGTH + 160f)
         {
             CurrentAIState = AIState.ForcedRetracting;
             StateTimer = 0f;
@@ -482,8 +478,7 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
 
         playerArmPosition.Y -= Main.player[Projectile.owner].gfxOffY;
 
-        var chainTexture = ModContent.Request<Texture2D>(ChainTexturePath);
-        var chainTextureExtra = ModContent.Request<Texture2D>(ChainTextureExtraPath);
+        var chainTexture = ModContent.Request<Texture2D>(CHAIN_TEXTURE_PATH);
         Rectangle? chainSourceRectangle = null;
         var chainHeightAdjustment = 0f;
 
@@ -511,7 +506,6 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
             }
             else if (chainCount >= 2)
             {
-                chainTextureToDraw = chainTextureExtra;
                 byte minValue = 140;
                 if (chainDrawColor.R < minValue)
                     chainDrawColor.R = minValue;
@@ -524,7 +518,6 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
             }
             else
             {
-                chainTextureToDraw = chainTextureExtra;
                 chainDrawColor = Color.White;
             }
 

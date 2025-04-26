@@ -52,8 +52,7 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
     {
         Projectile.damage = 10;
         Projectile.DamageType = DamageClass.Melee;
-        Projectile.width = 42;
-        Projectile.height = 32;
+        Projectile.width = Projectile.height = 28;
 
         stickToTile =
             stickToNPC =
