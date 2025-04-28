@@ -22,7 +22,7 @@ public class BloomcapHunt : Mission
         ModContent.GetInstance<Reverie>().Logger.Info("[BloomcapHunt Hunt] Mission constructed");
     }
 
-    internal enum Objectives
+    private enum Objectives
     {
         CollectBloomcaps = 0,
         Return = 1,

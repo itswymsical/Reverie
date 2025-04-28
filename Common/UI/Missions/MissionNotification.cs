@@ -139,7 +139,8 @@ public class MissionNotification : IInGameNotification
 
                 foreach (var objective in currentSet.Objectives)
                 {
-                    activeObjectives.Add(objective);
+                    if (objective.ShouldBeVisible(currentMission))
+                        activeObjectives.Add(objective);
                 }
             }
         }

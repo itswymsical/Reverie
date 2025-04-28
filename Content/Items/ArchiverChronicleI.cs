@@ -12,7 +12,7 @@ namespace Reverie.Content.Items
         {
             Item.useTime = Item.useAnimation = 20;
             Item.value = Item.buyPrice(0);
-            Item.rare = ItemRarityID.White;
+            Item.rare = ItemRarityID.Quest;
             Item.useStyle = ItemUseStyleID.HoldUp;
         }
 
@@ -78,22 +78,6 @@ namespace Reverie.Content.Items
 
                 return false;
             }
-            return true;
-        }
-
-        public override bool CanUseItem(Player player)
-        {
-            if (!DialogueManager.Instance.IsAnyActive())
-                return true;
-
-            return false;
-        }
-
-        public override bool? UseItem(Player player)
-        {
-            if (Main.myPlayer == player.whoAmI)
-                ArchiverChronicleUI.ShowChronicle($"DialogueLibrary.ArchiverChronicles.Book1");
-
             return true;
         }
     }

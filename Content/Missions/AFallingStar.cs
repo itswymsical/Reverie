@@ -1,5 +1,6 @@
 ﻿using Reverie.Common.Systems;
 using Reverie.Content.Cutscenes;
+using Reverie.Content.Items;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Utilities;
@@ -16,17 +17,17 @@ public class AFallingStar : Mission
     private int reverieSFXtimer = 0;
     private int nextChimeTime = 0;
     private int potTileBreakCounter = 0;
-    internal enum Objectives
+    private bool specialItemFound = false;
+    private enum Objectives
     {
         TalkToTownies = 0,
         GatherResources = 1,
         AquireItems = 2,
         ExploreBiomes = 3,
-        CheckIn = 4,
-        ClearSlimes = 5,
-        DefendTown = 6,
-        ClearSlimeRain = 7,
-        DefeatKingSlime = 8
+        ClearSlimes = 4,
+        DefendTown = 5,
+        ClearSlimeRain = 6,
+        DefeatKingSlime = 7
     }
 
     public AFallingStar() : base(MissionID.AFallingStar,
@@ -40,12 +41,14 @@ public class AFallingStar : Mission
 
         [("Harvest Ore", 30), ("Discover accessories", 2)],
 
-        [("Explore the Underground", 1),
-            ("Discover a Glowing Mushroom Biome", 1), ("Explore the Jungle", 1),
-            ("Explore the Underground Desert", 1),  ("Explore the Tundra", 1)],
+        [("Explore the Underground", 1), ("Check in with the Guide", 1),
+        ("Discover a Glowing Mushroom Biome", 1), ("Explore the Jungle", 1),
+        ("Explore the Underground Desert", 1),  ("Explore the Tundra", 1)],
 
-        [("Check in with the Guide", 1)],
-          //TODO: Mission objectives tied to the Archiver Chronicles, Reverie, and Guide's research.
+        //[("Find Stillspire Outpost", 1)],
+
+        //TODO: Mission objectives tied to the Archiver Chronicles, Reverie, and Guide's research.
+
         [("Clear out slimes", 10)],
 
         [("Defend the Town", 10)],
@@ -76,6 +79,9 @@ public class AFallingStar : Mission
     public override void OnMissionStart()
     {
         base.OnMissionStart(); // This now calls RegisterEventHandlers()
+
+        SetObjectiveVisibility((int)Objectives.ExploreBiomes, 1, false);
+
         CutsceneSystem.PlayCutscene(new FallingStarCutscene());
     }
 
@@ -145,6 +151,21 @@ public class AFallingStar : Mission
         base.UnregisterEventHandlers();
     }
 
+    //public override void LoadState(MissionDataContainer state)
+    //{
+    //    base.LoadState(state);
+
+    //    // Restore visibility conditions based on mission state
+    //    if (Progress == MissionProgress.Active)
+    //    {
+    //        // Example: if player has found the item but hasn't talked to guide yet
+    //        if (specialItemFound)
+    //        {
+    //            SetObjectiveVisibility((int)Objectives.ExploreBiomes, 2, true);
+    //        }
+    //    }
+    //}
+
     #endregion
 
     #region Event Handlers
@@ -156,26 +177,26 @@ public class AFallingStar : Mission
 
             switch (objective)
             {
-                case Objectives.CheckIn:
-                    DialogueManager.Instance.StartDialogueByKey(
-                        NPCManager.GuideData,
-                        DialogueKeys.FallingStar.SlimeInfestation,
-                        lineCount: 2,
-                        zoomIn: true);
-                    break;
-                case Objectives.ClearSlimes:
-                    StartSlimeRain();
-                    break;
-                case Objectives.ClearSlimeRain:
-                    SpawnKingSlime();
-                    break;
-                case Objectives.DefeatKingSlime:
-                    DialogueManager.Instance.StartDialogueByKey(
-                        NPCManager.GuideData,
-                        DialogueKeys.FallingStar.KingSlimeDefeat,
-                        lineCount: 4,
-                        zoomIn: true);
-                    break;
+                //case Objectives.CheckIn:
+                //    DialogueManager.Instance.StartDialogueByKey(
+                //        NPCManager.GuideData,
+                //        DialogueKeys.FallingStar.SlimeInfestation,
+                //        lineCount: 2,
+                //        zoomIn: true);
+                //    break;
+                //case Objectives.ClearSlimes:
+                //    StartSlimeRain();
+                //    break;
+                //case Objectives.ClearSlimeRain:
+                //    SpawnKingSlime();
+                //    break;
+                //case Objectives.DefeatKingSlime:
+                //    DialogueManager.Instance.StartDialogueByKey(
+                //        NPCManager.GuideData,
+                //        DialogueKeys.FallingStar.KingSlimeDefeat,
+                //        lineCount: 4,
+                //        zoomIn: true);
+                //    break;
             }
         }
         catch (Exception ex)
@@ -260,7 +281,7 @@ public class AFallingStar : Mission
                 {
                     DialogueManager.Instance.StartDialogueByKey(
                         NPCManager.NurseData,
-                        DialogueKeys.FallingStar.NurseIntro,
+                        DialogueKeys.Nurse.NurseIntro,
                         lineCount: 4,
                         zoomIn: false,
                         modifications:
@@ -273,13 +294,21 @@ public class AFallingStar : Mission
                     UpdateProgress(3);
                 }
                 break;
-            case Objectives.CheckIn:
-                if (npc.type == NPCID.Guide)
+            case Objectives.ExploreBiomes:
+                if (npc.type == NPCID.Guide && specialItemFound)
                 {
-                    UpdateProgress(0);
+                    DialogueManager.Instance.StartDialogueByKey(
+                        NPCManager.GuideData,
+                        DialogueKeys.FallingStar.GuideReadsChronicleI,
+                        lineCount: 3,
+                        zoomIn: true);
+                    UpdateProgress(1);
+                    SetObjectiveVisibility((int)Objectives.ExploreBiomes, 1, true);
+                    SetObjectiveVisibility((int)Objectives.ExploreBiomes, 3, true);
+                    SetObjectiveVisibility((int)Objectives.ExploreBiomes, 4, true);
                 }
                 break;
-        }
+        }  
     }
 
     private void OnItemPickupHandler(Item item, Player player)
@@ -298,6 +327,20 @@ public class AFallingStar : Mission
                     UpdateProgress(0, item.stack);
                 if (item.accessory)
                     UpdateProgress(1, item.stack);
+                break;
+            case Objectives.ExploreBiomes:
+                if (item.type == ModContent.ItemType<ArchiverChronicleI>())
+                {
+                    OnSpecialItemDiscovered();
+
+                    Main.NewText("Consider wisely...", Color.White);
+
+                    DialogueManager.Instance.StartDialogueByKey(
+                        NPCManager.GuideData,
+                        DialogueKeys.FallingStar.ArchiverChronicleIFound,
+                        lineCount: 3,
+                        zoomIn: false);
+                }
                 break;
         }
     }
@@ -428,7 +471,7 @@ public class AFallingStar : Mission
             Main.musicFade[Main.curMusic] = fadeInProgress;
         }
 
-        if (reverieSFXtimer == 5 * 60 /*&& Main.rand.NextBool(4)*/)
+        if (reverieSFXtimer == 5 * 60 && Main.rand.NextBool(4))
         {
             if (!DialogueManager.Instance.IsAnyActive())
             {
@@ -437,15 +480,23 @@ public class AFallingStar : Mission
                     DialogueKeys.FallingStar.ChimeResponse,
                     lineCount: 2,
                     zoomIn: false);
-                DialogueManager.Instance.StartDialogueByKey(
-                    NPCManager.MerchantData,
-                    DialogueKeys.FallingStar.ChimeResponse_Merchant,
-                    lineCount: 1,
-                    zoomIn: false);
             }
         }
     }
 
+    public void OnSpecialItemDiscovered()
+    {
+        specialItemFound = true;
+
+        // Now show "Check in with Guide" objective
+        SetObjectiveVisibility((int)Objectives.ExploreBiomes, 1, true);
+
+        // Hide other biome objectives until player checks in with guide
+        SetObjectiveVisibility((int)Objectives.ExploreBiomes, 2, false);
+        SetObjectiveVisibility((int)Objectives.ExploreBiomes, 3, false);
+        SetObjectiveVisibility((int)Objectives.ExploreBiomes, 4, false);
+        SetObjectiveVisibility((int)Objectives.ExploreBiomes, 5, false);
+    }
     private void GiveStarterItems()
     {
         foreach (var item in CopperItems)
@@ -513,4 +564,70 @@ public class AFallingStar : Mission
     }
 
     #endregion
+}
+
+public class ArchiverChronicleNPC : ModNPC
+{
+    public override string Texture => "Reverie/Assets/Textures/Items/ArchiverChronicle";
+
+    public override void SetDefaults()
+    {
+        NPC.width = 32;
+        NPC.height = 32;
+        NPC.aiStyle = -1;
+        NPC.lifeMax = 25;
+        NPC.immortal = true;
+        NPC.dontTakeDamageFromHostiles = true;
+        NPC.dontTakeDamage = true;
+        NPC.noGravity = true;
+        NPC.noTileCollide = true;
+        NPC.friendly = true;
+        NPC.GivenName = "???";
+    }
+
+    private float baseY; // Store the NPC's initial Y position
+    private bool positionSaved = false;
+
+    public override void AI()
+    {
+        // Add light effect
+        Lighting.AddLight(NPC.Center, 0.4f, 0.4f, 0.7f);
+
+        // Save the initial Y position if not already saved
+        if (!positionSaved)
+        {
+            baseY = NPC.position.Y;
+            positionSaved = true;
+        }
+
+        // Parameters for the sine wave
+        float amplitude = 6f; // How far up/down the NPC moves
+        float frequency = 0.03f; // How fast the NPC moves up/down
+
+        // Calculate new Y position based on sine wave
+        float sineWave = (float)Math.Sin(Main.GameUpdateCount * frequency);
+        NPC.position.Y = baseY + (sineWave * amplitude);
+
+        // Reset velocity to prevent accumulation
+        NPC.velocity.Y = 0f;
+
+        // Create dust effects
+        Dust.NewDust(NPC.position, NPC.width, NPC.height, DustID.MagicMirror, 0f, 0f, 150, default, 0.3f);
+    }
+
+    public override bool CanChat() => true;
+
+    public override string GetChat()
+    {
+        if (Main.netMode != NetmodeID.MultiplayerClient)
+            Item.NewItem(NPC.GetSource_Loot(), NPC.Center, ModContent.ItemType<ArchiverChronicleI>());
+        
+        else
+            Main.LocalPlayer.QuickSpawnItem(new EntitySource_Loot(NPC), ModContent.ItemType<ArchiverChronicleI>());
+        Main.CloseNPCChatOrSign();
+
+        NPC.active = false;
+
+        return base.GetChat();
+    }
 }

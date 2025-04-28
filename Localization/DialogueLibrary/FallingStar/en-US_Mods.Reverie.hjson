@@ -1,47 +1,42 @@
-DialogueLibrary: {
+﻿DialogueLibrary: {
 	AFallingStar: {
 		Cutscene.Line1: Hey! Do you guys hear that?
 		Intro.Line1: WHAT THE HELL?!?!
 
 		CrashLanding: {
 			Line1: That's one way to make an entrance...
-			Line2: Are you... glowing...?
-			Line3: Just what are you?
-			Line4: Sorry... that was a little rude.
-			Line5: Hey uh, how about you come meet the townsfolk?
-			Line6: Tools? Oh, right. The merchant can help you out with that.
-		}
-
-		ChimeResponse: {
-			Line1: Did you hear that?
-			Line2: Sounded like... a dream remembering itself.
-		}
-
-		ChimeResponse_Merchant.Line1: What the hell does that even mean?
-
-		NurseIntro: {
-			Line1: Hey there sunshine, that aura of yours is looking a little worn.
-			Line2: How about you let me patch you up?
-			Line3: Don't worry, I don't bite... much.
-			Line4: I'm just kidding! I don't bite at all. I'm a nurse, not a monster.
+			Line2: This place just keeps getting weirder and weirder...
+			Line3: How are you still alive?
+			Line4: Y'know what, I don't even wanna ask.
+			Line5: How's about you come meet the townsfolk?
 		}
 
 		GatheringResources: {
 			Line1: where did you fall from exactly?
 			Line2: That was a pretty gnarly landing, I'll assume your no normal Terrarian judging how you survived that fall.
-			Line3: It's odd though. you look like us, yet you give off am otherworldy presence...
-			Line4: Anyways...
-			Line5: Around here everyone works for themselves. If you want to survive, you'll have to gather resources.
-			Line6: Explore around the area a bit, there's a lot to see in this world of ours.
+			Line3: It's odd though. you look like us, yet you give off an otherworldy presence...
+			Line4: Around here, everyone works for their portions. If you want to survive, you'll have to gather resources.
+			Line5: Explore around the area a bit, there's a lot to see in this world of ours.
 		}
 
-		BuildShelter: {
-			Line1: Nice base. You're a natural at this.
-			Line2: We're always welcome to new faces here, no matter how odd they may be.
-			Line3: You should interact with some of the folks here, get to know 'em a bit.
-			Line4: While you do that, I'm gonna investigate that emmanating energy you left in the crater.
-			Line5: I've never seen anything like it...
+		ChimeResponse: {
+			Line1: What was that sound?
+			Line2: Did anyone else hear that?
 		}
+
+		ArchiverChronicleIFound: {
+			Line1: Whoa. I'm seeing some kind of mirror signal...
+			Line2: It's reflecting strange runes onto the MirrorNet.
+			Line3: Mind if I take a look at it? I'll try deciphering it while you explore.
+		}
+
+		GuideReadsChronicleI: {
+			Line1: Fascinating... even bad handwriting transcends dimensions.
+			Line2: I'll see what I can do with this while you're out.
+			Line3: I think I can make out some of the inscriptions, but it's a bit jumbled.
+		}
+
+		StillspireOutpost.Line1: So I was doing a little research in the area, and I found out about place is called the Stillspire Outpost.
 
 		WildlifeWoes: {
 			Line1: Hey, we've got a lot of slimes prancing about.

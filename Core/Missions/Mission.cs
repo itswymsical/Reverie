@@ -246,6 +246,38 @@ public abstract class Mission
     }
 
     public void ClearDirtyFlag() => isDirty = false;
+
+    // Control visibility directly
+    public void SetObjectiveVisibility(int setIndex, int objectiveIndex, bool isVisible)
+    {
+        if (setIndex >= 0 && setIndex < Objective.Count &&
+            objectiveIndex >= 0 && objectiveIndex < Objective[setIndex].Objectives.Count)
+        {
+            Objective[setIndex].Objectives[objectiveIndex].IsVisible = isVisible;
+        }
+    }
+
+    // Set custom visibility conditions
+    public void SetObjectiveVisibilityCondition(int setIndex, int objectiveIndex,
+                                               Objective.VisibilityCondition condition)
+    {
+        if (setIndex >= 0 && setIndex < Objective.Count &&
+            objectiveIndex >= 0 && objectiveIndex < Objective[setIndex].Objectives.Count)
+        {
+            Objective[setIndex].Objectives[objectiveIndex].VisibilityCheck = condition;
+        }
+    }
+
+    // Common pattern: Show one objective after another is completed
+    public void ShowObjectiveAfterCompletion(int setIndex, int objectiveToShow, int dependencyObjective)
+    {
+        SetObjectiveVisibilityCondition(setIndex, objectiveToShow, (mission) => {
+            var set = mission.Objective[setIndex];
+            return dependencyObjective >= 0 &&
+                   dependencyObjective < set.Objectives.Count &&
+                   set.Objectives[dependencyObjective].IsCompleted;
+        });
+    }
     #endregion
 }
 

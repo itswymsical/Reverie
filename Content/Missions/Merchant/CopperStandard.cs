@@ -6,7 +6,7 @@ namespace Reverie.Content.Missions.Merchant;
 
 public class CopperStandard : Mission
 {
-    internal enum Objectives
+    private enum Objectives
     {
         CopperCoins = 0,
         MineCopper = 1,

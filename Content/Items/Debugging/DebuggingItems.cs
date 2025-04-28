@@ -23,7 +23,7 @@ public class DialogueTest : ModItem
         if (Main.myPlayer == player.whoAmI)
             DialogueManager.Instance.StartDialogueByKey(
                NPCManager.MerchantData,
-               DialogueKeys.FallingStar.MerchantIntro,
+               DialogueKeys.Merchant.MerchantIntro,
                lineCount: 5,
                zoomIn: true, 
                modifications: 

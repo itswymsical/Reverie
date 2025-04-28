@@ -12,7 +12,18 @@ public class Objective(string description, int requiredCount = 1)
     public bool IsCompleted { get; set; } = false;
     public int RequiredCount { get; set; } = requiredCount;
     public int CurrentCount { get; set; } = 0;
+    public bool IsVisible { get; set; } = true;
 
+    public delegate bool VisibilityCondition(Mission mission);
+    public VisibilityCondition VisibilityCheck { get; set; } = null;
+
+    public bool ShouldBeVisible(Mission mission)
+    {
+        if (VisibilityCheck != null)
+            return VisibilityCheck(mission);
+
+        return IsVisible;
+    }
     public bool UpdateProgress(int amount = 1)
     {
         CurrentCount += amount;
@@ -31,6 +42,7 @@ public class Objective(string description, int requiredCount = 1)
         writer.Write(IsCompleted);
         writer.Write(RequiredCount);
         writer.Write(CurrentCount);
+        writer.Write(IsVisible);
     }
 
     public void ReadData(BinaryReader reader)
@@ -39,6 +51,7 @@ public class Objective(string description, int requiredCount = 1)
         IsCompleted = reader.ReadBoolean();
         RequiredCount = reader.ReadInt32();
         CurrentCount = reader.ReadInt32();
+        IsVisible = reader.ReadBoolean();
     }
 
     public byte[] Serialize()

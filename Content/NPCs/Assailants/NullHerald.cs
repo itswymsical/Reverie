@@ -278,11 +278,11 @@ public class NullHerald : FighterNPCActor
             {
                 Vector2 velocity = target.Center - NPC.Center;
                 velocity.Normalize();
-                velocity *= 14f; // Spear speed
+                velocity *= 11.5f; // Spear speed
 
                 // Shoot the spear
                 int spearType = ProjectileID.JavelinHostile; // Substitute with your custom projectile if available
-                int damage = NPC.damage;
+                int damage = NPC.damage / 2;
                 float knockback = 3f;
 
                 Projectile.NewProjectile(
@@ -400,87 +400,5 @@ public class NullHerald : FighterNPCActor
         }
 
         return true;
-    }
-
-    public override void PostDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
-    {
-        // Draw spear energy during spear windup
-        if ((int)NPC.ai[0] == STATE_SPEAR_WINDUP)
-        {
-            Texture2D glowTexture = TextureAssets.Extra[50].Value;
-
-            // Animation parameters (4 frames, each 32x20)
-            int frameHeight = 20;
-            int frameWidth = 32;
-            int totalFrames = 4;
-
-            // Calculate animation frame
-            int frameSpeed = 4;
-            int currentFrame = (int)(Main.GameUpdateCount / frameSpeed) % totalFrames;
-
-            // Define source rectangle for current frame
-            Rectangle sourceRectangle = new Rectangle(
-                0,
-                currentFrame * frameHeight,
-                frameWidth,
-                frameHeight
-            );
-
-            // Calculate position (in front of the NPC)
-            Vector2 position = NPC.Center - screenPos + new Vector2(NPC.direction * 20, 0);
-
-            // Calculate origin for rotation
-            Vector2 origin = new Vector2(frameWidth / 2, frameHeight / 2);
-
-            // Calculate color and scale
-            float progress = NPC.ai[1] / SpearWindupDuration;
-            float scale = 1.5f + progress * 0.5f;
-            Color spearColor = new Color(20, 200, 255) * Math.Min(progress * 0.9f, 0.9f);
-
-            // Draw the spear energy texture
-            spriteBatch.Draw(
-                glowTexture,
-                position,
-                sourceRectangle,
-                spearColor,
-                NPC.direction == 1 ? 0f : MathHelper.Pi,
-                origin,
-                scale,
-                SpriteEffects.None,
-                0f
-            );
-        }
-    }
-}
-
-public class HeraldHammerSlamProj : ModProjectile
-{
-    public override void SetStaticDefaults()
-    {
-        Main.projFrames[Type] = 4;
-    }
-
-    public override void SetDefaults()
-    {
-        Projectile.hostile = true;
-        Projectile.damage = 30;
-        Projectile.width = 172;
-        Projectile.height = 104;
-        Projectile.timeLeft = 45;
-        Projectile.tileCollide = false;
-    }
-    public override void AI()
-    {
-        //if (Projectile.timeLeft == 45)
-        //{
-        //    SoundEngine.PlaySound(SoundID.DD2_ExplosiveTrapExplode);
-        //}
-
-        Projectile.frameCounter++;
-        if (Projectile.frameCounter >= 4)
-        {
-            Projectile.frameCounter = 0;
-            Projectile.frame = (Projectile.frame + 1) % Main.projFrames[Type];
-        }
     }
 }

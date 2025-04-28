@@ -1,0 +1,10 @@
+﻿DialogueLibrary: {
+	Nurse: {
+		NurseIntro: {
+			Line1: Hey there sunshine, you look a little worse for wear.
+			Line2: How about you let me patch you up?
+			Line3: Don't worry, I don't bite... much.
+			Line4: I'm just joking! ...Only if you want it to be.
+		}
+	}
+}

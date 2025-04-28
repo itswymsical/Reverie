@@ -58,6 +58,12 @@ public static class DialogueKeys
         public static string BloomcapComplete => $"{PREFIX}.BloomcapComplete";
     }
 
+    public static class Nurse
+    {
+        private const string PREFIX = "Nurse";
+        public static string NurseIntro => $"{PREFIX}.NurseIntro";
+    }
+
     public static class TamerMissions
     {
         private const string PREFIX = "TamerTestMission";
@@ -70,20 +76,17 @@ public static class DialogueKeys
         private const string PREFIX = "AFallingStar";
 
         public static string Intro => $"{PREFIX}.Intro";
-        public static string MerchantIntro => $"{PREFIX}.MerchantIntro";
-        public static string DemolitionistIntro => $"{PREFIX}.DemolitionistIntro";
-        public static string NurseIntro => $"{PREFIX}.NurseIntro";
         public static string Cutscene => $"{PREFIX}.Cutscene";
         public static string CrashLanding => $"{PREFIX}.CrashLanding";
         public static string GatheringResources => $"{PREFIX}.GatheringResources";
-        public static string BuildShelter => $"{PREFIX}.BuildShelter";
+        public static string ArchiverChronicleIFound => $"{PREFIX}.ArchiverChronicleIFound";
+        public static string GuideReadsChronicleI => $"{PREFIX}.GuideReadsChronicleI";
         public static string WildlifeWoes => $"{PREFIX}.WildlifeWoes";
         public static string SlimeInfestation => $"{PREFIX}.SlimeInfestation";
         public static string SlimeInfestationCommentary => $"{PREFIX}.SlimeInfestation_Commentary";
         public static string SlimeRain => $"{PREFIX}.SlimeRain";
         public static string SlimeRainCommentary => $"{PREFIX}.SlimeRain_Commentary";
         public static string ChimeResponse => $"{PREFIX}.ChimeResponse";
-        public static string ChimeResponse_Merchant => $"{PREFIX}.ChimeResponse_Merchant";
         public static string SlimeRainWarning => $"{PREFIX}.SlimeRain_Warning";
         public static string KSEncounter => $"{PREFIX}.KS_Encounter";
         public static string KingSlimeDefeat => $"{PREFIX}.KingSlimeDefeat";

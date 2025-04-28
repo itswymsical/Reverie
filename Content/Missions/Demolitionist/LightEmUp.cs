@@ -5,7 +5,7 @@ namespace Reverie.Content.Missions.Demolitionist;
 
 public class LightEmUp : Mission
 {
-    internal enum Objectives
+    private enum Objectives
     {
         CollectTorches = 0,
         PlaceTorches = 1,
