@@ -1,12 +1,11 @@
 ﻿using Reverie.Common.Systems;
+using Reverie.Common.Systems.Camera;
 using Reverie.Content.Cutscenes;
 using Reverie.Content.Items;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Utilities;
 using System.Collections.Generic;
-using System.Linq;
-using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
 
@@ -97,7 +96,6 @@ public class AFallingStar : Mission
     {
         base.Update();
 
-
         if (CurrentIndex < (int)Objectives.ClearSlimeRain)
         {
             Main.slimeRain = false;
@@ -113,6 +111,10 @@ public class AFallingStar : Mission
         if (CurrentIndex > (int)Objectives.TalkToTownies)
         {
             UpdateAmbientSound();
+        }
+        if (CurrentIndex == (int)Objectives.ExploreBiomes)
+        {
+           
         }
         Main.bloodMoon = false;
     }
@@ -303,12 +305,13 @@ public class AFallingStar : Mission
                         lineCount: 3,
                         zoomIn: true);
                     UpdateProgress(1);
-                    SetObjectiveVisibility((int)Objectives.ExploreBiomes, 1, true);
+                    SetObjectiveVisibility((int)Objectives.ExploreBiomes, 2, true);
                     SetObjectiveVisibility((int)Objectives.ExploreBiomes, 3, true);
                     SetObjectiveVisibility((int)Objectives.ExploreBiomes, 4, true);
+                    SetObjectiveVisibility((int)Objectives.ExploreBiomes, 5, true);
                 }
                 break;
-        }  
+        }
     }
 
     private void OnItemPickupHandler(Item item, Player player)
@@ -404,13 +407,13 @@ public class AFallingStar : Mission
                 if (biome == BiomeType.Underground)
                     UpdateProgress(0);
                 if (biome == BiomeType.Glowshroom)
-                    UpdateProgress(1);
-                if (biome == BiomeType.Jungle)
                     UpdateProgress(2);
-                if (biome == BiomeType.UndergroundDesert)
+                if (biome == BiomeType.Jungle)
                     UpdateProgress(3);
-                if (biome == BiomeType.Snow)
+                if (biome == BiomeType.UndergroundDesert)
                     UpdateProgress(4);
+                if (biome == BiomeType.Snow)
+                    UpdateProgress(5);
                 break;
 
             case Objectives.DefendTown:
@@ -585,34 +588,77 @@ public class ArchiverChronicleNPC : ModNPC
         NPC.GivenName = "???";
     }
 
-    private float baseY; // Store the NPC's initial Y position
+    private float baseY;
     private bool positionSaved = false;
+
+    public override float SpawnChance(NPCSpawnInfo spawnInfo)
+    {
+        if (spawnInfo.Player.ZoneRockLayerHeight || spawnInfo.Player.ZoneDirtLayerHeight)
+        {
+            var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+
+            var fallingStarMission = missionPlayer.GetMission(MissionID.AFallingStar);
+
+            if (fallingStarMission != null &&
+                fallingStarMission.Progress == MissionProgress.Active &&
+                fallingStarMission.CurrentIndex == 3 && NPC.CountNPCS(Type) <= 1)
+            {
+                return 0.4f;
+            }
+        }
+
+        return 0f;
+    }
+
+    private int soundTimer = 0;
+    private bool hasPannedCamera = false;
 
     public override void AI()
     {
-        // Add light effect
+        soundTimer++;
+        if (soundTimer >= 80)
+        {
+            SoundEngine.PlaySound(SoundID.DD2_EtherianPortalIdleLoop with { Volume = 1f, Pitch = -0.2f }, NPC.Center);        
+            soundTimer = 0;
+        }
+
         Lighting.AddLight(NPC.Center, 0.4f, 0.4f, 0.7f);
 
-        // Save the initial Y position if not already saved
         if (!positionSaved)
         {
             baseY = NPC.position.Y;
             positionSaved = true;
         }
 
-        // Parameters for the sine wave
-        float amplitude = 6f; // How far up/down the NPC moves
-        float frequency = 0.03f; // How fast the NPC moves up/down
+        float amplitude = 7f;
+        float frequency = 0.05f;
 
-        // Calculate new Y position based on sine wave
         float sineWave = (float)Math.Sin(Main.GameUpdateCount * frequency);
         NPC.position.Y = baseY + (sineWave * amplitude);
 
-        // Reset velocity to prevent accumulation
         NPC.velocity.Y = 0f;
 
-        // Create dust effects
-        Dust.NewDust(NPC.position, NPC.width, NPC.height, DustID.MagicMirror, 0f, 0f, 150, default, 0.3f);
+        Dust.NewDust(NPC.position, NPC.width, NPC.height, DustID.t_Golden, 0f, 0f, 150, default, 0.6f);
+
+        if (!hasPannedCamera)
+        {
+            float distanceToPlayer = Vector2.Distance(Main.LocalPlayer.Center, NPC.Center);
+            if (distanceToPlayer < 30 * 16)
+            {
+                const int CUTSCENE_DURATION = 3 * 60;
+                Vector2 targetPosition = NPC.Center;
+
+                CameraSystem.DoPanAnimation(
+                    CUTSCENE_DURATION,
+                    targetPosition,
+                    Vector2.Zero
+                );
+
+                hasPannedCamera = true;
+
+                SoundEngine.PlaySound(SoundID.Item29, NPC.Center);
+            }
+        }
     }
 
     public override bool CanChat() => true;
@@ -629,5 +675,63 @@ public class ArchiverChronicleNPC : ModNPC
         NPC.active = false;
 
         return base.GetChat();
+    }
+
+    public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
+    {
+        Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
+        Vector2 drawPos = NPC.Center - screenPos;
+        Vector2 origin = new(texture.Width / 2f, texture.Height / 2f);
+
+        float mainPulse = (float)Math.Sin(Main.GameUpdateCount * 0.04f) * 0.3f + 0.7f;
+        float secondPulse = (float)Math.Sin(Main.GameUpdateCount * 0.03f + 1f) * 0.3f + 0.5f;
+
+        spriteBatch.Draw(
+            texture,
+            drawPos,
+            null,
+            Color.White * 0.3f * mainPulse,
+            0f,
+            origin,
+            NPC.scale * (1f + mainPulse * 0.2f),
+            SpriteEffects.None,
+            0f
+        );
+
+        spriteBatch.Draw(
+            texture,
+            drawPos,
+            null,
+            Color.White * 0.5f * secondPulse,
+            0f,
+            origin,
+            NPC.scale * (1f + secondPulse * 0.15f),
+            SpriteEffects.None,
+            0f
+        );
+
+        spriteBatch.End();
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState,
+                         DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+
+        Color glowColor = new Color(100, 100, 220) * mainPulse;
+
+        spriteBatch.Draw(
+            texture,
+            drawPos,
+            null,
+            glowColor,
+            0f,
+            origin,
+            NPC.scale,
+            SpriteEffects.None,
+            0f
+        );
+
+        spriteBatch.End();
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
+                         DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+
+        return true;
     }
 }
