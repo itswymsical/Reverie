@@ -158,7 +158,7 @@ public class ObjectiveEventNPC : GlobalNPC
 
             var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
 
-            if (missionPlayer.NPCHasAvailableMission(npc.type))
+            if (missionPlayer.NPCHasAvailableMission(npc.type) && npc.active)
             {
                 var mission = missionPlayer.AvailableMissions().FirstOrDefault(m => npc.type == m.ProviderNPC);
 
@@ -166,6 +166,10 @@ public class ObjectiveEventNPC : GlobalNPC
                     return;
 
                 MissionIndicatorManager.Instance.CreateIndicatorForNPC(npc, mission);
+            }
+            else
+            {
+                MissionIndicatorManager.Instance.RemoveIndicatorForNPC(npc.whoAmI);
             }
         }
     }

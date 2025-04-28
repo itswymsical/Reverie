@@ -70,6 +70,41 @@ public class MissionIndicatorManager : ModSystem
         return newIndicator;
     }
 
+    public void RemoveIndicatorForNPC(int npcIndex)
+    {
+        if (npcIndicators.TryGetValue(npcIndex, out MissionIndicator indicator))
+        {
+            indicators.Remove(indicator);
+            npcIndicators.Remove(npcIndex);
+
+            if (npcMissionTracking.ContainsKey(npcIndex))
+            {
+                npcMissionTracking.Remove(npcIndex);
+            }
+        }
+    }
+
+    public void RemoveIndicatorsForMission(int missionID)
+    {
+        // Create a list of NPCs to remove
+        var npcsToRemove = new List<int>();
+
+        // Find all NPCs with indicators for this mission
+        foreach (var kvp in npcMissionTracking)
+        {
+            if (kvp.Value == missionID)
+            {
+                npcsToRemove.Add(kvp.Key);
+            }
+        }
+
+        // Remove each indicator
+        foreach (var npcIndex in npcsToRemove)
+        {
+            RemoveIndicatorForNPC(npcIndex);
+        }
+    }
+
     public override void PostUpdateEverything()
     {
         for (var i = indicators.Count - 1; i >= 0; i--)

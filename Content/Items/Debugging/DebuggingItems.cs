@@ -36,6 +36,7 @@ public class DialogueTest : ModItem
         return true;
     }
 }
+
 public class PlayCutscene : ModItem
 {
     public override string Texture => PLACEHOLDER;

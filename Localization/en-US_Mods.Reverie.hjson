@@ -56,11 +56,6 @@ Items: {
 		Tooltip: ""
 	}
 
-	Lodestone: {
-		DisplayName: Lodestone
-		Tooltip: ""
-	}
-
 	LodestoneMagnet: {
 		DisplayName: Lodestone Magnet
 		Tooltip: Point and hold the magnet at a chunk of ore to vacuum it towards you.
@@ -155,14 +150,9 @@ Items: {
 		Tooltip: Conjures a Warden Arm that tosses high-velocity boulders at enemies.
 	}
 
-	EssencePledge: {
-		DisplayName: Essence Pledge
-		Tooltip: ""
-	}
-
 	PrimordialSandItem: {
 		DisplayName: Primordial Sand
-		Tooltip: ""
+		Tooltip: Shines upon the Ethereal Horizons
 	}
 
 	ArchaeaTranslocator: {
@@ -195,43 +185,18 @@ Items: {
 		Tooltip: ""
 	}
 
-	WoodenShingle: {
-		DisplayName: Wooden Shingle
-		Tooltip: ""
-	}
-
-	WoodWickerBlock: {
-		DisplayName: Wood Wicker Block
-		Tooltip: ""
-	}
-
 	LodestoneChestplate: {
 		DisplayName: Lodestone Chestplate
 		Tooltip: ""
 	}
 
 	LodestoneHelmet: {
-		DisplayName: Lodestone Helmet
+		DisplayName: Lodestone Mask
 		Tooltip: ""
 	}
 
 	LodestoneLeggings: {
-		DisplayName: Lodestone Leggings
-		Tooltip: ""
-	}
-
-	TombBrick: {
-		DisplayName: Tomb Brick
-		Tooltip: ""
-	}
-
-	TombBrickWall_Item: {
-		DisplayName: Tomb Brick Wall_ Item
-		Tooltip: ""
-	}
-
-	WoodWickerWall_Item: {
-		DisplayName: Wood Wicker Wall_ Item
+		DisplayName: Lodestone Skirt
 		Tooltip: ""
 	}
 
@@ -246,17 +211,12 @@ Items: {
 	}
 
 	BloomcapItem: {
-		DisplayName: Bloomcap Item
-		Tooltip: ""
-	}
-
-	WorldCoordUIPlacer: {
-		DisplayName: World Coord U I Placer
-		Tooltip: ""
+		DisplayName: Bloomcap
+		Tooltip: "'giggles expiditiously'"
 	}
 
 	SpawnUserInterfaceEntity: {
-		DisplayName: Spawn User Interface Entity
+		DisplayName: Spawn Mission Indicator (In World)
 		Tooltip: ""
 	}
 
@@ -265,58 +225,48 @@ Items: {
 		Tooltip: ""
 	}
 
-	StartMission: {
-		DisplayName: Start Mission
-		Tooltip: ""
+	LodestoneItem: {
+		DisplayName: Lodestone
+		Tooltip: "'Highly magnetic'"
 	}
 
-	SmoothCopperPlating: {
+	SmoothCopperPlatingItem: {
 		DisplayName: Smooth Copper Plating
 		Tooltip: ""
 	}
 
-	SlimeMetaballDebugger: {
-		DisplayName: Slime Metaball Debugger
-		Tooltip: ""
-	}
-
-	LodestoneItem: {
-		DisplayName: Lodestone Item
-		Tooltip: ""
-	}
-
-	SmoothCopperPlatingItem: {
-		DisplayName: Smooth Copper Plating Item
-		Tooltip: ""
-	}
-
 	PeatBlockItem: {
-		DisplayName: Peat Block Item
+		DisplayName: Peat Block
 		Tooltip: ""
 	}
 
 	TaigaGrassSeedsItem: {
-		DisplayName: Taiga Grass Seeds Item
+		DisplayName: Taiga Grass Seeds
 		Tooltip: ""
 	}
 
 	TombBrickItem: {
-		DisplayName: Tomb Brick Item
+		DisplayName: Tomb Brick
 		Tooltip: ""
 	}
 
 	WoodWickerBlockItem: {
-		DisplayName: Wood Wicker Block Item
+		DisplayName: Wood Wicker Block
 		Tooltip: ""
 	}
 
 	WoodWickerWallItem: {
-		DisplayName: Wood Wicker Wall Item
+		DisplayName: Wood Wicker Wall
 		Tooltip: ""
 	}
 
 	PlayCutscene: {
-		DisplayName: Play Cutscene
+		DisplayName: Cutscene Renderer
+		Tooltip: renders a cutscene
+	}
+
+	TombBrickWall_Item: {
+		DisplayName: Tomb Brick Wall_ Item
 		Tooltip: ""
 	}
 }
@@ -337,9 +287,8 @@ Projectiles: {
 	SlimeSprayProj.DisplayName: Slime Spray Proj
 	PrimordialSandBallFallingProjectile.DisplayName: Primordial Sand Ball Falling Projectile
 	PrimordialSandBallGunProjectile.DisplayName: Primordial Sand Ball Gun Projectile
+	HeraldHammerSlamProj.DisplayName: Herald Hammer Slam Proj
 }
-
-InfoDisplays.MissionObjectives.DisplayName: Mission Objectives
 
 Configs: {
 	ExperienceMeterConfig: {
@@ -370,106 +319,9 @@ Configs: {
 			Tooltip: ""
 		}
 	}
-
-	GraphicsConfig: {
-		DisplayName: Graphics Config
-
-		ScreenshakeMult: {
-			Label: Screenshake
-			Tooltip: Modifies the intensity of screen shake effects
-		}
-
-		LightingPollRate: {
-			Label: Lighting Buffer Poll Rate
-			Tooltip:
-				'''
-				Changes how often the lighting buffer polls for data. 
-				Higher values increase performance but make lighting update slower on some objects. 
-				Lower values result in smoother moving light but may hurt performance.
-				'''
-		}
-
-		ParticlesActive: {
-			Label: Extra Particles
-			Tooltip:
-				'''
-				Enables/Disables special particles. 
-				Disable this if you have performance issues.
-				'''
-		}
-
-		HighQualityLighting: {
-			Label: High quality lit textures
-			Tooltip:
-				'''
-				Enables/Disables fancy lighting on large textures. 
-				Disable this if you have performance issues.
-				'''
-		}
-
-		ReflectionConfig: {
-			Label: Background Reflections
-			Tooltip:
-				'''
-				Configures what is rendered for background reflections. 
-				Disable this if you have performance issues.
-				'''
-		}
-	}
-
-	ReflectionSubConfig: {
-		Tooltip: ""
-
-		ReflectionsOn: {
-			Label: Background Reflections
-			Tooltip:
-				'''
-				This will Enable/Disable the background reflections system entirely. 
-				If this is off, the other settings in this block are ignored. 
-				Disable this if you have performance issues.
-				'''
-		}
-
-		PlayerReflectionsOn: {
-			Label: Reflect Players
-			Tooltip:
-				'''
-				This will Enable/Disable reflecting Players.
-				 low performance impact.
-				'''
-		}
-
-		NpcReflectionsOn: {
-			Label: Reflect NPCs
-			Tooltip:
-				'''
-				This will Enable/Disable reflecting NPCs.
-				 low performance impact.
-				'''
-		}
-
-		ProjReflectionsOn: {
-			Label: Reflect Projectiles
-			Tooltip:
-				'''
-				This will Enable/Disable reflecting Projectiles.
-				 high performance impact.
-				'''
-		}
-
-		DustReflectionsOn: {
-			Label: Reflect Particles
-			Tooltip:
-				'''
-				This will Enable/Disable reflecting Particles, gores and dusts.
-				 high performance impact.
-				'''
-		}
-	}
 }
 
 NPCs: {
-	KingSlime.DisplayName: King Slime
 	WardenArm.DisplayName: Warden Arm
 	WoodenWarden.DisplayName: Wooden Warden
 
@@ -520,43 +372,38 @@ NPCs: {
 
 	Fungore.DisplayName: Fungore
 	EchoKnight.DisplayName: Echo Knight
-	Echo.DisplayName: Echo
 	Shelledrake.DisplayName: Shelledrake
+	NullHerald.DisplayName: Null Herald
 }
 
 Biomes: {
 	ArchaeaDesertBiome: {
-		DisplayName: Archaea Desert Biome
-		TownNPCDialogueName: the Archaea Desert Biome
+		DisplayName: Archaea Desert
+		TownNPCDialogueName: the Archaea Desert
 	}
 
 	EmberiteCavernsBiome: {
-		DisplayName: Emberite Caverns Biome
-		TownNPCDialogueName: the Emberite Caverns Biome
-	}
-
-	SylvanOverworldBiome: {
-		DisplayName: Sylvan Overworld Biome
-		TownNPCDialogueName: the Sylvan Overworld Biome
+		DisplayName: Emberite Caverns
+		TownNPCDialogueName: the Emberite Caverns
 	}
 
 	LowerCanopyBiome: {
-		DisplayName: Lower Canopy Biome
-		TownNPCDialogueName: the Lower Canopy Biome
+		DisplayName: Lower Canopy
+		TownNPCDialogueName: the Lower Canopy
 	}
 
 	WoodlandCanopyBiome: {
-		DisplayName: Woodland Canopy Biome
-		TownNPCDialogueName: the Woodland Canopy Biome
+		DisplayName: Woodland Canopy
+		TownNPCDialogueName: the Woodland Canopy
 	}
 
 	SylvanOverworldDayBiome: {
-		DisplayName: Sylvan Overworld Day Biome
-		TownNPCDialogueName: the Sylvan Overworld Day Biome
+		DisplayName: Sylvan Overworld
+		TownNPCDialogueName: the Sylvan Overworld
 	}
 
 	SylvanOverworldNightBiome: {
-		DisplayName: Sylvan Overworld Night Biome
-		TownNPCDialogueName: the Sylvan Overworld Night Biome
+		DisplayName: Sylvan Overworld
+		TownNPCDialogueName: the Sylvan Overworld
 	}
 }
