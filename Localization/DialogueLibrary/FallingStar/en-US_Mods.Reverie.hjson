@@ -1,4 +1,4 @@
-﻿DialogueLibrary: {
+DialogueLibrary: {
 	AFallingStar: {
 		Cutscene.Line1: Hey! Do you guys hear that?
 		Intro.Line1: WHAT THE HELL?!?!
@@ -17,6 +17,7 @@
 			Line3: It's odd though. you look like us, yet you give off an otherworldy presence...
 			Line4: Around here, everyone works for their portions. If you want to survive, you'll have to gather resources.
 			Line5: Explore around the area a bit, there's a lot to see in this world of ours.
+			Line6: Before you go, I have this for ya. It's a little something to help you get started. If you're looking for tools, ask the Merchant.
 		}
 
 		ChimeResponse: {

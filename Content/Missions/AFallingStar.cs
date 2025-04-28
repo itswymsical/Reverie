@@ -6,8 +6,10 @@ using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Utilities;
 using System.Collections.Generic;
+using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
+using Terraria.ID;
 
 namespace Reverie.Content.Missions;
 
@@ -48,7 +50,7 @@ public class AFallingStar : Mission
 
         //TODO: Mission objectives tied to the Archiver Chronicles, Reverie, and Guide's research.
 
-        [("Clear out slimes", 10)],
+        [("Mission still WIP (for now mess around with stuff)", 10)],
 
         [("Defend the Town", 10)],
 
@@ -59,7 +61,6 @@ public class AFallingStar : Mission
 
       [new Item(ItemID.RegenerationPotion),
           new Item(ItemID.IronskinPotion),
-          new Item(ItemID.MagicMirror),
           new Item(ItemID.GoldCoin, Main.rand.Next(4, 6))],
       isMainline: true,
       NPCID.Guide,
@@ -216,6 +217,10 @@ public class AFallingStar : Mission
             if (currentObjectiveSet == Objectives.TalkToTownies && objectiveIndex == 1)
             {
                 GiveStarterItems();
+            }
+            if (currentObjectiveSet == Objectives.TalkToTownies && objectiveIndex == 0)
+            {
+                GiveMirror();
             }
         }
         catch (Exception ex)
@@ -500,12 +505,18 @@ public class AFallingStar : Mission
         SetObjectiveVisibility((int)Objectives.ExploreBiomes, 4, false);
         SetObjectiveVisibility((int)Objectives.ExploreBiomes, 5, false);
     }
+
     private void GiveStarterItems()
     {
         foreach (var item in CopperItems)
         {
             Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), item.type, item.stack);
         }
+    }
+
+    private void GiveMirror()
+    {
+        Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.MagicMirror);   
     }
 
     private void StartSlimeRain()
@@ -575,7 +586,7 @@ public class ArchiverChronicleNPC : ModNPC
 
     public override void SetDefaults()
     {
-        NPC.width = 32;
+        NPC.width = 36;
         NPC.height = 32;
         NPC.aiStyle = -1;
         NPC.lifeMax = 25;
@@ -638,7 +649,7 @@ public class ArchiverChronicleNPC : ModNPC
 
         NPC.velocity.Y = 0f;
 
-        Dust.NewDust(NPC.position, NPC.width, NPC.height, DustID.t_Golden, 0f, 0f, 150, default, 0.6f);
+        Dust.NewDust(NPC.position, NPC.width, NPC.height, DustID.Enchanted_Gold, 0f, 0f, 150, default, 0.65f);
 
         if (!hasPannedCamera)
         {
@@ -671,6 +682,21 @@ public class ArchiverChronicleNPC : ModNPC
         else
             Main.LocalPlayer.QuickSpawnItem(new EntitySource_Loot(NPC), ModContent.ItemType<ArchiverChronicleI>());
         Main.CloseNPCChatOrSign();
+
+        Vector2 speed = Main.rand.NextVector2Circular(1.6f, 1.6f);
+        Dust dust = Dust.NewDustDirect(
+        NPC.position,
+                  NPC.width,
+                  NPC.height,
+                  DustID.Enchanted_Gold,
+                  speed.X,
+                  speed.Y,
+                  0,
+                  default,
+                  Main.rand.NextFloat(1f, 2f)
+              );
+        dust.noGravity = true;
+        dust.fadeIn = 1.2f;
 
         NPC.active = false;
 
@@ -732,6 +758,6 @@ public class ArchiverChronicleNPC : ModNPC
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
                          DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
 
-        return true;
+        return false;
     }
 }

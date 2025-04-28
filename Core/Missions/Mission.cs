@@ -37,6 +37,7 @@ public enum MissionAvailability
 /// </remarks>
 public abstract class Mission
 {
+
     #region Fields
     protected Player player = Main.LocalPlayer;
     protected bool isDirty = false;
