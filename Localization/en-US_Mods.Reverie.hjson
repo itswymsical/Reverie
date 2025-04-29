@@ -1,4 +1,5 @@
 UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+Conditions.CopperStandardComplete: After Completing 'Copper Standard'
 
 Items: {
 	DialogueTest: {
@@ -165,11 +166,6 @@ Items: {
 		Tooltip: ""
 	}
 
-	ChronicleI: {
-		DisplayName: Archiver Chronicle #01
-		Tooltip: "'Laine L.'"
-	}
-
 	BustedTranslocator: {
 		DisplayName: Busted Translocator
 		Tooltip: "'Use at your own descretion'"
@@ -269,6 +265,11 @@ Items: {
 		DisplayName: Tomb Brick Wall_ Item
 		Tooltip: ""
 	}
+
+	CopperTippedArrowItem: {
+		DisplayName: Copper-Tipped Arrow
+		Tooltip: Splits into piercing metal scraps on impact (+3 damage)
+	}
 }
 
 Projectiles: {
@@ -288,6 +289,9 @@ Projectiles: {
 	PrimordialSandBallFallingProjectile.DisplayName: Primordial Sand Ball Falling Projectile
 	PrimordialSandBallGunProjectile.DisplayName: Primordial Sand Ball Gun Projectile
 	HeraldHammerSlamProj.DisplayName: Herald Hammer Slam Proj
+	CopperTippedArrowProj.DisplayName: Copper Tipped Arrow Proj
+	AcornShrapnelProj.DisplayName: Acorn Shrapnel Proj
+	CopperShrapnelProj.DisplayName: Copper Shrapnel Proj
 }
 
 Configs: {

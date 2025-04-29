@@ -654,7 +654,7 @@ public class ArchiverChronicleNPC : ModNPC
         if (!hasPannedCamera)
         {
             float distanceToPlayer = Vector2.Distance(Main.LocalPlayer.Center, NPC.Center);
-            if (distanceToPlayer < 30 * 16)
+            if (distanceToPlayer < 50 * 16)
             {
                 const int CUTSCENE_DURATION = 3 * 60;
                 Vector2 targetPosition = NPC.Center;
