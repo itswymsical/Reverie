@@ -21,7 +21,11 @@ public class CutsceneSystem : ModSystem
         "Vanilla: Settings Button",
         "Vanilla: Mouse Over",
         "Vanilla: Radial Hotbars",
-        "Vanilla: Player Chat"
+        "Vanilla: Player Chat",
+        "Vanilla: Cursor",
+        "Vanilla: Laser Ruler",
+        "Vanilla: Gamepad Lock On",
+        "Vanilla: Vanilla: Tile Grid Option",
     ];
 
     public override void Load()
