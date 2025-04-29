@@ -6,10 +6,8 @@ using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Utilities;
 using System.Collections.Generic;
-using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
-using Terraria.ID;
 
 namespace Reverie.Content.Missions;
 
@@ -130,6 +128,7 @@ public class AFallingStar : Mission
         // Register event handlers specific to this mission
         ObjectiveEventNPC.OnNPCChat += OnNPCChatHandler;
         ObjectiveEventItem.OnItemPickup += OnItemPickupHandler;
+        ObjectiveEventItem.OnItemUpdate += OnItemUpdateHandler;
         ObjectiveEventNPC.OnNPCKill += OnNPCKillHandler;
         ObjectiveEventTile.OnTileBreak += OnTileBreakHandler;
         ObjectiveEventPlayer.OnBiomeEnter += OnBiomeEnterHandler;
@@ -146,6 +145,7 @@ public class AFallingStar : Mission
         // Unregister event handlers
         ObjectiveEventNPC.OnNPCChat -= OnNPCChatHandler;
         ObjectiveEventItem.OnItemPickup -= OnItemPickupHandler;
+        ObjectiveEventItem.OnItemUpdate -= OnItemUpdateHandler;
         ObjectiveEventNPC.OnNPCKill -= OnNPCKillHandler;
         ObjectiveEventTile.OnTileBreak -= OnTileBreakHandler;
         ObjectiveEventPlayer.OnBiomeEnter -= OnBiomeEnterHandler;
@@ -259,7 +259,7 @@ public class AFallingStar : Mission
                         NPCManager.MerchantData,
                         DialogueKeys.Merchant.MerchantIntro,
                         lineCount: 5,
-                        zoomIn: false,
+                        zoomIn: true,
                         modifications:
                        [(line: 1, delay: 3, emote: 0),
                             (line: 2, delay: 3, emote: 1),
@@ -274,7 +274,7 @@ public class AFallingStar : Mission
                         NPCManager.DemolitionistData,
                         DialogueKeys.Demolitionist.DemolitionistIntro,
                         lineCount: 4,
-                        zoomIn: false,
+                        zoomIn: true,
                         modifications:
                         [(line: 1, delay: 3, emote: 0),
                             (line: 2, delay: 3, emote: 0),
@@ -290,7 +290,7 @@ public class AFallingStar : Mission
                         NPCManager.NurseData,
                         DialogueKeys.Nurse.NurseIntro,
                         lineCount: 4,
-                        zoomIn: false,
+                        zoomIn: true,
                         modifications:
                         [(line: 1, delay: 3, emote: 0),
                             (line: 2, delay: 3, emote: 0),
@@ -352,7 +352,32 @@ public class AFallingStar : Mission
                 break;
         }
     }
+    private void OnItemUpdateHandler(Item item, Player player)
+    {
+        if (Progress != MissionProgress.Active) return;
 
+        var objective = (Objectives)CurrentIndex;
+        switch (objective)
+        {
+            case Objectives.AquireItems:
+                if (item.accessory)
+                    UpdateProgress(1, item.stack);
+                break;
+        }
+    }
+    private void OnItemEquipHandler(Item item, Player player)
+    {
+        if (Progress != MissionProgress.Active) return;
+
+        var objective = (Objectives)CurrentIndex;
+        switch (objective)
+        {
+            case Objectives.AquireItems:
+                if (item.accessory)
+                    UpdateProgress(1, item.stack);
+                break;
+        }
+    }
     private void OnNPCKillHandler(NPC npc)
     {
         if (Progress != MissionProgress.Active) return;
@@ -604,7 +629,7 @@ public class ArchiverChronicleNPC : ModNPC
 
     public override float SpawnChance(NPCSpawnInfo spawnInfo)
     {
-        if (spawnInfo.Player.ZoneRockLayerHeight || spawnInfo.Player.ZoneDirtLayerHeight)
+        if (spawnInfo.Player.ZoneRockLayerHeight || spawnInfo.Player.ZoneDirtLayerHeight && !DownedSystem.foundChronicleI)
         {
             var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
 
@@ -629,7 +654,7 @@ public class ArchiverChronicleNPC : ModNPC
         soundTimer++;
         if (soundTimer >= 80)
         {
-            SoundEngine.PlaySound(SoundID.DD2_EtherianPortalIdleLoop with { Volume = 1f, Pitch = -0.2f }, NPC.Center);        
+            SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.75f, Pitch = -0.2f }, NPC.Center);        
             soundTimer = 0;
         }
 
@@ -677,8 +702,7 @@ public class ArchiverChronicleNPC : ModNPC
     public override string GetChat()
     {
         if (Main.netMode != NetmodeID.MultiplayerClient)
-            Item.NewItem(NPC.GetSource_Loot(), NPC.Center, ModContent.ItemType<ArchiverChronicleI>());
-        
+            Item.NewItem(NPC.GetSource_Loot(), NPC.Center, ModContent.ItemType<ArchiverChronicleI>());      
         else
             Main.LocalPlayer.QuickSpawnItem(new EntitySource_Loot(NPC), ModContent.ItemType<ArchiverChronicleI>());
         Main.CloseNPCChatOrSign();
@@ -698,6 +722,7 @@ public class ArchiverChronicleNPC : ModNPC
         dust.noGravity = true;
         dust.fadeIn = 1.2f;
 
+        DownedSystem.foundChronicleI = true;
         NPC.active = false;
 
         return base.GetChat();

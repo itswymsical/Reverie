@@ -1,4 +1,4 @@
-UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 Conditions.CopperStandardComplete: After Completing 'Copper Standard'
 
 Items: {
@@ -261,8 +261,8 @@ Items: {
 		Tooltip: renders a cutscene
 	}
 
-	TombBrickWall_Item: {
-		DisplayName: Tomb Brick Wall_ Item
+	TombBrickWallItem: {
+		DisplayName: Tomb Brick Wall
 		Tooltip: ""
 	}
 

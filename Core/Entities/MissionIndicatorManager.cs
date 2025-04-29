@@ -1,5 +1,6 @@
 ﻿using Reverie.Core.Missions;
 using System.Collections.Generic;
+using Terraria.UI;
 
 namespace Reverie.Core.Entities;
 
@@ -127,15 +128,31 @@ public class MissionIndicatorManager : ModSystem
         }
     }
 
-    public override void PostDrawInterface(SpriteBatch spriteBatch)
+    //public override void PostDrawInterface(SpriteBatch spriteBatch)
+    //{
+    //    spriteBatch.End();
+    //    Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp,
+    //    DepthStencilState.None, RasterizerState.CullNone, null);
+
+    //    Instance.Draw(spriteBatch);
+
+    //    Main.spriteBatch.End();
+    //}
+
+    public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
     {
-        //spriteBatch.End();
-        //Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp,
-        //DepthStencilState.None, RasterizerState.CullNone, null);
-
-        Instance.Draw(spriteBatch);
-
-        //Main.spriteBatch.End();
+        int invasionIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Invasion Progress Bars"));
+        if (invasionIndex != -1)
+        {
+            layers.Insert(invasionIndex + 1, new LegacyGameInterfaceLayer(
+                "Reverie: Mission Indicators",
+                delegate {
+                    Instance.Draw(Main.spriteBatch);
+                    return true;
+                },
+                InterfaceScaleType.UI)
+            );
+        }
     }
 
     public void Draw(SpriteBatch spriteBatch)
