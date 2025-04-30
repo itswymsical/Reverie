@@ -378,7 +378,7 @@ NPCs: {
 	EchoKnight.DisplayName: Echo Knight
 	Shelledrake.DisplayName: Shelledrake
 	NullHerald.DisplayName: Null Herald
-	ArchiverChronicleNPC.DisplayName: Archiver Chronicle N P C
+	ArchiverChronicleNPC.DisplayName: Archiver Chronicle
 }
 
 Biomes: {

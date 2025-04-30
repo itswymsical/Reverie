@@ -1,7 +1,9 @@
-﻿using Reverie.Common.Systems;
+﻿using Microsoft.Xna.Framework.Graphics;
+using Reverie.Common.Systems;
 using Reverie.Common.Systems.Camera;
 using Reverie.Content.Cutscenes;
 using Reverie.Content.Items;
+using Reverie.Core.Cinematics;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Utilities;
@@ -668,20 +670,19 @@ public class ArchiverChronicleNPC : ModNPC
 
         float amplitude = 7f;
         float frequency = 0.05f;
-
         float sineWave = (float)Math.Sin(Main.GameUpdateCount * frequency);
-        NPC.position.Y = baseY + (sineWave * amplitude);
 
+        NPC.position.Y = baseY + (sineWave * amplitude);
         NPC.velocity.Y = 0f;
 
         Dust.NewDust(NPC.position, NPC.width, NPC.height, DustID.Enchanted_Gold, 0f, 0f, 150, default, 0.65f);
 
+        const int CUTSCENE_DURATION = 3 * 60;
         if (!hasPannedCamera)
-        {
+        {         
             float distanceToPlayer = Vector2.Distance(Main.LocalPlayer.Center, NPC.Center);
             if (distanceToPlayer < 50 * 16)
             {
-                const int CUTSCENE_DURATION = 3 * 60;
                 Vector2 targetPosition = NPC.Center;
 
                 CameraSystem.DoPanAnimation(
@@ -694,7 +695,7 @@ public class ArchiverChronicleNPC : ModNPC
 
                 SoundEngine.PlaySound(SoundID.Item29, NPC.Center);
             }
-        }
+        } 
     }
 
     public override bool CanChat() => true;
