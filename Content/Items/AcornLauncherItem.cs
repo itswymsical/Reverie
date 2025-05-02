@@ -10,7 +10,7 @@ public class AcornLauncherItem : ModItem
     public override void SetDefaults()
     {
         Item.DamageType = DamageClass.Ranged;
-        Item.damage = 17;
+        Item.damage = 14;
 
         Item.width = 92;
         Item.height = 34;

@@ -543,7 +543,7 @@ public class AFallingStar : Mission
 
     private void GiveMirror()
     {
-        Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.MagicMirror);   
+        Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.MagicMirror);
     }
 
     private void StartSlimeRain()

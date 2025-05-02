@@ -41,10 +41,16 @@ public class WorldGenSystem : ModSystem
     {
         var tundraIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Generate Ice Biome"));
         var sunflowerIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Sunflowers"));
+        var structIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Stalac"));
 
         if (tundraIndex >= 0)
         {
             tasks.Insert(tundraIndex + 1, new TaigaPlantPass());
+        }
+
+        if (structIndex >= 0)
+        {
+            tasks.Insert(structIndex + 1, new StillspirePass());
         }
 
         //if (sunflowerIndex >= 0)

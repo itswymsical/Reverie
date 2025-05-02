@@ -118,7 +118,7 @@ Items: {
 
 	AcornLauncherItem: {
 		DisplayName: Acorn Launcher
-		Tooltip: Charges up and fires acorns at high velocity
+		Tooltip: Charges and fires acorns at high velocity
 	}
 
 	AlluviumOreItem: {
@@ -156,11 +156,6 @@ Items: {
 		Tooltip: Shines upon the Ethereal Horizons
 	}
 
-	ArchaeaTranslocator: {
-		DisplayName: Archaea Translocator
-		Tooltip: ""
-	}
-
 	SylvanwaldeTranslocator: {
 		DisplayName: Sylvanwalde Translocator
 		Tooltip: ""
@@ -183,17 +178,17 @@ Items: {
 
 	LodestoneChestplate: {
 		DisplayName: Lodestone Chestplate
-		Tooltip: ""
+		Tooltip: "Increases damage reduction by 2%"
 	}
 
 	LodestoneHelmet: {
 		DisplayName: Lodestone Mask
-		Tooltip: ""
+		Tooltip: "Increases mining speed by 10%"
 	}
 
 	LodestoneLeggings: {
 		DisplayName: Lodestone Skirt
-		Tooltip: ""
+		Tooltip: "Increases run acceleration by 18%"
 	}
 
 	PeatBlock: {
