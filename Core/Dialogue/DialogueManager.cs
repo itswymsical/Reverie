@@ -42,7 +42,8 @@ public sealed class DialogueManager
     public NPCData GetNPCData(string npcId) => _npcDialogueData.TryGetValue(npcId, out var npcData) ? npcData : null;
 
     /// <summary>
-    /// Start a dialogue directly using a DialogueSequence
+    /// Starts a dialogue directly using a <seealso cref="DialogueSequence"/>.
+    /// NOTE: Its better to use the overloaded method with a localization key.
     /// </summary>
     public bool StartDialogue(NPCData npcData, DialogueSequence dialogue, string dialogueKey, bool zoomIn = false,
             string nextDialogueKey = null, NPCData nextNpcData = null, bool nextZoomIn = false)
@@ -68,9 +69,9 @@ public sealed class DialogueManager
     }
 
     /// <summary>
-    /// Start a dialogue by its key, building it on demand
+    /// Starts a dialogue by localization key.
     /// </summary>
-    public bool StartDialogueByKey(NPCData npcData, string dialogueKey, int lineCount, bool zoomIn = false, int defaultDelay = 2, int defaultEmote = 0, int? musicId = null,
+    public bool StartDialogue(NPCData npcData, string dialogueKey, int lineCount, bool zoomIn = false, int defaultDelay = 2, int defaultEmote = 0, int? musicId = null,
              bool letterbox = false, params(int line, int delay, int emote)[] modifications)
     {
         DialogueSequence dialogue;
@@ -91,27 +92,7 @@ public sealed class DialogueManager
     }
 
     /// <summary>
-    /// Start a simple one-line dialogue
-    /// </summary>
-    public bool StartSimpleDialogue(NPCData npcData, string dialogueKey, bool zoomIn = false,
-            int delay = 2, int emote = 0, int? musicId = null)
-    {
-        DialogueSequence dialogue;
-
-        // Check cache first
-        if (!_dialogueCache.TryGetValue(dialogueKey, out dialogue))
-        {
-            dialogue = DialogueBuilder.SimpleLineByKey(dialogueKey, delay, emote, musicId);
-
-            // Cache the dialogue for future use
-            _dialogueCache[dialogueKey] = dialogue;
-        }
-
-        return StartDialogue(npcData, dialogue, dialogueKey, zoomIn);
-    }
-
-    /// <summary>
-    /// Clears the dialogue cache to free up memory
+    /// Clears the dialogue cache to free up memory.
     /// </summary>
     public void ClearDialogueCache()
     {
@@ -194,7 +175,7 @@ public sealed class DialogueManager
     {
         if (_activeDialogue == null) return;
 
-        Letterbox.Draw(spriteBatch);
+        Letterbox.DrawCinematic(spriteBatch);
         Vector2 adjustedPosition = bottomAnchorPosition;
         adjustedPosition.Y -= Letterbox.LetterboxHeight;
 

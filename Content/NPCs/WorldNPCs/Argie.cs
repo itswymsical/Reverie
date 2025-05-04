@@ -62,7 +62,7 @@ public class Argie : WorldNPCActor
     {
         if (firstButton)
         {
-            DialogueManager.Instance.StartDialogueByKey(
+            DialogueManager.Instance.StartDialogue(
                     NPCManager.Default,
                     DialogueKeys.Argie.Introduction,
                     lineCount: 4,

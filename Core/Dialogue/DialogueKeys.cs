@@ -81,6 +81,7 @@ public static class DialogueKeys
         public static string GatheringResources => $"{PREFIX}.GatheringResources";
         public static string ArchiverChronicleIFound => $"{PREFIX}.ArchiverChronicleIFound";
         public static string GuideReadsChronicleI => $"{PREFIX}.GuideReadsChronicleI";
+        public static string ChronicleDecoded => $"{PREFIX}.ChronicleDecoded";
         public static string WildlifeWoes => $"{PREFIX}.WildlifeWoes";
         public static string SlimeInfestation => $"{PREFIX}.SlimeInfestation";
         public static string SlimeInfestationCommentary => $"{PREFIX}.SlimeInfestation_Commentary";

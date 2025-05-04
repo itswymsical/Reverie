@@ -35,14 +35,14 @@ public class CopperStandard : Mission
     public override void OnMissionStart()
     {
         base.OnMissionStart(); // This now calls RegisterEventHandlers()
-        DialogueManager.Instance.StartDialogueByKey(NPCManager.MerchantData, DialogueKeys.Merchant.CopperStandardStart,
+        DialogueManager.Instance.StartDialogue(NPCManager.MerchantData, DialogueKeys.Merchant.CopperStandardStart,
             lineCount: 5, zoomIn: true);
     }
 
     public override void OnMissionComplete(bool giveRewards = true)
     {
         base.OnMissionComplete(giveRewards); // This now calls UnregisterEventHandlers()
-        DialogueManager.Instance.StartDialogueByKey(
+        DialogueManager.Instance.StartDialogue(
             NPCManager.MerchantData, DialogueKeys.Merchant.CopperStandardComplete, lineCount: 4, zoomIn: true);
     }
 
@@ -145,18 +145,18 @@ public class CopperStandard : Mission
                 {
                     case Objectives.CopperCoins:
                         if (Main.rand.NextBool(2))
-                            DialogueManager.Instance.StartDialogueByKey(NPCManager.MerchantData,
+                            DialogueManager.Instance.StartDialogue(NPCManager.MerchantData,
                                 DialogueKeys.Merchant.CopperCoinsInProgress, lineCount: 2);
                         else
-                            DialogueManager.Instance.StartDialogueByKey(NPCManager.MerchantData,
+                            DialogueManager.Instance.StartDialogue(NPCManager.MerchantData,
                                 DialogueKeys.Merchant.CopperCoinsInProgress_Alt, lineCount: 2);
                         break;
                     case Objectives.MineCopper:
-                        DialogueManager.Instance.StartDialogueByKey(NPCManager.MerchantData,
+                        DialogueManager.Instance.StartDialogue(NPCManager.MerchantData,
                                 DialogueKeys.Merchant.MineCopperInProgress, lineCount: 2);
                         break;
                     case Objectives.SmeltCopper:
-                        DialogueManager.Instance.StartDialogueByKey(NPCManager.MerchantData,
+                        DialogueManager.Instance.StartDialogue(NPCManager.MerchantData,
                            DialogueKeys.Merchant.SmeltCopperInProgress, lineCount: 5);
                         break;
                     case Objectives.ReturnToMerchant:

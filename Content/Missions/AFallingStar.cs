@@ -1,13 +1,16 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using Reverie.Common.Systems;
+﻿using Reverie.Common.Systems;
 using Reverie.Common.Systems.Camera;
+
 using Reverie.Content.Cutscenes;
 using Reverie.Content.Items;
-using Reverie.Core.Cinematics;
+
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
+
 using Reverie.Utilities;
+
 using System.Collections.Generic;
+
 using Terraria.Audio;
 using Terraria.DataStructures;
 
@@ -25,10 +28,12 @@ public class AFallingStar : Mission
         GatherResources = 1,
         AquireItems = 2,
         ExploreBiomes = 3,
-        ClearSlimes = 4,
-        DefendTown = 5,
-        ClearSlimeRain = 6,
-        DefeatKingSlime = 7
+        CheckIn = 4,
+        EnterCorruption = 5,
+
+
+        ClearSlimeRain = 9,
+        DefeatKingSlime = 10
     }
 
     public AFallingStar() : base(MissionID.AFallingStar,
@@ -42,7 +47,7 @@ public class AFallingStar : Mission
 
         [("Harvest Ore", 30), ("Discover accessories", 2)],
 
-        [("Explore the Underground", 1), ("Check in with the Guide", 1),
+        [("Explore the Underground", 1), ("Give Guide Archiver Chronicle", 1),
         ("Discover a Glowing Mushroom Biome", 1), ("Explore the Jungle", 1),
         ("Explore the Underground Desert", 1),  ("Explore the Tundra", 1)],
 
@@ -50,13 +55,13 @@ public class AFallingStar : Mission
 
         //TODO: Mission objectives tied to the Archiver Chronicles, Reverie, and Guide's research.
 
-        [("Mission still WIP (for now mess around with stuff)", 10)],
+        [("Check in with Guide", 1)],
 
-        [("Defend the Town", 10)],
+        [("Explore the Corruption", 1), ("Enter the Stillspire", 1)],
 
-        [("Clear slime infestation", 100)],
+        [("TBA", 1)],
 
-        [("Defeat King Slime", 1)]
+        [("TBA", 1)]
       ],
 
       [new Item(ItemID.RegenerationPotion),
@@ -109,7 +114,7 @@ public class AFallingStar : Mission
                 Main.StartSlimeRain();
             }
         }
-        if (CurrentIndex > (int)Objectives.TalkToTownies)
+        if (CurrentIndex >= (int)Objectives.AquireItems)
         {
             UpdateAmbientSound();
         }
@@ -155,21 +160,6 @@ public class AFallingStar : Mission
         ModContent.GetInstance<Reverie>().Logger.Debug($"[A Falling Star] Unregistered event handlers");
         base.UnregisterEventHandlers();
     }
-
-    //public override void LoadState(MissionDataContainer state)
-    //{
-    //    base.LoadState(state);
-
-    //    // Restore visibility conditions based on mission state
-    //    if (Progress == MissionProgress.Active)
-    //    {
-    //        // Example: if player has found the item but hasn't talked to guide yet
-    //        if (specialItemFound)
-    //        {
-    //            SetObjectiveVisibility((int)Objectives.ExploreBiomes, 2, true);
-    //        }
-    //    }
-    //}
 
     #endregion
 
@@ -218,11 +208,11 @@ public class AFallingStar : Mission
 
             if (currentObjectiveSet == Objectives.TalkToTownies && objectiveIndex == 1)
             {
-                GiveStarterItems();
+                GrantCopperTools();
             }
             if (currentObjectiveSet == Objectives.TalkToTownies && objectiveIndex == 0)
             {
-                GiveMirror();
+                GrantMagicMirror();
             }
         }
         catch (Exception ex)
@@ -241,7 +231,7 @@ public class AFallingStar : Mission
             case Objectives.TalkToTownies:
                 if (npc.type == NPCID.Guide)
                 {
-                    DialogueManager.Instance.StartDialogueByKey(
+                    DialogueManager.Instance.StartDialogue(
                         NPCManager.GuideData,
                         DialogueKeys.FallingStar.GatheringResources,
                         lineCount: 6,
@@ -257,7 +247,7 @@ public class AFallingStar : Mission
                 }
                 if (npc.type == NPCID.Merchant)
                 {
-                    DialogueManager.Instance.StartDialogueByKey(
+                    DialogueManager.Instance.StartDialogue(
                         NPCManager.MerchantData,
                         DialogueKeys.Merchant.MerchantIntro,
                         lineCount: 5,
@@ -272,7 +262,7 @@ public class AFallingStar : Mission
                 }
                 if (npc.type == NPCID.Demolitionist)
                 {
-                    DialogueManager.Instance.StartDialogueByKey(
+                    DialogueManager.Instance.StartDialogue(
                         NPCManager.DemolitionistData,
                         DialogueKeys.Demolitionist.DemolitionistIntro,
                         lineCount: 4,
@@ -288,7 +278,7 @@ public class AFallingStar : Mission
                 }
                 if (npc.type == NPCID.Nurse)
                 {
-                    DialogueManager.Instance.StartDialogueByKey(
+                    DialogueManager.Instance.StartDialogue(
                         NPCManager.NurseData,
                         DialogueKeys.Nurse.NurseIntro,
                         lineCount: 4,
@@ -306,16 +296,28 @@ public class AFallingStar : Mission
             case Objectives.ExploreBiomes:
                 if (npc.type == NPCID.Guide && specialItemFound)
                 {
-                    DialogueManager.Instance.StartDialogueByKey(
+                    DialogueManager.Instance.StartDialogue(
                         NPCManager.GuideData,
                         DialogueKeys.FallingStar.GuideReadsChronicleI,
                         lineCount: 3,
                         zoomIn: true);
                     UpdateProgress(1);
+                    MissionUtils.RetrieveItemsFromPlayer(Main.LocalPlayer, ModContent.ItemType<ArchiverChronicleI>(), 1);
                     SetObjectiveVisibility((int)Objectives.ExploreBiomes, 2, true);
                     SetObjectiveVisibility((int)Objectives.ExploreBiomes, 3, true);
                     SetObjectiveVisibility((int)Objectives.ExploreBiomes, 4, true);
                     SetObjectiveVisibility((int)Objectives.ExploreBiomes, 5, true);
+                }
+                break;
+            case Objectives.CheckIn:
+                if (npc.type == NPCID.Guide)
+                {
+                    DialogueManager.Instance.StartDialogue(
+                        NPCManager.GuideData,
+                        DialogueKeys.FallingStar.ChronicleDecoded,
+                        lineCount: 7,
+                        zoomIn: true);
+                    UpdateProgress(0);
                 }
                 break;
         }
@@ -333,8 +335,6 @@ public class AFallingStar : Mission
                     UpdateProgress(0, item.stack);
                 break;
             case Objectives.AquireItems:
-                if (item.IsOre())
-                    UpdateProgress(0, item.stack);
                 if (item.accessory)
                     UpdateProgress(1, item.stack);
                 break;
@@ -345,7 +345,7 @@ public class AFallingStar : Mission
 
                     Main.NewText("Consider wisely...", Color.White);
 
-                    DialogueManager.Instance.StartDialogueByKey(
+                    DialogueManager.Instance.StartDialogue(
                         NPCManager.GuideData,
                         DialogueKeys.FallingStar.ArchiverChronicleIFound,
                         lineCount: 3,
@@ -354,6 +354,7 @@ public class AFallingStar : Mission
                 break;
         }
     }
+
     private void OnItemUpdateHandler(Item item, Player player)
     {
         if (Progress != MissionProgress.Active) return;
@@ -367,43 +368,16 @@ public class AFallingStar : Mission
                 break;
         }
     }
-    private void OnItemEquipHandler(Item item, Player player)
-    {
-        if (Progress != MissionProgress.Active) return;
 
-        var objective = (Objectives)CurrentIndex;
-        switch (objective)
-        {
-            case Objectives.AquireItems:
-                if (item.accessory)
-                    UpdateProgress(1, item.stack);
-                break;
-        }
-    }
     private void OnNPCKillHandler(NPC npc)
     {
         if (Progress != MissionProgress.Active) return;
 
         var objective = (Objectives)CurrentIndex;
-        switch (objective)
-        {
-            case Objectives.ClearSlimes:
-                if (npc.type == NPCAIStyleID.Slime)
-                    UpdateProgress(0);
-                break;
-            case Objectives.ExploreBiomes:
-                if (player.ZoneRockLayerHeight || player.ZoneDirtLayerHeight)
-                    if (npc.aiStyle != NPCAIStyleID.Slime)
-                        UpdateProgress(2);
-                break;
-            case Objectives.ClearSlimeRain:
-                HandleSlimeRain(npc);
-                break;
-            case Objectives.DefeatKingSlime:
-                if (npc.type == NPCID.KingSlime)
-                    UpdateProgress(0);
-                break;
-        }
+        //switch (objective)
+        //{
+
+        //}
     }
 
     private void OnTileBreakHandler(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
@@ -422,7 +396,11 @@ public class AFallingStar : Mission
                         UpdateProgress(1);
                         potTileBreakCounter = 0;
                     }
-                }
+                }  
+                break;
+            case Objectives.AquireItems:
+                if (TileID.Sets.Ore[type] && !fail)
+                    UpdateProgress(0);
                 break;
         }
     }
@@ -447,10 +425,11 @@ public class AFallingStar : Mission
                 if (biome == BiomeType.Snow)
                     UpdateProgress(5);
                 break;
-
-            case Objectives.DefendTown:
-                if (biome == BiomeType.Forest)
+            case Objectives.EnterCorruption:
+                if (biome == BiomeType.Corrupt)
                     UpdateProgress(0);
+                //if (biome == BiomeType.StillspireStructure)
+                //    UpdateProgress(1);
                 break;
         }
     }
@@ -510,7 +489,7 @@ public class AFallingStar : Mission
         {
             if (!DialogueManager.Instance.IsAnyActive())
             {
-                DialogueManager.Instance.StartDialogueByKey(
+                DialogueManager.Instance.StartDialogue(
                     NPCManager.GuideData,
                     DialogueKeys.FallingStar.ChimeResponse,
                     lineCount: 2,
@@ -533,7 +512,7 @@ public class AFallingStar : Mission
         SetObjectiveVisibility((int)Objectives.ExploreBiomes, 5, false);
     }
 
-    private void GiveStarterItems()
+    private void GrantCopperTools()
     {
         foreach (var item in CopperItems)
         {
@@ -541,7 +520,7 @@ public class AFallingStar : Mission
         }
     }
 
-    private void GiveMirror()
+    private void GrantMagicMirror()
     {
         Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.MagicMirror);
     }
@@ -549,7 +528,7 @@ public class AFallingStar : Mission
     private void StartSlimeRain()
     {
         Main.StartSlimeRain(true);
-        DialogueManager.Instance.StartDialogueByKey(
+        DialogueManager.Instance.StartDialogue(
         NPCManager.GuideData,
         DialogueKeys.FallingStar.SlimeRain,
         lineCount: 2,
@@ -563,7 +542,7 @@ public class AFallingStar : Mission
             UpdateProgress(0);
             if (Objective[CurrentIndex].Objectives[0].CurrentCount == 25)
             {
-                DialogueManager.Instance.StartDialogueByKey(
+                DialogueManager.Instance.StartDialogue(
                 NPCManager.GuideData,
                 DialogueKeys.FallingStar.SlimeRainCommentary,
                 lineCount: 2,
@@ -571,7 +550,7 @@ public class AFallingStar : Mission
             }
             if (Objective[CurrentIndex].Objectives[0].CurrentCount == 50)
             {
-                DialogueManager.Instance.StartDialogueByKey(
+                DialogueManager.Instance.StartDialogue(
                 NPCManager.GuideData,
                 DialogueKeys.FallingStar.SlimeRainWarning,
                 lineCount: 2,
@@ -582,7 +561,7 @@ public class AFallingStar : Mission
 
     private void SpawnKingSlime()
     {
-        DialogueManager.Instance.StartDialogueByKey(
+        DialogueManager.Instance.StartDialogue(
         NPCManager.GuideData,
         DialogueKeys.FallingStar.KSEncounter,
         lineCount: 3,

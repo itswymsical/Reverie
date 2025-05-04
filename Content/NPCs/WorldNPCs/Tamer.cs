@@ -52,7 +52,7 @@ public class Tamer : WorldNPCActor
     {
         if (!firstButton)
         {
-            DialogueManager.Instance.StartDialogueByKey(
+            DialogueManager.Instance.StartDialogue(
                     NPCManager.Default,
                     DialogueKeys.TamerMissions.Chapter1,
                     lineCount: 2,

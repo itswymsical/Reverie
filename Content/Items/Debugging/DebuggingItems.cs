@@ -21,7 +21,7 @@ public class DialogueTest : ModItem
     public override bool? UseItem(Player player)
     {
         if (Main.myPlayer == player.whoAmI)
-            DialogueManager.Instance.StartDialogueByKey(
+            DialogueManager.Instance.StartDialogue(
                NPCManager.MerchantData,
                DialogueKeys.Merchant.MerchantIntro,
                lineCount: 5,

@@ -84,7 +84,7 @@ public class BoundNPCGlobal : GlobalNPC
 
             SoundEngine.PlaySound(SoundID.Grass, npc.position);
 
-            DialogueManager.Instance.StartDialogueByKey(
+            DialogueManager.Instance.StartDialogue(
                 NPCManager.Default, DialogueKeys.Stylist.StylistRescue, lineCount: 3, zoomIn: false);
         }
     }

@@ -32,12 +32,20 @@ DialogueLibrary: {
 		}
 
 		GuideReadsChronicleI: {
-			Line1: Fascinating... even bad handwriting transcends dimensions.
+			Line1: Fascinating... even bad handwriting transcends time.
 			Line2: I'll see what I can do with this while you're out.
 			Line3: I think I can make out some of the inscriptions, but it's a bit jumbled.
 		}
 
-		StillspireOutpost.Line1: So I was doing a little research in the area, and I found out about place is called the Stillspire Outpost.
+		ChronicleDecoded: {
+			Line1: Hey, I think I figured out what the runes mean.
+			Line2: It looks like the person who wrote this was named 'Laine L.', apparently they used to be part of a historian group called "Archivers".
+			Line3: They were trying to find a way to travel between dimensions, and stop some force of evil.
+			Line4: The Chronicle doesn't say specifically what that evil is, but it seems like they were trying to stop it from destroying the world.
+			Line5: Also, it mentions of soliders residing here in Terraria, and a place called the Stillspire Outpost.
+			Line6: I've never heard of that place before, but it sounds like it would belong to the Corruption. I'd stay far away from there if I were you.
+			Line7: Then again, your not exactly the average Terrarian, are you? Maybe you could handle it.
+		}
 
 		WildlifeWoes: {
 			Line1: Hey, we've got a lot of slimes prancing about.

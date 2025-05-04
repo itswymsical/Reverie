@@ -1,15 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-using Terraria.DataStructures;
-
+﻿using Reverie.Core.Dialogue;
 using Reverie.Core.Entities;
-using Reverie.Core.Dialogue;
-
 using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
-using Terraria;
-using Reverie.Common.NPCs;
+using System.Collections.Generic;
+using System.Linq;
+using Terraria.DataStructures;
 
 namespace Reverie.Core.Missions;
 
@@ -46,7 +41,10 @@ public class ObjectiveEventItem : GlobalItem
     public override void UpdateEquip(Item item, Player player)
     {
         base.UpdateEquip(item, player);
-        OnItemUpdate?.Invoke(item, player);
+        if (MissionUtils.TryUpdateProgressForItem(item, player))
+        {
+            OnItemUpdate?.Invoke(item, player);
+        }
     }
 
     public override void UpdateInventory(Item item, Player player)
@@ -55,7 +53,6 @@ public class ObjectiveEventItem : GlobalItem
 
         if (MissionUtils.TryUpdateProgressForItem(item, player))
         {
-            // The item is relevant and hasn't contributed yet, so fire the event
             OnItemUpdate?.Invoke(item, player);
         }
     }
@@ -98,55 +95,55 @@ public class ObjectiveEventNPC : GlobalNPC
         OnNPCChat?.Invoke(npc, ref chat);
     }
 
-    public override void EditSpawnPool(IDictionary<int, float> pool, NPCSpawnInfo spawnInfo)
-    {
-        var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        var AFallingStar = mPlayer.GetMission(MissionID.AFallingStar);
+    //public override void EditSpawnPool(IDictionary<int, float> pool, NPCSpawnInfo spawnInfo)
+    //{
+    //    var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+    //    var AFallingStar = mPlayer.GetMission(MissionID.AFallingStar);
 
-        if (AFallingStar?.Progress == MissionProgress.Active)
-        {
-            var currentSet = AFallingStar.Objective[AFallingStar.CurrentIndex];
-            if (spawnInfo.PlayerInTown && AFallingStar.CurrentIndex >= 5)
-            {
-                if (AFallingStar.CurrentIndex >= 3 && Main.LocalPlayer.ZoneOverworldHeight)
-                {
-                    pool.Add(NPCID.BlueSlime, 0.08f);
-                    pool.Add(NPCID.GreenSlime, 0.102f);
-                }
-            }
-        }
-        else
-            base.EditSpawnPool(pool, spawnInfo);
-    }
+    //    if (AFallingStar?.Progress == MissionProgress.Active)
+    //    {
+    //        var currentSet = AFallingStar.Objective[AFallingStar.CurrentIndex];
+    //        if (spawnInfo.PlayerInTown && AFallingStar.CurrentIndex >= 5)
+    //        {
+    //            if (AFallingStar.CurrentIndex >= 3 && Main.LocalPlayer.ZoneOverworldHeight)
+    //            {
+    //                pool.Add(NPCID.BlueSlime, 0.08f);
+    //                pool.Add(NPCID.GreenSlime, 0.102f);
+    //            }
+    //        }
+    //    }
+    //    else
+    //        base.EditSpawnPool(pool, spawnInfo);
+    //}
 
-    public override void EditSpawnRate(Player player, ref int spawnRate, ref int maxSpawns)
-    {
-        var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+    //public override void EditSpawnRate(Player player, ref int spawnRate, ref int maxSpawns)
+    //{
+    //    var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
 
-        var AFallingStar = mPlayer.GetMission(MissionID.AFallingStar);
+    //    var AFallingStar = mPlayer.GetMission(MissionID.AFallingStar);
 
-        if (AFallingStar?.Progress == MissionProgress.Active && player.ZoneOverworldHeight)
-        {
-            var currentSet = AFallingStar.Objective[AFallingStar.CurrentIndex];
-            if (AFallingStar.CurrentIndex >= 4)
-            {
-                spawnRate = 3;
-                maxSpawns = 7;
-            }
-            if (AFallingStar.CurrentIndex >= 5)
-            {
-                spawnRate = 2;
-                maxSpawns = 9;
-            }
-            else if (AFallingStar.CurrentIndex >= 9)
-            {
-                spawnRate = 2;
-                maxSpawns = 11;
-            }
-        }
-        else
-            base.EditSpawnRate(player, ref spawnRate, ref maxSpawns);
-    }
+    //    if (AFallingStar?.Progress == MissionProgress.Active && player.ZoneOverworldHeight)
+    //    {
+    //        var currentSet = AFallingStar.Objective[AFallingStar.CurrentIndex];
+    //        if (AFallingStar.CurrentIndex >= 4)
+    //        {
+    //            spawnRate = 3;
+    //            maxSpawns = 7;
+    //        }
+    //        if (AFallingStar.CurrentIndex >= 5)
+    //        {
+    //            spawnRate = 2;
+    //            maxSpawns = 9;
+    //        }
+    //        else if (AFallingStar.CurrentIndex >= 9)
+    //        {
+    //            spawnRate = 2;
+    //            maxSpawns = 11;
+    //        }
+    //    }
+    //    else
+    //        base.EditSpawnRate(player, ref spawnRate, ref maxSpawns);
+    //}
 
     public override void AI(NPC npc)
     {
@@ -211,13 +208,13 @@ public class ObjectiveEventTile : GlobalTile
 {
     public delegate void TileBreakHandler(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem);
     public delegate void TilePlaceHandler(int i, int j, int type);
-    public delegate void TileFloorVisualsHandler(int type, Player player);
-    public delegate void TileRightClickHandler(int i, int j, int type);
+    public delegate void TileContactHandler(int type, Player player);
+    public delegate void TileInteractHandler(int i, int j, int type);
 
     public static event TileBreakHandler OnTileBreak;
     public static event TilePlaceHandler OnTilePlace;
-    public static event TileFloorVisualsHandler OnFloorVisuals;
-    public static event TileRightClickHandler OnTileRightClick;
+    public static event TileContactHandler OnTileContact;
+    public static event TileInteractHandler OnTileInteract;
     public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
     {
         base.KillTile(i, j, type, ref fail, ref effectOnly, ref noItem);
@@ -231,12 +228,12 @@ public class ObjectiveEventTile : GlobalTile
     public override void FloorVisuals(int type, Player player)
     {
         base.FloorVisuals(type, player);
-        OnFloorVisuals?.Invoke(type, player);
+        OnTileContact?.Invoke(type, player);
     }
     public override void RightClick(int i, int j, int type)
     {
         base.RightClick(i, j, type);
-        OnTileRightClick?.Invoke(i, j, type);
+        OnTileInteract?.Invoke(i, j, type);
     }
 }
 

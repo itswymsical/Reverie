@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 Conditions.CopperStandardComplete: After Completing 'Copper Standard'
 
 Items: {
@@ -178,17 +178,17 @@ Items: {
 
 	LodestoneChestplate: {
 		DisplayName: Lodestone Chestplate
-		Tooltip: "Increases damage reduction by 2%"
+		Tooltip: Increases damage reduction by 2%
 	}
 
 	LodestoneHelmet: {
 		DisplayName: Lodestone Mask
-		Tooltip: "Increases mining speed by 10%"
+		Tooltip: Increases mining speed by 10%
 	}
 
 	LodestoneLeggings: {
 		DisplayName: Lodestone Skirt
-		Tooltip: "Increases run acceleration by 18%"
+		Tooltip: Increases run acceleration by 18%
 	}
 
 	PeatBlock: {

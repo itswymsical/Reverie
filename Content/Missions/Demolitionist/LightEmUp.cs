@@ -35,7 +35,7 @@ public class LightEmUp : Mission
     public override void OnMissionStart()
     {
         base.OnMissionStart(); // By default, this calls RegisterEventHandlers()
-        DialogueManager.Instance.StartDialogueByKey(
+        DialogueManager.Instance.StartDialogue(
                NPCManager.DemolitionistData,
                DialogueKeys.Demolitionist.TorchGodStart,
                lineCount: 6);
@@ -44,7 +44,7 @@ public class LightEmUp : Mission
     public override void OnMissionComplete(bool giveRewards = true)
     {
         base.OnMissionComplete(giveRewards);
-        DialogueManager.Instance.StartDialogueByKey(
+        DialogueManager.Instance.StartDialogue(
            NPCManager.DemolitionistData,
            DialogueKeys.Demolitionist.TorchGodComplete,
            lineCount: 4);
@@ -131,28 +131,28 @@ public class LightEmUp : Mission
     {
         if (Objective[(int)Objectives.PlaceTorches].Objectives[0].CurrentCount == 10)
         {
-            DialogueManager.Instance.StartDialogueByKey(
+            DialogueManager.Instance.StartDialogue(
                    NPCManager.DemolitionistData,
                    DialogueKeys.Demolitionist.TorchPlacement_01,
                    lineCount: 1);
         }
         if (Objective[(int)Objectives.PlaceTorches].Objectives[0].CurrentCount == 25)
         {
-            DialogueManager.Instance.StartDialogueByKey(
+            DialogueManager.Instance.StartDialogue(
                    NPCManager.DemolitionistData,
                    DialogueKeys.Demolitionist.TorchPlacement_02,
                    lineCount: 1);
         }
         if (Objective[(int)Objectives.PlaceTorches].Objectives[0].CurrentCount == 50)
         {
-            DialogueManager.Instance.StartDialogueByKey(
+            DialogueManager.Instance.StartDialogue(
                    NPCManager.DemolitionistData,
                    DialogueKeys.Demolitionist.TorchPlacement_03,
                    lineCount: 1);
         }
         if (Objective[(int)Objectives.PlaceTorches].Objectives[0].CurrentCount == 100)
         {
-            DialogueManager.Instance.StartDialogueByKey(
+            DialogueManager.Instance.StartDialogue(
                    NPCManager.DemolitionistData,
                    DialogueKeys.Demolitionist.TorchPlacement_04,
                    lineCount: 1);

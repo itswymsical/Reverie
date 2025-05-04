@@ -70,7 +70,7 @@ public class BloomcapHunt : Mission
 
             if (Objective[CurrentIndex].Objectives[0].CurrentCount == 1)
             {
-                DialogueManager.Instance.StartDialogueByKey(
+                DialogueManager.Instance.StartDialogue(
                     NPCManager.Default,
                     DialogueKeys.Argie.BloomcapCollected,
                     lineCount: 2,
@@ -79,7 +79,7 @@ public class BloomcapHunt : Mission
 
             if (Objective[CurrentIndex].Objectives[0].CurrentCount == 4)
             {
-                DialogueManager.Instance.StartDialogueByKey(
+                DialogueManager.Instance.StartDialogue(
                     NPCManager.Default,
                     DialogueKeys.Argie.BloomcapCollectedHalf,
                     lineCount: 1,
@@ -105,7 +105,7 @@ public class BloomcapHunt : Mission
     {
         base.OnMissionStart();
 
-        DialogueManager.Instance.StartDialogueByKey(
+        DialogueManager.Instance.StartDialogue(
             NPCManager.Default,
             DialogueKeys.Argie.BloomcapIntro,
             lineCount: 5,
@@ -116,7 +116,7 @@ public class BloomcapHunt : Mission
     {
         base.OnMissionComplete(giveRewards);
 
-        DialogueManager.Instance.StartDialogueByKey(
+        DialogueManager.Instance.StartDialogue(
             NPCManager.Default,
             DialogueKeys.Argie.BloomcapComplete,
             lineCount: 4,
@@ -128,7 +128,7 @@ public class BloomcapHunt : Mission
         base.OnObjectiveComplete(objectiveIndex);
         if (objectiveIndex == 0)
         {
-            DialogueManager.Instance.StartDialogueByKey(
+            DialogueManager.Instance.StartDialogue(
                 NPCManager.Default,
                 DialogueKeys.Argie.BloomcapCollectedAll,
                 lineCount: 2,
