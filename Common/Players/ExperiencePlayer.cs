@@ -60,8 +60,8 @@ public class ExperiencePlayer : ModPlayer
 
     public static int GetNextExperienceThreshold(int level)
     {
-        if (level <= 1) return Main.masterMode ? 225 : Main.expertMode ? 175 : 150;
+        if (level <= 1) return Main.masterMode ? 325 : Main.expertMode ? 300 : 280;
         
-        return Main.masterMode ? 168 * level : Main.expertMode ? 122 * level : 108 * level;
+        return Main.masterMode ? (int)377.37753541f * level : Main.expertMode ? (int)327.37753541f * level : (int)302.37753541f * level;
     }
 }

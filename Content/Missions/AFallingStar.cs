@@ -43,7 +43,7 @@ public class AFallingStar : Mission
       [
         [("Talk to Guide", 1), ("Talk to Merchant", 1), ("Talk to Demolitionist", 1), ("Talk to Nurse", 1)],
 
-        [("Gather Wood", 50), ("Break Pots", 20)],
+        [("Gather Wood", 50), ("Break Pots", 15)],
 
         [("Harvest Ore", 30), ("Discover accessories", 2)],
 
@@ -457,7 +457,7 @@ public class AFallingStar : Mission
 
             SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ReverieChime")
             {
-                Volume = 7.5f,
+                Volume = 10.5f,
                 Pitch = 0f,
                 PitchVariance = 1f,
                 MaxInstances = 0

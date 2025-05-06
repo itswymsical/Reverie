@@ -1,5 +1,9 @@
-UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
-Conditions.CopperStandardComplete: After Completing 'Copper Standard'
+﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+
+Conditions: {
+	CopperStandardComplete: After (Copper Standard) Mission
+	CopperStandardActive: During (Copper Standard) Mission
+}
 
 Items: {
 	DialogueTest: {

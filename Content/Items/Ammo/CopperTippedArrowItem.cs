@@ -31,7 +31,15 @@ public class CopperTippedArrowItem : ModItem
         .AddCondition(new Condition(Instance.GetLocalization("Conditions.CopperStandardComplete"),
         () => Main.LocalPlayer.GetModPlayer<MissionPlayer>()
         .GetMission(MissionID.CopperStandard)?.Progress == MissionProgress.Completed))
+        .Register();
 
+        CreateRecipe(25)
+        .AddIngredient(ItemID.WoodenArrow, 25)
+        .AddIngredient(ItemID.CopperBar, 2)
+        .AddTile(TileID.Anvils)
+        .AddCondition(new Condition(Instance.GetLocalization("Conditions.CopperStandardActive"),
+        () => Main.LocalPlayer.GetModPlayer<MissionPlayer>()
+        .GetMission(MissionID.CopperStandard)?.Progress == MissionProgress.Active))
         .Register();
     }
 }
