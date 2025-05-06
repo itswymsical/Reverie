@@ -18,11 +18,10 @@ public static class DialogueKeys
         private const string PREFIX = "Merchant";
 
         public static string CopperStandardStart => $"{PREFIX}.CopperStandardStart";
-        public static string CopperStandardComplete => $"{PREFIX}.CopperStandardComplete";
+        public static string CopperStandardMidway => $"{PREFIX}.CopperStandardMidway";
         public static string CopperCoinsInProgress => $"{PREFIX}.CopperCoinsInProgress";
         public static string CopperCoinsInProgress_Alt => $"{PREFIX}.CopperCoinsInProgress_Alt";
         public static string MineCopperInProgress => $"{PREFIX}.MineCopperInProgress";
-        public static string SmeltCopperInProgress => $"{PREFIX}.SmeltCopperInProgress";
         public static string MerchantIntro => $"{PREFIX}.MerchantIntro";
 
     }

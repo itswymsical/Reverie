@@ -7,46 +7,29 @@ namespace Reverie.Common.Players;
 
 public class ExperiencePlayer : ModPlayer
 {
-    public int experienceLevel;
-    public int experienceValue;
+    public int expLevel;
+    public int expValue;
     public int skillPoints;
-
-    public bool TryUseSkillPoint()
-    {
-        if (skillPoints > 0)
-        {
-            skillPoints--;
-            return true;
-        }
-        SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}SkillLocked")
-        {
-            Volume = 0.6f,
-            PitchVariance = 0f,
-            MaxInstances = 5,
-        },
-        Main.LocalPlayer.position);
-        return false;
-    }
 
     public override void Initialize()
     {
-        experienceLevel = 1;
-        experienceValue = 0;
+        expLevel = 1;
+        expValue = 0;
         skillPoints = 0;
     }
 
     public override void SaveData(TagCompound tag)
     {
-        tag["experienceLevel"] = experienceLevel;
-        tag["experienceValue"] = experienceValue;
+        tag["expLevel"] = expLevel;
+        tag["expValue"] = expValue;
         tag["skillPoints"] = skillPoints;
     }
 
     public override void LoadData(TagCompound tag)
     {
-        if (tag.ContainsKey("experienceLevel")) experienceLevel = tag.GetInt("experienceLevel");
+        if (tag.ContainsKey("expLevel")) expLevel = tag.GetInt("expLevel");
         
-        if (tag.ContainsKey("experienceValue")) experienceValue = tag.GetInt("experienceValue");
+        if (tag.ContainsKey("expValue")) expValue = tag.GetInt("expValue");
         
         if (tag.ContainsKey("skillPoints")) skillPoints = tag.GetInt("skillPoints");
     }
@@ -54,14 +37,14 @@ public class ExperiencePlayer : ModPlayer
     public static void AddExperience(Player player, int value)
     {
         ExperiencePlayer modPlayer = player.GetModPlayer<ExperiencePlayer>();
-        if (modPlayer.experienceLevel <= 99)
+        if (modPlayer.expLevel <= 60)
         {
-            modPlayer.experienceValue += value;
+            modPlayer.expValue += value;
 
-            while (modPlayer.experienceValue >= GetNextExperienceThreshold(modPlayer.experienceLevel))
+            while (modPlayer.expValue >= GetNextExperienceThreshold(modPlayer.expLevel))
             {
-                modPlayer.experienceValue -= GetNextExperienceThreshold(modPlayer.experienceLevel);
-                modPlayer.experienceLevel++;
+                modPlayer.expValue -= GetNextExperienceThreshold(modPlayer.expLevel);
+                modPlayer.expLevel++;
                 modPlayer.skillPoints++;
 
                 SoundEngine.PlaySound(SoundID.AchievementComplete, player.position);
@@ -69,15 +52,16 @@ public class ExperiencePlayer : ModPlayer
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     InGameNotificationsTracker.AddNotification(new LevelNotification());                   
                 else
-                    Main.NewText($"{player.name} Reached Level {modPlayer.experienceLevel} " + $"[i:{ItemID.FallenStar}], Skill Points: {modPlayer.skillPoints}");
+                    Main.NewText($"{player.name} Reached Level {modPlayer.expLevel} " + $"[i:{ItemID.FallenStar}], Skill Points: {modPlayer.skillPoints}");
             }
         }
         else return;        
     }
+
     public static int GetNextExperienceThreshold(int level)
     {
-        if (level <= 1) return Main.masterMode ? 100 : Main.expertMode ? 75 : 50;
+        if (level <= 1) return Main.masterMode ? 225 : Main.expertMode ? 175 : 150;
         
-        return Main.masterMode ? 175 * level : Main.expertMode ? 150 * level : 125 * level;
+        return Main.masterMode ? 168 * level : Main.expertMode ? 122 * level : 108 * level;
     }
 }

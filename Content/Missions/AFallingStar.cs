@@ -21,7 +21,7 @@ public class AFallingStar : Mission
     private int reverieSFXtimer = 0;
     private int nextChimeTime = 0;
     private int potTileBreakCounter = 0;
-    private bool specialItemFound = false;
+
     private enum Objectives
     {
         TalkToTownies = 0,
@@ -39,7 +39,7 @@ public class AFallingStar : Mission
     public AFallingStar() : base(MissionID.AFallingStar,
       "Falling Star...",
       @"""Well, that's one way to make an appearance..."""
-      + "\nBegin your Journey, exploring Terraria",
+      + "\nBegin your journey, exploring Terraria.",
       [
         [("Talk to Guide", 1), ("Talk to Merchant", 1), ("Talk to Demolitionist", 1), ("Talk to Nurse", 1)],
 
@@ -50,10 +50,6 @@ public class AFallingStar : Mission
         [("Explore the Underground", 1), ("Give Guide Archiver Chronicle", 1),
         ("Discover a Glowing Mushroom Biome", 1), ("Explore the Jungle", 1),
         ("Explore the Underground Desert", 1),  ("Explore the Tundra", 1)],
-
-        //[("Find Stillspire Outpost", 1)],
-
-        //TODO: Mission objectives tied to the Archiver Chronicles, Reverie, and Guide's research.
 
         [("Check in with Guide", 1)],
 
@@ -83,7 +79,7 @@ public class AFallingStar : Mission
 
     public override void OnMissionStart()
     {
-        base.OnMissionStart(); // This now calls RegisterEventHandlers()
+        base.OnMissionStart(); // This calls RegisterEventHandlers()
 
         SetObjectiveVisibility((int)Objectives.ExploreBiomes, 1, false);
 
@@ -132,7 +128,6 @@ public class AFallingStar : Mission
 
         base.RegisterEventHandlers();
 
-        // Register event handlers specific to this mission
         ObjectiveEventNPC.OnNPCChat += OnNPCChatHandler;
         ObjectiveEventItem.OnItemPickup += OnItemPickupHandler;
         ObjectiveEventItem.OnItemUpdate += OnItemUpdateHandler;
@@ -149,7 +144,6 @@ public class AFallingStar : Mission
     {
         if (!eventsRegistered) return;
 
-        // Unregister event handlers
         ObjectiveEventNPC.OnNPCChat -= OnNPCChatHandler;
         ObjectiveEventItem.OnItemPickup -= OnItemPickupHandler;
         ObjectiveEventItem.OnItemUpdate -= OnItemUpdateHandler;
@@ -294,7 +288,7 @@ public class AFallingStar : Mission
                 }
                 break;
             case Objectives.ExploreBiomes:
-                if (npc.type == NPCID.Guide && specialItemFound)
+                if (npc.type == NPCID.Guide && DownedSystem.foundChronicleI)
                 {
                     DialogueManager.Instance.StartDialogue(
                         NPCManager.GuideData,
@@ -343,7 +337,7 @@ public class AFallingStar : Mission
                 {
                     OnSpecialItemDiscovered();
 
-                    Main.NewText("Consider wisely...", Color.White);
+                    //Main.NewText("Consider wisely...", Color.White);
 
                     DialogueManager.Instance.StartDialogue(
                         NPCManager.GuideData,
@@ -437,7 +431,7 @@ public class AFallingStar : Mission
 
     #region Helper Methods
     /// <summary>
-    /// Plays a periodic chime every 2-6 minutes, indicates the player's reverie is growing stronger.
+    /// Plays a chime every 2-6 minutes, reverie stuff
     /// </summary>
     private void UpdateAmbientSound()
     {
@@ -500,12 +494,12 @@ public class AFallingStar : Mission
 
     public void OnSpecialItemDiscovered()
     {
-        specialItemFound = true;
+        DownedSystem.foundChronicleI = true;
 
-        // Now show "Check in with Guide" objective
+        // show "Check in with Guide" objective
         SetObjectiveVisibility((int)Objectives.ExploreBiomes, 1, true);
 
-        // Hide other biome objectives until player checks in with guide
+        // Hide other objectives until player checks in with guide
         SetObjectiveVisibility((int)Objectives.ExploreBiomes, 2, false);
         SetObjectiveVisibility((int)Objectives.ExploreBiomes, 3, false);
         SetObjectiveVisibility((int)Objectives.ExploreBiomes, 4, false);

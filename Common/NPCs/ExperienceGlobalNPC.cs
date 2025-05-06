@@ -65,7 +65,7 @@ public class ExperienceGlobalNPC : GlobalNPC
 
                 var modPlayer = player.GetModPlayer<ExperiencePlayer>();
 
-                if (player.active && !player.dead && modPlayer.experienceLevel <= 99)
+                if (player.active && !player.dead && modPlayer.expLevel <= 60)
                 {
                     var damageRatio = (float)damageDealt / totalDamage;
                     var experiencePoints = (int)(npc.lifeMax * damageRatio / 8);

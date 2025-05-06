@@ -55,7 +55,7 @@ namespace Reverie.Common.UI.LevelUI
 			var modPlayer = player.GetModPlayer<ExperiencePlayer>();
 			GetTextureBasedOnLevel(player);
 
-			var title = $"{player.name} Reached Level {modPlayer.experienceLevel}!" +
+			var title = $"{player.name} Reached Level {modPlayer.expLevel}!" +
 				$"\nSkill Points Available {modPlayer.skillPoints}";
 
 			var effectiveScale = Scale * 1.1f;
@@ -76,54 +76,54 @@ namespace Reverie.Common.UI.LevelUI
 		public void GetTextureBasedOnLevel(Player player)
 		{
             var modPlayer = player.GetModPlayer<ExperiencePlayer>();
-            if (modPlayer.experienceLevel <= 1)
+            if (modPlayer.expLevel <= 1)
             {
                 iconTexture = TextureAssets.Item[ItemID.Wood];
 
             }
-            else if (modPlayer.experienceLevel <= 2)
+            else if (modPlayer.expLevel <= 2)
             {
                 iconTexture = TextureAssets.Item[ItemID.StoneBlock];
 
             }
-            else if (modPlayer.experienceLevel <= 3)
+            else if (modPlayer.expLevel <= 3)
             {
                 iconTexture = TextureAssets.Item[ItemID.IronBar];
 
             }
-            else if (modPlayer.experienceLevel <= 5)
+            else if (modPlayer.expLevel <= 5)
             {
                 iconTexture = TextureAssets.Item[ItemID.SilverBar];
 
             }
-            else if (modPlayer.experienceLevel <= 10)
+            else if (modPlayer.expLevel <= 10)
             {
                 iconTexture = TextureAssets.Item[ItemID.GoldBar];
 
             }
-            else if (modPlayer.experienceLevel <= 15)
+            else if (modPlayer.expLevel <= 15)
             {
                 iconTexture = TextureAssets.Item[ItemID.DemoniteBar];
             }
-            else if (modPlayer.experienceLevel <= 20)
+            else if (modPlayer.expLevel <= 20)
             {
                 iconTexture = TextureAssets.Item[ItemID.HellstoneBar];
 
             }
-            else if (modPlayer.experienceLevel <= 25)
+            else if (modPlayer.expLevel <= 25)
             {
                 iconTexture = TextureAssets.Item[ItemID.CobaltBar];
 
             }
-            else if (modPlayer.experienceLevel <= 30)
+            else if (modPlayer.expLevel <= 30)
             {
                 iconTexture = TextureAssets.Item[ItemID.MythrilBar];
             }
-            else if (modPlayer.experienceLevel <= 35)
+            else if (modPlayer.expLevel <= 35)
             {
                 iconTexture = TextureAssets.Item[ItemID.AdamantiteBar];
             }
-            else if (modPlayer.experienceLevel <= 40)
+            else if (modPlayer.expLevel <= 40)
             {
                 iconTexture = TextureAssets.Item[ItemID.ChlorophyteBar];
             }

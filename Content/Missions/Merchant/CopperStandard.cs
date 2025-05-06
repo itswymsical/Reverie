@@ -11,7 +11,10 @@ public class CopperStandard : Mission
         CopperCoins = 0,
         MineCopper = 1,
         SmeltCopper = 2,
-        ReturnToMerchant = 3
+        ReturnToMerchant = 3,
+        CraftItems = 4,
+        WaitForCustomers = 5,
+        CheckIn = 6
     }
     public CopperStandard() : base(MissionID.CopperStandard,
       "The Copper Standard",
@@ -20,7 +23,15 @@ public class CopperStandard : Mission
         [("Collect copper coins", 800)],
         [("Mine copper ore", 80)],
         [("Collect or smelt copper bars", 25)],
-        [("Return to the Merchant", 1)]
+
+        //TODO: add objectives for crafting specific copper items, which the merchant will buy off you
+        // TODO: Travelling Customer NPCs will spawn in the world periodically and visit the town to purchase copper items.
+        // You earn 20% of the sale price for each item sold.
+
+        [("Return to the Merchant", 1)],
+        [("Craft Copper-tipped Arrows", 30), ("Craft Copper shortswords", 4), ("Craft Copper Bows", 2)],
+        [("Wait for Customers", 1)],
+        [("Collect 50 silver in Earnings", 50), ("Check in with Merchant", 1)]
       ],
 
       rewards: [new Item(ItemID.SilverCoin, Main.rand.Next(75, 150)),
@@ -34,16 +45,16 @@ public class CopperStandard : Mission
 
     public override void OnMissionStart()
     {
-        base.OnMissionStart(); // This now calls RegisterEventHandlers()
+        base.OnMissionStart();
         DialogueManager.Instance.StartDialogue(NPCManager.MerchantData, DialogueKeys.Merchant.CopperStandardStart,
-            lineCount: 5, zoomIn: true);
+            lineCount: 6, zoomIn: true);
     }
 
     public override void OnMissionComplete(bool giveRewards = true)
     {
-        base.OnMissionComplete(giveRewards); // This now calls UnregisterEventHandlers()
-        DialogueManager.Instance.StartDialogue(
-            NPCManager.MerchantData, DialogueKeys.Merchant.CopperStandardComplete, lineCount: 4, zoomIn: true);
+        base.OnMissionComplete(giveRewards);
+        //DialogueManager.Instance.StartDialogue(
+        //    NPCManager.MerchantData, DialogueKeys.Merchant.CopperStandardComplete, lineCount: 4, zoomIn: true);
     }
 
     public override void Update()
@@ -82,6 +93,29 @@ public class CopperStandard : Mission
     #endregion
 
     #region Event Handlers
+    protected override void OnObjectiveIndexComplete(int setIndex, ObjectiveSet completedSet)
+    {
+        try
+        {
+            var objective = (Objectives)setIndex;
+            switch (objective)
+            {
+                case Objectives.CopperCoins:
+                    DialogueManager.Instance.StartDialogue(NPCManager.MerchantData,
+                        DialogueKeys.Merchant.MineCopperInProgress, lineCount: 2);
+                    break;
+                case Objectives.ReturnToMerchant:
+                    DialogueManager.Instance.StartDialogue(NPCManager.MerchantData,
+                        DialogueKeys.Merchant.CopperStandardMidway, lineCount: 4);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error in OnObjectiveIndexComplete: {ex.Message}");
+        }
+    }
+
     private void OnItemPickupHandler(Item item, Player player)
     {
         if (Progress != MissionProgress.Active) return;
@@ -154,10 +188,6 @@ public class CopperStandard : Mission
                     case Objectives.MineCopper:
                         DialogueManager.Instance.StartDialogue(NPCManager.MerchantData,
                                 DialogueKeys.Merchant.MineCopperInProgress, lineCount: 2);
-                        break;
-                    case Objectives.SmeltCopper:
-                        DialogueManager.Instance.StartDialogue(NPCManager.MerchantData,
-                           DialogueKeys.Merchant.SmeltCopperInProgress, lineCount: 5);
                         break;
                     case Objectives.ReturnToMerchant:
                         UpdateProgress(0);

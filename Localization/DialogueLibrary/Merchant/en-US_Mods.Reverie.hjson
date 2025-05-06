@@ -1,4 +1,4 @@
-DialogueLibrary: {
+﻿DialogueLibrary: {
 	Merchant: {
 		MerchantIntro: {
 			Line1: Hey! Nice to meet ya. I'm the local merchant around here.
@@ -11,16 +11,17 @@ DialogueLibrary: {
 		CopperStandardStart: {
 			Line1: I know silver and gold are flashier, but copper’s honest.
 			Line2: It’s the first metal people trust. The backbone of any good economy!
-			Line3: I want to get a local mint going; something real folks can trade with.
-			Line4: Think you can help me build the foundation?
+			Line3: I want to get a local thing going; something folks can trade with.
+			Line4: You up for the task?
 			Line5: Bring me a little of everything: raw ore, refined bars, and a fistful of coins.
+            Line6: After that, we can talk setting up shop and attracting customers.
 		}
 
-		CopperStandardComplete: {
+		CopperStandardMidway: {
 			Line1: Now that’s a beautiful haul!
-			Line2: You ever just hold a copper bar and feel stability in your hands?
-			Line3: With this, I can start setting up real trade. Maybe even forge a few coins of my own...
-			Line4: Stick with me, and I’ll make sure you always get the friends-and-fam rate.
+			Line2: With this, we can start setting up trade.
+            Line3: I’ll get the word out, and soon we’ll have a booming market right here!
+            Line4: Check your MirrorNet, these are the item's we'll need to stock.
 		}
 
 		CopperCoinsInProgress: {
@@ -36,14 +37,6 @@ DialogueLibrary: {
 		MineCopperInProgress: {
 			Line1: I swear copper’s got a smell... like dusty potential.
 			Line2: Don’t be shy, dig deep! The good stuff’s never on the surface.
-		}
-
-		SmeltCopperInProgress: {
-			Line1: You’ve got the ore, now refine it. A bar of copper is like a brick of dreams...
-			Line2: ...soft, shiny dreams.
-			Line3: ...
-			Line4: Fire up a furnace and make that metal sing!
-			Line5: If you burn your eyebrows off, that means you're doing it right!
 		}
 	}
 }
