@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -410,4 +410,9 @@ Biomes: {
 		DisplayName: Sylvan Overworld
 		TownNPCDialogueName: the Sylvan Overworld
 	}
+}
+
+Keybinds: {
+	"Fast-Forward Dialogue.DisplayName": Fast- Forward  Dialogue
+	"Skip Cutscene.DisplayName": Skip  Cutscene
 }

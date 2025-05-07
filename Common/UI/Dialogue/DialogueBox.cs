@@ -1,4 +1,6 @@
-﻿using Reverie.Core.Dialogue;
+﻿using ReLogic.Content;
+using Reverie.Common.Systems;
+using Reverie.Core.Dialogue;
 using Reverie.Utilities;
 using System.Collections.Generic;
 using System.Text;
@@ -6,7 +8,6 @@ using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.GameInput;
 using Terraria.UI;
-using static Reverie.Reverie;
 
 namespace Reverie.Common.UI.Dialogue;
 
@@ -34,8 +35,8 @@ public class DialogueBox : IInGameNotification
     public required NPCData npcData;
     private NPCData currentSpeakingNPC;
 
-    private Texture2D ArrowTexture = ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/ArrowForward").Value;
-    private Texture2D PortraitFrameTexture = ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortraitFrame").Value;
+    private readonly Texture2D ArrowTexture = ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/ArrowForward", AssetRequestMode.ImmediateLoad).Value;
+    private readonly Texture2D PortraitFrameTexture = ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortraitFrame", AssetRequestMode.ImmediateLoad).Value;
     #endregion
 
     #region Properties
@@ -111,7 +112,7 @@ public class DialogueBox : IInGameNotification
 
             currentSpeakingNPC = currentDialogue.SpeakingNPC ?? npcData;
         }
-        else
+        else if(!isRemoved)
         {
             isRemoved = true;
             isLastDialogue = true;
@@ -130,6 +131,27 @@ public class DialogueBox : IInGameNotification
     private void UpdateDisplay()
     {
         var currentDialogueText = currentDialogue.GetText();
+
+        // Fast forward for you losers who hate to read
+        if (ReverieSystem.FFDialogueKeybind.JustPressed)
+        {
+            if (charIndex < currentDialogueText.Value.Length)
+            {
+                charIndex = currentDialogueText.Value.Length;
+                PlayCharacterSound(CharacterSound);
+            }
+            else if (currentSequence.Count > 0)
+            {
+                NextEntry();
+                return;
+            }
+            else if (!isRemoved)
+            {
+                isRemoved = true;
+                isLastDialogue = true;
+                animationProgress = 0f;
+            }
+        }
 
         if (charIndex < currentDialogueText.Value.Length)
         {

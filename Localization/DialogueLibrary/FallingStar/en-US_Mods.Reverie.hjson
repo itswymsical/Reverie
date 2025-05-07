@@ -20,6 +20,14 @@ DialogueLibrary: {
 			Line6: Before you go, I have this for ya. It's a little something to help you get started. If you're looking for tools, ask the Merchant.
 		}
 
+		ExploreBiomes: {
+			Line1: Done chatting already? Cool, you should go explore the world a bit.
+			Line2: Open your inventory, you'll see a task list near your armor slots.
+			Line3: That's the MirrorNet log, it tracks your progress and gives you hints on what to do next.
+			Line4: As a starter, I suggest you gather some resources and explore the biomes around here.
+			Line5: Well then, see ya later! Let me know if you find anything interesting.
+		}
+
 		ChimeResponse: {
 			Line1: What was that sound?
 			Line2: Did anyone else hear that?

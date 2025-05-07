@@ -8,11 +8,21 @@ namespace Reverie.Common.Systems;
 public class ReverieSystem : ModSystem
 {
     public static ReverieSystem Instance => ModContent.GetInstance<ReverieSystem>();
-
+    public static ModKeybind FFDialogueKeybind { get; private set; }
+    public static ModKeybind SkipCutsceneKeybind { get; private set; }
     public override void Load()
     {
         NPCManager.Initialize();
         Reverie.Instance.Logger.Info("NPCManager for dialogue initialized...");
+
+        FFDialogueKeybind = KeybindLoader.RegisterKeybind(Mod, "Fast-Forward Dialogue", "V");
+        SkipCutsceneKeybind = KeybindLoader.RegisterKeybind(Mod, "Skip Cutscene", ";");
+
+    }
+    public override void Unload()
+    {
+        FFDialogueKeybind = null;
+        SkipCutsceneKeybind = null;
     }
 
     public override void ModifyTimeRate(ref double timeRate, ref double tileUpdateRate, ref double eventUpdateRate)

@@ -45,7 +45,7 @@ public class AFallingStar : Mission
 
         [("Gather Wood", 50), ("Break Pots", 15)],
 
-        [("Harvest Ore", 30), ("Discover accessories", 2)],
+        [("Harvest Ore", 30), ("Discover Utility items", 2)],
 
         [("Explore the Underground", 1), ("Give Guide Archiver Chronicle", 1),
         ("Discover a Glowing Mushroom Biome", 1), ("Explore the Jungle", 1),
@@ -55,9 +55,9 @@ public class AFallingStar : Mission
 
         [("Explore the Corruption", 1), ("Enter the Stillspire", 1)],
 
-        [("TBA", 1)],
+        [("Survive Assailants", 10)],
 
-        [("TBA", 1)]
+        [("Defeat the Vanguard", 1)]
       ],
 
       [new Item(ItemID.RegenerationPotion),
@@ -94,15 +94,37 @@ public class AFallingStar : Mission
         //player.StartNextMission(...);
     }
 
+    private bool exploreBiomesDialoguePending = false;
+    private int exploreBiomesDialogueTimer = 0;
+    private const int DIALOGUE_DELAY_FRAMES = 7 * 60;
+
     public override void Update()
     {
         base.Update();
+
+        if (exploreBiomesDialoguePending)
+        {
+            exploreBiomesDialogueTimer++;
+            if (exploreBiomesDialogueTimer >= DIALOGUE_DELAY_FRAMES)
+            {
+                if (!DialogueManager.Instance.IsAnyActive())
+                {
+                    DialogueManager.Instance.StartDialogue(
+                        NPCManager.GuideData,
+                        DialogueKeys.FallingStar.ExploreBiomes,
+                        lineCount: 5,
+                        zoomIn: true);
+                    exploreBiomesDialoguePending = false;
+                }
+            }
+        }
 
         if (CurrentIndex < (int)Objectives.ClearSlimeRain)
         {
             Main.slimeRain = false;
             Main.slimeRainTime = 0;
         }
+
         else if (CurrentIndex == (int)Objectives.ClearSlimeRain)
         {
             if (!Main.slimeRain)
@@ -110,14 +132,12 @@ public class AFallingStar : Mission
                 Main.StartSlimeRain();
             }
         }
+
         if (CurrentIndex >= (int)Objectives.AquireItems)
         {
             UpdateAmbientSound();
         }
-        if (CurrentIndex == (int)Objectives.ExploreBiomes)
-        {
-           
-        }
+
         Main.bloodMoon = false;
     }
 
@@ -166,26 +186,10 @@ public class AFallingStar : Mission
 
             switch (objective)
             {
-                //case Objectives.CheckIn:
-                //    DialogueManager.Instance.StartDialogueByKey(
-                //        NPCManager.GuideData,
-                //        DialogueKeys.FallingStar.SlimeInfestation,
-                //        lineCount: 2,
-                //        zoomIn: true);
-                //    break;
-                //case Objectives.ClearSlimes:
-                //    StartSlimeRain();
-                //    break;
-                //case Objectives.ClearSlimeRain:
-                //    SpawnKingSlime();
-                //    break;
-                //case Objectives.DefeatKingSlime:
-                //    DialogueManager.Instance.StartDialogueByKey(
-                //        NPCManager.GuideData,
-                //        DialogueKeys.FallingStar.KingSlimeDefeat,
-                //        lineCount: 4,
-                //        zoomIn: true);
-                //    break;
+                case Objectives.TalkToTownies:
+                    exploreBiomesDialoguePending = true;
+                    exploreBiomesDialogueTimer = 0;
+                    break;
             }
         }
         catch (Exception ex)
@@ -329,21 +333,16 @@ public class AFallingStar : Mission
                     UpdateProgress(0, item.stack);
                 break;
             case Objectives.AquireItems:
-                if (item.accessory)
+                if (item.accessory || item.MiscellaneousTool())
                     UpdateProgress(1, item.stack);
                 break;
             case Objectives.ExploreBiomes:
                 if (item.type == ModContent.ItemType<ArchiverChronicleI>())
                 {
-                    OnSpecialItemDiscovered();
-
-                    //Main.NewText("Consider wisely...", Color.White);
-
                     DialogueManager.Instance.StartDialogue(
-                        NPCManager.GuideData,
-                        DialogueKeys.FallingStar.ArchiverChronicleIFound,
-                        lineCount: 3,
-                        zoomIn: false);
+                        NPCManager.GuideData, DialogueKeys.FallingStar.ArchiverChronicleIFound, lineCount: 3,zoomIn: false);
+
+                    OnSpecialItemDiscovered();
                 }
                 break;
         }

@@ -78,6 +78,7 @@ public static class DialogueKeys
         public static string Cutscene => $"{PREFIX}.Cutscene";
         public static string CrashLanding => $"{PREFIX}.CrashLanding";
         public static string GatheringResources => $"{PREFIX}.GatheringResources";
+        public static string ExploreBiomes => $"{PREFIX}.ExploreBiomes";
         public static string ArchiverChronicleIFound => $"{PREFIX}.ArchiverChronicleIFound";
         public static string GuideReadsChronicleI => $"{PREFIX}.GuideReadsChronicleI";
         public static string ChronicleDecoded => $"{PREFIX}.ChronicleDecoded";
