@@ -5,6 +5,7 @@ using Terraria;
 using Terraria.ModLoader;
 using Reverie.Core.Missions;
 using System.Linq;
+using Reverie.Core.Missions.Core;
 
 namespace Reverie.Common.Commands;
 

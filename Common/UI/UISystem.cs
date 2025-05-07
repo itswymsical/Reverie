@@ -1,6 +1,6 @@
 ﻿using Terraria.Localization;
 
-namespace Reverie.Common.Systems
+namespace Reverie.Common.UI
 {
     [Autoload(Side = ModSide.Client)]
     internal class UISystem : ModSystem
@@ -11,7 +11,7 @@ namespace Reverie.Common.Systems
         public override void Load()
         {
 
-            string category = "UI";
+            var category = "UI";
             ExperienceText ??= Mod.GetLocalization($"{category}.ExperienceTracker");
 
         }

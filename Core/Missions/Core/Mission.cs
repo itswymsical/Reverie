@@ -9,7 +9,7 @@ using Terraria.DataStructures;
 using Terraria.ModLoader.IO;
 using Terraria.UI;
 
-namespace Reverie.Core.Missions;
+namespace Reverie.Core.Missions.Core;
 
 public enum MissionProgress
 {
@@ -150,7 +150,7 @@ public abstract class Mission
             var obj = currentSet.Objectives[objective];
             if (!obj.IsCompleted || amount < 0)
             {
-                bool wasCompleted = obj.UpdateProgress(amount);
+                var wasCompleted = obj.UpdateProgress(amount);
 
                 var player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
                 player.NotifyMissionUpdate(this);
@@ -233,7 +233,7 @@ public abstract class Mission
     #region Helper Methods
     private void GiveRewards()
     {
-        foreach (Item reward in Rewards)
+        foreach (var reward in Rewards)
         {
             Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), reward.type, reward.stack);
         }

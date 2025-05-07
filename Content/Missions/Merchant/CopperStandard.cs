@@ -1,5 +1,6 @@
 ﻿using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
+using Reverie.Core.Missions.Core;
 using Terraria.DataStructures;
 
 namespace Reverie.Content.Missions.Merchant;

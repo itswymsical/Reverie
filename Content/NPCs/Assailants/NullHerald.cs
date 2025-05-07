@@ -1,4 +1,4 @@
-﻿using Reverie.Common.Systems.Camera;
+﻿using Reverie.Core.Cinematics.Camera;
 using Reverie.Core.NPCs.Actors;
 using Terraria.Audio;
 using Terraria.GameContent;

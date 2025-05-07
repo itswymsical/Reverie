@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Terraria.DataStructures;
 
-namespace Reverie.Core.Missions;
+namespace Reverie.Core.Missions.Core;
 
 public class ObjectiveEventItem : GlobalItem
 {
@@ -266,7 +266,7 @@ public class ObjectiveEventPlayer : ModPlayer
     private void TriggerEvents()
     {
         var p = Player.GetModPlayer<MissionPlayer>();
-        bool merchantPresent = NPC.AnyNPCs(NPCID.Merchant);
+        var merchantPresent = NPC.AnyNPCs(NPCID.Merchant);
         var copperStandard = p.GetMission(MissionID.CopperStandard);
         if (copperStandard.Availability == MissionAvailability.Locked && copperStandard.Progress == MissionProgress.Inactive
             && merchantPresent && Player.HasItemInAnyInventory(ItemID.CopperBar))
@@ -274,7 +274,7 @@ public class ObjectiveEventPlayer : ModPlayer
             p.UnlockMission(MissionID.CopperStandard, true);
         }
 
-        bool demoPresent = NPC.AnyNPCs(NPCID.Demolitionist);
+        var demoPresent = NPC.AnyNPCs(NPCID.Demolitionist);
         var lightEmUp = p.GetMission(MissionID.LightEmUp);
         if (lightEmUp.Availability == MissionAvailability.Locked && lightEmUp.Progress == MissionProgress.Inactive
             && demoPresent && Player.HasItemInAnyInventory(ItemID.Torch) && Player.statLifeMax >= 140)

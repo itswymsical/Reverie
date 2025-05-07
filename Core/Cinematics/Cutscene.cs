@@ -1,5 +1,7 @@
 ﻿using Terraria.GameContent;
 using Reverie.Core.Animation;
+using Reverie.Common.Systems;
+using System.Linq;
 
 namespace Reverie.Core.Cinematics;
 
@@ -11,7 +13,7 @@ public abstract class Cutscene
     public float FadeAlpha { get; set; }
     public Color FadeColor { get; set; } = Color.Black;
 
-    public static bool DisableMoment { get; set; }
+    public static bool DisableInputs { get; set; }
     public static bool NoFallDamage { get; set; }
     public static bool IsPlayerVisible { get; set; } = true;
 
@@ -25,6 +27,21 @@ public abstract class Cutscene
 
     protected float ElapsedTime { get; set; }
 
+    private bool _isSkipping = false;
+    private int _skipHoldTime = 0;
+    private int _skipAnimationFrame = 0;
+    private int _skipAnimationTimer = 0;
+    private bool _skipFadeOutStarted = false;
+    private float _skipFadeOutDuration = 1f;
+    private float _skipFadeOutTimer = 0f;
+
+    protected bool CanSkip { get; set; } = true;
+    protected int SkipHoldDuration { get; set; } = 120;
+    protected int SkipAnimationFrameRate { get; set; } = 5;
+
+    private Texture2D _skipIcon;
+    private int _skipIconTotalFrames = 19;
+
     /// <summary>
     /// Starts the cutscene with default parameters
     /// </summary>
@@ -35,6 +52,12 @@ public abstract class Cutscene
             IsPlaying = true;
             IsUIHidden = false;
             ElapsedTime = 0f;
+            _isSkipping = false;
+            _skipHoldTime = 0;
+            _skipAnimationFrame = 0;
+            _skipAnimationTimer = 0;
+            _skipFadeOutStarted = false;
+            _skipFadeOutTimer = 0f;
 
             Letterbox.HeightPercentage = LetterboxHeightPercentage;
             Letterbox.LetterboxColor = LetterboxColor;
@@ -57,15 +80,15 @@ public abstract class Cutscene
     /// Starts the cutscene with custom letterbox configuration
     /// </summary>
     /// <param name="letterboxHeight">Height percentage (0.0-0.5)</param>
-    /// <param name="letterboxColor">Color of the letterbox</param>
+    /// <param name="color">Color of the letterbox</param>
     /// <param name="easing">Easing function for the animation</param>
     /// <param name="duration">Animation duration in frames</param>
-    public virtual void Start(float letterboxHeight, Color? letterboxColor = null, EaseFunction easing = null, int? duration = null)
+    public virtual void Start(float letterboxHeight, Color? color = null, EaseFunction easing = null, int? duration = null)
     {
         LetterboxHeightPercentage = MathHelper.Clamp(letterboxHeight, 0.01f, 0.5f);
 
-        if (letterboxColor.HasValue)
-            LetterboxColor = letterboxColor.Value;
+        if (color.HasValue)
+            LetterboxColor = color.Value;
 
         if (easing != null)
             LetterboxEasing = easing;
@@ -76,15 +99,8 @@ public abstract class Cutscene
         Start();
     }
 
-    /// <summary>
-    /// Called when the cutscene starts, after initialization
-    /// </summary>
     protected virtual void OnCutsceneStart() { }
 
-    /// <summary>
-    /// Updates the cutscene state
-    /// </summary>
-    /// <param name="gameTime">Game time information</param>
     public virtual void Update(GameTime gameTime)
     {
         try
@@ -100,9 +116,56 @@ public abstract class Cutscene
                 Main.musicBox2 = _currentMusicID.Value;
             }
 
+            if (CanSkip && !_skipFadeOutStarted)
+            {
+                if (ReverieSystem.SkipCutsceneKeybind.Current)
+                {
+                    _skipHoldTime++;
+                    _isSkipping = true;
+                    // Animate loading icon
+                    _skipAnimationTimer++;
+                    if (_skipAnimationTimer >= SkipAnimationFrameRate)
+                    {
+                        _skipAnimationTimer = 0;
+                        _skipAnimationFrame++;
+                        if (_skipAnimationFrame >= _skipIconTotalFrames)
+                        {
+                            _skipAnimationFrame = 0;
+                        }
+                    }
+
+                    // Check if skip is complete
+                    if (_skipHoldTime >= SkipHoldDuration)
+                    {
+                        OnSkipTriggered();
+                    }
+                }
+                else
+                {
+                    _isSkipping = false;
+                    _skipHoldTime = 0;
+                    _skipAnimationFrame = 0;
+                    _skipAnimationTimer = 0;
+                }
+            }
+
+            // Handle skip fade out
+            if (_skipFadeOutStarted)
+            {
+                _skipFadeOutTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                float fadeProgress = _skipFadeOutTimer / _skipFadeOutDuration;
+                FadeAlpha = Math.Min(fadeProgress, 1f);
+
+                if (fadeProgress >= 1f)
+                {
+                    End();
+                    return;
+                }
+            }
+
             OnCutsceneUpdate(gameTime);
 
-            if (IsFinished())
+            if (!_skipFadeOutStarted && IsFinished())
             {
                 End();
             }
@@ -111,6 +174,17 @@ public abstract class Cutscene
         {
             ModContent.GetInstance<Reverie>().Logger.Error("Error updating cutscene: " + ex.Message);
         }
+    }
+
+    /// <summary>
+    /// Called when skip is triggered
+    /// </summary>
+    protected virtual void OnSkipTriggered()
+    {
+
+        _skipFadeOutStarted = true;
+        FadeColor = Color.Black;
+      
     }
 
     /// <summary>
@@ -153,6 +227,44 @@ public abstract class Cutscene
         }
 
         DrawCutsceneContent(spriteBatch);
+
+        // Draw skip indicator
+        if (_isSkipping && !_skipFadeOutStarted)
+        {
+            DrawSkipIndicator(spriteBatch);
+        }
+    }
+
+    /// <summary>
+    /// Draws the skip indicator
+    /// </summary>
+    /// <param name="spriteBatch">SpriteBatch for drawing</param>
+    public virtual void DrawSkipIndicator(SpriteBatch spriteBatch)
+    {
+        if (_skipIcon == null)
+        {
+            _skipIcon = TextureAssets.LoadingSunflower?.Value;
+            if (_skipIcon == null) return;
+        }
+
+        var frameWidth = _skipIcon.Width;
+        var frameHeight = _skipIcon.Height / _skipIconTotalFrames;
+        Rectangle sourceRectangle = new Rectangle(0, _skipAnimationFrame * frameHeight, frameWidth, frameHeight);
+        Vector2 iconPosition = new Vector2(Main.screenWidth - frameWidth - 10, Main.screenHeight - frameHeight - 10);
+
+        spriteBatch.Draw(_skipIcon, iconPosition, sourceRectangle, Color.White);
+
+        string keybindName = ReverieSystem.SkipCutsceneKeybind.GetAssignedKeys().FirstOrDefault() ?? "[None]";
+        string skipText = $"Hold [{keybindName}] to skip...";
+
+        var font = FontAssets.MouseText.Value;
+        Vector2 textSize = font.MeasureString(skipText);
+        Vector2 textPosition = new Vector2(
+            iconPosition.X - textSize.X - 10,
+            iconPosition.Y + (frameHeight - textSize.Y) / 2
+        );
+
+        Utils.DrawBorderString(spriteBatch, skipText, textPosition, Color.White);
     }
 
     /// <summary>
@@ -210,8 +322,8 @@ public abstract class Cutscene
     protected static void DisableInvisibility() => IsPlayerVisible = true;
     protected static void EnableInvisibility() => IsPlayerVisible = false;
 
-    protected static void DisablePlayerMovement() => DisableMoment = true;
-    protected static void EnablePlayerMovement() => DisableMoment = false;
+    protected static void DisablePlayerMovement() => DisableInputs = true;
+    protected static void EnablePlayerMovement() => DisableInputs = false;
 
     /// <summary>
     /// Draws a full-screen fade effect

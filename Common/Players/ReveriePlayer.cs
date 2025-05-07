@@ -8,7 +8,7 @@ using Reverie.Core.Cinematics;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Graphics;
 using Reverie.Core.Missions;
-
+using Reverie.Core.Missions.Core;
 using SubworldLibrary;
 
 using System.Collections.Generic;
@@ -50,7 +50,7 @@ public class ReveriePlayer : ModPlayer
 
     public override void SetControls()
     {
-        if (Cutscene.DisableMoment)
+        if (Cutscene.DisableInputs)
         {
             Player.controlLeft = false;
             Player.controlRight = false;
@@ -61,6 +61,8 @@ public class ReveriePlayer : ModPlayer
             Player.controlInv = false;
             Player.controlUseItem = false;
             Player.controlUseTile = false;
+            Player.controlMap = false;
+            Player.controlMount = false;
         }
     }
 

@@ -3,8 +3,8 @@ using Reverie.Core.Entities;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Terraria.UI;
-using Reverie.Common.Systems;
 using Reverie.Content.Cutscenes;
+using Reverie.Core.Cinematics;
 
 namespace Reverie.Content.Items.Debugging;
 

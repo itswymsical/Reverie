@@ -1,6 +1,6 @@
-﻿using Reverie.Common.Systems;
-using Reverie.Common.UI.Dialogue;
+﻿using Reverie.Common.UI.Dialogue;
 using Reverie.Core.Cinematics;
+using Reverie.Core.Cinematics.Camera;
 using System.Collections.Generic;
 
 namespace Reverie.Core.Dialogue;

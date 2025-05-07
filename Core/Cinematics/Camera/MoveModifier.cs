@@ -1,6 +1,6 @@
 ﻿using Terraria.Graphics.CameraModifiers;
 
-namespace Reverie.Common.Systems.Camera;
+namespace Reverie.Core.Cinematics.Camera;
 
 internal class MoveModifier : ICameraModifier
 {

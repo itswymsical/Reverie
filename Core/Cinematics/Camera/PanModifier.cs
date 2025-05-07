@@ -1,6 +1,6 @@
 ﻿using Terraria.Graphics.CameraModifiers;
 
-namespace Reverie.Common.Systems;
+namespace Reverie.Core.Cinematics.Camera;
 
 internal class PanModifier : ICameraModifier
 {

@@ -1,6 +1,7 @@
 ﻿using Reverie.Content.Items;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
+using Reverie.Core.Missions.Core;
 
 namespace Reverie.Content.Missions.Argie;
 

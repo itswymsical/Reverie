@@ -112,7 +112,7 @@ public class DialogueBox : IInGameNotification
 
             currentSpeakingNPC = currentDialogue.SpeakingNPC ?? npcData;
         }
-        else if(!isRemoved)
+        else if (!isRemoved)
         {
             isRemoved = true;
             isLastDialogue = true;

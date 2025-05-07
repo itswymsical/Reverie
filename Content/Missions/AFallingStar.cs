@@ -1,12 +1,12 @@
 ﻿using Reverie.Common.Systems;
-using Reverie.Common.Systems.Camera;
 
 using Reverie.Content.Cutscenes;
 using Reverie.Content.Items;
-
+using Reverie.Core.Cinematics;
+using Reverie.Core.Cinematics.Camera;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
-
+using Reverie.Core.Missions.Core;
 using Reverie.Utilities;
 
 using System.Collections.Generic;

@@ -1,4 +1,5 @@
-﻿using Reverie.Core.Dialogue;
+﻿using Reverie.Core.Cinematics.Camera;
+using Reverie.Core.Dialogue;
 using Terraria.Audio;
 using Terraria.DataStructures;
 
@@ -31,7 +32,7 @@ public class BoundNPCGlobal : GlobalNPC
     {
         Vector2 targetPosition = npc.Center;
 
-        Systems.Camera.CameraSystem.DoPanAnimation(
+        CameraSystem.DoPanAnimation(
             CUTSCENE_DURATION,
             targetPosition,
             Vector2.Zero

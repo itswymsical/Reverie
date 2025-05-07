@@ -1,4 +1,5 @@
 ﻿using Reverie.Core.Missions;
+using Reverie.Core.Missions.Core;
 using Reverie.Utilities;
 using Terraria.Audio;
 using Terraria.GameContent;

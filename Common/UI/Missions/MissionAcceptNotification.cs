@@ -1,4 +1,4 @@
-﻿using Reverie.Core.Missions;
+﻿using Reverie.Core.Missions.Core;
 using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.UI;

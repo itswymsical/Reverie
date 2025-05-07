@@ -1,8 +1,6 @@
-﻿using Reverie.Core.Missions;
+﻿namespace Reverie.Core.Missions.System;
 
-namespace Reverie.Common.Systems;
-
-public class MissionInitSystem : ModSystem
+public class MissionLoadingSystem : ModSystem
 {
     private static bool worldJustLoaded = false;
     private static int worldLoadCounter = 0;
@@ -16,7 +14,7 @@ public class MissionInitSystem : ModSystem
         worldJustLoaded = true;
         worldLoadCounter = 0;
 
-        ModContent.GetInstance<Reverie>().Logger.Info("MissionInitSystem: OnWorldLoad complete");
+        ModContent.GetInstance<Reverie>().Logger.Info("MissionLoadingSystem: OnWorldLoad complete");
     }
 
     public override void PostUpdateWorld()
@@ -30,7 +28,7 @@ public class MissionInitSystem : ModSystem
                 MissionManager.Instance.OnWorldFullyLoaded();
                 worldJustLoaded = false;
 
-                ModContent.GetInstance<Reverie>().Logger.Info("MissionInitSystem: Deferred world load complete");
+                ModContent.GetInstance<Reverie>().Logger.Info("MissionLoadingSystem: Deferred world load complete");
             }
         }
     }

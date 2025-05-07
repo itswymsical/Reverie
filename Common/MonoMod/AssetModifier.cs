@@ -1,8 +1,8 @@
 ﻿using Terraria.GameContent;
 
-namespace Reverie.Common.Systems;
+namespace Reverie.Common.MonoMod;
 
-public class AssetModifierSystem : ModSystem
+public class AssetModifier : ModSystem
 {
     public override void OnModLoad()
     {

@@ -1,5 +1,6 @@
 ﻿using Reverie.Content.Projectiles.Ammo;
 using Reverie.Core.Missions;
+using Reverie.Core.Missions.Core;
 
 namespace Reverie.Content.Items.Ammo;
 

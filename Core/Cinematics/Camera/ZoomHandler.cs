@@ -1,6 +1,6 @@
 ﻿using Terraria.Graphics;
 
-namespace Reverie.Common.Systems;
+namespace Reverie.Core.Cinematics.Camera;
 
 public class ZoomHandler : ModSystem
 {

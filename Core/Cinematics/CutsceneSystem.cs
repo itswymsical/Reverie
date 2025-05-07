@@ -1,10 +1,9 @@
-﻿using Reverie.Core.Cinematics;
-using Reverie.Core.Interfaces;
+﻿using Reverie.Core.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria.UI;
 
-namespace Reverie.Common.Systems;
+namespace Reverie.Core.Cinematics;
 
 public class CutsceneSystem : ModSystem
 {
@@ -128,6 +127,15 @@ public class CutsceneSystem : ModSystem
         catch (Exception ex)
         {
             ModContent.GetInstance<Reverie>().Logger.Error("Error playing cutscene: " + ex.Message);
+        }
+    }
+
+    public static void EndCurrentCutscene()
+    {
+        if (CurrentCutscene != null)
+        {
+            CurrentCutscene.End();
+            CurrentCutscene = null;
         }
     }
 }

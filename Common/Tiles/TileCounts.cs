@@ -1,11 +1,11 @@
-﻿namespace Reverie.Common.Systems;
+﻿namespace Reverie.Common.Tiles;
 
-internal class TileCountSystem : ModSystem
+internal class TileCounts : ModSystem
 {
     public int canopyBlockCount;
     //public int emberiteCavernsBlockCount;
 
-    public static TileCountSystem Instance => ModContent.GetInstance<TileCountSystem>();
+    public static TileCounts Instance => ModContent.GetInstance<TileCounts>();
 
     public override void TileCountsAvailable(ReadOnlySpan<int> tileCounts)
     {

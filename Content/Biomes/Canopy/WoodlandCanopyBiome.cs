@@ -1,4 +1,4 @@
-﻿using Reverie.Common.Systems;
+﻿using Reverie.Common.Tiles;
 using static Reverie.Common.WorldGeneration.WoodlandCanopy.CanopyGeneration;
 
 namespace Reverie.Content.Biomes.Canopy;
@@ -27,7 +27,7 @@ public class WoodlandCanopyBiome : ModBiome
 
         var belowDirtLayer = playerTile.Y > Main.worldSurface + 20;
 
-        var enoughCanopyBlocks = ModContent.GetInstance<TileCountSystem>().canopyBlockCount >= 100;
+        var enoughCanopyBlocks = ModContent.GetInstance<TileCounts>().canopyBlockCount >= 100;
 
         return inCanopyX && inUpperHalfY && belowDirtLayer && enoughCanopyBlocks;
     }
@@ -54,7 +54,7 @@ public class LowerCanopyBiome : ModBiome
 
         var inLowerHalfY = playerTile.Y >= canopyMiddle && playerTile.Y <= canopyBottom;
 
-        var enoughCanopyBlocks = ModContent.GetInstance<TileCountSystem>().canopyBlockCount >= 100;
+        var enoughCanopyBlocks = ModContent.GetInstance<TileCounts>().canopyBlockCount >= 100;
 
         return inCanopyX && inLowerHalfY && enoughCanopyBlocks;
     }

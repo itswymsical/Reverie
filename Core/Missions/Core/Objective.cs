@@ -4,7 +4,7 @@ using System.Linq;
 
 using Terraria.ModLoader.IO;
 
-namespace Reverie.Core.Missions;
+namespace Reverie.Core.Missions.Core;
 
 public class Objective(string description, int requiredCount = 1)
 {
@@ -167,10 +167,10 @@ public class ObjectiveSet(List<Objective> objectives)
 
     public void ReadData(BinaryReader reader)
     {
-        int count = reader.ReadInt32();
+        var count = reader.ReadInt32();
         HasCheckedInitialInventory = reader.ReadBoolean();
         Objectives.Clear();
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
             var objective = new Objective("", 1);
             objective.ReadData(reader);
