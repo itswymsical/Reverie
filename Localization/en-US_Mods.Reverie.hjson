@@ -269,6 +269,11 @@ Items: {
 		DisplayName: Copper-Tipped Arrow
 		Tooltip: Splits into piercing metal scraps on impact (+3 damage)
 	}
+
+	ChallengeNotif: {
+		DisplayName: Challenge Notif
+		Tooltip: ""
+	}
 }
 
 Projectiles: {

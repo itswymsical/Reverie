@@ -5,6 +5,9 @@ using Reverie.Core.Missions;
 using Terraria.UI;
 using Reverie.Content.Cutscenes;
 using Reverie.Core.Cinematics;
+using Reverie.Common.UI;
+using Reverie.Core.ChallengeSystem;
+using System.Linq;
 
 namespace Reverie.Content.Items.Debugging;
 
@@ -33,6 +36,34 @@ public class DialogueTest : ModItem
                 (line: 4, delay: 3, emote: 0),
                 (line: 5, delay: 3, emote: 1)]);
 
+        return true;
+    }
+}
+
+public class ChallengeNotif : ModItem
+{
+    public override string Texture => PLACEHOLDER;
+    public override void SetDefaults()
+    {
+        Item.useTime = Item.useAnimation = 20;
+        Item.value = Item.buyPrice(0);
+        Item.rare = ItemRarityID.Quest;
+        Item.useStyle = ItemUseStyleID.HoldUp;
+    }
+    public override bool? UseItem(Player player)
+    {
+        var mplayer = Main.LocalPlayer.GetModPlayer<ChallengePlayer>();
+        var challenge = ChallengeManager.Instance.GetChallenge(ChallengeID.SlimeSlayer);
+
+        var notification = new ChallengeNotification(challenge,
+            name: challenge.Name,
+            current: challenge.CurrentCount,
+            max: challenge.RequiredCount,
+            tier: (int)challenge.CurrentTier,
+            maxTiers: (int)challenge.TierRequirements.Keys.Max()
+        );
+
+        InGameNotificationsTracker.AddNotification(notification);
         return true;
     }
 }
