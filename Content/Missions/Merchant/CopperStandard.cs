@@ -1,4 +1,5 @@
-﻿using Reverie.Core.Dialogue;
+﻿using Reverie.Content.Items.Ammo;
+using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Core.Missions.Core;
 using Terraria.DataStructures;
@@ -158,6 +159,14 @@ public class CopperStandard : Mission
                 case Objectives.SmeltCopper:
                     if (item.type == ItemID.CopperBar)
                         UpdateProgress(0, item.stack);
+                    break;
+                case Objectives.CraftItems:
+                    if (item.type == ModContent.ItemType<CopperTippedArrowItem>())
+                        UpdateProgress(0, item.stack);
+                    if (item.type == ItemID.CopperShortsword)
+                        UpdateProgress(1, item.stack);
+                    if (item.type == ItemID.CopperBow)
+                        UpdateProgress(2, item.stack);
                     break;
             }
         }

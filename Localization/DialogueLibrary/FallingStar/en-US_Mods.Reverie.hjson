@@ -21,11 +21,11 @@ DialogueLibrary: {
 		}
 
 		ExploreBiomes: {
-			Line1: Done chatting already? Cool, you should go explore the world a bit.
-			Line2: Open your inventory, you'll see a task list near your armor slots.
-			Line3: That's the MirrorNet log, it tracks your progress and gives you hints on what to do next.
+			Line1: Done chatting already? Cool! Open your inventory, you'll see a task list near your armor slots.
+			Line2: That's the Mirror-Net log, it tracks your progress and gives you hints on what to do next.
+			Line3: It also shows you new job listings, so be sure to check it often.
 			Line4: As a starter, I suggest you gather some resources and explore the biomes around here.
-			Line5: Well then, see ya later! Let me know if you find anything interesting.
+			Line5: Let me know if you find anything interesting, good luck out there!
 		}
 
 		ChimeResponse: {

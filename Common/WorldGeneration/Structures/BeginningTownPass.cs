@@ -28,7 +28,7 @@ public class BeginningTownPass : GenPass
 
         for (var attempt = 0; attempt < 1000; attempt++)
         {
-            var x = worldCenter + WorldGen.genRand.Next(-200, 201);
+            var x = worldCenter + WorldGen.genRand.Next(150, 200);
             var startY = Main.spawnTileY - SURFACE_CHECK_HEIGHT;
 
             var validPoint = FindValidSurface(x, startY);
@@ -139,7 +139,7 @@ public class BeginningTownPass : GenPass
 
         StructureHelper.API.Generator.GenerateStructure("Structures/BeginningTown", new Point16(structureX, structureY + 4), Instance);
 
-        int spawnX = structureX - 48;
+        int spawnX = structureX - 88;
         int spawnColumnIndex = Math.Max(0, Math.Min(STRUCTURE_WIDTH, 48));
         int spawnGroundLevel = groundLevels[spawnColumnIndex];
         int spawnY = spawnGroundLevel - 3;

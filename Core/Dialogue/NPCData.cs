@@ -148,7 +148,7 @@ public static class NPCManager
 
         var guidePortrait = new NPCPortrait(
             ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Guide"),
-            frameCount: 5
+            frameCount: 6
         );
 
         GuideData = new NPCData(
