@@ -5,22 +5,23 @@ using Terraria.WorldBuilding;
 
 namespace Reverie.Common.Subworlds.TestGen;
 
-public class TestPass : GenPass
+public class CanopyBiomePass : GenPass
 {
-    public TestPass() : base("TestPass", 0.1f)
+    public CanopyBiomePass() : base("CanopyBiomePass", 0.1f)
     {
     }
 
     protected override void ApplyPass(GenerationProgress progress, GameConfiguration configuration)
     {
-        var origin = new Point(Main.maxTilesX / 2, Main.maxTilesX / 2);
+        var origin = new Point(Main.maxTilesX / 2, Main.maxTilesY / 2);
 
         Main.spawnTileX = origin.X;
         Main.spawnTileY = origin.Y;
 
+        //BIG DIRT
         WorldUtils.Gen(
-            origin,
-            new Shapes.Mound((int)Math.PI * (origin.X / 16), origin.Y / 13),
+            new(origin.X, (int)(origin.Y * 1.577)),
+            new Shapes.Slime(origin.X / 4, 1.3, 1.7),
             Actions.Chain(new Actions.SetTile(TileID.Dirt))
         );
 
@@ -28,7 +29,7 @@ public class TestPass : GenPass
         int treeY = origin.Y;
 
         var structureWidth = 53;
-        var structureHeight = 192;
+        var structureHeight = 190;
 
         while (Main.tile[treeX, treeY].HasTile && treeY > 0)
         {
@@ -59,7 +60,7 @@ public class TestPass : GenPass
                     angle: randomAngle,
                     50 + Main.rand.Next(0, 30),
                     3 + Main.rand.NextDouble() * 2,
-                    0.5
+                    1.8
                 ),
                 Actions.Chain(new Actions.SetTile(TileID.LivingWood))
             );

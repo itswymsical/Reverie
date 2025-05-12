@@ -70,7 +70,7 @@ public static class WorldGenUtils
     }
 
     /// <summary>
-    /// Generates a vanilla mountain, modified to allow flexibilty and modifications to its geometry
+    /// Generates a large mound, based off the vanilla mountain code and modified to change its geometry
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
@@ -79,7 +79,7 @@ public static class WorldGenUtils
     /// <param name="baseRadius"></param>
     /// <param name="height"></param>
     /// <returns></returns>
-    public static bool VanillaMountain(int currentX, int currentY, int mountainCenterX, int mountainCenterY, int initialRadius, int mountainHeight)
+    public static bool MakeLargeMound(int currentX, int currentY, int mountainCenterX, int mountainCenterY, int initialRadius, int mountainHeight)
     {
         double currentRadius = initialRadius;
         double adjustedRadius = currentRadius;
@@ -163,23 +163,6 @@ public static class WorldGenUtils
         }
 
         return false;
-    }
-
-    public static bool GenerateRectangle(int x, int y, int centerX, int centerY, int width, int height)
-    {
-        int left = centerX - width / 2;
-        int right = centerX + width / 2;
-        int top = centerY - height / 2;
-        int bottom = centerY + height / 2;
-
-        return x >= left && x <= right && y >= top && y <= bottom;
-    }
-
-    public static bool GenerateCircle(int x, int y, int centerX, int centerY, int radius)
-    {
-        int dx = x - centerX;
-        int dy = y - centerY;
-        return dx * dx + dy * dy <= radius * radius;
     }
 
     public static bool GenerateTrapezoid(int x, int y, int centerX, int centerY, int horizontalRadius, int verticalRadius)
