@@ -1,6 +1,4 @@
-﻿using Reverie.Content.Tiles.Canopy;
-using Reverie.Content.Tiles.Taiga;
-using Reverie.lib;
+﻿using Terraria.DataStructures;
 using Terraria.GameContent.Generation;
 using Terraria.IO;
 using Terraria.WorldBuilding;
@@ -13,7 +11,6 @@ public class TestPass : GenPass
     {
     }
 
-    private FastNoiseLite noise;
     protected override void ApplyPass(GenerationProgress progress, GameConfiguration configuration)
     {
         var origin = new Point(Main.maxTilesX / 2, Main.maxTilesX / 2);
@@ -21,63 +18,58 @@ public class TestPass : GenPass
         Main.spawnTileX = origin.X;
         Main.spawnTileY = origin.Y;
 
-        //WorldUtils.Gen(
-        //    origin,
-        //    new Shapes.Circle((int)Math.PI * (origin.X / 20)),
-        //    Actions.Chain(new Actions.SetTile(TileID.LivingWood))
-        //);
-
-        //Dirt hill
         WorldUtils.Gen(
             origin,
-            new Shapes.Mound((int)Math.PI * (origin.X / 16), origin.Y / 8),
+            new Shapes.Mound((int)Math.PI * (origin.X / 16), origin.Y / 13),
             Actions.Chain(new Actions.SetTile(TileID.Dirt))
         );
 
-        //tree
-        WorldUtils.Gen(
-            new Point(origin.X, origin.Y - (origin.Y / 8)),
-            new ShapeRoot(-1.2, 60, 9.6, 2),
-            Actions.Chain(new Actions.SetTile(TileID.LivingMahogany))
-        );
+        int treeX = origin.X;
+        int treeY = origin.Y;
 
-        // trunk 2
-        WorldUtils.Gen(
-            new Point(origin.X - 6, origin.Y - (origin.Y / 6)),
-            new ShapeRoot(-2.1, 34, 5.6, 2),
-            Actions.Chain(new Actions.SetTile(TileID.LivingMahogany))
-        );
+        var structureWidth = 53;
+        var structureHeight = 192;
 
-        // branch test
-        WorldUtils.Gen(
-            new Point(origin.X - 20, origin.Y - (origin.Y / 6)),
-            new ShapeBranch(10, 16),
-            Actions.Chain(new Actions.SetTile(TileID.Stone))
-        );
+        while (Main.tile[treeX, treeY].HasTile && treeY > 0)
+        {
+            treeY--;
+        }
+        treeY++;
 
+        if (Main.tile[treeX, treeY].HasTile)
+        {
+            var structX = origin.X - structureWidth;
+            var structY = origin.Y - structureHeight;
+            StructureHelper.API.Generator.GenerateStructure("Structures/CanopyTree", new Point16(structX, structY), Instance);
+        }
 
         int totalWidth = 175;
         int quantity = 16;
         int spacing = totalWidth / quantity;
 
-        Random random = new Random();
-
         // Generate roots across the underhill
         for (int i = 0; i < quantity; i++)
         {
             int xPosition = origin.X - (totalWidth / 2) + (i * spacing);
-            double randomAngle = random.NextDouble() * Math.PI; // Random angle between 0 and π
+            double randomAngle = Main.rand.NextDouble() * Math.PI; // Random angle between 0 and π
 
             WorldUtils.Gen(
-                new(xPosition, origin.Y),
+                new(xPosition + 10, origin.Y),
                 new ShapeRoot(
                     angle: randomAngle,
-                    50 + random.Next(0, 30),
-                    3 + random.NextDouble() * 2,
+                    50 + Main.rand.Next(0, 30),
+                    3 + Main.rand.NextDouble() * 2,
                     0.5
                 ),
                 Actions.Chain(new Actions.SetTile(TileID.LivingWood))
             );
         }
+
+        //Tunnel
+        WorldUtils.Gen(
+            new(origin.X, origin.Y - 30),
+            new ShapeRoot(MathHelper.Pi / 2, origin.Y / 2, 8, 1),
+            Actions.Chain(new Actions.ClearTile(), new Actions.PlaceWall(WallID.LivingWoodUnsafe))
+        );
     }
 }
