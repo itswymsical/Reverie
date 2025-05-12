@@ -10,6 +10,7 @@ public class ReverieSystem : ModSystem
     public static ReverieSystem Instance => ModContent.GetInstance<ReverieSystem>();
     public static ModKeybind FFDialogueKeybind { get; private set; }
     public static ModKeybind SkipCutsceneKeybind { get; private set; }
+    public static ModKeybind ReloadSubworld { get; private set; }
     public override void Load()
     {
         NPCManager.Initialize();
@@ -17,14 +18,13 @@ public class ReverieSystem : ModSystem
 
         FFDialogueKeybind = KeybindLoader.RegisterKeybind(Mod, "Fast-Forward Dialogue", "V");
         SkipCutsceneKeybind = KeybindLoader.RegisterKeybind(Mod, "Skip Cutscene", "Q");
-
+        ReloadSubworld = KeybindLoader.RegisterKeybind(Mod, "Reload Test Sub", "Z");
     }
     public override void Unload()
     {
         FFDialogueKeybind = null;
         SkipCutsceneKeybind = null;
     }
-
     public override void ModifyTimeRate(ref double timeRate, ref double tileUpdateRate, ref double eventUpdateRate)
     {
         base.ModifyTimeRate(ref timeRate, ref tileUpdateRate, ref eventUpdateRate);

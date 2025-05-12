@@ -415,4 +415,5 @@ Biomes: {
 Keybinds: {
 	"Fast-Forward Dialogue.DisplayName": Fast- Forward  Dialogue
 	"Skip Cutscene.DisplayName": Skip  Cutscene
+	"Reload Test Sub.DisplayName": Reload  Test  Sub
 }

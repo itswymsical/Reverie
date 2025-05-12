@@ -1,4 +1,6 @@
 ﻿using Reverie.Common.Subworlds.Archaea;
+using Reverie.Common.Subworlds.TestGen;
+using Reverie.Common.Systems;
 using Reverie.Common.UI.Missions;
 
 using Reverie.Content.Dusts;
@@ -46,6 +48,11 @@ public class ReveriePlayer : ModPlayer
         }
 
         DialogueManager.Instance.UpdateActive();
+
+        if (ReverieSystem.ReloadSubworld.JustPressed)
+        {
+            SubworldSystem.Enter<TestSub>();
+        }
     }
 
     public override void SetControls()
