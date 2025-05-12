@@ -228,10 +228,10 @@ public abstract class Cutscene
 
         DrawCutsceneContent(spriteBatch);
 
-        DrawSkipIndicator(spriteBatch)
+        // Draw skip indicator
         if (_isSkipping && !_skipFadeOutStarted)
         {
-            //DrawSkipIndicator(spriteBatch);
+            DrawSkipIndicator(spriteBatch);
         }
     }
 
