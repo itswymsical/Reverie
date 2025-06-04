@@ -19,6 +19,8 @@ public class TaigaGrassTile : GrassTile
         DustType = DustID.Mud;
         HitSound = SoundID.Dig;
         TileID.Sets.SnowBiome[Type] = Type;
+        VanillaFallbackOnModDeletion = TileID.Grass;
+
         AddMapEntry(new Color(88, 150, 112));
     }
     public override void RandomUpdate(int i, int j)
@@ -102,10 +104,10 @@ public class CorruptTaigaGrassTile : GrassTile
         DustType = DustID.CorruptPlants;
         HitSound = SoundID.Dig;
 
-        VanillaFallbackOnModDeletion = TileID.SnowBlock;
+        VanillaFallbackOnModDeletion = TileID.CorruptGrass;
 
         TileID.Sets.CorruptBiome[Type] = Type;
-        AddMapEntry(new Color(109, 106, 174));
+        AddMapEntry(new Color(200, 199, 215));
     }
 
     public override bool HasWalkDust()
@@ -135,10 +137,10 @@ public class CrimsonTaigaGrassTile : GrassTile
         DustType = DustID.CrimsonPlants;
         HitSound = SoundID.Dig;
 
-        VanillaFallbackOnModDeletion = TileID.SnowBlock;
+        VanillaFallbackOnModDeletion = TileID.CrimsonGrass;
 
         TileID.Sets.CrimsonBiome[Type] = Type;
-        AddMapEntry(new Color(208, 80, 80));
+        AddMapEntry(new Color(215, 199, 201));
     }
 
     public override bool HasWalkDust()
@@ -168,7 +170,7 @@ public class HallowTaigaGrassTile : GrassTile
         DustType = DustID.HallowedPlants;
         HitSound = SoundID.Dig;
 
-        VanillaFallbackOnModDeletion = TileID.SnowBlock;
+        VanillaFallbackOnModDeletion = TileID.HallowedGrass;
 
         TileID.Sets.HallowBiome[Type] = Type;
         AddMapEntry(new Color(77, 153, 191));

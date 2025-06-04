@@ -72,11 +72,12 @@ Items: {
 	}
 
 	SeedBagItem: {
-		DisplayName: Seed Bag
+		DisplayName: Birdseed Bag
 		Tooltip:
 			'''
-			Tosses a bunch of seeds that stick to enemies and tiles.
-			A flock of birds will appear and voraciously consume the seeds.
+			Tosses birdseed that sticks to targets and tiles.
+			A flock of birds will appear to voraciously consume the birdseed.
+			deals a flat 2 damage per hit, ignoring defense.
 			'''
 	}
 
@@ -269,6 +270,32 @@ Items: {
 		DisplayName: Copper-Tipped Arrow
 		Tooltip: Splits into piercing metal scraps on impact (+3 damage)
 	}
+
+	CactusPotItem: {
+		DisplayName: Cactus Pot
+		Tooltip: Enemies take 22% of contact damage they've dealt to you
+	}
+
+	FlowerSatchelItem: {
+		DisplayName: Flower Satchel
+		Tooltip:
+			'''
+			Used to store potion flowers, has a total of 3 slots.
+			Flowers stored in the satchel will grant stat bonuses depending on the type, stack, and combination of flowers.
+			Can only have one satchel in your inventory at a time.
+			Right-click to open
+			'''
+	}
+
+	MagnoliaItem: {
+		DisplayName: Magnolia Flower
+		Tooltip: Produces floral pheromones
+	}
+
+	SalicifoliaPheromonesItem: {
+		DisplayName: Salicifolia Pheromones
+		Tooltip: When sprayed on growing herbs, they advance to their next growth stage.
+	}
 }
 
 Projectiles: {
@@ -276,7 +303,7 @@ Projectiles: {
 	BorealHewerProj.DisplayName: Boreal Hewer
 	FlailstormProj.DisplayName: Flailstorm
 	LodestoneMagnetProj.DisplayName: Lodestone Magnet
-	SeedProj.DisplayName: Seed
+	SeedProj.DisplayName: Birdseed
 	AcornLauncherProj.DisplayName: Acorn Launcher
 	AcornProj.DisplayName: Acorn
 	AcornShrapnel.DisplayName: Acorn Shrapnel
@@ -284,13 +311,21 @@ Projectiles: {
 	BrambleArrowProj.DisplayName: Bramble Arrow
 	WardensArmProj.DisplayName: Wardens Arm
 	ExplosiveLanding.DisplayName: Explosive Landing
-	SlimeSprayProj.DisplayName: Slime Spray Proj
-	PrimordialSandBallFallingProjectile.DisplayName: Primordial Sand Ball Falling Projectile
-	PrimordialSandBallGunProjectile.DisplayName: Primordial Sand Ball Gun Projectile
-	HeraldHammerSlamProj.DisplayName: Herald Hammer Slam Proj
-	CopperTippedArrowProj.DisplayName: Copper Tipped Arrow Proj
-	AcornShrapnelProj.DisplayName: Acorn Shrapnel Proj
-	CopperShrapnelProj.DisplayName: Copper Shrapnel Proj
+	SlimeSprayProj.DisplayName: Slime Spray
+	PrimordialSandBallFallingProjectile.DisplayName: Primordial Sand Ball
+	PrimordialSandBallGunProjectile.DisplayName: Primordial Sand Ball
+	HeraldHammerSlamProj.DisplayName: Herald Hammer Slam
+	CopperTippedArrowProj.DisplayName: Copper Tipped Arrow
+	AcornShrapnelProj.DisplayName: Acorn Shrapnel
+	CopperShrapnelProj.DisplayName: Copper Shrapnel
+	BlinkrootSeedProj.DisplayName: Blinkroot Seed
+	DaybloomSeedProj.DisplayName: Daybloom Seed
+	DeathweedSeedProj.DisplayName: Deathweed Seed
+	FireblossomSeedProj.DisplayName: Fireblossom Seed
+	MoonglowSeedProj.DisplayName: Moonglow Seed
+	ShiverthornSeedProj.DisplayName: Shiverthorn Seed
+	WaterleafSeedProj.DisplayName: Waterleaf Seed
+	MagnoliaPheromonesProj.DisplayName: Magnolia Pheromones
 }
 
 Configs: {

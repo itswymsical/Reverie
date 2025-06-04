@@ -13,6 +13,12 @@ public class PeatTile : ModTile
         Main.tileMerge[TileID.IceBlock][Type] = true;
         Main.tileMerge[Type][TileID.IceBlock] = true;
 
+        Main.tileMerge[TileID.Ebonstone][Type] = true;
+        Main.tileMerge[Type][TileID.Ebonstone] = true;
+        Main.tileMerge[TileID.Crimstone][Type] = true;
+        Main.tileMerge[Type][TileID.Crimstone] = true;
+
+
         Main.tileMerge[TileID.ClayBlock][Type] = true;
         Main.tileMerge[Type][TileID.ClayBlock] = true;
 
@@ -26,6 +32,7 @@ public class PeatTile : ModTile
         MineResist = 0.5f;
         DustType = DustID.Mud;
         HitSound = SoundID.Dig;
+        VanillaFallbackOnModDeletion = TileID.Dirt;
 
         AddMapEntry(new Color(126, 95, 74));
     }

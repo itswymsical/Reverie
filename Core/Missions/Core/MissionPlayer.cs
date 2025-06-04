@@ -648,14 +648,14 @@ public partial class MissionPlayer : ModPlayer
         ProcessDeferredLoad();
         notifiedMissions.Clear();
 
-        var fallingStar = GetMission(MissionID.AFallingStar);
+        //var fallingStar = GetMission(MissionID.AFallingStar);
 
-        if (fallingStar != null && fallingStar.Availability != MissionAvailability.Completed 
-            && fallingStar.Progress != MissionProgress.Active)
-        {
-            UnlockMission(MissionID.AFallingStar);
-            StartMission(MissionID.AFallingStar);
-        }
+        //if (fallingStar != null && fallingStar.Availability != MissionAvailability.Completed 
+        //    && fallingStar.Progress != MissionProgress.Active)
+        //{
+        //    UnlockMission(MissionID.AFallingStar);
+        //    StartMission(MissionID.AFallingStar);
+        //}
     }
 
     public override void PostUpdate()

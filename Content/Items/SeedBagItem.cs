@@ -7,8 +7,8 @@ public class SeedBagItem : ModItem
 {
     public override void SetDefaults()
     {
-        Item.DamageType = DamageClass.MagicSummonHybrid;
-        Item.damage = 3;
+        Item.DamageType = DamageClass.Magic;
+        Item.damage = 2;
         Item.knockBack = 0.8f;
         Item.width = 24;
         Item.height = 32;

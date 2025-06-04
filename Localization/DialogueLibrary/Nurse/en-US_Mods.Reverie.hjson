@@ -1,4 +1,4 @@
-﻿DialogueLibrary: {
+DialogueLibrary: {
 	Nurse: {
 		NurseIntro: {
 			Line1: Hey there sunshine, you look a little worse for wear.
@@ -6,5 +6,19 @@
 			Line3: Don't worry, I don't bite... much.
 			Line4: I'm just joking! ...Only if you want it to be.
 		}
+	}
+}
+
+Tiles.MagnoliaTile.MapEntry: Magnolia Tile
+
+Buffs: {
+	BarkskinPotionBuff: {
+		DisplayName: Barkskin Potion Buff
+		Description: Mods.Reverie.Buffs.BarkskinPotionBuff.Description
+	}
+
+	WaterleafSlowness: {
+		DisplayName: Waterleaf Slowness
+		Description: Mods.Reverie.Buffs.WaterleafSlowness.Description
 	}
 }

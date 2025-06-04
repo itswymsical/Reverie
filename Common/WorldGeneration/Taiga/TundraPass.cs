@@ -17,9 +17,6 @@ public class TundraPass : GenPass
         progress.Message = "Growing Taiga";
         ApplyTaigaSurface();
 
-        progress.Message = "Blending Biomes";
-        BlendBiomes();
-
         progress.Message = "Foresting the Taiga";
         SpreadGrass();
         progress.Set(1.0f);
@@ -28,12 +25,10 @@ public class TundraPass : GenPass
     private static void GenerateTundra(GenerationProgress progress)
     {
         GenVars.snowTop = (int)Main.worldSurface;
-        int snowDepthBound = GenVars.lavaLine - WorldGen.genRand.Next(160, 200);
         int lavaLineDepth = GenVars.lavaLine;
 
         int leftEdge = GenVars.snowOriginLeft;
         int rightEdge = GenVars.snowOriginRight;
-        int columnDepth = 10;
 
         for (int currentDepth = 0; currentDepth <= lavaLineDepth - 140; currentDepth++)
         {
@@ -64,187 +59,92 @@ public class TundraPass : GenPass
             GenVars.snowMinX[currentDepth] = leftEdge;
             GenVars.snowMaxX[currentDepth] = rightEdge;
 
-            int snowWidthPercent = WorldGen.genRand.Next(44, 57);
-            int snowCoreStart = leftEdge + (rightEdge - leftEdge) * (100 - snowWidthPercent) / 200;
-            int snowCoreEnd = rightEdge - (rightEdge - leftEdge) * (100 - snowWidthPercent) / 200;
-
             for (int x = leftEdge; x < rightEdge; x++)
             {
-                if (currentDepth < snowDepthBound)
+                if (IsValidCoordinate(x, currentDepth))
                 {
-                    if (Main.tile[x, currentDepth].WallType == 2)
-                        Main.tile[x, currentDepth].WallType = 40;
-
                     Tile tile = Main.tile[x, currentDepth];
-                    if (IsValidCoordinate(x, currentDepth) && tile.HasTile)
-                    {
-                        bool isWithinSurfaceLayer = currentDepth <= (int)Main.worldSurface + 8;
-                        switch (tile.TileType)
-                        {
-                            case TileID.Dirt:
-                            case TileID.Grass:
-                            case TileID.Mud:
-                            case TileID.JungleGrass:
-                            case TileID.Sand:
-                                tile.TileType = TileID.SnowBlock;
-                                break;
-                            case TileID.Stone:
-                                tile.TileType = TileID.IceBlock;
-                                break;
-                        }
-                    }
-                }
-
-                Tile tile2 = Main.tile[x, currentDepth];
-                if (x >= snowCoreStart && x <= snowCoreEnd)
-                {                   
-                    if (currentDepth <= (int)Main.worldSurface + 8)
-                    {           
-                        switch (tile2.TileType)
-                        {
-                            case TileID.Dirt:
-                            case TileID.Grass:
-                            case TileID.Mud:
-                            case TileID.Sand:
-                                tile2.TileType = TileID.SnowBlock;
-                                break;
-                            case TileID.Stone:
-                            case TileID.ClayBlock:
-                                tile2.TileType = TileID.IceBlock;
-                                break;
-                        }
-                    }
-                }
-                else
-                {
-                    if (currentDepth <= (int)Main.worldSurface + 8)
-                    {
-                        switch (tile2.TileType)
-                        {
-                            case TileID.Dirt:
-                            case TileID.Grass:
-                            case TileID.Mud:
-                            case TileID.Sand:
-                            case TileID.SnowBlock:
-                                tile2.TileType = (ushort)ModContent.TileType<PeatTile>();
-                                break;
-                            case TileID.Stone:
-                            case TileID.IceBlock:
-                                tile2.TileType = TileID.SnowBlock;
-                                break;
-                        }
-                    }
-                }
-
-                if (currentDepth > snowDepthBound)
-                {
-                    columnDepth += WorldGen.genRand.Next(-3, 4);
-                    if (WorldGen.genRand.NextBool(3))
-                    {
-                        columnDepth += WorldGen.genRand.Next(-4, 5);
-                        if (WorldGen.genRand.NextBool(3))
-                            columnDepth += WorldGen.genRand.Next(-6, 7);
-                    }
-
-                    if (columnDepth < 0)
-                        columnDepth = WorldGen.genRand.Next(3);
-                    else if (columnDepth > 50)
-                        columnDepth = 50 - WorldGen.genRand.Next(3);
-
-                    for (int columnY = currentDepth; columnY < currentDepth + columnDepth; columnY++)
-                    {
-                        if (Main.tile[x, columnY].WallType == 2)
-                            Main.tile[x, columnY].WallType = 40;
-                    }
+                    tile.TileType = (ushort)ModContent.TileType<PeatTile>();
                 }
             }
-
-            if (GenVars.snowBottom < currentDepth)
-                GenVars.snowBottom = currentDepth;
         }
+
+        GenVars.snowBottom = (int)Main.worldSurface;
     }
 
     private static void ApplyTaigaSurface()
     {
         int leftEdge = GenVars.snowOriginLeft;
         int rightEdge = GenVars.snowOriginRight;
-        int tundraWidth = rightEdge - leftEdge;
+        int snowWidth = rightEdge - leftEdge;
+        int worldCenter = Main.maxTilesX / 2;
+        int taigaWidth = snowWidth * 2; // Make taiga twice as wide as snow biome
 
-        int snowWidthPercent = WorldGen.genRand.Next(44, 57);
-        int snowCoreStart = leftEdge + (tundraWidth * (100 - snowWidthPercent) / 200);
-        int snowCoreEnd = rightEdge - (tundraWidth * (100 - snowWidthPercent) / 200);
+        // Determine if snow biome is more to the left or right of world center
+        int snowCenter = leftEdge + (snowWidth / 2);
+        bool placeOnLeft = snowCenter > worldCenter;
 
-        for (int x = leftEdge; x < rightEdge; x++)
+        // Calculate taiga boundaries based on position
+        int taigaLeft, taigaRight;
+        if (placeOnLeft)
         {
-            int surfaceY = FindSurfaceLevel(x);
-            if (surfaceY <= 0)
-                continue;
-
-            if (x >= snowCoreStart && x <= snowCoreEnd)
-            {
-                Main.tile[x, surfaceY].TileType = TileID.SnowBlock;
-            }
-            else
-            {
-                Main.tile[x, surfaceY].TileType = (ushort)ModContent.TileType<PeatTile>();
-            }
+            // Place taiga to the left of snow
+            taigaRight = leftEdge;
+            taigaLeft = taigaRight - taigaWidth;
         }
-    }
-
-    private static void BlendBiomes()
-    {
-        int leftEdge = GenVars.snowOriginLeft;
-        int rightEdge = GenVars.snowOriginRight;
-        int tundraWidth = rightEdge - leftEdge;
-
-        int snowWidthPercent = WorldGen.genRand.Next(44, 57);
-        int snowCoreStart = leftEdge + (tundraWidth * (93 - snowWidthPercent) / 187);
-        int snowCoreEnd = rightEdge - (tundraWidth * (93 - snowWidthPercent) / 187);
-
-        int blendingWidth = (int)(tundraWidth * 0.1f);
-
-        for (int x = snowCoreStart - blendingWidth; x <= snowCoreEnd + blendingWidth; x++)
+        else
         {
-            if (!IsValidCoordinate(x, 0))
-                continue;
+            // Place taiga to the right of snow
+            taigaLeft = rightEdge;
+            taigaRight = taigaLeft + taigaWidth;
+        }
 
+        // Ensure we don't go outside world bounds
+        taigaLeft = Math.Max(0, taigaLeft);
+        taigaRight = Math.Min(Main.maxTilesX - 1, taigaRight);
+
+        // Place taiga tiles
+        for (int x = taigaLeft; x < taigaRight; x++)
+        {
             int surfaceY = FindSurfaceLevel(x);
             if (surfaceY <= 0)
                 continue;
 
-            int maxDepth = 10;
-            for (int depth = 1; depth <= maxDepth; depth++)
-            {
-                int y = surfaceY + depth;
-                if (!IsValidCoordinate(x, y))
-                    continue;
-
-                Tile tile = Main.tile[x, y];
-                if (!tile.HasTile)
-                    continue;
-
-                float distanceFromEdge = Math.Min(
-                    Math.Abs(x - (snowCoreStart - blendingWidth)),
-                    Math.Abs(x - (snowCoreEnd + blendingWidth))
-                );
-                float blendFactor = distanceFromEdge / blendingWidth;
-
-                if (WorldGen.genRand.NextFloat() > blendFactor)
-                {
-                    tile.TileType = TileID.SnowBlock;
-                }
-                else
-                {
-                    tile.TileType = (ushort)ModContent.TileType<PeatTile>();
-                }
-            }
+            Main.tile[x, surfaceY].TileType = (ushort)ModContent.TileType<PeatTile>();
         }
     }
 
     private static void SpreadGrass()
     {
-        //idgaf, checking the entire world bc I had enough of trying to get both sides of the taiga to generate grass
-        for (var x = 5; x < Main.maxTilesX - 5; x++)
+        // Calculate taiga boundaries (same logic as ApplyTaigaSurface)
+        int leftEdge = GenVars.snowOriginLeft;
+        int rightEdge = GenVars.snowOriginRight;
+        int snowWidth = rightEdge - leftEdge;
+        int worldCenter = Main.maxTilesX / 2;
+        int taigaWidth = snowWidth * 2;
+
+        int snowCenter = leftEdge + (snowWidth / 2);
+        bool placeOnLeft = snowCenter > worldCenter;
+
+        // Calculate taiga boundaries based on position
+        int taigaLeft, taigaRight;
+        if (placeOnLeft)
+        {
+            taigaRight = leftEdge;
+            taigaLeft = taigaRight - taigaWidth;
+        }
+        else
+        {
+            taigaLeft = rightEdge;
+            taigaRight = taigaLeft + taigaWidth;
+        }
+
+        // Ensure we don't go outside world bounds
+        taigaLeft = Math.Max(5, taigaLeft);
+        taigaRight = Math.Min(Main.maxTilesX - 5, taigaRight);
+
+        // Only spread grass within taiga boundaries
+        for (var x = taigaLeft; x < taigaRight; x++)
         {
             for (var y = 5; y < Main.maxTilesY - 5; y++)
             {
@@ -256,11 +156,12 @@ public class TundraPass : GenPass
                 {
                     tile.TileType = (ushort)ModContent.TileType<SnowTaigaGrassTile>();
 
-                    for (var grassX = x - 1; grassX < x + 1; grassX++) // Changed < to <= to include x+1
+                    // Spread to neighboring tiles within taiga boundaries
+                    for (var grassX = Math.Max(taigaLeft, x - 1); grassX <= Math.Min(taigaRight - 1, x + 1); grassX++)
                     {
-                        for (var grassY = y - 1; grassY < y + 1; grassY++) // Changed < to <= to include y+1
+                        for (var grassY = y - 1; grassY < y + 1; grassY++)
                         {
-                            if (grassX >= 0 && grassX < Main.maxTilesX && grassY >= 0 && grassY < Main.maxTilesY)
+                            if (grassY >= 0 && grassY < Main.maxTilesY)
                             {
                                 var currentTile = Framing.GetTileSafely(grassX, grassY);
                                 var grassAbove = Framing.GetTileSafely(grassX, grassY - 1);

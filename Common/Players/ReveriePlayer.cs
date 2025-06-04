@@ -6,15 +6,12 @@ using Reverie.Content.Tiles.Archaea;
 
 using Reverie.Core.Cinematics;
 using Reverie.Core.Dialogue;
-using Reverie.Core.Graphics;
 using Reverie.Core.Missions;
 using Reverie.Core.Missions.Core;
 using SubworldLibrary;
 
 using System.Collections.Generic;
 using System.Linq;
-using Terraria.DataStructures;
-using Terraria.GameContent;
 using Terraria.UI;
 
 namespace Reverie.Common.Players;
@@ -84,12 +81,12 @@ public class ReveriePlayer : ModPlayer
         //}
     }
 
-    public override void ModifyStartingInventory(IReadOnlyDictionary<string, List<Item>> itemsByMod, bool mediumCoreDeath)
-    {
-        itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperShortsword);
-        itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperPickaxe);
-        itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperAxe);
-    }
+    //public override void ModifyStartingInventory(IReadOnlyDictionary<string, List<Item>> itemsByMod, bool mediumCoreDeath)
+    //{
+    //    itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperShortsword);
+    //    itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperPickaxe);
+    //    itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperAxe);
+    //}
 
     private const int SAND_HAZE_RANGE_X = 55;
     private const int SAND_HAZE_RANGE_Y = 30;

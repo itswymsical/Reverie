@@ -1,6 +1,5 @@
 ﻿using Reverie.Common.WorldGeneration.Structures;
 using Reverie.Common.WorldGeneration.Taiga;
-using Reverie.Common.WorldGeneration.WoodlandCanopy;
 using System.Collections.Generic;
 using Terraria.GameContent.Generation;
 using Terraria.IO;
@@ -12,8 +11,8 @@ public class WorldGenSystem : ModSystem
 {
     public override void Load()
     {
-        WorldGen.DetourPass((PassLegacy)WorldGen.VanillaGenPasses["Generate Ice Biome"], Detour_Tundra);
-        WorldGen.DetourPass((PassLegacy)WorldGen.VanillaGenPasses["Guide"], Detour_Town);
+        //WorldGen.DetourPass((PassLegacy)WorldGen.VanillaGenPasses["Generate Ice Biome"], Detour_Tundra);
+        //WorldGen.DetourPass((PassLegacy)WorldGen.VanillaGenPasses["Guide"], Detour_Town);
         WorldGen.DetourPass((PassLegacy)WorldGen.VanillaGenPasses["Shinies"], Detour_Ores);
     }
     private void Detour_Ores(WorldGen.orig_GenPassDetour orig, object self, GenerationProgress progress, GameConfiguration configuration)
@@ -23,6 +22,7 @@ public class WorldGenSystem : ModSystem
         orePass.Apply(progress, configuration);
     }
 
+    /*
     private void Detour_Tundra(WorldGen.orig_GenPassDetour orig, object self, GenerationProgress progress, GameConfiguration configuration)
     {
         var tundraPass = new TundraPass();
@@ -36,37 +36,25 @@ public class WorldGenSystem : ModSystem
 
         guidePass.Apply(progress, configuration);
     }
-
+    */
     public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
     {
         var tundraIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Generate Ice Biome"));
         var sunflowerIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Sunflowers"));
-        var structIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Stalac"));
 
-        if (tundraIndex >= 0)
-        {
-            tasks.Insert(tundraIndex + 1, new TaigaPlantPass());
-        }
+        //var structIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Stalac"));
 
-        if (structIndex >= 0)
-        {
-            tasks.Insert(structIndex + 1, new StillspirePass());
-        }
+        var spawnIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Guide"));
 
-        //if (sunflowerIndex >= 0)
+        //if (structIndex >= 0)
         //{
-        //    tasks.Insert(sunflowerIndex + 1, new NewCanopyPass());
+        //    tasks.Insert(structIndex + 1, new StillspirePass());
         //}
 
-        //int CanopyIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Stalac"));
-        //if (CanopyIndex != 1)
-        //{
-        //    tasks.Insert(CanopyIndex + 1, new CanopyPass("Woodland Canopy", 635f));
-        //    tasks.Insert(CanopyIndex + 2, new CanopyFoliagePass("Canopy Decor", 280f));
-        //    tasks.Insert(CanopyIndex + 3, new ReverieTreePass("Reverie Tree", 150f));
-        //    tasks.Insert(CanopyIndex + 4, new SmoothPass("Smoothing World Again", 100f));
-        //    tasks.Insert(CanopyIndex + 5, new ShrinePass("Canopy Shrines", 183f));
-        //    tasks.Insert(CanopyIndex + 6, new SanctumPass("Archiver Sanctum", 337f));
-        //}
+        if (spawnIndex != 1)
+        {
+            tasks.Insert(spawnIndex + 1, new TaigaPass());
+            tasks.Insert(spawnIndex + 2, new TaigaPlantPass());
+        }     
     }
 }

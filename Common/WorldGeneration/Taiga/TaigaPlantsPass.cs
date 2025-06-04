@@ -1,7 +1,7 @@
-﻿using Reverie.Content.Tiles.Taiga;
-using Reverie.lib;
-using Terraria.IO;
+﻿using Terraria.IO;
 using Terraria.WorldBuilding;
+using Reverie.Content.Tiles.Taiga;
+using Reverie.lib;
 
 namespace Reverie.Common.WorldGeneration.Taiga;
 
@@ -13,17 +13,40 @@ public class TaigaPlantPass : GenPass
     {
         progress.Message = "Growing Taiga Grass";
 
-        int snowWidthPercent = WorldGen.genRand.Next(44, 57);
+        // Calculate taiga boundaries using the same logic as TaigaPass
         int leftEdge = GenVars.snowOriginLeft;
         int rightEdge = GenVars.snowOriginRight;
-        int tundraWidth = rightEdge - leftEdge;
-        int snowCoreStart = leftEdge + (tundraWidth * (100 - snowWidthPercent) / 200);
-        int snowCoreEnd = rightEdge - (tundraWidth * (100 - snowWidthPercent) / 200);
+        int snowWidth = rightEdge - leftEdge;
+        int worldCenter = Main.maxTilesX / 2;
+        int taigaWidth = snowWidth * 2;
 
-        PlaceDecorations(leftEdge, rightEdge, snowCoreStart, snowCoreEnd, progress);
+        // Determine if snow biome is more to the left or right of world center
+        int snowCenter = leftEdge + (snowWidth / 2);
+        bool placeOnLeft = snowCenter > worldCenter;
+
+        // Calculate taiga boundaries based on position
+        int taigaLeft, taigaRight;
+        if (placeOnLeft)
+        {
+            // Place taiga to the left of snow
+            taigaRight = leftEdge;
+            taigaLeft = taigaRight - taigaWidth;
+        }
+        else
+        {
+            // Place taiga to the right of snow
+            taigaLeft = rightEdge;
+            taigaRight = taigaLeft + taigaWidth;
+        }
+
+        // Ensure we don't go outside world bounds
+        taigaLeft = Math.Max(0, taigaLeft);
+        taigaRight = Math.Min(Main.maxTilesX - 1, taigaRight);
+
+        PlaceDecorations(taigaLeft, taigaRight, progress);
     }
-    
-    private static void PlaceDecorations(int left, int right, int snowCoreStart, int snowCoreEnd, GenerationProgress progress)
+
+    private static void PlaceDecorations(int left, int right, GenerationProgress progress)
     {
         progress.Message = "Growing Plants";
 
@@ -53,14 +76,7 @@ public class TaigaPlantPass : GenPass
 
                 if (WorldGen.genRand.NextFloat() < 0.4f * noiseValue)
                 {
-                    if (x >= snowCoreStart && x <= snowCoreEnd)
-                    {
-                        PlaceSapling(x, surfaceY - 1);
-                    }
-                    else
-                    {
-                        PlacePlant(x, surfaceY - 1);
-                    }
+                    PlacePlant(x, surfaceY - 1);
                 }
             }
         }
@@ -94,11 +110,5 @@ public class TaigaPlantPass : GenPass
                 NetMessage.SendTileSquare(-1, x, y, 1, TileChangeType.None);
             }
         }
-    }
-
-    private static void PlaceSapling(int x, int y)
-    {
-        WorldGen.PlaceTile(x, y, TileID.Saplings, style: 0, mute: true);
-        WorldGen.GrowTree(x, y);
     }
 }
