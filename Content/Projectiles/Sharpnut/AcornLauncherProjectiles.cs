@@ -3,11 +3,10 @@ using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.GameContent;
 
-namespace Reverie.Content.Projectiles;
+namespace Reverie.Content.Projectiles.Sharpnut;
 
 public class AcornLauncherProj : ModProjectile
 {
-    public override string Texture => $"{nameof(Reverie)}/Assets/Textures/Items/AcornLauncherItem";
     private enum AIState
     {
         Charging,
@@ -20,8 +19,8 @@ public class AcornLauncherProj : ModProjectile
         set => Projectile.ai[0] = (int)value;
     }
 
-    private const float ChargeTime = 33f;
-    private const float FireRate = 18f;
+    private const float CHARGE_TIME = 33f;
+    private const float FIRE_RATE = 18f;
 
     public override void SetDefaults()
     {
@@ -65,7 +64,7 @@ public class AcornLauncherProj : ModProjectile
             if (State == AIState.Charging)
             {
                 Projectile.ai[1]++;
-                if (Projectile.ai[1] >= ChargeTime)
+                if (Projectile.ai[1] >= CHARGE_TIME)
                 {
                     State = AIState.Firing;
                     Projectile.ai[1] = 0;
@@ -74,7 +73,7 @@ public class AcornLauncherProj : ModProjectile
             else if (State == AIState.Firing)
             {
                 Projectile.ai[1]++;
-                if (Projectile.ai[1] >= FireRate && owner.HasAmmo(owner.HeldItem))
+                if (Projectile.ai[1] >= FIRE_RATE && owner.HasAmmo(owner.HeldItem))
                 {
                     FireProjectile(owner, aimDirection);
                     Projectile.ai[1] = 0;
@@ -101,7 +100,7 @@ public class AcornLauncherProj : ModProjectile
         // Draw charge progress bar
         if (State == AIState.Charging)
         {
-            var chargeProgress = Projectile.ai[1] / ChargeTime;
+            var chargeProgress = Projectile.ai[1] / CHARGE_TIME;
             var barOffset = new Vector2(0, 30).RotatedBy(Projectile.rotation);
             var barPosition = drawPos + barOffset;
             var barRect = new Rectangle((int)barPosition.X - 15, (int)barPosition.Y, 30, 5);

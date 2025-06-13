@@ -7,7 +7,7 @@ using Terraria.GameContent;
 namespace Reverie.Core.Entities;
 
 /// <summary>
-/// A mission indicator that appears in the world and shows mission details on hover
+/// An indicator of missions, appears in the world and shows mission details
 /// </summary>
 public class MissionIndicator : UIEntity
 {
@@ -23,6 +23,8 @@ public class MissionIndicator : UIEntity
 
     private readonly float bobAmount = (float)Math.PI;
 
+    public static bool ShowDebugHitbox = false;
+
     public MissionIndicator(Vector2 worldPosition, Mission mission)
          : base(worldPosition, 48, 48)
     {
@@ -36,7 +38,7 @@ public class MissionIndicator : UIEntity
             Height = iconTexture.Height;
         }
 
-        OnDraw = DrawIndicator;
+        OnDrawWorld = DrawIndicator;
 
         OnClick += HandleClick;
     }
@@ -44,13 +46,12 @@ public class MissionIndicator : UIEntity
     public static MissionIndicator CreateForNPC(NPC npc, Mission mission)
     {
         var indicator = new MissionIndicator(npc.Top, mission);
-        indicator.TrackEntity(npc, new Vector2(0, -40)); // Position above NPC's head
+        indicator.TrackEntity(npc, new Vector2(0, -40));
         return indicator;
     }
 
     protected override void CustomUpdate()
     {
-        // Only proceed with normal update if not loading texture
         if (IsHovering && hoverFadeIn < 1f)
         {
             hoverFadeIn += HOVER_FADE_SPEED;
@@ -68,31 +69,110 @@ public class MissionIndicator : UIEntity
         Offset = new Vector2(0, (float)Math.Sin(AnimationTimer) * bobAmount);
     }
 
-    private void DrawIndicator(SpriteBatch spriteBatch, Vector2 screenPos, float opacity)
+
+    private void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPos, float opacity)
     {
         if (iconTexture == null)
             return;
-        
 
         var scale = IsHovering ? 1.1f : 1f;
-
         var glowColor = IsHovering ? Color.White : Color.White * 0.8f;
 
         spriteBatch.Draw(
             iconTexture,
-            screenPos + new Vector2(Width / 2, Height / 2),
+            worldPos,
             null,
             glowColor * opacity,
             0f,
-            new Vector2(iconTexture.Width, iconTexture.Height),
+            new Vector2(iconTexture.Width / 2, iconTexture.Height / 2),
             scale,
             SpriteEffects.None,
             0f
         );
 
+        if (ShowDebugHitbox)
+        {
+            DrawDebugHitbox(spriteBatch, worldPos, opacity);
+        }
+
         if (IsHovering)
         {
-            DrawPanel(spriteBatch, screenPos, opacity * hoverFadeIn);
+            DrawPanel(spriteBatch, worldPos, opacity * hoverFadeIn);
+        }
+    }
+
+    private void DrawDebugHitbox(SpriteBatch spriteBatch, Vector2 worldPos, float opacity)
+    {
+        // Don't apply zoom to the hitbox dimensions - use the original Width/Height
+        var scaledWidth = Width;
+        var scaledHeight = Height;
+
+        // Calculate hitbox rectangle centered on worldPos (drawing in world space)
+        var hitboxRect = new Rectangle(
+            (int)worldPos.X - scaledWidth / 2,
+            (int)worldPos.Y - scaledHeight / 2,
+            scaledWidth,
+            scaledHeight
+        );
+
+        // Create a 1x1 white pixel texture for drawing rectangles
+        var pixel = TextureAssets.MagicPixel.Value;
+
+        // Draw hitbox border (red for normal, green for hovering)
+        var borderColor = IsHovering ? Color.Lime : Color.Red;
+        borderColor *= opacity * 0.8f;
+
+        // Draw border lines (top, bottom, left, right)
+        spriteBatch.Draw(pixel, new Rectangle(hitboxRect.X, hitboxRect.Y, hitboxRect.Width, 2), borderColor);
+        spriteBatch.Draw(pixel, new Rectangle(hitboxRect.X, hitboxRect.Bottom - 2, hitboxRect.Width, 2), borderColor);
+        spriteBatch.Draw(pixel, new Rectangle(hitboxRect.X, hitboxRect.Y, 2, hitboxRect.Height), borderColor);
+        spriteBatch.Draw(pixel, new Rectangle(hitboxRect.Right - 2, hitboxRect.Y, 2, hitboxRect.Height), borderColor);
+
+        // Draw semi-transparent fill
+        var fillColor = IsHovering ? Color.Lime : Color.Red;
+        fillColor *= opacity * 0.2f;
+        spriteBatch.Draw(pixel, hitboxRect, fillColor);
+
+        // Enhanced debug info to track coordinate issues
+        var zoom = Main.GameViewMatrix.Zoom.Y;
+        var screenPos = WorldToScreen(worldPos);
+
+        // Get additional debug info
+        var baseWorldPos = WorldPosition; // The stored world position
+        var currentOffset = Offset; // Current animation offset
+        var trackingInfo = "";
+        if (trackingEntity != null)
+        {
+            if (trackingEntity is NPC npc)
+            {
+                trackingInfo = $"NPC.Top: {npc.Top}\nTrackOffset: {trackingOffset}\nNPC.Pos: {npc.position}";
+            }
+        }
+
+        var debugText = $"BaseWorldPos: {baseWorldPos}\nCurrentOffset: {currentOffset}\nFinalWorldPos: {worldPos}\nScreenPos: {screenPos}\nScreenPosition: {Main.screenPosition}\nZoom: {zoom:F2}\nMouse: {Main.MouseScreen}\nHover: {IsHovering}\n{trackingInfo}";
+
+        Utils.DrawBorderStringFourWay(
+            spriteBatch,
+            FontAssets.MouseText.Value,
+            debugText,
+            hitboxRect.X,
+            hitboxRect.Y - 200,
+            Color.Yellow * opacity,
+            Color.Black * opacity,
+            Vector2.Zero,
+            0.6f
+        );
+
+        // Draw center crosshair
+        var centerX = hitboxRect.X + hitboxRect.Width / 2;
+        var centerY = hitboxRect.Y + hitboxRect.Height / 2;
+        spriteBatch.Draw(pixel, new Rectangle(centerX - 5, centerY - 1, 10, 2), Color.White * opacity);
+        spriteBatch.Draw(pixel, new Rectangle(centerX - 1, centerY - 5, 2, 10), Color.White * opacity);
+
+        // Helper method for WorldToScreen conversion
+        Vector2 WorldToScreen(Vector2 worldPosition)
+        {
+            return Vector2.Transform(worldPosition - Main.screenPosition, Main.GameViewMatrix.TransformationMatrix);
         }
     }
 

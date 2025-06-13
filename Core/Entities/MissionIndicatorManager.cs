@@ -128,17 +128,6 @@ public class MissionIndicatorManager : ModSystem
         }
     }
 
-    //public override void PostDrawInterface(SpriteBatch spriteBatch)
-    //{
-    //    spriteBatch.End();
-    //    Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp,
-    //    DepthStencilState.None, RasterizerState.CullNone, null);
-
-    //    Instance.Draw(spriteBatch);
-
-    //    Main.spriteBatch.End();
-    //}
-
     public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
     {
         int invasionIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Invasion Progress Bars"));
@@ -150,7 +139,7 @@ public class MissionIndicatorManager : ModSystem
                     Instance.Draw(Main.spriteBatch);
                     return true;
                 },
-                InterfaceScaleType.UI)
+                InterfaceScaleType.Game)
             );
         }
     }

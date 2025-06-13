@@ -1,8 +1,5 @@
 ﻿namespace Reverie.Core.Entities;
 
-/// <summary>
-/// A world entity that acts as a UI element, allowing for both world positioning and UI interactions
-/// </summary>
 public class UIEntity
 {
     #region Properties
@@ -10,8 +7,14 @@ public class UIEntity
     public int Width { get; set; }
     public int Height { get; set; }
 
-    private Entity trackingEntity;
-    private Vector2 trackingOffset;
+    /// <summary>
+    /// do not use this field outside of debugging purposes.
+    /// </summary>
+    public Entity trackingEntity;
+    /// <summary>
+    /// do not use this field outside of debugging purposes.
+    /// </summary>
+    public Vector2 trackingOffset;
     private bool isTracking => trackingEntity != null && trackingEntity.active;
 
     public bool IsHovering { get; private set; }
@@ -26,8 +29,8 @@ public class UIEntity
     public event Action OnClick;
     #endregion
 
-    public delegate void DrawDelegate(SpriteBatch spriteBatch, Vector2 screenPos, float opacity);
-    public DrawDelegate OnDraw;
+    public delegate void DrawDelegate(SpriteBatch spriteBatch, Vector2 worldPos, float opacity);
+    public DrawDelegate OnDrawWorld;
 
     public UIEntity(Vector2 worldPosition, int width, int height)
     {
@@ -95,35 +98,50 @@ public class UIEntity
         if (!IsVisible)
             return false;
 
-        var zoom = Main.GameViewMatrix.Zoom.Y;
+        // Convert world position to screen position for mouse checking
+        var worldPosWithOffset = WorldPosition + Offset;
+        var screenPos = WorldToScreen(worldPosWithOffset);
 
-        // Convert world position to screen position with proper zoom handling
-        var screenPos = WorldToScreen(WorldPosition + Offset);
-
+        // Use zoom for scaling the hitbox
+        var zoom = Main.GameViewMatrix.Zoom.X;
         var scaledWidth = (int)(Width * zoom);
         var scaledHeight = (int)(Height * zoom);
 
-        return new Rectangle(
+        var hitboxRect = new Rectangle(
             (int)screenPos.X - scaledWidth / 2,
             (int)screenPos.Y - scaledHeight / 2,
             scaledWidth,
             scaledHeight
-        ).Contains(Main.MouseScreen.ToPoint());
+        );
+
+        return hitboxRect.Contains(Main.MouseScreen.ToPoint());
     }
 
     /// <summary>
-    /// Draws the entity in the world
+    /// Draws the entity in world space (called during world rendering)
+    /// </summary>
+    public virtual void DrawInWorld(SpriteBatch spriteBatch)
+    {
+        if (!IsVisible)
+            return;
+
+        // Use world position directly - no conversion needed since we're in world space
+        var worldPosWithOffset = WorldPosition + Offset;
+
+        // Call custom draw method if provided
+        OnDrawWorld?.Invoke(spriteBatch, worldPosWithOffset, 1f);
+    }
+
+    /// <summary>
+    /// Legacy screen-space draw method (kept for backwards compatibility)
     /// </summary>
     public virtual void Draw(SpriteBatch spriteBatch)
     {
         if (!IsVisible)
             return;
 
-        // Get screen position with animation offset
         var screenPos = WorldToScreen(WorldPosition + Offset);
-
-        // Call custom draw method if provided
-        OnDraw?.Invoke(spriteBatch, screenPos, 1f);
+        OnDrawWorld?.Invoke(spriteBatch, screenPos, 1f);
     }
 
     /// <summary>

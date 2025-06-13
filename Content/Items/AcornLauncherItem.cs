@@ -1,5 +1,6 @@
 ﻿using Reverie.Content.Items.Tiles.Canopy;
 using Reverie.Content.Projectiles;
+using Reverie.Content.Projectiles.Sharpnut;
 using Terraria.Audio;
 using Terraria.DataStructures;
 
