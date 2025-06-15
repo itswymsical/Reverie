@@ -460,7 +460,6 @@ public static class FlowerEffectConfig
         public string Name { get; set; }
         public short[] RequiredFlowers { get; set; }
 
-        // Enhanced signature that receives individual flower counts
         public Action<SatchelPlayer, Dictionary<int, int>, int> ApplyEffect { get; set; }
 
         /// <summary>
@@ -477,12 +476,10 @@ public static class FlowerEffectConfig
             Name = $"[i:{ItemID.Blinkroot}]",
             ApplyEffect = (player, count) =>
             {
-                // Very small individual bonuses - 0.1% mining speed per flower
                 var pickBonus = count * 0.001f;
                 player.pickSpeedBonus += pickBonus;
                 player.individualFlowerEffects.Add($"[i:{ItemID.Blinkroot}]+{pickBonus:P1} mining speed");
 
-                // Tiny damage bonus - 0.05% per flower
                 var damageBonus = count * 0.0005f;
                 player.damageBonus += damageBonus;
                 player.individualFlowerEffects.Add($"[i:{ItemID.Blinkroot}]+{damageBonus:P1} damage");
@@ -495,7 +492,6 @@ public static class FlowerEffectConfig
             Name = $"[i:{ItemID.Daybloom}]",
             ApplyEffect = (player, count) =>
             {
-                // Small life bonus - 0.5 hp per flower
                 var hpBonus = (int)(count * 0.5f);
                 if (hpBonus > 0)
                 {
@@ -503,7 +499,6 @@ public static class FlowerEffectConfig
                     player.individualFlowerEffects.Add($"[i:{ItemID.Daybloom}]+{hpBonus} maximum life");
                 }
 
-                // Tiny defense bonus - 1 defense per 10 flowers
                 var defBonus = count / 10;
                 if (defBonus > 0)
                 {
@@ -519,12 +514,10 @@ public static class FlowerEffectConfig
             Name = $"[i:{ItemID.Fireblossom}]",
             ApplyEffect = (player, count) =>
             {
-                // Small melee damage - 0.2% per flower
                 var meleeBonus = count * 0.002f;
                 player.meleeDamageBonus += meleeBonus;
                 player.individualFlowerEffects.Add($"[i:{ItemID.Fireblossom}]+{meleeBonus:P1} melee damage");
 
-                // Tiny crit bonus - 1% per 10 flowers
                 var critBonus = count / 10;
                 if (critBonus > 0)
                 {
@@ -540,12 +533,10 @@ public static class FlowerEffectConfig
             Name = $"[i:{ItemID.Shiverthorn}]",
             ApplyEffect = (player, count) =>
             {
-                // Small crit bonus - 0.1% per flower
                 var critBonus = count * 0.1f;
                 player.critBonus += critBonus;
                 player.individualFlowerEffects.Add($"[i:{ItemID.Shiverthorn}]+{critBonus:F1}% critical strike chance");
 
-                // Tiny build speed - 0.1% per flower
                 var buildBonus = count * 0.001f;
                 player.buildSpeedBonus += buildBonus;
                 player.individualFlowerEffects.Add($"[i:{ItemID.Shiverthorn}]+{buildBonus:P1} placement speed");
@@ -561,7 +552,6 @@ public static class FlowerEffectConfig
             RequiredFlowers = [ItemID.Daybloom, ItemID.Blinkroot, ItemID.Shiverthorn],
             ApplyEffect = (player, flowerCounts, minCount) =>
             {
-                // Each effect scales with its specific flower count
                 var shiverthorn = flowerCounts[ItemID.Shiverthorn];
                 var daybloom = flowerCounts[ItemID.Daybloom];
                 var blinkroot = flowerCounts[ItemID.Blinkroot];

@@ -87,6 +87,7 @@ public static class ItemUtils
             || item.type == ItemID.AshWood
             || item.type == ItemID.Pearlwood;
     }
+
     public static bool IsMadeFromMetal(this Item item, params int[] metalTypes)
     {
         foreach (var metalType in metalTypes)

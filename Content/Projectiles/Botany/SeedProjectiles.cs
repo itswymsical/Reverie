@@ -52,14 +52,14 @@ public class DaybloomSeedProj : ModProjectile, IDrawPrimitive
         if (cache == null)
         {
             cache = [];
-            for (var i = 0; i < 15; i++)
+            for (var i = 0; i < 11; i++)
             {
                 cache.Add(pos);
             }
         }
 
         cache.Add(pos);
-        while (cache.Count > 15)
+        while (cache.Count > 11)
         {
             cache.RemoveAt(0);
         }
@@ -71,7 +71,7 @@ public class DaybloomSeedProj : ModProjectile, IDrawPrimitive
 
         var trailColor = new Color(244, 212, 0);
 
-        trail ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(5), factor => factor * 50, factor =>
+        trail ??= new Trail(Main.instance.GraphicsDevice, 11, new RoundedTip(5), factor => factor * 20, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
@@ -79,7 +79,7 @@ public class DaybloomSeedProj : ModProjectile, IDrawPrimitive
         });
         trail.Positions = [.. cache];
 
-        trail2 ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(5), factor => factor * 30, factor =>
+        trail2 ??= new Trail(Main.instance.GraphicsDevice, 11, new RoundedTip(5), factor => factor * 8, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
@@ -106,13 +106,37 @@ public class DaybloomSeedProj : ModProjectile, IDrawPrimitive
             effect.Parameters["pixelation"]?.SetValue(4f);
             effect.Parameters["resolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
             effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
-            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}LaserTrail2").Value);
+            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail").Value);
 
             trail?.Render(effect);
 
             effect.Parameters["pixelation"]?.SetValue(6f);
             trail2?.Render(effect);
         }
+    }
+    public override bool PreDraw(ref Color lightColor)
+    {
+        var texture = TextureAssets.Projectile[Type].Value;
+
+        var offset = Projectile.velocity.SafeNormalize(Vector2.Zero) * 10f;
+
+        var drawPosition = Projectile.Center - offset - Main.screenPosition;
+        var sourceRect = new Rectangle(0, 0, texture.Width, texture.Height);
+        var origin = sourceRect.Size() / 2f;
+
+        Main.EntitySpriteDraw(
+            texture,
+            drawPosition,
+            sourceRect,
+            lightColor,
+            Projectile.rotation,
+            origin,
+            Projectile.scale,
+            SpriteEffects.None,
+            0
+        );
+
+        return false;
     }
 
     public override void OnKill(int timeLeft)
@@ -166,14 +190,14 @@ public class BlinkrootSeedProj : ModProjectile, IDrawPrimitive
         if (cache == null)
         {
             cache = [];
-            for (var i = 0; i < 15; i++)
+            for (var i = 0; i < 11; i++)
             {
                 cache.Add(pos);
             }
         }
 
         cache.Add(pos);
-        while (cache.Count > 15)
+        while (cache.Count > 11)
         {
             cache.RemoveAt(0);
         }
@@ -185,7 +209,7 @@ public class BlinkrootSeedProj : ModProjectile, IDrawPrimitive
 
         var trailColor = new Color(212, 151, 32);
 
-        trail ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(5), factor => factor * 50, factor =>
+        trail ??= new Trail(Main.instance.GraphicsDevice, 11, new RoundedTip(5), factor => factor * 20, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
@@ -193,7 +217,7 @@ public class BlinkrootSeedProj : ModProjectile, IDrawPrimitive
         });
         trail.Positions = [.. cache];
 
-        trail2 ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(5), factor => factor * 30, factor =>
+        trail2 ??= new Trail(Main.instance.GraphicsDevice, 11, new RoundedTip(5), factor => factor * 8, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
@@ -215,18 +239,42 @@ public class BlinkrootSeedProj : ModProjectile, IDrawPrimitive
             var view = Main.GameViewMatrix.TransformationMatrix;
             var projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
 
-            effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.07f);
+            effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.05f);
             effect.Parameters["repeats"]?.SetValue(8f);
             effect.Parameters["pixelation"]?.SetValue(4f);
             effect.Parameters["resolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
             effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
-            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}LaserTrail2").Value);
+            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail").Value);
 
             trail?.Render(effect);
 
             effect.Parameters["pixelation"]?.SetValue(6f);
             trail2?.Render(effect);
         }
+    }
+    public override bool PreDraw(ref Color lightColor)
+    {
+        var texture = TextureAssets.Projectile[Type].Value;
+
+        var offset = Projectile.velocity.SafeNormalize(Vector2.Zero) * 10f;
+
+        var drawPosition = Projectile.Center - offset - Main.screenPosition;
+        var sourceRect = new Rectangle(0, 0, texture.Width, texture.Height);
+        var origin = sourceRect.Size() / 2f;
+
+        Main.EntitySpriteDraw(
+            texture,
+            drawPosition,
+            sourceRect,
+            lightColor,
+            Projectile.rotation,
+            origin,
+            Projectile.scale,
+            SpriteEffects.None,
+            0
+        );
+
+        return false;
     }
 
     public override void OnKill(int timeLeft)
@@ -280,14 +328,14 @@ public class FireblossomSeedProj : ModProjectile, IDrawPrimitive
         if (cache == null)
         {
             cache = [];
-            for (var i = 0; i < 15; i++)
+            for (var i = 0; i < 13; i++)
             {
                 cache.Add(pos);
             }
         }
 
         cache.Add(pos);
-        while (cache.Count > 15)
+        while (cache.Count > 13)
         {
             cache.RemoveAt(0);
         }
@@ -299,7 +347,7 @@ public class FireblossomSeedProj : ModProjectile, IDrawPrimitive
 
         var trailColor = new Color(215, 68, 29);
 
-        trail ??= new Trail(Main.instance.GraphicsDevice, 15, new TriangularTip(16), factor => factor * 24, factor =>
+        trail ??= new Trail(Main.instance.GraphicsDevice, 13, new TriangularTip(16), factor => factor * 24, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
@@ -307,7 +355,7 @@ public class FireblossomSeedProj : ModProjectile, IDrawPrimitive
         });
         trail.Positions = [.. cache];
 
-        trail2 ??= new Trail(Main.instance.GraphicsDevice, 15, new TriangularTip(16), factor => factor * 18, factor =>
+        trail2 ??= new Trail(Main.instance.GraphicsDevice, 13, new TriangularTip(16), factor => factor * 18, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
@@ -341,6 +389,30 @@ public class FireblossomSeedProj : ModProjectile, IDrawPrimitive
             effect.Parameters["pixelation"]?.SetValue(6f);
             trail2?.Render(effect);
         }
+    }
+    public override bool PreDraw(ref Color lightColor)
+    {
+        var texture = TextureAssets.Projectile[Type].Value;
+
+        var offset = Projectile.velocity.SafeNormalize(Vector2.Zero) * 10f;
+
+        var drawPosition = Projectile.Center - offset - Main.screenPosition;
+        var sourceRect = new Rectangle(0, 0, texture.Width, texture.Height);
+        var origin = sourceRect.Size() / 2f;
+
+        Main.EntitySpriteDraw(
+            texture,
+            drawPosition,
+            sourceRect,
+            lightColor,
+            Projectile.rotation,
+            origin,
+            Projectile.scale,
+            SpriteEffects.None,
+            0
+        );
+
+        return false;
     }
 
     public override void OnKill(int timeLeft)
@@ -395,14 +467,14 @@ public class ShiverthornSeedProj : ModProjectile, IDrawPrimitive
         if (cache == null)
         {
             cache = [];
-            for (var i = 0; i < 15; i++)
+            for (var i = 0; i < 11; i++)
             {
                 cache.Add(pos);
             }
         }
 
         cache.Add(pos);
-        while (cache.Count > 15)
+        while (cache.Count > 11)
         {
             cache.RemoveAt(0);
         }
@@ -414,7 +486,7 @@ public class ShiverthornSeedProj : ModProjectile, IDrawPrimitive
 
         var trailColor = new Color(92, 183, 255);
 
-        trail ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(5), factor => factor * 36, factor =>
+        trail ??= new Trail(Main.instance.GraphicsDevice, 11, new RoundedTip(5), factor => factor * 17, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
@@ -422,7 +494,7 @@ public class ShiverthornSeedProj : ModProjectile, IDrawPrimitive
         });
         trail.Positions = [.. cache];
 
-        trail2 ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(5), factor => factor * 18, factor =>
+        trail2 ??= new Trail(Main.instance.GraphicsDevice, 11, new RoundedTip(5), factor => factor * 8, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
@@ -456,6 +528,30 @@ public class ShiverthornSeedProj : ModProjectile, IDrawPrimitive
             effect.Parameters["pixelation"]?.SetValue(6f);
             trail2?.Render(effect);
         }
+    }
+    public override bool PreDraw(ref Color lightColor)
+    {
+        var texture = TextureAssets.Projectile[Type].Value;
+
+        var offset = Projectile.velocity.SafeNormalize(Vector2.Zero) * 10f;
+
+        var drawPosition = Projectile.Center - offset - Main.screenPosition;
+        var sourceRect = new Rectangle(0, 0, texture.Width, texture.Height);
+        var origin = sourceRect.Size() / 2f;
+
+        Main.EntitySpriteDraw(
+            texture,
+            drawPosition,
+            sourceRect,
+            lightColor,
+            Projectile.rotation,
+            origin,
+            Projectile.scale,
+            SpriteEffects.None,
+            0
+        );
+
+        return false;
     }
 
     public override void OnKill(int timeLeft)
@@ -509,14 +605,14 @@ public class MoonglowSeedProj : ModProjectile, IDrawPrimitive
         if (cache == null)
         {
             cache = [];
-            for (var i = 0; i < 15; i++)
+            for (var i = 0; i < 11; i++)
             {
                 cache.Add(pos);
             }
         }
 
         cache.Add(pos);
-        while (cache.Count > 15)
+        while (cache.Count > 11)
         {
             cache.RemoveAt(0);
         }
@@ -528,7 +624,7 @@ public class MoonglowSeedProj : ModProjectile, IDrawPrimitive
 
         var trailColor = new Color(52, 196, 187);
 
-        trail ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(5), factor => factor * 80, factor =>
+        trail ??= new Trail(Main.instance.GraphicsDevice, 11, new RoundedTip(5), factor => factor * 20, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
@@ -536,7 +632,7 @@ public class MoonglowSeedProj : ModProjectile, IDrawPrimitive
         });
         trail.Positions = [.. cache];
 
-        trail2 ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(5), factor => factor * 40, factor =>
+        trail2 ??= new Trail(Main.instance.GraphicsDevice, 11, new RoundedTip(5), factor => factor * 8, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
@@ -563,13 +659,37 @@ public class MoonglowSeedProj : ModProjectile, IDrawPrimitive
             effect.Parameters["pixelation"]?.SetValue(4f);
             effect.Parameters["resolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
             effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
-            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}LaserTrail2").Value);
+            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}BeamTrail").Value);
 
             trail?.Render(effect);
 
             effect.Parameters["pixelation"]?.SetValue(6f);
             trail2?.Render(effect);
         }
+    }
+    public override bool PreDraw(ref Color lightColor)
+    {
+        var texture = TextureAssets.Projectile[Type].Value;
+
+        var offset = Projectile.velocity.SafeNormalize(Vector2.Zero) * 10f;
+
+        var drawPosition = Projectile.Center - offset - Main.screenPosition;
+        var sourceRect = new Rectangle(0, 0, texture.Width, texture.Height);
+        var origin = sourceRect.Size() / 2f;
+
+        Main.EntitySpriteDraw(
+            texture,
+            drawPosition,
+            sourceRect,
+            lightColor,
+            Projectile.rotation,
+            origin,
+            Projectile.scale,
+            SpriteEffects.None,
+            0
+        );
+
+        return false;
     }
 
     public override void OnKill(int timeLeft)
@@ -623,14 +743,14 @@ public class DeathweedSeedProj : ModProjectile, IDrawPrimitive
         if (cache == null)
         {
             cache = [];
-            for (var i = 0; i < 15; i++)
+            for (var i = 0; i < 11; i++)
             {
                 cache.Add(pos);
             }
         }
 
         cache.Add(pos);
-        while (cache.Count > 15)
+        while (cache.Count > 11)
         {
             cache.RemoveAt(0);
         }
@@ -642,7 +762,7 @@ public class DeathweedSeedProj : ModProjectile, IDrawPrimitive
 
         var trailColor = new Color(177, 92, 182);
 
-        trail ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(5), factor => factor * 50, factor =>
+        trail ??= new Trail(Main.instance.GraphicsDevice, 11, new RoundedTip(5), factor => factor * 20, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
@@ -650,7 +770,7 @@ public class DeathweedSeedProj : ModProjectile, IDrawPrimitive
         });
         trail.Positions = [.. cache];
 
-        trail2 ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(5), factor => factor * 30, factor =>
+        trail2 ??= new Trail(Main.instance.GraphicsDevice, 11, new RoundedTip(5), factor => factor * 8, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
@@ -672,18 +792,42 @@ public class DeathweedSeedProj : ModProjectile, IDrawPrimitive
             var view = Main.GameViewMatrix.TransformationMatrix;
             var projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
 
-            effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.07f);
+            effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * .07f);
             effect.Parameters["repeats"]?.SetValue(8f);
             effect.Parameters["pixelation"]?.SetValue(4f);
             effect.Parameters["resolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
             effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
-            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}LightningTrail").Value);
+            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}BeamTrail").Value);
 
             trail?.Render(effect);
 
             effect.Parameters["pixelation"]?.SetValue(6f);
             trail2?.Render(effect);
         }
+    }
+    public override bool PreDraw(ref Color lightColor)
+    {
+        var texture = TextureAssets.Projectile[Type].Value;
+
+        var offset = Projectile.velocity.SafeNormalize(Vector2.Zero) * 10f;
+
+        var drawPosition = Projectile.Center - offset - Main.screenPosition;
+        var sourceRect = new Rectangle(0, 0, texture.Width, texture.Height);
+        var origin = sourceRect.Size() / 2f;
+
+        Main.EntitySpriteDraw(
+            texture,
+            drawPosition,
+            sourceRect,
+            lightColor,
+            Projectile.rotation,
+            origin,
+            Projectile.scale,
+            SpriteEffects.None,
+            0
+        );
+
+        return false;
     }
 
     public override void OnKill(int timeLeft)
@@ -737,26 +881,26 @@ public class WaterleafSeedProj : ModProjectile, IDrawPrimitive
         if (cache == null)
         {
             cache = [];
-            for (var i = 0; i < 15; i++)
+            for (var i = 0; i < 11; i++)
             {
                 cache.Add(pos);
             }
         }
 
         cache.Add(pos);
-        while (cache.Count > 15)
+
+        while (cache.Count > 11)
         {
             cache.RemoveAt(0);
         }
     }
-
     private void ManageTrail()
     {
         var pos = Projectile.Center;
 
         var trailColor = new Color(100, 150, 8);
 
-        trail ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(5), factor => factor * 12, factor =>
+        trail ??= new Trail(Main.instance.GraphicsDevice, 11, new RoundedTip(5), factor => factor * 12, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
@@ -764,7 +908,7 @@ public class WaterleafSeedProj : ModProjectile, IDrawPrimitive
         });
         trail.Positions = [.. cache];
 
-        trail2 ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(5), factor => factor * 5, factor =>
+        trail2 ??= new Trail(Main.instance.GraphicsDevice, 11, new RoundedTip(5), factor => factor * 5, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
@@ -798,6 +942,31 @@ public class WaterleafSeedProj : ModProjectile, IDrawPrimitive
             effect.Parameters["pixelation"]?.SetValue(6f);
             trail2?.Render(effect);
         }
+    }
+
+    public override bool PreDraw(ref Color lightColor)
+    {
+        var texture = TextureAssets.Projectile[Type].Value;
+
+        var offset = Projectile.velocity.SafeNormalize(Vector2.Zero) * 10f;
+
+        var drawPosition = Projectile.Center - offset - Main.screenPosition;
+        var sourceRect = new Rectangle(0, 0, texture.Width, texture.Height);
+        var origin = sourceRect.Size() / 2f;
+
+        Main.EntitySpriteDraw(
+            texture,
+            drawPosition,
+            sourceRect,
+            lightColor,
+            Projectile.rotation,
+            origin,
+            Projectile.scale,
+            SpriteEffects.None,
+            0
+        );
+
+        return false;
     }
 
     public override void OnKill(int timeLeft)
