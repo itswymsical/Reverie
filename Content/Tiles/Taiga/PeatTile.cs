@@ -36,33 +36,33 @@ public class PeatTile : ModTile
 
         AddMapEntry(new Color(126, 95, 74));
     }
-    public override void RandomUpdate(int i, int j)
-    {
-        if (!Main.rand.NextBool(6)) return;
+    //public override void RandomUpdate(int i, int j)
+    //{
+    //    if (!Main.rand.NextBool(6)) return;
 
-        int[] directions = { -1, 1 };
-        foreach (int xDir in directions)
-        {
-            int x = i + xDir;
-            if (x < 0 || x >= Main.maxTilesX) continue;
+    //    int[] directions = { -1, 1 };
+    //    foreach (int xDir in directions)
+    //    {
+    //        int x = i + xDir;
+    //        if (x < 0 || x >= Main.maxTilesX) continue;
 
-            foreach (int yDir in directions)
-            {
-                int y = j + yDir;
-                if (y < 0 || y >= Main.maxTilesY) continue;
+    //        foreach (int yDir in directions)
+    //        {
+    //            int y = j + yDir;
+    //            if (y < 0 || y >= Main.maxTilesY) continue;
 
-                Tile tile = Main.tile[x, y];
-                if (tile.HasTile && tile.TileType == Type)
-                {
-                    if (!Main.tile[x, y - 1].HasTile || !Main.tileSolid[Main.tile[x, y - 1].TileType])
-                    {
-                        tile.TileType = (ushort)ModContent.TileType<TaigaGrassTile>();
+    //            Tile tile = Main.tile[x, y];
+    //            if (tile.HasTile && tile.TileType == Type)
+    //            {
+    //                if (!Main.tile[x, y - 1].HasTile || !Main.tileSolid[Main.tile[x, y - 1].TileType])
+    //                {
+    //                    tile.TileType = (ushort)ModContent.TileType<TaigaGrassTile>();
 
-                        if (Main.netMode == NetmodeID.Server)
-                            NetMessage.SendTileSquare(-1, x, y, 1);
-                    }
-                }
-            }
-        }
-    }
+    //                    if (Main.netMode == NetmodeID.Server)
+    //                        NetMessage.SendTileSquare(-1, x, y, 1);
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
 }

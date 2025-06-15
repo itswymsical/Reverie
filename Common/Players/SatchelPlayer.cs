@@ -3,6 +3,7 @@ using Reverie.Content.Items.Botany;
 using Reverie.Utilities;
 using System.Collections.Generic;
 using System.Linq;
+using Terraria.ModLoader;
 
 namespace Reverie.Common.Players;
 
@@ -21,6 +22,7 @@ public class SatchelPlayer : ModPlayer
     public float damageBonus;
     public float critBonus;
     public float kbBonus;
+    public float thornsBonus;
 
     public int lifeBonus;
     public int lifeRegenBonus;
@@ -99,6 +101,9 @@ public class SatchelPlayer : ModPlayer
 
         if (critBonus > 0)
             Player.GetCritChance(DamageClass.Generic) += critBonus;
+
+        if (thornsBonus > 0)
+            Player.thorns += thornsBonus;
 
         if (manaBonus > 0)
             Player.statManaMax2 += manaBonus;
@@ -204,6 +209,7 @@ public class SatchelPlayer : ModPlayer
         damageBonus = 0f;
         critBonus = 0f;
         kbBonus = 0f;
+        thornsBonus = 0f;
 
         lifeBonus = 0;
         lifeRegenBonus = 0;
@@ -476,7 +482,7 @@ public static class FlowerEffectConfig
             Name = $"[i:{ItemID.Blinkroot}]",
             ApplyEffect = (player, count) =>
             {
-                var pickBonus = count * 0.001f;
+                var pickBonus = count * 0.003f;
                 player.pickSpeedBonus += pickBonus;
                 player.individualFlowerEffects.Add($"[i:{ItemID.Blinkroot}]+{pickBonus:P1} mining speed");
 
@@ -527,6 +533,22 @@ public static class FlowerEffectConfig
             },
         },
 
+        [ItemID.Sunflower] = new FlowerEffect
+        {
+            ItemType = ItemID.Sunflower,
+            Name = $"[i:{ItemID.Sunflower}]",
+            ApplyEffect = (player, count) =>
+            {
+                var speedBonus = count * 0.003f;
+                player.moveSpeedBonus += speedBonus;
+                player.individualFlowerEffects.Add($"[i:{ItemID.Sunflower}]+{speedBonus:P1} movement speed");
+
+                var buildBonus = count * 0.001f;
+                player.buildSpeedBonus += buildBonus;
+                player.individualFlowerEffects.Add($"[i:{ItemID.Sunflower}]+{buildBonus:P1} placement speed");
+            }
+        },
+
         [ItemID.Shiverthorn] = new FlowerEffect
         {
             ItemType = ItemID.Shiverthorn,
@@ -541,7 +563,62 @@ public static class FlowerEffectConfig
                 player.buildSpeedBonus += buildBonus;
                 player.individualFlowerEffects.Add($"[i:{ItemID.Shiverthorn}]+{buildBonus:P1} placement speed");
             }
-        }
+        },
+
+        [ItemID.Moonglow] = new FlowerEffect
+        {
+            ItemType = ItemID.Moonglow,
+            Name = $"[i:{ItemID.Moonglow}]",
+            ApplyEffect = (player, count) =>
+            {
+           
+                var manaBonus = (int)(count * 0.5f);
+                if (manaBonus > 0)
+                {
+                    player.manaBonus += manaBonus;
+                    player.individualFlowerEffects.Add($"[i:{ItemID.Moonglow}]+{manaBonus} maximum mana");
+                }
+
+                var manaRegenBonus = (int)(count * 0.25f);
+                if (manaRegenBonus > 0)
+                {
+                    player.manaRegenBonus += manaRegenBonus;
+                    player.individualFlowerEffects.Add($"[i:{ItemID.Moonglow}]+{manaRegenBonus} mana regeneration");
+                }
+            }
+        },
+
+        [ItemID.Waterleaf] = new FlowerEffect
+        {
+            ItemType = ItemID.Moonglow,
+            Name = $"[i:{ItemID.Moonglow}]",
+            ApplyEffect = (player, count) =>
+            {
+                var kbBonus = count * 0.001f;
+                player.kbBonus += kbBonus;
+                player.individualFlowerEffects.Add($"[i:{ItemID.Moonglow}]+{kbBonus:P1} knockback");
+
+                var magicBonus = count * 0.001f;
+                player.magicDamageBonus += magicBonus;
+                player.individualFlowerEffects.Add($"[i:{ItemID.Moonglow}]+{magicBonus:P1} magic damage");
+            }
+        },
+
+        [ItemID.Deathweed] = new FlowerEffect
+        {
+            ItemType = ItemID.Deathweed,
+            Name = $"[i:{ItemID.Deathweed}]",
+            ApplyEffect = (player, count) =>
+            {
+                var thornsBonus = count * 0.001f;
+                player.thornsBonus += thornsBonus;
+                player.individualFlowerEffects.Add($"[i:{ItemID.Deathweed}]+{thornsBonus:P1} thorn damage");
+
+                var critBonus = count * 0.001f;
+                player.critBonus += critBonus;
+                player.individualFlowerEffects.Add($"[i:{ItemID.Deathweed}]+{critBonus:P1} critical strike chance");
+            }
+        },
     };
 
     public static readonly List<ComboEffect> ComboEffects =
@@ -576,6 +653,40 @@ public static class FlowerEffectConfig
                     {
                         player.Combo_DawnsGrace = true;
                         player.comboEffects.Add($"[i:{ModContent.ItemType<FlowerSatchelItem>()}][c/a0fea3:Hunter & Trapsight effects when above 90% HP]");
+                    }
+                }
+            }
+        },
+
+        new ComboEffect
+        {
+            Name = "Duskwilt Bouquet",
+            RequiredFlowers = [ItemID.Moonglow, ItemID.Deathweed, (short)ModContent.ItemType<MagnoliaItem>()],
+            ApplyEffect = (player, flowerCounts, minCount) =>
+            {
+                var moonglow = flowerCounts[ItemID.Moonglow];
+                var deathweed = flowerCounts[ItemID.Deathweed];
+                var magnolia = flowerCounts[(short)ModContent.ItemType<MagnoliaItem>()];
+
+                var thornBonus = deathweed * 0.003f;
+                var meleeDmgBonus = moonglow * 0.0031515f;
+                var critBonus = magnolia * 0.005f;
+
+                player.thornsBonus += thornBonus;
+                player.meleeDamageBonus += meleeDmgBonus;
+                player.critBonus += critBonus;
+
+                player.comboEffects.Add($"[i:{ItemID.Deathweed}]+{thornBonus:P1} thorn damage ({deathweed})");
+                player.comboEffects.Add($"[i:{ItemID.Moonglow}]+{meleeDmgBonus:P1} melee damage ({moonglow})");
+                player.comboEffects.Add($"[i:{ModContent.ItemType<MagnoliaItem>()}]+{critBonus:P1} critical strike chance ({magnolia})");
+            },
+            ExtraEffects = new()
+            {
+                [30] = new ComboEffect_Special
+                {
+                    ApplyEffect = (player) =>
+                    {
+                        player.comboEffects.Add($"[i:{ModContent.ItemType<FlowerSatchelItem>()}][c/a0fea3:Enemies have a chance to plant a sapling on death (not done)]");
                     }
                 }
             }

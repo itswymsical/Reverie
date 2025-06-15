@@ -39,7 +39,7 @@ public class TaigaGrassTile : GrassTile
                 if (y < 0 || y >= Main.maxTilesY) continue;
 
                 Tile tile = Main.tile[x, y];
-                if (tile.HasTile && tile.TileType == Type)
+                if (tile.HasTile && (tile.TileType == Type || tile.TileType == DirtType))
                 {
                     if (!Main.tile[x, y - 1].HasTile || !Main.tileSolid[Main.tile[x, y - 1].TileType])
                     {
@@ -86,6 +86,14 @@ public class SnowTaigaGrassTile : GrassTile
     {
         dustType = DustID.Snow;
     }
+    public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
+    {
+        if (!effectOnly)
+        {
+            fail = true;
+            Framing.GetTileSafely(i, j).TileType = (ushort)ModContent.TileType<TaigaGrassTile>();
+        }
+    }
 }
 
 public class CorruptTaigaGrassTile : GrassTile
@@ -118,6 +126,14 @@ public class CorruptTaigaGrassTile : GrassTile
     public override void WalkDust(ref int dustType, ref bool makeDust, ref Color color)
     {
         dustType = DustID.CorruptPlants;
+    }
+    public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
+    {
+        if (!effectOnly)
+        {
+            fail = true;
+            Framing.GetTileSafely(i, j).TileType = (ushort)ModContent.TileType<TaigaGrassTile>();
+        }
     }
 }
 
@@ -152,6 +168,14 @@ public class CrimsonTaigaGrassTile : GrassTile
     {
         dustType = DustID.CrimsonPlants;
     }
+    public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
+    {
+        if (!effectOnly)
+        {
+            fail = true;
+            Framing.GetTileSafely(i, j).TileType = (ushort)ModContent.TileType<TaigaGrassTile>();
+        }
+    }
 }
 
 public class HallowTaigaGrassTile : GrassTile
@@ -184,5 +208,13 @@ public class HallowTaigaGrassTile : GrassTile
     public override void WalkDust(ref int dustType, ref bool makeDust, ref Color color)
     {
         dustType = DustID.HallowedPlants;
+    }
+    public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
+    {
+        if (!effectOnly)
+        {
+            fail = true;
+            Framing.GetTileSafely(i, j).TileType = (ushort)ModContent.TileType<TaigaGrassTile>();
+        }
     }
 }

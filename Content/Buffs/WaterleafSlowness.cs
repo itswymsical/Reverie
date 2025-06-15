@@ -9,6 +9,9 @@
 
         public override void Update(NPC npc, ref int buffIndex)
         {
+            if (npc.boss)
+                return;
+
             npc.velocity /= 1.33f;
             npc.AddBuff(BuffID.Wet, 1);
         }
