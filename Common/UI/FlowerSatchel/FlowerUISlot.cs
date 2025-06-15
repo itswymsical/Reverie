@@ -150,17 +150,23 @@ internal class FlowerSatchelUIState : UIState
     {
         if (_effectsTitle != null)
         {
-            _effectsTitle.SetText(modPlayer.GetEffectsSummary());
+            _effectsTitle.SetText(modPlayer.GetSummary());
         }
 
-        if (_effectsList != null && modPlayer.activeEffects.Count > 0)
+        if (_effectsList != null)
         {
-            var effectsText = string.Join("\n", modPlayer.activeEffects);
-            _effectsList.SetText(effectsText);
-        }
-        else if (_effectsList != null)
-        {
-            _effectsList.SetText("");
+            // Use the new display method that respects alt key state
+            var displayEffects = modPlayer.GetDisplayEffects();
+
+            if (displayEffects.Count > 0)
+            {
+                var effectsText = string.Join("\n", displayEffects);
+                _effectsList.SetText(effectsText);
+            }
+            else
+            {
+                _effectsList.SetText("");
+            }
         }
     }
 
