@@ -1,4 +1,4 @@
-UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -280,10 +280,10 @@ Items: {
 		DisplayName: Flower Satchel
 		Tooltip:
 			'''
-			Used to store potion flowers, has a total of 3 slots.
+			Can be used to store most flowers, has a total of 3 slots.
 			Flowers stored in the satchel will grant stat bonuses depending on the type, stack, and combination of flowers.
-			Can only have one satchel in your inventory at a time.
-			Right-click to open
+			You can only have one satchel in your inventory at a time.
+			Right-click to open (must keep open to benefit from bonuses)
 			'''
 	}
 

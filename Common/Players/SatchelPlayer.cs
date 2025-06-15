@@ -1,25 +1,30 @@
-﻿using Reverie.Content.Items.Botany;
+﻿using Microsoft.Xna.Framework.Input;
+using Reverie.Content.Items.Botany;
 using Reverie.Utilities;
 using System.Collections.Generic;
 using System.Linq;
-using Terraria.Audio;
-using Terraria.ID;
 
 namespace Reverie.Common.Players;
 
 public class SatchelPlayer : ModPlayer
 {
+    #region Properties / Fields / Whatever
     public bool flowerSatchelVisible;
     public Item activeSatchel;
 
     public float moveSpeedBonus;
     public float pickSpeedBonus;
     public float buildSpeedBonus;
+
     public int defenseBonus;
     public float enduranceBonus;
     public float damageBonus;
     public float critBonus;
+    public float kbBonus;
+
     public int lifeBonus;
+    public int lifeRegenBonus;
+    public int manaRegenBonus;
     public int manaBonus;
 
     public float meleeDamageBonus;
@@ -27,19 +32,20 @@ public class SatchelPlayer : ModPlayer
 
     public bool shiverthorn_FrozenCrit;
     public bool shiverthorn_Frostburn;
-    public bool shiverthorn_Dangersense;
-    public bool daybloom_speedBoost;
-    public bool blinkroot_OreChime;
+    public bool Combo_ExplorersCorsage;
+    public bool Combo_SunriseSpray;
+    public bool Combo_DawnsGrace;
     public bool daybloom_Ironclad;
 
-    // Separate effect lists
     public List<string> individualFlowerEffects = [];
     public List<string> comboEffects = [];
 
-    // Combined list for compatibility (if needed elsewhere)
     public List<string> activeEffects => GetCombinedEffects();
 
     private const int MAX_STACK_FOR_STATS = 30;
+
+    public int timer;
+    #endregion
 
     public override void Initialize()
     {
@@ -60,9 +66,10 @@ public class SatchelPlayer : ModPlayer
         CalculateFlowerEffects();
     }
 
+    #region Stat Checks / Update Logic
     public override void PostUpdateEquips()
     {
-        #region general stat buffs
+        #region General Stat Buffs
         if (moveSpeedBonus > 0)
             Player.moveSpeed += moveSpeedBonus;
 
@@ -95,18 +102,28 @@ public class SatchelPlayer : ModPlayer
 
         if (manaBonus > 0)
             Player.statManaMax2 += manaBonus;
+
         if (lifeBonus > 0)
             Player.statLifeMax2 += lifeBonus;
+
+        if (lifeRegenBonus > 0)
+            Player.lifeRegen += lifeRegenBonus;
+
+        if (manaRegenBonus > 0)
+            Player.manaRegen += manaRegenBonus;
+
+        if (kbBonus > 0)
+            Player.GetKnockback(DamageClass.Generic) += kbBonus;
         #endregion
 
         if (daybloom_Ironclad)
         {
             int metalItems = CountMetalItems();
             if (metalItems > 0)
-                Player.statDefense += metalItems / 4; // +1 defense per each 4 item         
+                Player.statDefense += metalItems / 4;       
         }
 
-        if (daybloom_speedBoost && Main.dayTime)
+        if (Combo_SunriseSpray && Main.dayTime)
             Player.moveSpeed += 0.04f;
 
         if (shiverthorn_FrozenCrit && Player.ZoneSnow)
@@ -116,7 +133,7 @@ public class SatchelPlayer : ModPlayer
     public override void OnHitByNPC(NPC npc, Player.HurtInfo hurtInfo)
     {
         base.OnHitByNPC(npc, hurtInfo);
-        if (shiverthorn_Dangersense)
+        if (Combo_ExplorersCorsage)
         {
             Player.AddBuff(BuffID.Dangersense, 90);
         }
@@ -125,7 +142,7 @@ public class SatchelPlayer : ModPlayer
     public override void OnHitByProjectile(Projectile proj, Player.HurtInfo hurtInfo)
     {
         base.OnHitByProjectile(proj, hurtInfo);
-        if (shiverthorn_Dangersense)
+        if (Combo_ExplorersCorsage)
         {
             Player.AddBuff(BuffID.Dangersense, 90);
         }
@@ -148,7 +165,7 @@ public class SatchelPlayer : ModPlayer
     private int CountMetalItems()
     {
         int count = 0;
-        for (int i = 0; i < 58; i++) // Main inventory + armor + accessories
+        for (int i = 0; i < 58; i++)
         {
             Item item = Player.inventory[i];
             if (!item.IsAir && item.IsMadeFromMetal([ItemID.IronBar, ItemID.LeadBar]))
@@ -156,7 +173,6 @@ public class SatchelPlayer : ModPlayer
                 count++;
             }
         }
-        // Check armor and accessories
         for (int i = 0; i < Player.armor.Length; i++)
         {
             Item item = Player.armor[i];
@@ -168,12 +184,12 @@ public class SatchelPlayer : ModPlayer
         return count;
     }
 
-    public int timer;
     public override void PostUpdate()
     {
-        if (blinkroot_OreChime && Player.statLife > Player.statLifeMax2 * 0.9f)
+        if (Combo_DawnsGrace && Player.statLife > Player.statLifeMax2 * 0.9f)
         {
-            Player.AddBuff(BuffID.Hunter, 60);
+            Player.dangerSense = true;
+            Player.detectCreature = true;
         }
     }
 
@@ -182,26 +198,34 @@ public class SatchelPlayer : ModPlayer
         moveSpeedBonus = 0f;
         pickSpeedBonus = 0f;
         buildSpeedBonus = 0f;
+
         defenseBonus = 0;
         enduranceBonus = 0f;
         damageBonus = 0f;
         critBonus = 0f;
-        manaBonus = 0;
+        kbBonus = 0f;
+
         lifeBonus = 0;
+        lifeRegenBonus = 0;
+        manaRegenBonus = 0;
+        manaBonus = 0;
+
         meleeDamageBonus = 0f;
         magicDamageBonus = 0f;
 
         shiverthorn_FrozenCrit = false;
         shiverthorn_Frostburn = false;
-        shiverthorn_Dangersense = false;
-        daybloom_speedBoost = false;
-        blinkroot_OreChime = false;
+        Combo_ExplorersCorsage = false;
+        Combo_SunriseSpray = false;
+        Combo_DawnsGrace = false;
         daybloom_Ironclad = false;
 
         individualFlowerEffects.Clear();
         comboEffects.Clear();
     }
+    #endregion
 
+    #region Main Logic
     private void CalculateFlowerEffects()
     {
         if (activeSatchel?.ModItem is not FlowerSatchelItem satchel)
@@ -220,12 +244,17 @@ public class SatchelPlayer : ModPlayer
             }
         }
 
+        var flowersConsumedByCombos = new HashSet<int>();
+
+        ApplyComboEffects(flowerCounts, flowersConsumedByCombos);
+
         foreach (var kvp in flowerCounts)
         {
-            ApplyFlowerEffect(kvp.Key, kvp.Value);
+            if (!flowersConsumedByCombos.Contains(kvp.Key))
+            {
+                ApplyFlowerEffect(kvp.Key, kvp.Value);
+            }
         }
-
-        ApplyComboEffects(flowerCounts);
     }
 
     private void ApplyFlowerEffect(int itemType, int count)
@@ -234,51 +263,52 @@ public class SatchelPlayer : ModPlayer
             return;
 
         effect.ApplyEffect(this, count);
-
-        var applicableThresholds = effect.ThresholdEffects
-            .Where(t => count >= t.Key)
-            .OrderBy(t => t.Key);
-
-        foreach (var threshold in applicableThresholds)
-        {
-            threshold.Value.ApplyEffect(this);
-        }
     }
 
-    private void ApplyComboEffects(Dictionary<int, int> flowerCounts)
+    private void ApplyComboEffects(Dictionary<int, int> flowerCounts, HashSet<int> consumedFlowers)
     {
         foreach (var combo in FlowerEffectConfig.ComboEffects)
         {
-            // Check if all required flowers are present
             var hasAllFlowers = combo.RequiredFlowers.All(f => flowerCounts.ContainsKey(f));
             if (!hasAllFlowers)
                 continue;
 
-            // Find the minimum count among required flowers
             var minCount = combo.RequiredFlowers.Select(f => flowerCounts[f]).Min();
             if (minCount > 0)
             {
-                combo.ApplyEffect(this, minCount);
+                combo.ApplyEffect(this, flowerCounts, minCount);
+
+                var applicableThresholds = combo.ExtraEffects
+                    .Where(t => minCount >= t.Key)
+                    .OrderBy(t => t.Key);
+
+                foreach (var threshold in applicableThresholds)
+                {
+                    threshold.Value.ApplyEffect(this);
+                }
+
+                foreach (var flowerType in combo.RequiredFlowers)
+                {
+                    consumedFlowers.Add(flowerType);
+                }
             }
         }
     }
+    #endregion
 
-    // Method to get effects for display based on alt key state
+    #region Display Info
     public List<string> GetDisplayEffects()
     {
         var displayEffects = new List<string>();
 
-        // Always show combo effects
         displayEffects.AddRange(comboEffects);
 
-        // Only show individual flower effects when holding left-alt
-        if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt))
+        if (Main.keyState.IsKeyDown(Keys.LeftAlt))
         {
             displayEffects.AddRange(individualFlowerEffects);
         }
         else if (individualFlowerEffects.Count > 0)
         {
-            // Show hint when there are hidden effects
             displayEffects.Add("Hold [Left Alt] to show flower effects");
         }
 
@@ -296,20 +326,124 @@ public class SatchelPlayer : ModPlayer
 
     public string GetSummary()
     {
-        var totalEffects = comboEffects.Count + individualFlowerEffects.Count;
-        if (totalEffects == 0)
+        var summaryParts = new List<string>();
+
+        var activeCombos = GetActiveCombos();
+        summaryParts.AddRange(activeCombos);
+
+        var activeFlowers = GetActiveIndividualFlowers();
+        if (activeFlowers.Count > 0)
+        {
+            var flowerNames = string.Join(", ", activeFlowers);
+            var effectText = "effects";
+            summaryParts.Add($"{flowerNames} {effectText}");
+        }
+
+        if (summaryParts.Count == 0)
             return "No active effects";
 
-        return $"{totalEffects} active effect{(totalEffects > 1 ? "s" : "")}";
+        return string.Join(" | ", summaryParts);
     }
-}
 
-/// <summary>
-/// Configuration system for flower effects in the Flower Satchel.
-/// </summary>
+    private List<string> GetActiveCombos()
+    {
+        var activeCombos = new List<string>();
+
+        if (activeSatchel?.ModItem is not FlowerSatchelItem satchel)
+            return activeCombos;
+
+        var flowerCounts = GetFlowerCounts();
+
+        foreach (var combo in FlowerEffectConfig.ComboEffects)
+        {
+            var hasAllFlowers = combo.RequiredFlowers.All(f => flowerCounts.ContainsKey(f));
+            if (hasAllFlowers)
+            {
+                var minCount = combo.RequiredFlowers.Select(f => flowerCounts[f]).Min();
+                if (minCount > 0)
+                {
+                    activeCombos.Add(combo.Name);
+                }
+            }
+        }
+
+        return activeCombos;
+    }
+
+    private List<string> GetActiveIndividualFlowers()
+    {
+        var activeFlowers = new List<string>();
+
+        if (activeSatchel?.ModItem is not FlowerSatchelItem satchel)
+            return activeFlowers;
+
+        var flowerCounts = GetFlowerCounts();
+        var flowersInCombos = new HashSet<int>();
+
+        foreach (var combo in FlowerEffectConfig.ComboEffects)
+        {
+            var hasAllFlowers = combo.RequiredFlowers.All(f => flowerCounts.ContainsKey(f));
+            if (hasAllFlowers)
+            {
+                var minCount = combo.RequiredFlowers.Select(f => flowerCounts[f]).Min();
+                if (minCount > 0)
+                {
+                    foreach (var flowerType in combo.RequiredFlowers)
+                    {
+                        flowersInCombos.Add(flowerType);
+                    }
+                }
+            }
+        }
+
+        foreach (var kvp in flowerCounts)
+        {
+            if (!flowersInCombos.Contains(kvp.Key) && kvp.Value > 0)
+            {
+                var flowerName = GetFlowerDisplayName(kvp.Key);
+                if (!string.IsNullOrEmpty(flowerName))
+                {
+                    activeFlowers.Add(flowerName);
+                }
+            }
+        }
+
+        return activeFlowers;
+    }
+
+    private Dictionary<int, int> GetFlowerCounts()
+    {
+        var flowerCounts = new Dictionary<int, int>();
+
+        if (activeSatchel?.ModItem is not FlowerSatchelItem satchel)
+            return flowerCounts;
+
+        foreach (var item in satchel.items)
+        {
+            if (!item.IsAir)
+            {
+                var effectiveStack = Math.Min(item.stack, MAX_STACK_FOR_STATS);
+                flowerCounts[item.type] = flowerCounts.GetValueOrDefault(item.type) + effectiveStack;
+            }
+        }
+
+        return flowerCounts;
+    }
+
+    private string GetFlowerDisplayName(int itemType)
+    {
+        if (FlowerEffectConfig.FlowerEffects.ContainsKey(itemType))
+        {
+            return Lang.GetItemNameValue(itemType);
+        }
+
+        return "";
+    }
+    #endregion
+}
 public static class FlowerEffectConfig
 {
-    public class FlowerEffect_Special
+    public class ComboEffect_Special
     {
         public Action<SatchelPlayer> ApplyEffect { get; set; }
     }
@@ -319,14 +453,20 @@ public static class FlowerEffectConfig
         public int ItemType { get; set; }
         public string Name { get; set; }
         public Action<SatchelPlayer, int> ApplyEffect { get; set; }
-        public Dictionary<int, FlowerEffect_Special> ThresholdEffects { get; set; } = [];
     }
 
     public class ComboEffect
     {
         public string Name { get; set; }
         public short[] RequiredFlowers { get; set; }
-        public Action<SatchelPlayer, int> ApplyEffect { get; set; }
+
+        // Enhanced signature that receives individual flower counts
+        public Action<SatchelPlayer, Dictionary<int, int>, int> ApplyEffect { get; set; }
+
+        /// <summary>
+        /// Additional effects that can be applied depending on minimum flower count.
+        /// </summary>
+        public Dictionary<int, ComboEffect_Special> ExtraEffects { get; set; } = [];
     }
 
     public static readonly Dictionary<int, FlowerEffect> FlowerEffects = new()
@@ -337,38 +477,16 @@ public static class FlowerEffectConfig
             Name = $"[i:{ItemID.Blinkroot}]",
             ApplyEffect = (player, count) =>
             {
-                // Mining speed: 1% per flower
-                var pickBonus = count * 0.0084f;
+                // Very small individual bonuses - 0.1% mining speed per flower
+                var pickBonus = count * 0.001f;
                 player.pickSpeedBonus += pickBonus;
-                player.individualFlowerEffects.Add($"[i:{ItemID.Blinkroot}]+{pickBonus:P0} mining speed");
+                player.individualFlowerEffects.Add($"[i:{ItemID.Blinkroot}]+{pickBonus:P1} mining speed");
 
-                // Damage: 1% per 3 flowers
-                var damageBonus = count * (0.01f / 3f);
-                if (damageBonus > 0)
-                {
-                    player.damageBonus += damageBonus;
-                    player.individualFlowerEffects.Add($"[i:{ItemID.Blinkroot}]+{damageBonus:P1} damage");
-                }
+                // Tiny damage bonus - 0.05% per flower
+                var damageBonus = count * 0.0005f;
+                player.damageBonus += damageBonus;
+                player.individualFlowerEffects.Add($"[i:{ItemID.Blinkroot}]+{damageBonus:P1} damage");
             },
-            ThresholdEffects = new()
-            {
-                [15] = new FlowerEffect_Special
-                {
-                    ApplyEffect = (player) =>
-                    {
-                        player.Player.nightVision = true;
-                        player.individualFlowerEffects.Add($"[i:{ItemID.Blinkroot}][grants[i:{ItemID.NightOwlPotion}]effects]");
-                    }
-                },
-                [30] = new FlowerEffect_Special
-                {
-                    ApplyEffect = (player) =>
-                    {
-                        player.blinkroot_OreChime = true;
-                        player.individualFlowerEffects.Add($"[i:{ItemID.Blinkroot}][gain[i:{ItemID.HunterPotion}]effects when above 90% HP]");
-                    }
-                }
-            }
         },
 
         [ItemID.Daybloom] = new FlowerEffect
@@ -377,36 +495,22 @@ public static class FlowerEffectConfig
             Name = $"[i:{ItemID.Daybloom}]",
             ApplyEffect = (player, count) =>
             {
-                var hpBonus = count;
-                player.lifeBonus += hpBonus;
-                player.individualFlowerEffects.Add($"[i:{ItemID.Daybloom}]+{hpBonus} maximum life");
+                // Small life bonus - 0.5 hp per flower
+                var hpBonus = (int)(count * 0.5f);
+                if (hpBonus > 0)
+                {
+                    player.lifeBonus += hpBonus;
+                    player.individualFlowerEffects.Add($"[i:{ItemID.Daybloom}]+{hpBonus} maximum life");
+                }
 
-                var defBonus = count / 6;
+                // Tiny defense bonus - 1 defense per 10 flowers
+                var defBonus = count / 10;
                 if (defBonus > 0)
                 {
                     player.defenseBonus += defBonus;
                     player.individualFlowerEffects.Add($"[i:{ItemID.Daybloom}]+{defBonus} defense");
                 }
             },
-            ThresholdEffects = new()
-            {
-                [10] = new FlowerEffect_Special
-                {
-                    ApplyEffect = (player) =>
-                    {
-                        player.daybloom_speedBoost = true;
-                        player.individualFlowerEffects.Add($"[i:{ItemID.Daybloom}]gain +4% speed boost during the day");
-                    }
-                },
-                [30] = new FlowerEffect_Special
-                {
-                    ApplyEffect = (player) =>
-                    {
-                        player.daybloom_Ironclad = true;
-                        player.individualFlowerEffects.Add($"[i:{ItemID.Daybloom}][MAX] +1 defense per each 4 items made of iron on your person");
-                    }
-                },
-            }
         },
 
         [ItemID.Fireblossom] = new FlowerEffect
@@ -415,36 +519,19 @@ public static class FlowerEffectConfig
             Name = $"[i:{ItemID.Fireblossom}]",
             ApplyEffect = (player, count) =>
             {
-                // Melee damage: 1.5% per flower
-                var meleeBonus = count * 0.015f;
+                // Small melee damage - 0.2% per flower
+                var meleeBonus = count * 0.002f;
                 player.meleeDamageBonus += meleeBonus;
-                player.individualFlowerEffects.Add($"[i:{ItemID.Fireblossom}]+{meleeBonus:P0} melee damage");
+                player.individualFlowerEffects.Add($"[i:{ItemID.Fireblossom}]+{meleeBonus:P1} melee damage");
 
-                var critBonus = count / 6;
+                // Tiny crit bonus - 1% per 10 flowers
+                var critBonus = count / 10;
                 if (critBonus > 0)
                 {
                     player.critBonus += critBonus;
-                    player.individualFlowerEffects.Add($"[i:{ItemID.Fireblossom}]+{critBonus} critical strike chance");
+                    player.individualFlowerEffects.Add($"[i:{ItemID.Fireblossom}]+{critBonus}% critical strike chance");
                 }
             },
-            ThresholdEffects = new()
-            {
-                [15] = new FlowerEffect_Special
-                {
-                    ApplyEffect = (player) =>
-                    {
-                        // Would need to be handled in OnHitNPC or similar
-                        player.individualFlowerEffects.Add($"[i:{ItemID.Fireblossom}]Melee attacks inflict On Fire!");
-                    }
-                },
-                [30] = new FlowerEffect_Special
-                {
-                    ApplyEffect = (player) =>
-                    {
-                        player.individualFlowerEffects.Add($"[i:{ItemID.Fireblossom}]Max effect reached");
-                    }
-                }
-            }
         },
 
         [ItemID.Shiverthorn] = new FlowerEffect
@@ -453,32 +540,15 @@ public static class FlowerEffectConfig
             Name = $"[i:{ItemID.Shiverthorn}]",
             ApplyEffect = (player, count) =>
             {
-                var critBonus = count * 0.3f;
+                // Small crit bonus - 0.1% per flower
+                var critBonus = count * 0.1f;
                 player.critBonus += critBonus;
                 player.individualFlowerEffects.Add($"[i:{ItemID.Shiverthorn}]+{critBonus:F1}% critical strike chance");
 
-                var buildBonus = count * 0.00675f;
+                // Tiny build speed - 0.1% per flower
+                var buildBonus = count * 0.001f;
                 player.buildSpeedBonus += buildBonus;
-                player.individualFlowerEffects.Add($"[i:{ItemID.Shiverthorn}]+{buildBonus:P0} placement speed");
-            },
-            ThresholdEffects = new()
-            {
-                [15] = new FlowerEffect_Special
-                {
-                    ApplyEffect = (player) =>
-                    {
-                        player.shiverthorn_Dangersense = true;
-                        player.individualFlowerEffects.Add($"[i:{ItemID.Shiverthorn}] grants[i:{ItemID.TrapsightPotion}]shortly when hit");
-                    }
-                },
-                [30] = new FlowerEffect_Special
-                {
-                    ApplyEffect = (player) =>
-                    {
-                        player.shiverthorn_FrozenCrit = true;
-                        player.individualFlowerEffects.Add($"[i:{ItemID.Shiverthorn}] +6% crit damage while in any frozen biome");
-                    }
-                },
+                player.individualFlowerEffects.Add($"[i:{ItemID.Shiverthorn}]+{buildBonus:P1} placement speed");
             }
         }
     };
@@ -487,42 +557,138 @@ public static class FlowerEffectConfig
     [
         new ComboEffect
         {
-            Name = "Dayblink",
-            RequiredFlowers = [ItemID.Daybloom, ItemID.Blinkroot],
-            ApplyEffect = (player, minCount) =>
+            Name = "Dawn's Grace Bouquet",
+            RequiredFlowers = [ItemID.Daybloom, ItemID.Blinkroot, ItemID.Shiverthorn],
+            ApplyEffect = (player, flowerCounts, minCount) =>
             {
-                var bonus = minCount * 0.0032f;
-                player.enduranceBonus += bonus;
-                player.comboEffects.Add($"([i:{ItemID.Daybloom}]+[i:{ItemID.Blinkroot}]) +{bonus:P0} damage reduction");
-            }
-        },
+                // Each effect scales with its specific flower count
+                var shiverthorn = flowerCounts[ItemID.Shiverthorn];
+                var daybloom = flowerCounts[ItemID.Daybloom];
+                var blinkroot = flowerCounts[ItemID.Blinkroot];
 
-        new ComboEffect
-        {
-            Name = "Obsidian Boquet",
-            RequiredFlowers = [ItemID.Fireblossom, ItemID.Waterleaf],
-            ApplyEffect = (player, minCount) =>
-            {
-                var hpBonus = minCount + 2;
-                player.lifeBonus += hpBonus;
-                player.comboEffects.Add($"([i:{ItemID.Fireblossom}]+[i:{ItemID.Shiverthorn}]) +{hpBonus} maximum life");
-            }
-        },
+                var enduranceBonus = shiverthorn * 0.005f;
+                var lifeBonus = daybloom * 2;
+                var miningBonus = blinkroot * 0.0075f;
 
-        new ComboEffect
-        {
-            Name = "Nature's Vigor",
-            RequiredFlowers = [ItemID.Daybloom, ItemID.Fireblossom],
-            ApplyEffect = (player, minCount) =>
+                player.enduranceBonus += enduranceBonus;
+                player.lifeBonus += lifeBonus;
+                player.pickSpeedBonus += miningBonus;
+
+                player.comboEffects.Add($"[i:{ItemID.Shiverthorn}]+{enduranceBonus:P1} damage reduction ({shiverthorn})");
+                player.comboEffects.Add($"[i:{ItemID.Daybloom}]+{lifeBonus} maximum life ({daybloom})");
+                player.comboEffects.Add($"[i:{ItemID.Blinkroot}]+{miningBonus:P1} mining speed ({blinkroot})");
+            },
+            ExtraEffects = new()
             {
-                var defBonus = minCount / 3;
-                var speedBonus = minCount * 0.01f;
-                if (defBonus > 0)
+                [30] = new ComboEffect_Special
                 {
-                    player.defenseBonus += defBonus;
+                    ApplyEffect = (player) =>
+                    {
+                        player.Combo_DawnsGrace = true;
+                        player.comboEffects.Add($"[i:{ModContent.ItemType<FlowerSatchelItem>()}][c/a0fea3:Hunter & Trapsight effects when above 90% HP]");
+                    }
                 }
-                player.moveSpeedBonus += speedBonus;
-                player.comboEffects.Add($"Nature's Vigor: +{defBonus} defense, +{speedBonus:P0} speed");
+            }
+        },
+
+        new ComboEffect
+        {
+            Name = "Emberfrost Arrangement",
+            RequiredFlowers = [ItemID.Fireblossom, ItemID.Shiverthorn],
+            ApplyEffect = (player, flowerCounts, minCount) =>
+            {
+                var fireblossom = flowerCounts[ItemID.Fireblossom];
+                var shiverthorn = flowerCounts[ItemID.Shiverthorn];
+
+                var critChance = shiverthorn * 0.35f;
+                var meleeDamage = fireblossom * 0.004f;
+                var kbBoost = fireblossom * 0.003f;
+
+                player.critBonus += critChance;
+                player.meleeDamageBonus += meleeDamage;
+                player.kbBonus += kbBoost;
+
+                player.comboEffects.Add($"[i:{ItemID.Shiverthorn}]+{critChance:F1}% critical strike chance ({shiverthorn})");
+                player.comboEffects.Add($"[i:{ItemID.Fireblossom}]+{meleeDamage:P1} melee damage ({fireblossom})");
+                player.comboEffects.Add($"[i:{ItemID.Fireblossom}]+{kbBoost:P0} knockback ({fireblossom})");
+            }
+        },
+
+        new ComboEffect
+        {
+            Name = "Sunrise Spray",
+            RequiredFlowers = [ItemID.Fireblossom, ItemID.Daybloom, ItemID.Sunflower],
+            ApplyEffect = (player, flowerCounts, minCount) =>
+            {
+                var fireblossom = flowerCounts[ItemID.Fireblossom];
+                var daybloom = flowerCounts[ItemID.Daybloom];
+                var sunflower = flowerCounts[ItemID.Sunflower];
+
+                var lifeRegen = fireblossom / 3;
+                var defenseBonus = daybloom / 4;
+                var moveSpeed = sunflower * 0.003f;
+
+                player.lifeRegenBonus += lifeRegen;
+                player.defenseBonus += defenseBonus;
+                player.moveSpeedBonus += moveSpeed;
+
+                player.comboEffects.Add($"[i:{ItemID.Fireblossom}]+{lifeRegen} life regeneration ({fireblossom})");
+                player.comboEffects.Add($"[i:{ItemID.Daybloom}]+{defenseBonus} defense ({daybloom})");
+                player.comboEffects.Add($"[i:{ItemID.Sunflower}]+{moveSpeed:P0} movement speed ({sunflower})");
+            },
+            ExtraEffects = new()
+            {
+                [30] = new ComboEffect_Special
+                {
+                    ApplyEffect = (player) =>
+                    {
+                        player.Combo_SunriseSpray = true;
+                        player.comboEffects.Add($"[i:{ModContent.ItemType<FlowerSatchelItem>()}][c/a0fea3:+4% speed during day]");
+                    }
+                },
+            }
+        },
+
+        new ComboEffect
+        {
+            Name = "Explorer's Corsage",
+            RequiredFlowers = [ItemID.Blinkroot, ItemID.Moonglow, ItemID.Shiverthorn],
+            ApplyEffect = (player, flowerCounts, minCount) =>
+            {
+                var blinkroot = flowerCounts[ItemID.Blinkroot];
+                var moonglow = flowerCounts[ItemID.Moonglow];
+                var shiverthorn = flowerCounts[ItemID.Shiverthorn];
+
+                var buildSpeed = moonglow * 0.005f;
+                var critChance = shiverthorn * 0.19f;
+                var miningSpeed = blinkroot * 0.005f;
+
+                player.buildSpeedBonus += buildSpeed;
+                player.critBonus += critChance;
+                player.pickSpeedBonus += miningSpeed;
+
+                player.comboEffects.Add($"[i:{ItemID.Moonglow}]+{buildSpeed:P1} placement speed ({moonglow})");
+                player.comboEffects.Add($"[i:{ItemID.Shiverthorn}]+{critChance:F1}% critical strike chance ({shiverthorn})");
+                player.comboEffects.Add($"[i:{ItemID.Blinkroot}]+{miningSpeed:P0} mining speed ({blinkroot})");
+            },
+            ExtraEffects = new()
+            {
+                [15] = new ComboEffect_Special
+                {
+                    ApplyEffect = (player) =>
+                    {
+                        player.Player.nightVision = true;
+                        player.comboEffects.Add($"[i:{ModContent.ItemType<FlowerSatchelItem>()}][c/a0fea3:Gain Night Owl Vision]");
+                    }
+                },
+                [30] = new ComboEffect_Special
+                {
+                    ApplyEffect = (player) =>
+                    {
+                        player.Combo_ExplorersCorsage = true;
+                        player.comboEffects.Add($"[i:{ModContent.ItemType<FlowerSatchelItem>()}][c/a0fea3:Gain Dangersense when hit]");
+                    }
+                },
             }
         }
     ];
