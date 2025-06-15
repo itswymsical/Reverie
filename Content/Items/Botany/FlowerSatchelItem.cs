@@ -3,11 +3,11 @@
 // https://github.com/GabeHasWon/SpiritReforged/blob/master/Common/UI/BackpackInterface/BackbackUISlot.cs#L1
 
 using ReLogic.Graphics;
+using Reverie.Common.Players;
 using System.IO;
 using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ModLoader.IO;
-using Reverie.Common.Players;
 
 namespace Reverie.Content.Items.Botany;
 
@@ -106,42 +106,13 @@ public class FlowerSatchelItem : ModItem
 
     public override void AddRecipes()
     {
-        CreateRecipe(4)
+        CreateRecipe()
+            .AddIngredient(ItemID.Silk, 10)
+            .AddIngredient(ItemID.Vine, 3)
             .AddIngredient(ModContent.ItemType<MagnoliaItem>())
-            .AddIngredient(ItemID.Daybloom)
-            .AddIngredient(ItemID.Shiverthorn)
-            .AddIngredient(ItemID.Blinkroot)
-            .AddIngredient(ItemID.Moonglow)
-            .AddIngredient(ItemID.Deathweed)
-            .AddIngredient(ItemID.Waterleaf)
-            .AddTile(TileID.WorkBenches)
+            .AddTile(TileID.Loom)
             .Register();
     }
-
-
-    //public override void UpdateInventory(Player player)
-    //{
-    //    bool foundFirst = false;
-    //    int lastSatchelSlot = -1;
-
-    //    // Find duplicate satchels
-    //    for (int i = 0; i < player.inventory.Length; i++)
-    //    {
-    //        if (player.inventory[i].type == ModContent.ItemType<FlowerSatchel>())
-    //        {
-    //            if (!foundFirst)
-    //                foundFirst = true;
-    //            else
-    //                lastSatchelSlot = i;
-    //        }
-    //    }
-
-    //    // Remove duplicate if found
-    //    if (lastSatchelSlot != -1)
-    //    {
-    //        player.inventory[lastSatchelSlot].TurnToAir();
-    //    }
-    //}
 
     #region Checks
     public override bool ConsumeItem(Player player) => false;
@@ -165,6 +136,27 @@ public class FlowerSatchelItem : ModItem
                item.type == ItemID.Fireblossom || item.type == ItemID.Shiverthorn || item.type == ItemID.Blinkroot ||
                item.type == ItemID.Moonglow || item.type == ItemID.Deathweed || item.type == ItemID.SkyBlueFlower
                || item.type == ItemID.Waterleaf || item.type == ItemID.Sunflower;
+    }
+
+    public bool HasFlowers()
+    {
+        foreach (var item in items)
+        {
+            if (!item.IsAir)
+                return true;
+        }
+        return false;
+    }
+
+    public int GetTotalFlowerCount()
+    {
+        var count = 0;
+        foreach (var item in items)
+        {
+            if (!item.IsAir)
+                count += item.stack;
+        }
+        return count;
     }
     #endregion
 

@@ -296,6 +296,11 @@ Items: {
 		DisplayName: Salicifolia Pheromones
 		Tooltip: When sprayed on growing herbs, they advance to their next growth stage.
 	}
+
+	TileTemplateItem: {
+		DisplayName: Tile Template Item
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
