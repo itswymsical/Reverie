@@ -87,5 +87,127 @@ public static class ItemUtils
             || item.type == ItemID.AshWood
             || item.type == ItemID.Pearlwood;
     }
+    public static bool IsMadeFromMetal(this Item item, params int[] metalTypes)
+    {
+        foreach (var metalType in metalTypes)
+        {
+            var metalItem = new Item();
+            metalItem.SetDefaults(metalType);
 
+            if (item.CraftedFromRecursive(metalItem))
+                return true;
+        }
+
+        return false;
+    }
+
+    public static bool IsMadeFromAnyMetal(this Item item)
+    {
+        int[] commonMetals = [
+        ItemID.CopperOre, ItemID.CopperBar,
+        ItemID.TinOre, ItemID.TinBar,
+        ItemID.IronOre, ItemID.IronBar,
+        ItemID.LeadOre, ItemID.LeadBar,
+        ItemID.SilverOre, ItemID.SilverBar,
+        ItemID.TungstenOre, ItemID.TungstenBar,
+        ItemID.GoldOre, ItemID.GoldBar,
+        ItemID.PlatinumOre, ItemID.PlatinumBar,
+
+        ItemID.DemoniteOre, ItemID.DemoniteBar,
+        ItemID.CrimtaneOre, ItemID.CrimtaneBar,
+        ItemID.Hellstone, ItemID.HellstoneBar,
+
+        ItemID.CobaltOre, ItemID.CobaltBar,
+        ItemID.PalladiumOre, ItemID.PalladiumBar,
+        ItemID.MythrilOre, ItemID.MythrilBar,
+        ItemID.OrichalcumOre, ItemID.OrichalcumBar,
+        ItemID.AdamantiteOre, ItemID.AdamantiteBar,
+        ItemID.TitaniumOre, ItemID.TitaniumBar,
+
+        ItemID.ChlorophyteOre, ItemID.ChlorophyteBar,
+        ItemID.HallowedBar, ItemID.LunarBar,
+    ];
+
+        return item.IsMadeFromMetal(commonMetals);
+    }
+
+    public static bool CraftedWith(this Item item, int ingredient)
+    {
+        for (var i = 0; i < Recipe.maxRecipes; i++)
+        {
+            var currentRecipe = Main.recipe[i];
+
+            if (currentRecipe == null || currentRecipe.createItem.type != item.type)
+                continue;
+
+            for (var j = 0; j < currentRecipe.requiredItem.Count; j++)
+            {
+                if (currentRecipe.requiredItem[j] != null && currentRecipe.requiredItem[j].type == ingredient)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static bool CraftedWith(this Item item, Item ingredient)
+    {
+        for (var i = 0; i < Recipe.maxRecipes; i++)
+        {
+            var currentRecipe = Main.recipe[i];
+
+            if (currentRecipe == null || currentRecipe.createItem.type != item.type)
+                continue;
+
+            for (var j = 0; j < currentRecipe.requiredItem.Count; j++)
+            {
+                if (currentRecipe.requiredItem[j] != null && currentRecipe.requiredItem[j].type == ingredient.type)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static bool CraftedFromRecursive(this Item item, Item baseIngredient, HashSet<int> visitedItems = null)
+    {
+        // Initialize visited items set to prevent infinite recursion
+        if (visitedItems == null)
+            visitedItems = new HashSet<int>();
+
+        // If we've already checked this item, skip to prevent cycles
+        if (visitedItems.Contains(item.type))
+            return false;
+
+        // Add current item to visited set
+        visitedItems.Add(item.type);
+
+        // Check all recipes that create this item
+        for (var i = 0; i < Recipe.maxRecipes; i++)
+        {
+            var currentRecipe = Main.recipe[i];
+
+            // Skip null or invalid recipes
+            if (currentRecipe == null || currentRecipe.createItem.type != item.type)
+                continue;
+
+            // Check each ingredient in this recipe
+            for (var j = 0; j < currentRecipe.requiredItem.Count; j++)
+            {
+                var requiredItem = currentRecipe.requiredItem[j];
+                if (requiredItem == null)
+                    continue;
+
+                // Direct match - this recipe directly uses the base ingredient
+                if (requiredItem.type == baseIngredient.type)
+                    return true;
+
+                // Recursive check - does this ingredient's crafting chain contain the base ingredient?
+                if (requiredItem.CraftedFromRecursive(baseIngredient, visitedItems))
+                    return true;
+            }
+        }
+
+        return false;
+    }
 }

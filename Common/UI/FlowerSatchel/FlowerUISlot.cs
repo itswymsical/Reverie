@@ -106,6 +106,8 @@ internal class FlowerSatchelUIState : UIState
     private const float SLOT_SPACING = 44f;
     private const int SLOTS_PER_ROW = 3;
     private Item _lastSatchel;
+    private UIText _effectsTitle;
+    private UIText _effectsList;
 
     public override void OnInitialize()
     {
@@ -129,6 +131,9 @@ internal class FlowerSatchelUIState : UIState
                 RefreshSlots(satchel);
 
             _lastSatchel = satchel.Item;
+
+            // Update effects text
+            UpdateEffectsDisplay(modPlayer);
         }
         else
         {
@@ -141,18 +146,53 @@ internal class FlowerSatchelUIState : UIState
         base.Update(gameTime);
     }
 
+    private void UpdateEffectsDisplay(SatchelPlayer modPlayer)
+    {
+        if (_effectsTitle != null)
+        {
+            _effectsTitle.SetText(modPlayer.GetSummary());
+        }
+
+        if (_effectsList != null)
+        {
+            // Use the new display method that respects alt key state
+            var displayEffects = modPlayer.GetDisplayEffects();
+
+            if (displayEffects.Count > 0)
+            {
+                var effectsText = string.Join("\n", displayEffects);
+                _effectsList.SetText(effectsText);
+            }
+            else
+            {
+                _effectsList.SetText("");
+            }
+        }
+    }
+
     private void RefreshSlots(FlowerSatchelItem satchel)
     {
         ClearSlots();
 
         // Add title text
-        Append(new UIText("current effects: 0", 0.925f, false)
+        _effectsTitle = new UIText("No active effects", 0.925f, false)
         {
             Left = new StyleDimension(Main.screenWidth / 48, 0),
             Top = new StyleDimension(Main.screenHeight / 2.7f, 0),
-            TextColor = Color.White * 0.95f,
-            ShadowColor = Color.Transparent
-        });
+            TextColor = Color.LightGreen * 0.95f,
+            ShadowColor = Color.Black
+        };
+        Append(_effectsTitle);
+
+        // Add effects list below title
+        _effectsList = new UIText("", 0.8f, false)
+        {
+            Left = new StyleDimension(Main.screenWidth / 48, 0),
+            Top = new StyleDimension(Main.screenHeight / 2.7f + 25, 0),
+            TextColor = Color.White * 0.8f,
+            ShadowColor = Color.Black
+        };
+        Append(_effectsList);
 
         // Add flower slots in a single row
         float baseX = Main.screenWidth / 20 - SLOTS_PER_ROW * 47 / 2;
@@ -175,6 +215,8 @@ internal class FlowerSatchelUIState : UIState
     private void ClearSlots()
     {
         RemoveAllChildren();
+        _effectsTitle = null;
+        _effectsList = null;
     }
 }
 
@@ -190,7 +232,19 @@ internal class FlowerInventorySlot : BasicItemSlot
 
     protected override void DrawSelf(SpriteBatch spriteBatch)
     {
-        base.DrawSelf(spriteBatch);     
+        base.DrawSelf(spriteBatch);
+    }
+
+    private Color GetFlowerGlowColor(int itemType)
+    {
+        return itemType switch
+        {
+            ItemID.Daybloom => Color.Yellow,
+            ItemID.Blinkroot => Color.LightBlue,
+            ItemID.Fireblossom => Color.OrangeRed,
+            ItemID.Shiverthorn => Color.Cyan,
+            _ => Color.Transparent
+        };
     }
 
     public override bool ValidItemForSlot(Item item)
