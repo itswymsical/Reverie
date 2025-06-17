@@ -41,17 +41,19 @@ public class WorldGenSystem : ModSystem
     public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
     {
         var tundraIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Generate Ice Biome"));
-        var sunflowerIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Sunflowers"));
 
-        var canopyIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Jungle"));
+        var canopyIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Granite"));
+        var canopyIndex2 = tasks.FindIndex(genPass => genPass.Name.Equals("Spreading Grass"));
 
         var spawnIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Guide"));
 
         if (canopyIndex != 1)
         {
-            tasks.Insert(canopyIndex + 1, new CanopySurfacePass());
-        }
-
+            tasks.Insert(canopyIndex + 1, new CanopyBasePass());
+            tasks.Insert(canopyIndex + 2, new CanopyUndergroundPass());
+            tasks.Insert(canopyIndex + 3, new CanopyFoliagePass());
+        }  
+        
         if (spawnIndex != 1)
         {
             tasks.Insert(spawnIndex + 1, new TaigaPass());

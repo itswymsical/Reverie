@@ -148,6 +148,28 @@ public class OrePass : GenPass
         }
     }
 
+    private bool IsValidOreLocation(int x, int y, int width, int height)
+    {
+        int checkRadius = Math.Max(width, height) / 2 + 2;
+
+        for (int checkX = x - checkRadius; checkX <= x + checkRadius; checkX++)
+        {
+            for (int checkY = y - checkRadius; checkY <= y + checkRadius; checkY++)
+            {
+                if (WorldGen.InWorld(checkX, checkY))
+                {
+                    Tile tile = Main.tile[checkX, checkY];
+                    if (tile.HasTile && (tile.TileType == TileID.LivingWood ||
+                        tile.TileType == (ushort)ModContent.TileType<OxisolTile>()))
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     private void GenerateOre(OreConfiguration config)
     {
         foreach (var distribution in config.Distribution)
@@ -156,13 +178,25 @@ public class OrePass : GenPass
 
             for (int i = 0; i < count; i++)
             {
-                int x = WorldGen.genRand.Next(0, Main.maxTilesX);
-                int y = GetYPositionForLayer(distribution.Layer);
-                int width = WorldGen.genRand.Next(distribution.MinWidth, distribution.MaxWidth + 1);
-                int height = WorldGen.genRand.Next(distribution.MinHeight, distribution.MaxHeight + 1);
+                int attempts = 0;
+                int maxAttempts = 50; // Prevent infinite loops
 
-                if (Main.tile[x, y].TileType != TileID.LivingWood || Main.tile[x, y].TileType != (ushort)ModContent.TileType<OxisolTile>())
+                int x, y, width, height;
+
+                do
+                {
+                    x = WorldGen.genRand.Next(0, Main.maxTilesX);
+                    y = GetYPositionForLayer(distribution.Layer);
+                    width = WorldGen.genRand.Next(distribution.MinWidth, distribution.MaxWidth + 1);
+                    height = WorldGen.genRand.Next(distribution.MinHeight, distribution.MaxHeight + 1);
+                    attempts++;
+                }
+                while (!IsValidOreLocation(x, y, width, height) && attempts < maxAttempts);
+
+                if (attempts < maxAttempts)
+                {
                     WorldGen.TileRunner(x, y, width, height, config.TileType);
+                }
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using Terraria.ObjectData;
+﻿using Reverie.Content.Tiles.Canopy.Surface;
+using Terraria.ObjectData;
 
 namespace Reverie.Content.Tiles.Canopy;
 
@@ -13,7 +14,7 @@ public class CanopyFoliageTile : ModTile
         TileID.Sets.SwaysInWindBasic[Type] = true;
         TileID.Sets.IgnoredByGrowingSaplings[Type] = true;
 
-        TileObjectData.newTile.AnchorValidTiles = [ModContent.TileType<WoodgrassTile>()];
+        TileObjectData.newTile.AnchorValidTiles = [ModContent.TileType<WoodgrassTile>(), ModContent.TileType<CanopyGrassTile>()];
         TileObjectData.newTile.LavaDeath = true;
         TileObjectData.newTile.WaterDeath = false;
 
