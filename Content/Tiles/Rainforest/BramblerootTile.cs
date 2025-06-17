@@ -1,4 +1,4 @@
-﻿namespace Reverie.Content.Tiles.Canopy;
+﻿namespace Reverie.Content.Tiles.Rainforest;
 
 public class BramblerootTile : ModTile
 {

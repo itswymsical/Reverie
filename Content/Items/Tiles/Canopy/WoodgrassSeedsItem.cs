@@ -1,7 +1,7 @@
 ﻿// Super simple code but I'm still crediting:
 // https://github.com/GabeHasWon/SpiritReforged/blob/master/Content/Savanna/Items/SavannaGrassSeeds.cs
 
-using Reverie.Content.Tiles.Canopy;
+using Reverie.Content.Tiles.Rainforest;
 
 namespace Reverie.Content.Items.Tiles.Canopy;
 

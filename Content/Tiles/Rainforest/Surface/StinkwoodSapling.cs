@@ -4,7 +4,7 @@ using Terraria.GameContent.Metadata;
 using Terraria.Localization;
 using Terraria.ObjectData;
 
-namespace Reverie.Content.Tiles.Canopy.Surface;
+namespace Reverie.Content.Tiles.Rainforest.Surface;
 
 public class StinkwoodSapling : ModTile
 {

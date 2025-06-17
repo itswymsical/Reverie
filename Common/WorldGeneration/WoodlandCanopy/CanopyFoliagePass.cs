@@ -1,5 +1,5 @@
-﻿using Reverie.Content.Tiles.Canopy;
-using Reverie.Content.Tiles.Canopy.Surface;
+﻿using Reverie.Content.Tiles.Rainforest;
+using Reverie.Content.Tiles.Rainforest.Surface;
 using Reverie.lib;
 using Terraria.GameContent.Biomes;
 using Terraria.IO;
@@ -14,23 +14,23 @@ public class CanopyFoliagePass : GenPass
     private FastNoiseLite _decorationNoise;
     #endregion
 
-    public CanopyFoliagePass() : base("Woodland Canopy Foliage", 160f)
+    public CanopyFoliagePass() : base("Woodland Rainforest Foliage", 160f)
     {
     }
 
     protected override void ApplyPass(GenerationProgress progress, GameConfiguration configuration)
     {
-        progress.Message = "Detecting Canopy boundaries...";
+        progress.Message = "Detecting Rainforest boundaries...";
 
         _canopyBounds = DetectCanopyBounds();
 
         if (!_canopyBounds.IsValid)
         {
-            progress.Message = "No Canopy biome detected - skipping foliage generation";
+            progress.Message = "No Rainforest biome detected - skipping foliage generation";
             return;
         }
 
-        progress.Message = "Sprucing up the Woodland Canopy...";
+        progress.Message = "Sprucing up the Woodland Rainforest...";
         Intitialize_DecoNoise();
         DoGrassAndFoliage(progress);
     }

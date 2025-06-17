@@ -1,5 +1,5 @@
-﻿using Reverie.Content.Tiles.Canopy;
-using Reverie.Content.Tiles.Canopy.Surface;
+﻿using Reverie.Content.Tiles.Rainforest;
+using Reverie.Content.Tiles.Rainforest.Surface;
 using Reverie.Content.Tiles.Taiga;
 
 namespace Reverie.Common.Tiles;

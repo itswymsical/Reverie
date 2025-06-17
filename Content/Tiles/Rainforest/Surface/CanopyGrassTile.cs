@@ -2,7 +2,7 @@
 using Reverie.Content.Tiles.Taiga;
 using System.Collections.Generic;
 
-namespace Reverie.Content.Tiles.Canopy.Surface;
+namespace Reverie.Content.Tiles.Rainforest.Surface;
 
 public class CanopyGrassTile : GrassTile
 {

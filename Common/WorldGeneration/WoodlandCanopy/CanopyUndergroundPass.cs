@@ -1,4 +1,4 @@
-﻿using Reverie.Content.Tiles.Canopy.Surface;
+﻿using Reverie.Content.Tiles.Rainforest.Surface;
 using Reverie.lib;
 using Terraria.GameContent.Biomes;
 using Terraria.IO;
@@ -31,13 +31,13 @@ public class CanopyUndergroundPass : GenPass
 
     protected override void ApplyPass(GenerationProgress progress, GameConfiguration configuration)
     {
-        progress.Message = "Detecting Canopy boundaries...";
+        progress.Message = "Detecting Rainforest boundaries...";
 
         _canopyBounds = DetectCanopyBounds();
 
         if (!_canopyBounds.IsValid)
         {
-            progress.Message = "No Canopy biome detected - skipping cave generation";
+            progress.Message = "No Rainforest biome detected - skipping cave generation";
             return;
         }
 

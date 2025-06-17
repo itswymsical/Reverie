@@ -1,4 +1,4 @@
-﻿using Reverie.Content.Tiles.Canopy;
+﻿using Reverie.Content.Tiles.Rainforest;
 
 namespace Reverie.Content.Items.Tiles.Canopy;
 

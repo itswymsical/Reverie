@@ -1,5 +1,5 @@
 ﻿using Reverie.Content.Tiles;
-using Reverie.Content.Tiles.Canopy.Surface;
+using Reverie.Content.Tiles.Rainforest.Surface;
 using System;
 using System.Collections.Generic;
 using Terraria;

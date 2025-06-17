@@ -1,4 +1,4 @@
-﻿namespace Reverie.Content.Tiles.Canopy.Surface;
+﻿namespace Reverie.Content.Tiles.Rainforest.Surface;
 public class OxisolTile : ModTile
 {
     public override void SetStaticDefaults()

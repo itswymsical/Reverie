@@ -1,4 +1,4 @@
-﻿using Reverie.Content.Tiles.Canopy.Surface;
+﻿using Reverie.Content.Tiles.Rainforest.Surface;
 using Reverie.lib;
 using Terraria.GameContent.Biomes;
 using Terraria.IO;
@@ -34,7 +34,7 @@ public class CanopyBasePass : GenPass
     private JungleBounds _jungleBounds;
     #endregion
 
-    public CanopyBasePass() : base("Canopy Overworld", 80f)
+    public CanopyBasePass() : base("Rainforest Overworld", 80f)
     {
         _config = new CanopyConfiguration();
     }
@@ -50,11 +50,11 @@ public class CanopyBasePass : GenPass
 
         if (!_jungleBounds.IsValid)
         {
-            progress.Message = "Failed to detect jungle boundaries - skipping Canopy generation";
+            progress.Message = "Failed to detect jungle boundaries - skipping Rainforest generation";
             return;
         }
 
-        progress.Message = "Growing Canopy Biome adjacent to jungle...";
+        progress.Message = "Growing Rainforest Biome adjacent to jungle...";
         CalculateCanopyBounds();
         GenerateTerrain(progress);
     }
@@ -238,7 +238,7 @@ public class CanopyBasePass : GenPass
                 }
                 else
                 {
-                    throw new InvalidOperationException("Insufficient space for Canopy biome - blocked by desert and limited world space");
+                    throw new InvalidOperationException("Insufficient space for Rainforest biome - blocked by desert and limited world space");
                 }
             }
         }
@@ -258,7 +258,7 @@ public class CanopyBasePass : GenPass
                 }
                 else
                 {
-                    throw new InvalidOperationException("Insufficient space for Canopy biome - blocked by desert and limited world space");
+                    throw new InvalidOperationException("Insufficient space for Rainforest biome - blocked by desert and limited world space");
                 }
             }
         }
@@ -310,7 +310,7 @@ public class CanopyBasePass : GenPass
         // Ensure minimum viable width
         if (canopyWidth < 100)
         {
-            throw new InvalidOperationException("Insufficient space for Canopy biome placement adjacent to jungle");
+            throw new InvalidOperationException("Insufficient space for Rainforest biome placement adjacent to jungle");
         }
 
         // Final validation: Check for conflicts with desert boundaries
@@ -371,7 +371,7 @@ public class CanopyBasePass : GenPass
             // Check for overlap or insufficient separation
             if ((_canopyLeft <= desertX + minSeparation && _canopyRight >= desertX - minSeparation))
             {
-                Instance.Logger.Warn($"Canopy biome ({_canopyLeft}-{_canopyRight}) may be too close to desert (center: {desertX})");
+                Instance.Logger.Warn($"Rainforest biome ({_canopyLeft}-{_canopyRight}) may be too close to desert (center: {desertX})");
 
                 // Attempt to adjust bounds if possible
                 if (desertX < _canopyLeft) // Desert is to the left

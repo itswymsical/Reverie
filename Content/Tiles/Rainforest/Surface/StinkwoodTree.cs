@@ -2,7 +2,7 @@
 using Terraria.Enums;
 using Terraria.GameContent;
 
-namespace Reverie.Content.Tiles.Canopy.Surface;
+namespace Reverie.Content.Tiles.Rainforest.Surface;
 
 public class StinkwoodTree : ModPalmTree
 {
@@ -23,9 +23,9 @@ public class StinkwoodTree : ModPalmTree
     {
         GrowsOnTileId = [ModContent.TileType<WoodgrassTile>(), ModContent.TileType<CanopyGrassTile>()];
 
-        texture = ModContent.Request<Texture2D>($"{NAME}/Assets/Textures/Tiles/Canopy/Surface/StinkwoodTree");
-        oasisTopsTexture = ModContent.Request<Texture2D>($"{NAME}/Assets/Textures/Tiles/Canopy/Surface/StinkwoodTree_Tops");
-        topsTexture = ModContent.Request<Texture2D>($"{NAME}/Assets/Textures/Tiles/Canopy/Surface/StinkwoodTree_Tops");
+        texture = ModContent.Request<Texture2D>($"{NAME}/Assets/Textures/Tiles/Rainforest/Surface/StinkwoodTree");
+        oasisTopsTexture = ModContent.Request<Texture2D>($"{NAME}/Assets/Textures/Tiles/Rainforest/Surface/StinkwoodTree_Tops");
+        topsTexture = ModContent.Request<Texture2D>($"{NAME}/Assets/Textures/Tiles/Rainforest/Surface/StinkwoodTree_Tops");
     }
 
     public override Asset<Texture2D> GetTexture() => texture;

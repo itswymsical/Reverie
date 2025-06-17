@@ -3,7 +3,7 @@ using Reverie.Content.Items.Tiles.Canopy;
 using System.Collections.Generic;
 using Terraria.DataStructures;
 
-namespace Reverie.Content.Tiles.Canopy;
+namespace Reverie.Content.Tiles.Rainforest;
 
 public class WoodgrassTile : GrassTile
 {

@@ -4,12 +4,12 @@ namespace Reverie.Content.Biomes.Canopy
 {
 	public class CanopyWaterStyle : ModWaterStyle
 	{
-        public override string Texture => NAME + "/Assets/Textures/Biomes/Canopy/CanopyWaterStyle";
+        public override string Texture => NAME + "/Assets/Textures/Biomes/Rainforest/CanopyWaterStyle";
         public override string BlockTexture => Texture + "_Block";
         public override string SlopeTexture => Texture + "_Slope";
         private Asset<Texture2D> rainTexture;
 		public override void Load() {
-			rainTexture = Mod.Assets.Request<Texture2D>("Assets/Textures/Biomes/Canopy/CanopyRain");
+			rainTexture = Mod.Assets.Request<Texture2D>("Assets/Textures/Biomes/Rainforest/CanopyRain");
 		}
 
 		public override int ChooseWaterfallStyle() {

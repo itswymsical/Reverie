@@ -1,7 +1,7 @@
 ﻿using Reverie.Core.Loaders;
 using Terraria.Graphics.Effects;
 
-namespace Reverie.Content.Tiles;
+namespace Reverie.Content.Tiles.Misc;
 
 public class CopperPlatingTile : ModTile
 {
@@ -26,14 +26,14 @@ public class CopperPlatingTile : ModTile
     }
     public override bool PreDraw(int i, int j, SpriteBatch spriteBatch)
     {
-        Effect effect = ShaderLoader.GetShader("ShineShader").Value;
+        var effect = ShaderLoader.GetShader("ShineShader").Value;
         spriteBatch.End();
         spriteBatch.Begin(default, BlendState.Additive, default, default, default, effect);
 
 
         if (effect != null)
         {
-            effect.Parameters["uTime"]?.SetValue((float)Main.GameUpdateCount * 0.02f);
+            effect.Parameters["uTime"]?.SetValue(Main.GameUpdateCount * 0.02f);
             effect.Parameters["uOpacity"]?.SetValue(1f);
         }
         

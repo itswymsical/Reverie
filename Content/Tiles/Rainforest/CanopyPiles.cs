@@ -1,8 +1,8 @@
-﻿using Reverie.Content.Tiles.Canopy.Surface;
+﻿using Reverie.Content.Tiles.Rainforest.Surface;
 using Terraria.DataStructures;
 using Terraria.ObjectData;
 
-namespace Reverie.Content.Tiles.Canopy;
+namespace Reverie.Content.Tiles.Rainforest;
 
 public class CanopyLogTile : ModTile
 {
