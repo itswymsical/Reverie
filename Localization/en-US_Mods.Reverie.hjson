@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -449,6 +449,16 @@ Biomes: {
 	SylvanOverworldNightBiome: {
 		DisplayName: Sylvan Overworld
 		TownNPCDialogueName: the Sylvan Overworld
+	}
+
+	SurfaceCanopyBiome: {
+		DisplayName: Surface Canopy Biome
+		TownNPCDialogueName: the Surface Canopy Biome
+	}
+
+	UndergroundCanopyBiome: {
+		DisplayName: Underground Canopy Biome
+		TownNPCDialogueName: the Underground Canopy Biome
 	}
 }
 
