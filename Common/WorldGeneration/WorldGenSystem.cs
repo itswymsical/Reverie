@@ -42,7 +42,7 @@ public class WorldGenSystem : ModSystem
     {
         var tundraIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Generate Ice Biome"));
 
-        var canopyIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Granite"));
+        var canopyIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Full Desert"));
 
         var spawnIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Guide"));
         var corruptIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Corruption"));
@@ -50,7 +50,7 @@ public class WorldGenSystem : ModSystem
         if (canopyIndex != 1)
         {
             tasks.Insert(canopyIndex + 1, new CanopyBasePass());
-            tasks.Insert(canopyIndex + 2, new CanopyUndergroundPass());
+            //tasks.Insert(canopyIndex + 2, new CanopyUndergroundPass());
             tasks.Insert(canopyIndex + 3, new CanopyFoliagePass());
         }  
         

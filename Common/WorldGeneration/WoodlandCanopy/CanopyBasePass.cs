@@ -11,7 +11,7 @@ public class CanopyConfiguration
     public float HillFrequency { get; set; } = 0.0175f;
     public int BaseHeightOffset { get; set; } = 0;
     public int HillHeightVariation { get; set; } = 62;
-    public int CanopyDepth { get; set; } = (int)(Main.maxTilesY / 1.7647f);
+    public int CanopyDepth { get; set; } = (int)(Main.maxTilesY / 6.7647f);
 }
 
 public class JungleBounds
@@ -418,6 +418,41 @@ public class CanopyBasePass : GenPass
         }
     }
 
+    private void PlaceTerrain(int x, int y, int surfaceY)
+    {
+        Tile tile = Main.tile[x, y];
+        tile.HasTile = true;
+
+        int depthFromSurface = y - surfaceY;
+        if (depthFromSurface <= 1)
+        {
+            tile.HasTile = false;
+            tile.WallType = WallID.FlowerUnsafe;
+            tile.WallColor = PaintID.LimePaint;
+        }
+        else if (depthFromSurface <= 10)
+        {
+            tile.TileType = (ushort)ModContent.TileType<OxisolTile>();
+            tile.WallType = WallID.MudUnsafe;
+        }
+        else if (depthFromSurface <= _config.CanopyDepth * 0.02f)
+        {
+            tile.TileType = TileID.ClayBlock;
+        }
+        else if (depthFromSurface <= _config.CanopyDepth * 0.12f)
+        {
+            tile.TileType = TileID.Mud;
+        }
+        //else if (depthFromSurface <= _config.CanopyDepth * 0.65f)
+        //{
+        //    tile.TileType = (ushort)ModContent.TileType<OxisolTile>();
+        //}
+        else
+        {
+            tile.TileType = (ushort)ModContent.TileType<OxisolTile>();
+        }
+    }
+
     #region Helper Methods
     private int GetTerrainHeightAt(int x)
     {
@@ -563,43 +598,6 @@ public class CanopyBasePass : GenPass
         }
     }
 
-    private void PlaceTerrain(int x, int y, int surfaceY)
-    {
-        Tile tile = Main.tile[x, y];
-        tile.HasTile = true;
-
-        int depthFromSurface = y - surfaceY;
-        if (depthFromSurface <= 2)
-        {
-            tile.HasTile = false;
-            tile.WallType = WallID.LivingLeaf;
-        }
-        else if (depthFromSurface <= 10)
-        {
-            tile.TileType = (ushort)ModContent.TileType<OxisolTile>();
-            tile.WallType = WallID.MudUnsafe;
-        }
-        else if (depthFromSurface <= 16)
-        {
-            tile.TileType = TileID.ClayBlock;
-        }
-        else if (depthFromSurface <= 32)
-        {
-            tile.TileType = (ushort)ModContent.TileType<OxisolTile>();
-        }
-        else if (depthFromSurface <= 140)
-        {
-            tile.TileType = TileID.Mud;
-        }
-        else if (depthFromSurface <= 260)
-        {
-            tile.TileType = (ushort)ModContent.TileType<OxisolTile>();
-        }
-        else
-        {
-            tile.TileType = TileID.LivingWood;
-        }
-    }
     #endregion
 
     #region Validation

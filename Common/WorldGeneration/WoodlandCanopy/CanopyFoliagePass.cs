@@ -264,22 +264,21 @@ public class CanopyFoliagePass : GenPass
 
         if (!tile.HasTile) return;
 
-        // Only decorate on grass tiles
-        bool validTile = tile.TileType == (ushort)ModContent.TileType<CanopyGrassTile>() || tile.TileType == (ushort)ModContent.TileType<WoodgrassTile>();
+        bool validTile = tile.TileType == (ushort)ModContent.TileType<CanopyGrassTile>() ||
+                         tile.TileType == (ushort)ModContent.TileType<WoodgrassTile>();
 
         if (!validTile) return;
 
-        // Get decoration noise for varied placement
         float decorationValue = _decorationNoise.GetNoise(x, y);
 
-        // GRASS PLANTS (only on surface grass)
-        if (validTile && decorationValue > 0.2f && !tileAbove.HasTile &&
-            !tile.LeftSlope && !tile.RightSlope && !tile.IsHalfBlock)
+        // Surface decorations (foliage and saplings)
+        if (validTile && !tileAbove.HasTile && !tile.LeftSlope && !tile.RightSlope && !tile.IsHalfBlock)
         {
-            if (WorldGen.genRand.NextBool(3))
+            // Foliage placement (more common)
+            if (WorldGen.genRand.NextBool(4))
             {
                 WorldGen.PlaceTile(x, y - 1, (ushort)ModContent.TileType<CanopyFoliageTile>());
-                tileAbove = Framing.GetTileSafely(x, y - 1); // Refresh reference
+                tileAbove = Framing.GetTileSafely(x, y - 1);
                 tileAbove.TileFrameY = 0;
                 tileAbove.TileFrameX = (short)(WorldGen.genRand.Next(10) * 18);
                 WorldGen.SquareTileFrame(x, y - 1, true);
@@ -289,11 +288,50 @@ public class CanopyFoliagePass : GenPass
                     NetMessage.SendTileSquare(-1, x, y - 1, 1, TileChangeType.None);
                 }
             }
+            // Sapling placement (less common, with spacing)
+            else if (WorldGen.genRand.NextBool(12) && tile.BlockType == BlockType.Solid)
+            {
+                bool hasNearbyTree = false;
+                const int MINIMUM_TREE_SPACING = 3; // Minimum distance between trees
+
+                for (int checkX = x - MINIMUM_TREE_SPACING; checkX <= x + MINIMUM_TREE_SPACING; checkX++)
+                {
+                    for (int checkY = y - 3; checkY <= y + 1; checkY++)
+                    {
+                        if (!WorldGen.InWorld(checkX, checkY)) continue;
+
+                        Tile checkTile = Framing.GetTileSafely(checkX, checkY);
+                        if (checkTile.HasTile &&
+                            (checkTile.TileType == (ushort)ModContent.TileType<StinkwoodSapling>() ||
+                             checkTile.TileType == TileID.PalmTree))
+                        {
+                            hasNearbyTree = true;
+                            break;
+                        }
+                    }
+                    if (hasNearbyTree) break;
+                }
+
+                // Only place sapling if no nearby trees and enough space above
+                if (!hasNearbyTree && HasSpaceForTree(x, y - 1, 3, 8))
+                {
+                    WorldGen.PlaceTile(x, y - 1, (ushort)ModContent.TileType<StinkwoodSapling>(), mute: true);
+
+                    if (WorldGen.genRand.NextBool(4))
+                    {
+                        WorldGen.GrowPalmTree(x, y - 1);
+                    }
+
+                    if (Main.netMode == NetmodeID.Server)
+                    {
+                        NetMessage.SendTileSquare(-1, x, y - 1, 1, TileChangeType.None);
+                    }
+                }
+            }
         }
 
-        // VINES (only on surface grass)
-        if (validTile && decorationValue > 0.4f && !tileBelow.HasTile &&
-            !tile.BottomSlope && WorldGen.genRand.NextBool(8))
+        // Hanging vines
+        if (validTile /*&& decorationValue > 0.4f*/ && !tileBelow.HasTile && !tile.BottomSlope && WorldGen.genRand.NextBool(6))
         {
             tileBelow.TileType = (ushort)ModContent.TileType<CanopyVineTile>();
             tileBelow.HasTile = true;
@@ -305,20 +343,8 @@ public class CanopyFoliagePass : GenPass
             }
         }
 
-        // SAPLINGS (only on surface grass)
-        if (validTile && decorationValue > 0.6f && !tileAbove.HasTile &&
-            !tile.LeftSlope && !tile.RightSlope && !tile.IsHalfBlock &&
-            WorldGen.genRand.NextBool(18))
-        {
-            if (tile.BlockType == BlockType.Solid)
-            {
-                WorldGen.PlaceTile(x, y - 1, TileID.Saplings, mute: true);
-                WorldGen.GrowTree(x, y - 1);
-            }
-        }
-
-        // DECORATIVE PILES (both grass types, but different chances)
-        float pileChance = validTile ? 0.14f : 0.08f; // More piles on surface
+        // Large decorations (logs, rocks)
+        float pileChance = validTile ? 0.64f : 0.18f;
         if (decorationValue > 0.7f && WorldGen.genRand.NextFloat() < pileChance)
         {
             if (HasSpaceForDecoration(x, y, 3, 2))
@@ -335,6 +361,26 @@ public class CanopyFoliagePass : GenPass
                 }
             }
         }
+    }
+
+    private bool HasSpaceForTree(int centerX, int centerY, int width, int height)
+    {
+        // Check if there's enough vertical space for a tree to grow
+        for (int x = centerX - width / 2; x < centerX + width / 2; x++)
+        {
+            for (int y = centerY - height; y < centerY; y++)
+            {
+                if (!WorldGen.InWorld(x, y)) return false;
+
+                Tile checkTile = Framing.GetTileSafely(x, y);
+                // Allow some tiles but not solid blocks that would interfere
+                if (checkTile.HasTile && Main.tileSolid[checkTile.TileType])
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private bool HasSpaceForDecoration(int centerX, int centerY, int width, int height)

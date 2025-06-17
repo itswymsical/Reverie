@@ -90,7 +90,7 @@ public class CanopyUndergroundPass : GenPass
 
         Tile tile = Main.tile[x, y];
         return tile.HasTile && (tile.TileType == TileID.LivingWood ||
-                               tile.TileType == (ushort)ModContent.TileType<OxisolTile>());
+                               tile.TileType == (ushort)ModContent.TileType<OxisolTile>() || tile.TileType == (ushort)ModContent.TileType<OxisolTile>());
     }
 
     private void InitializeNoiseGenerators()
@@ -99,14 +99,14 @@ public class CanopyUndergroundPass : GenPass
         _caveNoise = new FastNoiseLite(WorldGen.genRand.Next());
         _caveNoise.SetNoiseType(FastNoiseLite.NoiseType.ValueCubic);
         _caveNoise.SetFractalType(FastNoiseLite.FractalType.FBm);
-        _caveNoise.SetFrequency(0.07f);
+        _caveNoise.SetFrequency(0.087f);
         _caveNoise.SetFractalOctaves(4);
 
         // Cave density variation noise
         _densityNoise = new FastNoiseLite(WorldGen.genRand.Next());
-        _densityNoise.SetNoiseType(FastNoiseLite.NoiseType.ValueCubic);
+        _densityNoise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
         _densityNoise.SetFractalType(FastNoiseLite.FractalType.FBm);
-        _densityNoise.SetFrequency(0.08f);
+        _densityNoise.SetFrequency(0.09f);
         _densityNoise.SetFractalOctaves(2);
     }
 
@@ -148,7 +148,7 @@ public class CanopyUndergroundPass : GenPass
     private bool ShouldCarveAt(int x, int y, int centerX, int centerY, Rectangle bounds)
     {
         // Get primary cave noise
-        float caveValue = _caveNoise.GetNoise(x / 2f, y / 1.7f);
+        float caveValue = _caveNoise.GetNoise(x / 2.7f, y / 3.7f);
 
         // Get density variation
         float density = _densityNoise.GetNoise(x, y) * 0.5f + 0.5f; // Remap to 0-1
