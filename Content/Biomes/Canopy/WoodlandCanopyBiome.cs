@@ -5,7 +5,7 @@ namespace Reverie.Content.Biomes.Canopy;
 
 public class WoodlandCanopyBiome : ModBiome
 {
-    public override int Music => MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}Woodhaven");
+    public override int Music => MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}UndergroundCanopy");
     public override SceneEffectPriority Priority => SceneEffectPriority.BiomeHigh;
     public override ModUndergroundBackgroundStyle UndergroundBackgroundStyle => ModContent.GetInstance<CanopyBackgroundStyle>();
     public override string BestiaryIcon => base.BestiaryIcon;

@@ -1,4 +1,5 @@
 ﻿using Reverie.Content.Tiles;
+using Reverie.Content.Tiles.Canopy.Surface;
 using System;
 using System.Collections.Generic;
 using Terraria;
@@ -160,7 +161,8 @@ public class OrePass : GenPass
                 int width = WorldGen.genRand.Next(distribution.MinWidth, distribution.MaxWidth + 1);
                 int height = WorldGen.genRand.Next(distribution.MinHeight, distribution.MaxHeight + 1);
 
-                WorldGen.TileRunner(x, y, width, height, config.TileType);
+                if (Main.tile[x, y].TileType != TileID.LivingWood || Main.tile[x, y].TileType != (ushort)ModContent.TileType<OxisolTile>())
+                    WorldGen.TileRunner(x, y, width, height, config.TileType);
             }
         }
     }

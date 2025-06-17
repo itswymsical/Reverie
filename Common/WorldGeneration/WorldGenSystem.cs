@@ -1,5 +1,6 @@
 ﻿using Reverie.Common.WorldGeneration.Structures;
 using Reverie.Common.WorldGeneration.Taiga;
+using Reverie.Common.WorldGeneration.WoodlandCanopy;
 using System.Collections.Generic;
 using Terraria.GameContent.Generation;
 using Terraria.IO;
@@ -42,14 +43,14 @@ public class WorldGenSystem : ModSystem
         var tundraIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Generate Ice Biome"));
         var sunflowerIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Sunflowers"));
 
-        //var structIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Stalac"));
+        var canopyIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Jungle"));
 
         var spawnIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Guide"));
 
-        //if (structIndex >= 0)
-        //{
-        //    tasks.Insert(structIndex + 1, new StillspirePass());
-        //}
+        if (canopyIndex != 1)
+        {
+            tasks.Insert(canopyIndex + 1, new CanopySurfacePass());
+        }
 
         if (spawnIndex != 1)
         {

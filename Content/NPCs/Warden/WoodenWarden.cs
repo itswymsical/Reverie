@@ -81,7 +81,7 @@ namespace Reverie.Content.NPCs.Warden
             NPC.lavaImmune = true;
             NPC.knockBackResist = 0f;
             if (!Main.dedServ)
-                Music = MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}LigneousWarden");
+                Music = MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}WoodenWarden");
             
             NPC.HitSound = new SoundStyle($"{SFX_DIRECTORY}WoodHit2")
             {
