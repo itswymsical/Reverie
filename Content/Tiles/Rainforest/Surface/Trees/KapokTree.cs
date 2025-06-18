@@ -1,187 +1,273 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.GameContent.Metadata;
 using Terraria.Localization;
 using Terraria.ObjectData;
-using Terraria.UI;
+using Terraria.Utilities;
 
 namespace Reverie.Content.Tiles.Rainforest.Surface.Trees;
 
-public class KapokTree : CustomTree
+/// <summary>
+/// Fixed Kapok Tree implementation with proper trunk framing and curve logic
+/// </summary>
+public class KapokTree : ModTile
 {
-    // Tree configuration
-    public override int MinHeight => 32;
-    public override int MaxHeight => 58;
-    public override int CanopyStartOffset => 4;
-    public override bool UsesPalmTreeFraming => true; // Use palm tree framing style
-    public override TreeTypes TreeType => TreeTypes.Palm;
+    public const int FrameSize = 22;
 
-    public override int[] ValidAnchorTiles => [
-        ModContent.TileType<CanopyGrassTile>(),
-        ModContent.TileType<WoodgrassTile>(),
-        ModContent.TileType<OxisolTile>()
-    ];
+    // Tree configuration - Fixed to be more reasonable
+    public virtual int TreeHeight => WorldGen.genRand.Next(20, 45); // More reasonable range
+    public virtual int MaxCurveDistance => 3; // Reduced curve for better connection
 
-    public override int GetTreeWidth() => 1; // Kapok trees are 2 tiles wide
-
-    protected override void ConfigureTreeSettings()
+    public override void SetStaticDefaults()
     {
+        Main.tileSolid[Type] = false;
+        Main.tileFrameImportant[Type] = true;
+        Main.tileNoAttach[Type] = true;
+        Main.tileLavaDeath[Type] = true;
+        Main.tileAxe[Type] = true;
+        Main.tileBlockLight[Type] = true;
+
+        TileObjectData.newTile.CopyFrom(TileObjectData.Style1x1);
+        TileObjectData.newTile.CoordinateWidth = FrameSize - 2;
+        TileObjectData.newTile.CoordinateHeights = [FrameSize - 2];
+        TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile | AnchorType.AlternateTile, 1, 0);
+        TileObjectData.newTile.AnchorValidTiles = [
+            ModContent.TileType<CanopyGrassTile>(),
+            ModContent.TileType<WoodgrassTile>(),
+            ModContent.TileType<OxisolTile>()
+        ];
+        TileObjectData.newTile.AnchorAlternateTiles = [Type];
+
+        TileID.Sets.IsATreeTrunk[Type] = true;
+        TileID.Sets.IsShakeable[Type] = true;
+        TileID.Sets.GetsDestroyedForMeteors[Type] = true;
+        TileID.Sets.GetsCheckedForLeaves[Type] = true;
+        TileMaterials.SetForTileId(Type, TileMaterials._materialsByName["Plant"]);
+
         AddMapEntry(new Color(101, 142, 44), Language.GetText("MapObject.Tree"));
         DustType = DustID.RichMahogany;
         HitSound = SoundID.Dig;
+
+        TileObjectData.addTile(Type);
     }
 
-    protected override int GetEnvironmentalHeightModifier(int x, int y)
+    /// <summary>
+    /// Check for highest tile in the tree
+    /// </summary>
+    public bool IsTreeTop(int i, int j)
     {
-        var modifier = 0;
+        var current = Framing.GetTileSafely(i, j);
+        if (!current.HasTile || current.TileType != Type)
+            return false;
 
-        // Height increases near water
-        if (IsNearWater(x, y, 20))
-            modifier += 3;
-
-        // Height decreases if crowded
-        if (HasNearbyTallTrees(x, y, 15))
-            modifier -= 2;
-
-        // Height increases in deeper areas
-        if (y > Main.worldSurface + 50)
-            modifier += 1;
-
-        return modifier;
+        var above = Framing.GetTileSafely(i, j - 1);
+        return !above.HasTile || above.TileType != Type;
     }
 
-    protected override int GetMaxHeightBonus()
+    /// <summary>
+    /// Get the horizontal sway for the tree top
+    /// </summary>
+    public static float GetSway(int i, int j, double factor = 0)
     {
-        return 10; // Ancient Kapoks can be significantly taller
+        if (factor == 0)
+            factor = Main.GameUpdateCount * 0.01;
+
+        return (float)Math.Sin(factor + i * 0.1f + j * 0.05f) * 0.3f;
     }
 
-    protected override bool ShouldUseAlternateFrames(int x, int y)
+    /// <summary>
+    /// Get proper frame coordinates for trunk segment
+    /// </summary>
+    private Point GetTrunkFrame(int heightFromBase, int totalHeight)
     {
-        // Use alternate frames for trees grown on Woodgrass (oasis variant)
-        var anchor = GetAnchorPosition(x, y, Type);
-        var anchorTile = Framing.GetTileSafely(anchor.X, anchor.Y + 1);
-        return anchorTile.TileType == ModContent.TileType<WoodgrassTile>();
-    }
+        int frameX, frameY = 0;
 
-    protected override void PlaceCanopy(int i, int j, int height)
-    {
-        var canopyX = i;
-        var canopyY = j - height;
-
-        Main.NewText($"Trying to place canopy at ({canopyX}, {canopyY})", Color.Cyan);
-
-        if (WorldGen.InWorld(canopyX, canopyY))
+        if (heightFromBase == 0)
         {
-            // Place the canopy tile
-            bool placed = WorldGen.PlaceTile(canopyX, canopyY, ModContent.TileType<KapokCanopyTile>(), true);
-            Main.NewText($"Tile placed: {placed}", placed ? Color.Green : Color.Red);
+            // Root/stump at base - use frame 3
+            frameX = 3;
+        }
+        else if (heightFromBase >= totalHeight - 1)
+        {
+            // Top of tree - use end textures (frames 4+)
+            frameX = WorldGen.genRand.Next(4, 11); // Assuming frames 4-10 are end textures
+        }
+        else
+        {
+            // Middle trunk - use middle trunk textures (frames 0-2)
+            frameX = WorldGen.genRand.Next(3); // 0-2
+        }
 
-            if (placed)
+        return new Point(frameX, frameY);
+    }
+
+    /// <summary>
+    /// Create the tree structure with proper framing
+    /// </summary>
+    protected virtual void CreateTree(int i, int j, int height)
+    {
+        List<Point> treeTiles = new List<Point>(); // Track placed tiles
+
+        // Create trunk from bottom to top - straight up
+        for (int h = 0; h < height; h++)
+        {
+            int currentY = j - h;
+
+            if (WorldGen.InWorld(i, currentY))
             {
-                // Manually create tile entity since PlaceInWorld might not be called
-                var entity = new KapokCanopyEntity();
-                int entityID = entity.Place(canopyX, canopyY);
-                Main.NewText($"Entity ID: {entityID}", entityID != -1 ? Color.Green : Color.Red);
+                // Check if there's already a tile at this position (prevent overlap)
+                var existingTile = Framing.GetTileSafely(i, currentY);
+                if (existingTile.HasTile && existingTile.TileType == Type)
+                    continue; // Skip if already placed
 
-                if (entityID != -1)
+                WorldGen.PlaceTile(i, currentY, Type, true);
+                var tile = Framing.GetTileSafely(i, currentY);
+
+                if (tile.HasTile && tile.TileType == Type)
                 {
-                    entity.canopyStyle = WorldGen.genRand.Next(3);
-                    entity.treeHeight = height;
-                    Main.NewText($"Entity configured: style {entity.canopyStyle}", Color.Yellow);
+                    // Get proper frame for this trunk segment
+                    Point frame = GetTrunkFrame(h, height);
+                    tile.TileFrameX = (short)(frame.X * FrameSize);
+                    tile.TileFrameY = (short)(frame.Y * FrameSize);
+
+                    treeTiles.Add(new Point(i, currentY));
                 }
             }
+        }
 
-            // Network sync
-            if (Main.netMode == NetmodeID.Server)
-            {
-                NetMessage.SendTileSquare(-1, canopyX, canopyY, 1);
-            }
+        // Network sync for placed tiles
+        if (Main.netMode != NetmodeID.SinglePlayer && treeTiles.Count > 0)
+        {
+            // Find bounds of placed tiles
+            int minY = treeTiles.Min(p => p.Y);
+            int maxY = treeTiles.Max(p => p.Y);
+
+            NetMessage.SendTileSquare(-1, i, minY, 1, maxY - minY + 1, TileChangeType.None);
         }
     }
 
+    /// <summary>
+    /// Custom drawing for tree parts
+    /// </summary>
+    public override void PostDraw(int i, int j, SpriteBatch spriteBatch)
+    {
+        if (!IsTreeTop(i, j))
+            return;
+
+        var texture = ModContent.Request<Texture2D>(Texture).Value;
+        var position = new Vector2(i, j) * 16 - Main.screenPosition;
+
+        float sway = GetSway(i, j);
+        float rotation = sway * 0.13f;
+
+        var canopySource = new Rectangle(0, 32, 324, 294);
+        var canopyOrigin = new Vector2(canopySource.Width / 2, canopySource.Height / 2);
+
+        Vector2 canopyPosition = position + new Vector2(218, 68); // Center on tile
+
+        spriteBatch.Draw(texture, canopyPosition, canopySource, Lighting.GetColor(i, j), rotation, canopyOrigin, 1f, SpriteEffects.None, 0f);
+    }
+
+    /// <summary>
+    /// Handle tree destruction and shaking
+    /// </summary>
     public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
     {
-        if (!fail)
+        if (fail && WorldGen.genRand.NextBool(3))
         {
-            // If this is the base of the tree, find and remove the canopy
-            var relative = GetRelativePosition(i, j);
-            if (relative.Y == 0) // Base tile
-            {
-                var treeHeight = GetTreeHeightAt(i, j, Type);
-                var canopyPos = new Point(i, j - treeHeight);
-
-                if (WorldGen.InWorld(canopyPos.X, canopyPos.Y))
-                {
-                    var canopyTile = Framing.GetTileSafely(canopyPos.X, canopyPos.Y);
-                    if (canopyTile.HasTile && canopyTile.TileType == ModContent.TileType<KapokCanopyTile>())
-                    {
-                        WorldGen.KillTile(canopyPos.X, canopyPos.Y);
-                    }
-                }
-            }
+            OnShakeTree(i, j);
         }
-
-        base.KillTile(i, j, ref fail, ref effectOnly, ref noItem);
     }
 
-    public override bool ShakeTree(int i, int j, ref bool createLeaves)
+    protected virtual void OnShakeTree(int i, int j)
     {
-        var treeHeight = GetTreeHeightAt(i, j, Type);
+        var drop = new WeightedRandom<int>();
 
-        if (WorldGen.genRand.NextBool(10))
-        {
-            int dropType = ItemID.Acorn; // Default drop
+        drop.Add(ItemID.None, 0.7f);
+        drop.Add(ItemID.Acorn, 0.2f);
+        drop.Add(ItemID.Wood, 0.08f);
+        drop.Add(ItemID.LifeCrystal, 0.02f);
 
-            // Taller trees have better drops
-            if (treeHeight > 20 && WorldGen.genRand.NextBool(3))
-                dropType = ItemID.Wood; // TODO: Replace with Kapok Wood
+        var position = new Vector2(i, j - 2) * 16;
+        int dropType = (int)drop;
+        if (dropType > ItemID.None)
+            Item.NewItem(null, new Rectangle((int)position.X, (int)position.Y, 16, 16), dropType);
 
-            // Ancient Kapoks drop rare items
-            if (treeHeight > 25 && WorldGen.genRand.NextBool(20))
-                dropType = ItemID.LifeCrystal; // TODO: Replace with Kapok Fruit
-
-            Item.NewItem(null, new Rectangle(i * 16, j * 16, 16, 16), dropType);
-        }
-
-        createLeaves = true;
-        return true;
+        GrowEffects(i, j);
     }
 
-    // Utility methods specific to Kapok trees
-    private static bool IsNearWater(int x, int y, int range)
+    protected virtual void GrowEffects(int i, int j)
     {
-        for (var checkX = x - range; checkX <= x + range; checkX++)
+        var center = new Vector2(i, j) * 16f + new Vector2(8);
+
+        for (int g = 0; g < 10; g++)
         {
-            for (var checkY = y - range; checkY <= y + range; checkY++)
-            {
-                if (WorldGen.InWorld(checkX, checkY))
-                {
-                    var tile = Framing.GetTileSafely(checkX, checkY);
-                    if (tile.LiquidAmount > 0) return true;
-                }
-            }
+            var leaf = Dust.NewDustDirect(center + Main.rand.NextVector2Unit() * 30f, 0, 0,
+                DustID.GrassBlades, Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(-1f, 1f));
+            leaf.fadeIn = 1.2f;
+            leaf.scale = 1.1f;
         }
-        return false;
     }
 
-    private static bool HasNearbyTallTrees(int x, int y, int range)
+    /// <summary>
+    /// Improved tree growth method
+    /// </summary>
+    public static bool GrowKapokTree(int i, int j)
     {
-        for (var checkX = x - range; checkX <= x + range; checkX++)
+        // Find ground level more carefully
+        int groundY = j;
+        for (int check = 0; check < 10; check++)
         {
-            for (var checkY = y - range; checkY <= y + range; checkY++)
+            var tile = Framing.GetTileSafely(i, groundY + 1);
+            if (WorldGen.SolidOrSlopedTile(tile))
+                break;
+            groundY++;
+        }
+
+        var instance = ModContent.GetInstance<KapokTree>();
+        var height = instance.TreeHeight;
+
+        // More lenient area checking - just check the general area
+        bool canPlace = true;
+
+        // Check basic vertical clearance
+        for (int checkY = groundY - height; checkY < groundY; checkY++)
+        {
+            if (!WorldGen.InWorld(i, checkY))
             {
-                if (WorldGen.InWorld(checkX, checkY))
+                canPlace = false;
+                break;
+            }
+
+            // Check a small area around the trunk line for major obstructions
+            for (int checkX = i - 2; checkX <= i + 2; checkX++)
+            {
+                var tile = Framing.GetTileSafely(checkX, checkY);
+                if (tile.HasTile && Main.tileSolid[tile.TileType])
                 {
-                    var tile = Framing.GetTileSafely(checkX, checkY);
-                    if (tile.HasTile && tile.TileType == ModContent.TileType<KapokTree>())
-                    {
-                        var height = GetTreeHeightAt(checkX, checkY, ModContent.TileType<KapokTree>());
-                        if (height > 20) return true;
-                    }
+                    canPlace = false;
+                    break;
                 }
             }
+
+            if (!canPlace) break;
         }
+
+        if (canPlace)
+        {
+            // Clear any existing tiles at the base
+            WorldGen.KillTile(i, groundY);
+
+            instance.CreateTree(i, groundY, height);
+
+            if (WorldGen.PlayerLOS(i, groundY))
+                instance.GrowEffects(i, groundY);
+
+            return true;
+        }
+
         return false;
     }
 }

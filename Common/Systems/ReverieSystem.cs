@@ -46,12 +46,7 @@ public class ReverieSystem : ModSystem
             }
         }
     }
-    public override void PostSetupContent()
-    {
-        base.PostSetupContent();
-        TileEntity.manager.Register(ModContent.GetInstance<KapokCanopyEntity>());
 
-    }
     public override void AddRecipeGroups()
     {
         RecipeGroup CopperBarRecipeGroup = new(() => $"{Language.GetTextValue("LegacyMisc.37")} {Lang.GetItemNameValue(ItemID.CopperBar)}",
