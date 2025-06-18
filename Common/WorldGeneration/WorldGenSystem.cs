@@ -1,6 +1,6 @@
 ﻿using Reverie.Common.WorldGeneration.Structures;
 using Reverie.Common.WorldGeneration.Taiga;
-using Reverie.Common.WorldGeneration.WoodlandCanopy;
+using Reverie.Common.WorldGeneration.Rainforest;
 using System.Collections.Generic;
 using Terraria.GameContent.Generation;
 using Terraria.IO;
@@ -49,9 +49,9 @@ public class WorldGenSystem : ModSystem
         tasks.RemoveAt(corruptIndex);
         if (canopyIndex != 1)
         {
-            tasks.Insert(canopyIndex + 1, new CanopyBasePass());
-            //tasks.Insert(canopyIndex + 2, new CanopyUndergroundPass());
-            tasks.Insert(canopyIndex + 3, new CanopyFoliagePass());
+            tasks.Insert(canopyIndex + 1, new RainforestBase());
+            tasks.Insert(canopyIndex + 2, new RainforestUndergroundPass());
+            tasks.Insert(canopyIndex + 3, new RainforestFoliagePass());
         }  
         
         if (spawnIndex != 1)

@@ -10,6 +10,9 @@ public class PeatTile : ModTile
         Main.tileMerge[TileID.SnowBlock][Type] = true;
         Main.tileMerge[Type][TileID.SnowBlock] = true;
 
+        Main.tileMerge[TileID.Stone][Type] = true;
+        Main.tileMerge[Type][TileID.Stone] = true;
+
         Main.tileMerge[TileID.IceBlock][Type] = true;
         Main.tileMerge[Type][TileID.IceBlock] = true;
 

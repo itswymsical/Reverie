@@ -15,7 +15,7 @@ public class CanopyLogTile : ModTile
 
         TileID.Sets.DisableSmartCursor[Type] = true;
 
-        TileObjectData.newTile.AnchorValidTiles = [ModContent.TileType<WoodgrassTile>(), ModContent.TileType<CanopyGrassTile>(), TileID.LivingWood];
+        TileObjectData.newTile.AnchorValidTiles = [ModContent.TileType<WoodgrassTile>(), ModContent.TileType<RainforestGrassTile>(), TileID.LivingWood];
         TileObjectData.newTile.LavaDeath = true;
 
         TileObjectData.newTile.CopyFrom(TileObjectData.Style5x4);
@@ -48,7 +48,7 @@ public class CanopyRockTile : ModTile
         Main.tileLavaDeath[Type] = true;
         TileID.Sets.DisableSmartCursor[Type] = true;
 
-        TileObjectData.newTile.AnchorValidTiles = [ModContent.TileType<WoodgrassTile>(), ModContent.TileType<CanopyGrassTile>(), TileID.LivingWood];
+        TileObjectData.newTile.AnchorValidTiles = [ModContent.TileType<WoodgrassTile>(), ModContent.TileType<RainforestGrassTile>(), TileID.LivingWood];
         TileObjectData.newTile.LavaDeath = true;
 
         TileObjectData.newTile.CopyFrom(TileObjectData.Style5x4);

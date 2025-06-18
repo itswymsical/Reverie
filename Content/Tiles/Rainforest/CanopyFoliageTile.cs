@@ -14,7 +14,7 @@ public class CanopyFoliageTile : ModTile
         TileID.Sets.SwaysInWindBasic[Type] = true;
         TileID.Sets.IgnoredByGrowingSaplings[Type] = true;
 
-        TileObjectData.newTile.AnchorValidTiles = [ModContent.TileType<WoodgrassTile>(), ModContent.TileType<CanopyGrassTile>()];
+        TileObjectData.newTile.AnchorValidTiles = [ModContent.TileType<WoodgrassTile>(), ModContent.TileType<RainforestGrassTile>()];
         TileObjectData.newTile.LavaDeath = true;
         TileObjectData.newTile.WaterDeath = false;
 

@@ -19,8 +19,8 @@ public class OxisolTile : ModTile
         Main.tileMerge[TileID.ClayBlock][Type] = true;
         Main.tileMerge[Type][TileID.ClayBlock] = true;
 
-        Main.tileMerge[ModContent.TileType<CanopyGrassTile>()][Type] = true;
-        Main.tileMerge[Type][ModContent.TileType<CanopyGrassTile>()] = true;
+        Main.tileMerge[ModContent.TileType<RainforestGrassTile>()][Type] = true;
+        Main.tileMerge[Type][ModContent.TileType<RainforestGrassTile>()] = true;
 
         Main.tileBlockLight[Type] = true;
 

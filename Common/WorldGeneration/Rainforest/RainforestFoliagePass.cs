@@ -5,16 +5,16 @@ using Terraria.GameContent.Biomes;
 using Terraria.IO;
 using Terraria.WorldBuilding;
 
-namespace Reverie.Common.WorldGeneration.WoodlandCanopy;
+namespace Reverie.Common.WorldGeneration.Rainforest;
 
-public class CanopyFoliagePass : GenPass
+public class RainforestFoliagePass : GenPass
 {
     #region Fields
-    private CanopyBounds _canopyBounds;
+    private RainforestBounds _canopyBounds;
     private FastNoiseLite _decorationNoise;
     #endregion
 
-    public CanopyFoliagePass() : base("Woodland Rainforest Foliage", 160f)
+    public RainforestFoliagePass() : base("Rainforest Foliage", 160f)
     {
     }
 
@@ -35,9 +35,9 @@ public class CanopyFoliagePass : GenPass
         DoGrassAndFoliage(progress);
     }
 
-    private CanopyBounds DetectCanopyBounds()
+    private RainforestBounds DetectCanopyBounds()
     {
-        var bounds = new CanopyBounds
+        var bounds = new RainforestBounds
         {
             MinX = Main.maxTilesX,
             MaxX = 0,
@@ -97,7 +97,7 @@ public class CanopyFoliagePass : GenPass
         {
             if (IsExposedToAir(x, y))
             {
-                TryPlaceCanopyGrass(x, y, (ushort)ModContent.TileType<CanopyGrassTile>());
+                TryPlaceCanopyGrass(x, y, (ushort)ModContent.TileType<RainforestGrassTile>());
             }
         }
         // Underground grass: Convert LivingWood to WoodgrassTile if exposed to air
@@ -218,7 +218,7 @@ public class CanopyFoliagePass : GenPass
 
         if (!tile.HasTile) return;
 
-        bool isCanopyTile = tile.TileType == (ushort)ModContent.TileType<CanopyGrassTile>() ||
+        bool isCanopyTile = tile.TileType == (ushort)ModContent.TileType<RainforestGrassTile>() ||
                            tile.TileType == (ushort)ModContent.TileType<WoodgrassTile>() ||
                            tile.TileType == (ushort)ModContent.TileType<OxisolTile>() ||
                            tile.TileType == TileID.LivingWood ||
@@ -264,7 +264,7 @@ public class CanopyFoliagePass : GenPass
 
         if (!tile.HasTile) return;
 
-        bool validTile = tile.TileType == (ushort)ModContent.TileType<CanopyGrassTile>() ||
+        bool validTile = tile.TileType == (ushort)ModContent.TileType<RainforestGrassTile>() ||
                          tile.TileType == (ushort)ModContent.TileType<WoodgrassTile>();
 
         if (!validTile) return;

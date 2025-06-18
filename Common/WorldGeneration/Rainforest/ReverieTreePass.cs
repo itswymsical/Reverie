@@ -8,7 +8,7 @@ using Terraria.ID;
 using Terraria.IO;
 using Terraria.WorldBuilding;
 
-namespace Reverie.Common.WorldGeneration.WoodlandCanopy
+namespace Reverie.Common.WorldGeneration.Rainforest
 {
     //public class ReverieTreePass(string name, float loadWeight) : GenPass(name, loadWeight)
     //{

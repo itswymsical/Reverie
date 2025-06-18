@@ -1,17 +1,19 @@
 ﻿using Reverie.Content.Tiles.Rainforest.Surface;
 using Reverie.lib;
+using Reverie.Utilities;
 using Terraria.GameContent.Biomes;
 using Terraria.IO;
 using Terraria.WorldBuilding;
 
-namespace Reverie.Common.WorldGeneration.WoodlandCanopy;
+namespace Reverie.Common.WorldGeneration.Rainforest;
 
-public class CanopyConfiguration
+public class RainforestConfiguration
 {
-    public float HillFrequency { get; set; } = 0.0175f;
+    public float HillFrequency { get; set; } = 0.087f;
     public int BaseHeightOffset { get; set; } = 0;
-    public int HillHeightVariation { get; set; } = 62;
-    public int CanopyDepth { get; set; } = (int)(Main.maxTilesY / 6.7647f);
+    public int HillHeightVariation { get; set; } = 16;
+    public int SurfaceDepth { get; set; } = (int)(Main.maxTilesY * 0.078f);
+
 }
 
 public class JungleBounds
@@ -25,18 +27,18 @@ public class JungleBounds
     public Rectangle ToRectangle() => new Rectangle(MinX, SurfaceY, MaxX - MinX, Height);
 }
 
-public class CanopyBasePass : GenPass
+public class RainforestBase : GenPass
 {
     #region Fields
-    private readonly CanopyConfiguration _config;
+    private readonly RainforestConfiguration _config;
     private FastNoiseLite _hillNoise;
     private int _canopyLeft, _canopyRight;
     private JungleBounds _jungleBounds;
     #endregion
 
-    public CanopyBasePass() : base("Rainforest Overworld", 80f)
+    public RainforestBase() : base("Rainforest Surface", 80f)
     {
-        _config = new CanopyConfiguration();
+        _config = new RainforestConfiguration();
     }
 
     protected override void ApplyPass(GenerationProgress progress, GameConfiguration configuration)
@@ -46,7 +48,7 @@ public class CanopyBasePass : GenPass
         Initialize();
 
         // Multi-layered jungle detection approach
-        _jungleBounds = DetectJungleBoundaries();
+        _jungleBounds = JungleDetection.DetectJungleBoundaries();
 
         if (!_jungleBounds.IsValid)
         {
@@ -54,8 +56,8 @@ public class CanopyBasePass : GenPass
             return;
         }
 
-        progress.Message = "Growing Rainforest Biome adjacent to jungle...";
-        CalculateCanopyBounds();
+        progress.Message = "Tropical Rainforest";
+        CalculateRainforestBounds();
         GenerateTerrain(progress);
     }
 
@@ -69,144 +71,8 @@ public class CanopyBasePass : GenPass
     }
 
     #region Jungle & Desert Detection
-    private JungleBounds DetectJungleBoundaries()
-    {
-        // Layer 1: Validate GenVars jungle coordinates
-        JungleBounds bounds = ValidateGenVarsJungle();
-        if (bounds.IsValid)
-        {
-            return bounds;
-        }
 
-        // Layer 2: Comprehensive tile scanning
-        bounds = ScanForJungleBiome();
-        if (bounds.IsValid)
-        {
-            return bounds;
-        }
-
-        // Layer 3: Positional estimation based on Terraria's generation rules
-        return EstimateJungleLocation();
-    }
-
-    private JungleBounds ValidateGenVarsJungle()
-    {
-        var bounds = new JungleBounds();
-
-        // Validate GenVars coordinates with bounds checking
-        if (GenVars.jungleMinX > 0 && GenVars.jungleMaxX > GenVars.jungleMinX &&
-            GenVars.jungleMaxX < Main.maxTilesX - 200)
-        {
-            bounds.MinX = GenVars.jungleMinX;
-            bounds.MaxX = GenVars.jungleMaxX;
-            bounds.SurfaceY = (int)Main.worldSurface;
-            bounds.Height = 400;
-
-            // Verify by checking if area actually contains jungle tiles
-            if (ValidateJungleArea(bounds.MinX + (bounds.MaxX - bounds.MinX) / 2, bounds.SurfaceY + 50))
-            {
-                return bounds;
-            }
-        }
-
-        return new JungleBounds(); // Invalid
-    }
-
-    private JungleBounds ScanForJungleBiome()
-    {
-        var bounds = new JungleBounds
-        {
-            MinX = Main.maxTilesX,
-            MaxX = 0,
-            SurfaceY = (int)Main.worldSurface,
-            Height = 400
-        };
-
-        int scanStartY = (int)Main.worldSurface;
-        int scanEndY = Math.Min((int)Main.worldSurface + 200, Main.maxTilesY - 100);
-
-        // Scan for jungle tiles in surface area
-        for (int x = 200; x < Main.maxTilesX - 200; x += 5) // Sample every 5 tiles for efficiency
-        {
-            for (int y = scanStartY; y < scanEndY; y += 3)
-            {
-                if (WorldGen.InWorld(x, y) && IsJungleTile(x, y))
-                {
-                    // Verify this is a significant jungle area, not just scattered tiles
-                    if (ValidateJungleArea(x, y, 25))
-                    {
-                        bounds.MinX = Math.Min(bounds.MinX, x);
-                        bounds.MaxX = Math.Max(bounds.MaxX, x);
-                    }
-                }
-            }
-        }
-
-        // Expand bounds slightly to ensure we capture the full biome
-        if (bounds.IsValid)
-        {
-            bounds.MinX = Math.Max(bounds.MinX - 50, 200);
-            bounds.MaxX = Math.Min(bounds.MaxX + 50, Main.maxTilesX - 200);
-        }
-
-        return bounds;
-    }
-
-    private JungleBounds EstimateJungleLocation()
-    {
-        // Jungle typically spawns opposite side from Dungeon
-        bool jungleOnLeft = Main.dungeonX > Main.maxTilesX / 2;
-        int estimatedCenter = jungleOnLeft ? Main.maxTilesX / 4 : (Main.maxTilesX * 3) / 4;
-        int estimatedWidth = Main.maxTilesX / 5; // Jungle typically spans ~20% of world width
-
-        return new JungleBounds
-        {
-            MinX = Math.Max(estimatedCenter - estimatedWidth / 2, 200),
-            MaxX = Math.Min(estimatedCenter + estimatedWidth / 2, Main.maxTilesX - 200),
-            SurfaceY = (int)Main.worldSurface,
-            Height = 400
-        };
-    }
-
-    private bool IsJungleTile(int x, int y)
-    {
-        if (!WorldGen.InWorld(x, y)) return false;
-
-        Tile tile = Main.tile[x, y];
-        return tile.HasTile && (tile.TileType == TileID.JungleGrass ||
-                               tile.TileType == TileID.Mud ||
-                               tile.TileType == TileID.JunglePlants ||
-                               tile.TileType == TileID.JungleVines);
-    }
-
-    private bool ValidateJungleArea(int centerX, int centerY, int radius = 25)
-    {
-        int jungleTiles = 0;
-        int totalTiles = 0;
-
-        for (int x = centerX - radius; x <= centerX + radius; x++)
-        {
-            for (int y = centerY - radius; y <= centerY + radius; y++)
-            {
-                if (WorldGen.InWorld(x, y))
-                {
-                    Tile tile = Main.tile[x, y];
-                    if (tile.HasTile)
-                    {
-                        totalTiles++;
-                        if (IsJungleTile(x, y))
-                        {
-                            jungleTiles++;
-                        }
-                    }
-                }
-            }
-        }
-
-        return totalTiles > 0 && (float)jungleTiles / totalTiles > 0.25f; // 25% jungle tile threshold
-    }
-   
-    private void CalculateCanopyBounds()
+    private void CalculateRainforestBounds()
     {
         // Analyze jungle edges to determine optimal canopy placement
         Rectangle jungleRect = _jungleBounds.ToRectangle();
@@ -248,7 +114,7 @@ public class CanopyBasePass : GenPass
             placeOnLeft = true;
 
             // Check if left side has sufficient space
-            int minRequiredSpace = (int)(Main.maxTilesX / 20.33f);
+            int minRequiredSpace = (int)(Main.maxTilesX / 16.33f);
             if (leftSpace < minRequiredSpace)
             {
                 // Not enough space on left, check if right is viable
@@ -278,8 +144,8 @@ public class CanopyBasePass : GenPass
         }
 
         // Calculate canopy dimensions
-        int canopyWidth = WorldGen.genRand.Next((int)(Main.maxTilesX / 20.33f), (int)(Main.maxTilesX / 10.43f));
-        int jungleOffset = -160; // Gap between jungle and canopy (increased to avoid desert overlap)
+        int canopyWidth = WorldGen.genRand.Next((int)(Main.maxTilesX / 16.33f), (int)(Main.maxTilesX / 10.43f));
+        int jungleOffset = -180;
 
         // Position canopy with proper spacing analysis
         if (placeOnLeft)
@@ -314,7 +180,7 @@ public class CanopyBasePass : GenPass
         }
 
         // Final validation: Check for conflicts with desert boundaries
-        ValidateCanopyDesertSeparation();
+        ValidateRainforestDesertSeparation();
     }
 
     private bool IsDesertOnLeftSideOfJungle(Rectangle jungleRect)
@@ -349,14 +215,13 @@ public class CanopyBasePass : GenPass
 
     private bool IsDesertClear()
     {
-        // Check if we have reliable desert location data
         return (GenVars.UndergroundDesertLocation.X > 0 && GenVars.UndergroundDesertLocation.X < Main.maxTilesX) ||
                (GenVars.UndergroundDesertHiveLocation.X > 0 && GenVars.UndergroundDesertHiveLocation.X < Main.maxTilesX);
     }
 
-    private void ValidateCanopyDesertSeparation()
+    private void ValidateRainforestDesertSeparation()
     {
-        // Ensure adequate separation between canopy and desert
+        // Ensure separation between canopy and desert
         int desertX = -1;
 
         if (GenVars.UndergroundDesertLocation.X > 0)
@@ -389,32 +254,32 @@ public class CanopyBasePass : GenPass
 
     private void GenerateTerrain(GenerationProgress progress)
     {
-        progress.Message = "Preparing canopy terrain foundation...";
+        progress.Message = "Preparing Rainforest terrain...";
 
         // Step 1: Find edge heights for contouring
         int leftEdgeHeight = GetTerrainHeightAt(_canopyLeft - 1);
         int rightEdgeHeight = GetTerrainHeightAt(_canopyRight + 1);
 
-        progress.Message = "Clearing existing terrain...";
+        progress.Message = "Clearing terrain...";
 
-        // Step 2: Clear the entire canopy area
+        // Step 2: Clear terrain
         ClearArea();
 
-        progress.Message = "Generating canopy terrain with noise...";
+        progress.Message = "Rainforest Erosion...";
 
-        // Step 3: Generate base terrain heights using noise
+        // Step 3: Generate terrain heights
         int[] terrainHeights = GenerateTerrainHeights(leftEdgeHeight, rightEdgeHeight);
 
-        progress.Message = "Building canopy columns...";
+        progress.Message = "Building Rainforest columns...";
 
-        // Step 4: Fill terrain columns based on generated heights
+        // Step 4: Fill terrain columns
         int totalColumns = _canopyRight - _canopyLeft;
         for (int i = 0; i < totalColumns; i++)
         {
             int x = _canopyLeft + i;
             progress.Set((double)i / totalColumns);
 
-            FillCanopyColumn(x, terrainHeights[i]);
+            FillTerrainColumn(x, terrainHeights[i]);
         }
     }
 
@@ -424,29 +289,25 @@ public class CanopyBasePass : GenPass
         tile.HasTile = true;
 
         int depthFromSurface = y - surfaceY;
-        if (depthFromSurface <= 1)
+        if (depthFromSurface == 1)
         {
             tile.HasTile = false;
             tile.WallType = WallID.FlowerUnsafe;
-            tile.WallColor = PaintID.LimePaint;
+            tile.WallColor = PaintID.DeepLimePaint;
         }
-        else if (depthFromSurface <= 10)
+        else if (depthFromSurface <= 4)
         {
             tile.TileType = (ushort)ModContent.TileType<OxisolTile>();
             tile.WallType = WallID.MudUnsafe;
         }
-        else if (depthFromSurface <= _config.CanopyDepth * 0.02f)
+        else if (depthFromSurface <= _config.SurfaceDepth * 0.41f)
         {
             tile.TileType = TileID.ClayBlock;
         }
-        else if (depthFromSurface <= _config.CanopyDepth * 0.12f)
+        else if (depthFromSurface <= _config.SurfaceDepth * 0.52f)
         {
             tile.TileType = TileID.Mud;
         }
-        //else if (depthFromSurface <= _config.CanopyDepth * 0.65f)
-        //{
-        //    tile.TileType = (ushort)ModContent.TileType<OxisolTile>();
-        //}
         else
         {
             tile.TileType = (ushort)ModContent.TileType<OxisolTile>();
@@ -473,8 +334,8 @@ public class CanopyBasePass : GenPass
     private void ClearArea()
     {
         // Clear from much higher up to ensure all existing terrain is removed
-        int clearStartY = Math.Max(0, (int)Main.worldSurface - 300); // Clear much higher above surface
-        int clearEndY = (int)Main.worldSurface + 100; // Only clear down to where we'll place surface, not deep underground
+        int clearStartY = Math.Max(0, (int)Main.worldSurface - 300);
+        int clearEndY = (int)Main.worldSurface - 30;
 
         for (int x = _canopyLeft; x < _canopyRight; x++)
         {
@@ -544,17 +405,15 @@ public class CanopyBasePass : GenPass
         }
 
         // Near edges, blend towards edge heights more gradually
-        float edgeInfluence = (1f - taperFactor) * 0.7f; // Reduce edge influence for smoother transitions
+        float edgeInfluence = (1f - taperFactor) * 0.9f; // Reduce edge influence for smoother transitions
 
         if (normalizedPosition < 0.5f)
         {
-            // Closer to left edge
             float leftInfluence = (0.5f - normalizedPosition) * 2f * edgeInfluence;
             return (int)(baseHeight * (1f - leftInfluence) + leftEdgeHeight * leftInfluence);
         }
         else
         {
-            // Closer to right edge
             float rightInfluence = (normalizedPosition - 0.5f) * 2f * edgeInfluence;
             return (int)(baseHeight * (1f - rightInfluence) + rightEdgeHeight * rightInfluence);
         }
@@ -586,9 +445,9 @@ public class CanopyBasePass : GenPass
         return (float)(0.5 * (1 + Math.Cos(Math.PI * (1 - distanceFromEdge))));
     }
 
-    private void FillCanopyColumn(int x, int surfaceY)
+    private void FillTerrainColumn(int x, int surfaceY)
     {
-        int maxDepth = surfaceY + _config.CanopyDepth;
+        int maxDepth = surfaceY + _config.SurfaceDepth;
 
         for (int y = surfaceY; y < maxDepth && y < Main.maxTilesY; y++)
         {

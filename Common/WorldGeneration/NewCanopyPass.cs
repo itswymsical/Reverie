@@ -2,7 +2,7 @@
 using Terraria.IO;
 using Terraria.WorldBuilding;
 
-namespace Reverie.Common.WorldGeneration.WoodlandCanopy;
+namespace Reverie.Common.WorldGeneration;
 
 //public class NewCanopyPass : GenPass
 //{

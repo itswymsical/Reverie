@@ -34,7 +34,7 @@ public class KapokTree : ModTile
         TileObjectData.newTile.CoordinateHeights = [FrameSize - 2];
         TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile | AnchorType.AlternateTile, 1, 0);
         TileObjectData.newTile.AnchorValidTiles = [
-            ModContent.TileType<CanopyGrassTile>(),
+            ModContent.TileType<RainforestGrassTile>(),
             ModContent.TileType<WoodgrassTile>(),
             ModContent.TileType<OxisolTile>()
         ];

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Reverie.Content.Tiles.Rainforest.Surface;
 
-public class CanopyGrassTile : GrassTile
+public class RainforestGrassTile : GrassTile
 {
     protected override int DirtType => ModContent.TileType<OxisolTile>();
     //public override List<int> PlantTypes => [ModContent.TileType<SnowTaigaPlants>()];
@@ -22,7 +22,7 @@ public class CanopyGrassTile : GrassTile
 
         VanillaFallbackOnModDeletion = TileID.JungleGrass;
 
-        AddMapEntry(new Color(100, 100, 33));
+        AddMapEntry(new Color(100, 170, 33));
     }
 
     public override bool HasWalkDust()
