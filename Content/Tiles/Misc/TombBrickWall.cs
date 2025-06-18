@@ -1,5 +1,4 @@
-﻿
-namespace Reverie.Content.Tiles;
+﻿namespace Reverie.Content.Tiles.Misc;
 
 public class TombBrickWall : ModWall
 {

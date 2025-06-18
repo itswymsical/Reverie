@@ -1,4 +1,4 @@
-﻿using Reverie.Content.Tiles;
+﻿using Reverie.Content.Tiles.Misc;
 
 namespace Reverie.Content.Items.Tiles;
 

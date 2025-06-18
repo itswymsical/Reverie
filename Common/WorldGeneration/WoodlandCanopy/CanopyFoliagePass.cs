@@ -288,46 +288,46 @@ public class CanopyFoliagePass : GenPass
                     NetMessage.SendTileSquare(-1, x, y - 1, 1, TileChangeType.None);
                 }
             }
-            // Sapling placement (less common, with spacing)
-            else if (WorldGen.genRand.NextBool(12) && tile.BlockType == BlockType.Solid)
-            {
-                bool hasNearbyTree = false;
-                const int MINIMUM_TREE_SPACING = 3; // Minimum distance between trees
+            //// Sapling placement (less common, with spacing)
+            //else if (WorldGen.genRand.NextBool(12) && tile.BlockType == BlockType.Solid)
+            //{
+            //    bool hasNearbyTree = false;
+            //    const int MINIMUM_TREE_SPACING = 3; // Minimum distance between trees
 
-                for (int checkX = x - MINIMUM_TREE_SPACING; checkX <= x + MINIMUM_TREE_SPACING; checkX++)
-                {
-                    for (int checkY = y - 3; checkY <= y + 1; checkY++)
-                    {
-                        if (!WorldGen.InWorld(checkX, checkY)) continue;
+            //    for (int checkX = x - MINIMUM_TREE_SPACING; checkX <= x + MINIMUM_TREE_SPACING; checkX++)
+            //    {
+            //        for (int checkY = y - 3; checkY <= y + 1; checkY++)
+            //        {
+            //            if (!WorldGen.InWorld(checkX, checkY)) continue;
 
-                        Tile checkTile = Framing.GetTileSafely(checkX, checkY);
-                        if (checkTile.HasTile &&
-                            (checkTile.TileType == (ushort)ModContent.TileType<StinkwoodSapling>() ||
-                             checkTile.TileType == TileID.PalmTree))
-                        {
-                            hasNearbyTree = true;
-                            break;
-                        }
-                    }
-                    if (hasNearbyTree) break;
-                }
+            //            Tile checkTile = Framing.GetTileSafely(checkX, checkY);
+            //            if (checkTile.HasTile &&
+            //                (checkTile.TileType == (ushort)ModContent.TileType<StinkwoodSapling>() ||
+            //                 checkTile.TileType == TileID.PalmTree))
+            //            {
+            //                hasNearbyTree = true;
+            //                break;
+            //            }
+            //        }
+            //        if (hasNearbyTree) break;
+            //    }
 
-                // Only place sapling if no nearby trees and enough space above
-                if (!hasNearbyTree && HasSpaceForTree(x, y - 1, 3, 8))
-                {
-                    WorldGen.PlaceTile(x, y - 1, (ushort)ModContent.TileType<StinkwoodSapling>(), mute: true);
+            //    // Only place sapling if no nearby trees and enough space above
+            //    if (!hasNearbyTree && HasSpaceForTree(x, y - 1, 3, 8))
+            //    {
+            //        WorldGen.PlaceTile(x, y - 1, (ushort)ModContent.TileType<StinkwoodSapling>(), mute: true);
 
-                    if (WorldGen.genRand.NextBool(4))
-                    {
-                        WorldGen.GrowPalmTree(x, y - 1);
-                    }
+            //        if (WorldGen.genRand.NextBool(4))
+            //        {
+            //            WorldGen.GrowPalmTree(x, y - 1);
+            //        }
 
-                    if (Main.netMode == NetmodeID.Server)
-                    {
-                        NetMessage.SendTileSquare(-1, x, y - 1, 1, TileChangeType.None);
-                    }
-                }
-            }
+            //        if (Main.netMode == NetmodeID.Server)
+            //        {
+            //            NetMessage.SendTileSquare(-1, x, y - 1, 1, TileChangeType.None);
+            //        }
+            //    }
+            //}
         }
 
         // Hanging vines

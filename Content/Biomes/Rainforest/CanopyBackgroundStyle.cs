@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using Terraria.ModLoader;
 
-namespace Reverie.Content.Biomes.Canopy
+namespace Reverie.Content.Biomes.Rainforest
 {
 	public class CanopyBackgroundStyle : ModUndergroundBackgroundStyle
 	{

@@ -301,6 +301,11 @@ Items: {
 		DisplayName: Tile Template Item
 		Tooltip: ""
 	}
+
+	KapokTreeDebugWand: {
+		DisplayName: Kapok Tree Debug Wand
+		Tooltip: ""
+	}
 }
 
 Projectiles: {

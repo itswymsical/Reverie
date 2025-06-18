@@ -1,4 +1,4 @@
-﻿using Reverie.Content.Tiles;
+﻿using Reverie.Content.Tiles.Misc;
 using Reverie.Content.Tiles.Rainforest.Surface;
 using System;
 using System.Collections.Generic;

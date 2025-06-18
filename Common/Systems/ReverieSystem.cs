@@ -1,6 +1,8 @@
-﻿using Reverie.Core.Dialogue;
+﻿using Reverie.Content.Tiles.Rainforest.Surface.Trees;
+using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Utilities;
+using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.Localization;
 
@@ -44,7 +46,12 @@ public class ReverieSystem : ModSystem
             }
         }
     }
+    public override void PostSetupContent()
+    {
+        base.PostSetupContent();
+        TileEntity.manager.Register(ModContent.GetInstance<KapokCanopyEntity>());
 
+    }
     public override void AddRecipeGroups()
     {
         RecipeGroup CopperBarRecipeGroup = new(() => $"{Language.GetTextValue("LegacyMisc.37")} {Lang.GetItemNameValue(ItemID.CopperBar)}",

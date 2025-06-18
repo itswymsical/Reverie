@@ -1,6 +1,6 @@
 ﻿using ReLogic.Content;
 
-namespace Reverie.Content.Biomes.Canopy
+namespace Reverie.Content.Biomes.Rainforest
 {
 	public class CanopyWaterStyle : ModWaterStyle
 	{

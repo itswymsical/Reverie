@@ -9,7 +9,11 @@ DialogueLibrary: {
 	}
 }
 
-Tiles.MagnoliaTile.MapEntry: Magnolia Tile
+Tiles: {
+	MagnoliaTile.MapEntry: Magnolia Tile
+	KapokCanopy.MapEntry: Kapok Canopy
+	KapokCanopyTile.MapEntry: Kapok Canopy Tile
+}
 
 Buffs: {
 	BarkskinPotionBuff: {

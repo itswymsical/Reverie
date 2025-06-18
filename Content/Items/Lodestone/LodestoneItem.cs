@@ -1,4 +1,4 @@
-﻿using Reverie.Content.Tiles;
+﻿using Reverie.Content.Tiles.Misc;
 using Reverie.Utilities;
 
 namespace Reverie.Content.Items.Lodestone;

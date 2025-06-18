@@ -1,6 +1,6 @@
 ﻿using Reverie.Common.Tiles;
 
-namespace Reverie.Content.Biomes.Canopy;
+namespace Reverie.Content.Biomes.Rainforest;
 
 public class SurfaceCanopyBiome : ModBiome
 {

@@ -1,4 +1,4 @@
-﻿namespace Reverie.Content.Tiles;
+﻿namespace Reverie.Content.Tiles.Misc;
 
 public class WoodWickerTile : ModTile
 {

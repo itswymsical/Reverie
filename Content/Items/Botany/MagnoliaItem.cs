@@ -1,7 +1,7 @@
 ﻿using ReLogic.Graphics;
 using System.Collections.Generic;
 using Terraria.GameContent;
-using Reverie.Content.Tiles;
+using Reverie.Content.Tiles.Misc;
 
 namespace Reverie.Content.Items.Botany;
 

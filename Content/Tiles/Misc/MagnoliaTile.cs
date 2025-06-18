@@ -4,7 +4,7 @@ using Terraria.Localization;
 using Terraria.ObjectData;
 using Reverie.Content.Items.Botany;
 
-namespace Reverie.Content.Tiles
+namespace Reverie.Content.Tiles.Misc
 {
 	public enum PlantStage : byte
 	{
@@ -30,7 +30,7 @@ namespace Reverie.Content.Tiles
 
 			TileMaterials.SetForTileId(Type, TileMaterials._materialsByName["Plant"]);
 
-			LocalizedText name = CreateMapEntryName();
+			var name = CreateMapEntryName();
 			AddMapEntry(new Color(128, 128, 128), name);
 
 			TileObjectData.newTile.CopyFrom(TileObjectData.StyleAlch);
@@ -53,14 +53,14 @@ namespace Reverie.Content.Tiles
 
 		public override bool CanPlace(int i, int j)
 		{
-			Tile tile = Framing.GetTileSafely(i, j);
+			var tile = Framing.GetTileSafely(i, j);
 
 			if (tile.HasTile)
 			{
 				int tileType = tile.TileType;
 				if (tileType == Type)
 				{
-					PlantStage stage = GetStage(i, j);
+					var stage = GetStage(i, j);
 					return stage == PlantStage.Grown;
 				}
 
@@ -68,9 +68,9 @@ namespace Reverie.Content.Tiles
 				{
 					if (Main.tileCut[tileType] || TileID.Sets.BreakableWhenPlacing[tileType] || tileType == TileID.WaterDrip || tileType == TileID.LavaDrip || tileType == TileID.HoneyDrip || tileType == TileID.SandDrip)
 					{
-						bool foliageGrass = tileType == TileID.Plants || tileType == TileID.Plants2;
-						bool moddedFoliage = tileType >= TileID.Count && (Main.tileCut[tileType] || TileID.Sets.BreakableWhenPlacing[tileType]);
-						bool harvestableVanillaHerb = Main.tileAlch[tileType] && WorldGen.IsHarvestableHerbWithSeed(tileType, tile.TileFrameX / 18);
+						var foliageGrass = tileType == TileID.Plants || tileType == TileID.Plants2;
+						var moddedFoliage = tileType >= TileID.Count && (Main.tileCut[tileType] || TileID.Sets.BreakableWhenPlacing[tileType]);
+						var harvestableVanillaHerb = Main.tileAlch[tileType] && WorldGen.IsHarvestableHerbWithSeed(tileType, tile.TileFrameX / 18);
 
 						if (foliageGrass || moddedFoliage || harvestableVanillaHerb)
 						{
@@ -104,7 +104,7 @@ namespace Reverie.Content.Tiles
 
 		public override bool CanDrop(int i, int j)
 		{
-			PlantStage stage = GetStage(i, j);
+			var stage = GetStage(i, j);
 
 			if (stage == PlantStage.Planted)
 				return false;
@@ -114,13 +114,13 @@ namespace Reverie.Content.Tiles
 
 		public override IEnumerable<Item> GetItemDrops(int i, int j)
 		{
-			PlantStage stage = GetStage(i, j);
+			var stage = GetStage(i, j);
 
-			Vector2 worldPosition = new Vector2(i, j).ToWorldCoordinates();
-			Player nearestPlayer = Main.player[Player.FindClosest(worldPosition, 16, 16)];
+			var worldPosition = new Vector2(i, j).ToWorldCoordinates();
+			var nearestPlayer = Main.player[Player.FindClosest(worldPosition, 16, 16)];
 
-			int herbItemType = ModContent.ItemType<MagnoliaItem>();
-			int herbItemStack = 1;
+			var herbItemType = ModContent.ItemType<MagnoliaItem>();
+			var herbItemStack = 1;
 
 			if (nearestPlayer.active && (nearestPlayer.HeldItem.type == ItemID.StaffofRegrowth || nearestPlayer.HeldItem.type == ItemID.AcornAxe))
 			{
@@ -139,15 +139,15 @@ namespace Reverie.Content.Tiles
 
 		public override bool IsTileSpelunkable(int i, int j)
 		{
-			PlantStage stage = GetStage(i, j);
+			var stage = GetStage(i, j);
 
 			return stage == PlantStage.Grown;
 		}
 
 		public override void RandomUpdate(int i, int j)
 		{
-			Tile tile = Framing.GetTileSafely(i, j);
-			PlantStage stage = GetStage(i, j);
+			var tile = Framing.GetTileSafely(i, j);
+			var stage = GetStage(i, j);
 
 			if (stage != PlantStage.Grown)
 			{
@@ -163,7 +163,7 @@ namespace Reverie.Content.Tiles
 
 		private static PlantStage GetStage(int i, int j)
 		{
-			Tile tile = Framing.GetTileSafely(i, j);
+			var tile = Framing.GetTileSafely(i, j);
 			return (PlantStage)(tile.TileFrameX / FrameWidth);
 		}
 	}
