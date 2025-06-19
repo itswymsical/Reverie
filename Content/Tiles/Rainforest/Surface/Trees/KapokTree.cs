@@ -14,11 +14,9 @@ namespace Reverie.Content.Tiles.Rainforest.Surface.Trees;
 /// </summary>
 public class KapokTree : ModTile
 {
-    public const int FrameSize = 22;
+    public const int FRAME_SIZE = 22;
 
-    // Tree configuration - Fixed to be more reasonable
-    public virtual int TreeHeight => WorldGen.genRand.Next(20, 45); // More reasonable range
-    public virtual int MaxCurveDistance => 3; // Reduced curve for better connection
+    public virtual int TreeHeight => WorldGen.genRand.Next(17, 38);
 
     public override void SetStaticDefaults()
     {
@@ -30,8 +28,8 @@ public class KapokTree : ModTile
         Main.tileBlockLight[Type] = true;
 
         TileObjectData.newTile.CopyFrom(TileObjectData.Style1x1);
-        TileObjectData.newTile.CoordinateWidth = FrameSize - 2;
-        TileObjectData.newTile.CoordinateHeights = [FrameSize - 2];
+        TileObjectData.newTile.CoordinateWidth = FRAME_SIZE - 2;
+        TileObjectData.newTile.CoordinateHeights = [FRAME_SIZE - 2];
         TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile | AnchorType.AlternateTile, 1, 0);
         TileObjectData.newTile.AnchorValidTiles = [
             ModContent.TileType<RainforestGrassTile>(),
@@ -129,8 +127,8 @@ public class KapokTree : ModTile
                 {
                     // Get proper frame for this trunk segment
                     Point frame = GetTrunkFrame(h, height);
-                    tile.TileFrameX = (short)(frame.X * FrameSize);
-                    tile.TileFrameY = (short)(frame.Y * FrameSize);
+                    tile.TileFrameX = (short)(frame.X * FRAME_SIZE);
+                    tile.TileFrameY = (short)(frame.Y * FRAME_SIZE);
 
                     treeTiles.Add(new Point(i, currentY));
                 }

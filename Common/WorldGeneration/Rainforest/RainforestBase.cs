@@ -295,7 +295,7 @@ public class RainforestBase : GenPass
             tile.WallType = WallID.FlowerUnsafe;
             tile.WallColor = PaintID.DeepLimePaint;
         }
-        else if (depthFromSurface <= 4)
+        else if (depthFromSurface <= 10)
         {
             tile.TileType = (ushort)ModContent.TileType<OxisolTile>();
             tile.WallType = WallID.MudUnsafe;
