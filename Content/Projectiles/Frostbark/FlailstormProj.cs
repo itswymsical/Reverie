@@ -6,28 +6,37 @@ using System.Collections.Generic;
 using Terraria.Audio;
 using Terraria.GameContent;
 
-
 namespace Reverie.Content.Projectiles.Frostbark;
 
 public class FlailstormProj : ModProjectile, IDrawPrimitive
 {
     private const string ChainTexturePath = "Reverie/Assets/Textures/Projectiles/Frostbark/FlailstormChain";
     private const string ChainTextureExtraPath = ChainTexturePath;
-    private Vector2 offset;
-
-    private float oldRotation;
 
     private List<Vector2> cache;
     private Trail trail;
     private Trail trail2;
+
+    // Charging system constants
+    private const float ChargeLevel1Time = 60f;  // 1 second
+    private const float ChargeLevel2Time = 120f; // 2 seconds  
+    private const float ChargeLevel3Time = 180f; // 3 seconds
+    private const int IceCloudSpawnRate = 15;    // Spawn ice cloud every 15 frames when charging
+    private float lastIceCloudSpawn = 0f;
+
+    // Charge properties
+    private int ChargeLevel => SpinningStateTimer < ChargeLevel1Time ? 0 :
+                              SpinningStateTimer < ChargeLevel2Time ? 1 :
+                              SpinningStateTimer < ChargeLevel3Time ? 2 : 3;
+
+    private float ChargeMultiplier => 1f + ChargeLevel * 0.5f; // 1x, 1.5x, 2x, 2.5x knockback
+
     private enum AIState
     {
         Spinning,
         LaunchingForward,
         Retracting,
-        UnusedState,
         ForcedRetracting,
-        Ricochet,
         Dropping
     }
 
@@ -68,6 +77,7 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
         Projectile.usesLocalNPCImmunity = true;
         Projectile.localNPCHitCooldown = 30;
     }
+
     public override void AI()
     {
         ManageCaches();
@@ -103,9 +113,6 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
             case AIState.ForcedRetracting:
                 HandleForcedRetractingState(player, mountedCenter, meleeSpeedMultiplier);
                 break;
-            case AIState.Ricochet:
-                HandleRicochetState(player);
-                break;
             case AIState.Dropping:
                 HandleDroppingState(player, mountedCenter);
                 break;
@@ -134,16 +141,57 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
                 return;
             }
         }
+
         SpinningStateTimer += 1f;
+
+        // Spawn ice clouds while charging
+        if (SpinningStateTimer > 30f && SpinningStateTimer - lastIceCloudSpawn >= IceCloudSpawnRate)
+        {
+            SpawnIceCloud(player, mountedCenter);
+            lastIceCloudSpawn = SpinningStateTimer;
+        }
+
+        // Visual and audio feedback for charge levels
+        if (SpinningStateTimer == ChargeLevel1Time || SpinningStateTimer == ChargeLevel2Time || SpinningStateTimer == ChargeLevel3Time)
+        {
+            // Play charge up sound
+            SoundEngine.PlaySound(SoundID.Item30, Projectile.position);
+
+            // Spawn visual effect
+            for (int i = 0; i < 10; i++)
+            {
+                var dust = Dust.NewDustDirect(Projectile.position, Projectile.width, Projectile.height,
+                    DustID.IceTorch, 0f, 0f, 150, default, 1.5f);
+                dust.velocity = Main.rand.NextVector2Circular(3f, 3f);
+                dust.noGravity = true;
+            }
+        }
+
         var offsetFromPlayer = new Vector2(player.direction).RotatedBy((float)Math.PI * 10f * (SpinningStateTimer / 60f) * player.direction);
         offsetFromPlayer.Y *= 0.8f;
         if (offsetFromPlayer.Y * player.gravDir > 0f)
         {
             offsetFromPlayer.Y *= 0.5f;
         }
-        Projectile.Center = mountedCenter + offsetFromPlayer * 30f + new Vector2(0, player.gfxOffY);
+
+        // Increase spin radius slightly when charged
+        float spinRadius = 30f + ChargeLevel * 5f;
+        Projectile.Center = mountedCenter + offsetFromPlayer * spinRadius + new Vector2(0, player.gfxOffY);
         Projectile.velocity = Vector2.Zero;
         Projectile.localNPCHitCooldown = SpinHitCooldown;
+    }
+
+    private void SpawnIceCloud(Player player, Vector2 mountedCenter)
+    {
+        if (Main.myPlayer != Projectile.owner) return;
+
+        // Spawn ice cloud projectile around the flail
+        var cloudPosition = Projectile.Center + Main.rand.NextVector2Circular(40f, 40f);
+        var cloudVelocity = Main.rand.NextVector2Circular(2f, 2f);
+
+        // You'll need to create an IceCloudProj projectile
+        // Projectile.NewProjectile(Projectile.GetSource_FromThis(), cloudPosition, cloudVelocity, 
+        //     ModContent.ProjectileType<IceCloudProj>(), Projectile.damage / 3, 0f, player.whoAmI);
     }
 
     private void HandleLaunchingForwardState(Player player, Vector2 mountedCenter, float meleeSpeedMultiplier)
@@ -212,23 +260,6 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
         player.ChangeDir((player.Center.X < Projectile.Center.X).ToDirectionInt());
     }
 
-    private void HandleRicochetState(Player player)
-    {
-        if (StateTimer++ >= LaunchTimeLimit + 5)
-        {
-            CurrentAIState = AIState.Dropping;
-            StateTimer = 0f;
-            Projectile.netUpdate = true;
-        }
-        else
-        {
-            Projectile.localNPCHitCooldown = MovingHitCooldown;
-            Projectile.velocity.Y += 0.6f;
-            Projectile.velocity.X *= 0.95f;
-            player.ChangeDir((player.Center.X < Projectile.Center.X).ToDirectionInt());
-        }
-    }
-
     private void HandleDroppingState(Player player, Vector2 mountedCenter)
     {
         if (!player.controlUseItem || Projectile.Distance(mountedCenter) > MaxLaunchLength + 160f)
@@ -249,7 +280,7 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
     {
         Projectile.direction = (Projectile.velocity.X > 0f).ToDirectionInt();
         Projectile.spriteDirection = Projectile.direction;
-        Projectile.rotation = CurrentAIState == AIState.Ricochet || CurrentAIState == AIState.Dropping
+        Projectile.rotation = CurrentAIState == AIState.Dropping
             ? Projectile.velocity.ToRotation() + Projectile.velocity.X * 0.1f
             : Projectile.DirectionTo(mountedCenter).ToRotation() + MathHelper.PiOver2;
     }
@@ -269,9 +300,23 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
 
     private void SpawnDust()
     {
-        if (Main.rand.NextBool(CurrentAIState == AIState.LaunchingForward ? 3 : 7))
+        // Spawn more dust when charged
+        int dustFrequency = CurrentAIState == AIState.LaunchingForward ? 3 : 7;
+        if (CurrentAIState == AIState.Spinning && ChargeLevel > 0)
         {
-            Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.FrostDaggerfish, 0f, 0f, 150, default, 1.3f);
+            dustFrequency = Math.Max(1, dustFrequency - ChargeLevel);
+        }
+
+        if (Main.rand.NextBool(dustFrequency))
+        {
+            var dust = Main.dust[Dust.NewDust(Projectile.position, Projectile.width, Projectile.height,
+                DustID.FrostDaggerfish, 0f, 0f, 150, default, 1.3f + ChargeLevel * 0.3f)];
+
+            if (ChargeLevel > 0)
+            {
+                dust.noGravity = true;
+                dust.velocity *= 1f + ChargeLevel * 0.5f;
+            }
         }
     }
 
@@ -280,15 +325,16 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
         var defaultLocalNPCHitCooldown = 10;
         var impactIntensity = 0;
         var velocity = Projectile.velocity;
-        var bounceFactor = 0.4f;
-        if (CurrentAIState == AIState.LaunchingForward || CurrentAIState == AIState.Ricochet)
+        var bounceFactor = 0.3f;
+
+        if (CurrentAIState == AIState.LaunchingForward)
         {
-            bounceFactor = 0.9f;
+            bounceFactor = 0.5f;
         }
 
         if (CurrentAIState == AIState.Dropping)
         {
-            bounceFactor = 0.3f;
+            bounceFactor = 0.1f;
         }
 
         if (oldVelocity.X != Projectile.velocity.X)
@@ -315,7 +361,6 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
 
         if (CurrentAIState == AIState.LaunchingForward)
         {
-            CurrentAIState = AIState.Ricochet;
             Projectile.localNPCHitCooldown = defaultLocalNPCHitCooldown;
             Projectile.netUpdate = true;
             var scanAreaStart = Projectile.TopLeft.ToTileCoordinates();
@@ -324,6 +369,12 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
             Projectile.CreateImpactExplosion(2, Projectile.Center, ref scanAreaStart, ref scanAreaEnd, Projectile.width, out var causedShockwaves);
             Projectile.CreateImpactExplosion2_FlailTileCollision(Projectile.Center, causedShockwaves, velocity);
             Projectile.position -= velocity;
+
+            // Spawn ice explosion on charged tile collision
+            if (ChargeLevel > 0)
+            {
+                SpawnIceExplosion(Projectile.Center);
+            }
         }
 
         if (impactIntensity > 0)
@@ -337,7 +388,7 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
             SoundEngine.PlaySound(SoundID.Dig, Projectile.position);
         }
 
-        if (CurrentAIState != AIState.UnusedState && CurrentAIState != AIState.Spinning && CurrentAIState != AIState.Ricochet && CurrentAIState != AIState.Dropping && CollisionCounter >= 10f)
+        if (CurrentAIState != AIState.Spinning && CurrentAIState != AIState.Dropping && CollisionCounter >= 10f)
         {
             CurrentAIState = AIState.ForcedRetracting;
             Projectile.netUpdate = true;
@@ -361,7 +412,7 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
             var mountedCenter = Main.player[Projectile.owner].MountedCenter;
             var shortestVectorFromPlayerToTarget = targetHitbox.ClosestPointInRect(mountedCenter) - mountedCenter;
             shortestVectorFromPlayerToTarget.Y /= 0.8f;
-            var hitRadius = 55f;
+            var hitRadius = 55f + ChargeLevel * 10f; // Larger hitbox when charged
             return shortestVectorFromPlayerToTarget.Length() <= hitRadius;
         }
         return base.Colliding(projHitbox, targetHitbox);
@@ -372,51 +423,92 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
         SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}HewerReturn")
         {
             MaxInstances = 1,
-            Volume = 0.4f,
-            Pitch = -0.9f,
+            Volume = 0.4f + ChargeLevel * 0.1f,
+            Pitch = -0.9f + ChargeLevel * 0.1f,
         }, Projectile.position);
+
+        // Spawn ice explosion when charged
+        if (ChargeLevel > 0)
+        {
+            SpawnIceExplosion(target.Center);
+        }
     }
+
+    private void SpawnIceExplosion(Vector2 position)
+    {
+        if (Main.myPlayer != Projectile.owner) return;
+
+        // Spawn ice explosion projectiles based on charge level
+        int explosionCount = 3 + ChargeLevel * 2; // 3, 5, 7, or 9 projectiles
+        float explosionRadius = 80f + ChargeLevel * 20f;
+
+        for (int i = 0; i < explosionCount; i++)
+        {
+            var angle = (MathHelper.TwoPi / explosionCount) * i;
+            var velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * 8f;
+
+            // You'll need to create an IceExplosionProj projectile
+            // Projectile.NewProjectile(Projectile.GetSource_FromThis(), position, velocity,
+            //     ModContent.ProjectileType<IceExplosionProj>(), Projectile.damage, Projectile.knockBack, 
+            //     Projectile.owner);
+        }
+
+        // Visual and audio effects
+        SoundEngine.PlaySound(SoundID.Item27, position);
+
+        for (int i = 0; i < 20 + ChargeLevel * 10; i++)
+        {
+            var dust = Dust.NewDustDirect(position - Vector2.One * 20f, 40, 40,
+                DustID.IceTorch, 0f, 0f, 150, default, 1.5f + ChargeLevel * 0.5f);
+            dust.velocity = Main.rand.NextVector2Circular(5f + ChargeLevel * 2f, 5f + ChargeLevel * 2f);
+            dust.noGravity = true;
+        }
+    }
+
     public override void OnHitPlayer(Player target, Player.HurtInfo info)
     {
         SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}HewerReturn")
         {
             MaxInstances = 1,
-            Volume = 0.4f,
-            Pitch = -0.9f,
+            Volume = 0.4f + ChargeLevel * 0.1f,
+            Pitch = -0.9f + ChargeLevel * 0.1f,
         }, Projectile.position);
     }
+
     public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
     {
         if (CurrentAIState == AIState.Spinning)
-            modifiers.SourceDamage *= 1.1f;
+            modifiers.SourceDamage *= 1.1f + ChargeLevel * 0.2f; // Increased damage when charged
 
         else if (CurrentAIState == AIState.LaunchingForward || CurrentAIState == AIState.Retracting)
-            modifiers.SourceDamage *= 1.3f;
+            modifiers.SourceDamage *= 1.3f + ChargeLevel * 0.3f; // Even more damage when charged
 
         modifiers.HitDirectionOverride = (Main.player[Projectile.owner].Center.X < target.Center.X).ToDirectionInt();
 
         if (CurrentAIState == AIState.Spinning)
-            modifiers.Knockback *= 0.25f;
+            modifiers.Knockback *= 0.25f * ChargeMultiplier; // Charge affects knockback
 
         else if (CurrentAIState == AIState.Dropping)
-            modifiers.Knockback *= 0.5f;
+            modifiers.Knockback *= 0.5f * ChargeMultiplier;
+        else
+            modifiers.Knockback *= ChargeMultiplier; // Apply charge multiplier to other states
     }
+
     private void ManageCaches()
     {
-        // Get the actual projectile position without random offsets
         var pos = Projectile.Center;
 
         if (cache == null)
         {
             cache = [];
-            for (var i = 0; i < 15; i++)
+            for (var i = 0; i < 25; i++)
             {
                 cache.Add(pos);
             }
         }
 
         cache.Add(pos);
-        while (cache.Count > 15)
+        while (cache.Count > 25)
         {
             cache.RemoveAt(0);
         }
@@ -424,27 +516,29 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
 
     private void ManageTrail()
     {
-        // Use the actual projectile position
         var pos = Projectile.Center;
-
-        // Change color to an ice blue
         Color iceColor = new Color(120, 200, 255);
 
-        trail ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(12), factor => factor * 24, factor =>
+        // Scale trail width based on charge level
+        float chargeTrailMultiplier = 1f + ChargeLevel * 1.5f; // 1x, 1.5x, 2x, 2.5x width
+
+        trail ??= new Trail(Main.instance.GraphicsDevice, 25, new RoundedTip(16), factor => factor * 30 * chargeTrailMultiplier, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
-            // Use a blue ice color that fades out
-            return iceColor * 0.6f * (float)Math.Pow(factor.X, 2);
+            // More intense color when charged
+            float chargeIntensity = 0.6f + ChargeLevel * 0.2f;
+            return iceColor * chargeIntensity * (float)Math.Pow(factor.X, 2);
         });
         trail.Positions = [.. cache];
 
-        trail2 ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(12), factor => factor * 16, factor =>
+        trail2 ??= new Trail(Main.instance.GraphicsDevice, 25, new RoundedTip(16), factor => factor * 20 * chargeTrailMultiplier, factor =>
         {
             if (factor.X >= 0.98f)
                 return Color.White * 0;
-            // Create a whiter center for the ice trail
-            return Color.Lerp(iceColor, Color.White, 0.6f) * 0.7f * (float)Math.Pow(factor.X, 2);
+            // Brighter center when charged
+            float chargeIntensity = 0.7f + ChargeLevel * 0.2f;
+            return Color.Lerp(iceColor, Color.White, 0.6f + ChargeLevel * 0.1f) * chargeIntensity * (float)Math.Pow(factor.X, 2);
         });
         trail2.Positions = [.. cache];
 
@@ -454,8 +548,7 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
 
     public void DrawPrimitives()
     {
-        // Use ShaderLoader.GetShader() to load the pixel trail shader
-        var effect = ShaderLoader.GetShader("pixelTrail").Value;
+        var effect = ShaderLoader.GetShader("LightningTrail").Value;
 
         if (effect != null)
         {
@@ -463,12 +556,12 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
             var view = Main.GameViewMatrix.TransformationMatrix;
             var projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
 
-            effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.07f);
+            effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.04f);
             effect.Parameters["repeats"]?.SetValue(8f);
             effect.Parameters["pixelation"]?.SetValue(12f);
             effect.Parameters["resolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
             effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
-            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Star06").Value);
+            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail").Value);
 
             trail?.Render(effect);
 
@@ -476,10 +569,10 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
             trail2?.Render(effect);
         }
     }
+
     public override bool PreDraw(ref Color lightColor)
     {
         var playerArmPosition = Main.GetPlayerArmPosition(Projectile);
-
         playerArmPosition.Y -= Main.player[Projectile.owner].gfxOffY;
 
         var chainTexture = ModContent.Request<Texture2D>(ChainTexturePath);
@@ -512,7 +605,7 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
             else if (chainCount >= 2)
             {
                 chainTextureToDraw = chainTextureExtra;
-                byte minValue = 140;
+                byte minValue = (byte)(140 + ChargeLevel * 20); // Brighter when charged
                 if (chainDrawColor.R < minValue)
                     chainDrawColor.R = minValue;
 
@@ -525,7 +618,10 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
             else
             {
                 chainTextureToDraw = chainTextureExtra;
-                chainDrawColor = Color.White;
+                // Add ice glow when charged
+                chainDrawColor = ChargeLevel > 0 ?
+                    Color.Lerp(Color.White, new Color(120, 200, 255), ChargeLevel * 0.3f) :
+                    Color.White;
             }
 
             Main.spriteBatch.Draw(chainTextureToDraw.Value, chainDrawPosition - Main.screenPosition, chainSourceRectangle, chainDrawColor, chainRotation, chainOrigin, 1f, SpriteEffects.None, 0f);
@@ -544,6 +640,13 @@ public class FlailstormProj : ModProjectile, IDrawPrimitive
             {
                 var drawPos = Projectile.oldPos[k] - Main.screenPosition + drawOrigin + new Vector2(0f, Projectile.gfxOffY);
                 var color = Projectile.GetAlpha(lightColor) * ((Projectile.oldPos.Length - k) / (float)Projectile.oldPos.Length);
+
+                // Add charge glow
+                if (ChargeLevel > 0)
+                {
+                    color = Color.Lerp(color, new Color(120, 200, 255), ChargeLevel * 0.2f);
+                }
+
                 Main.spriteBatch.Draw(projectileTexture, drawPos, null, color, Projectile.rotation, drawOrigin, Projectile.scale - k / (float)Projectile.oldPos.Length / 3, spriteEffects, 0f);
             }
         }

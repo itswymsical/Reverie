@@ -6,11 +6,11 @@ public class Flailstorm : ModItem
 {
     public override void SetDefaults()
     {
-        Item.damage = 14;
+        Item.damage = 7;
         Item.width = Item.height = 38;
         Item.useTime = Item.useAnimation = 38;
         Item.knockBack = 2.8f;
-        Item.crit = 3;
+        Item.crit = -2;
         Item.value = Item.sellPrice(silver: 14);
         Item.rare = ItemRarityID.Blue;
 
@@ -29,7 +29,7 @@ public class Flailstorm : ModItem
         var recipe = CreateRecipe();
         recipe.AddIngredient(ItemID.BorealWood, 8);
         recipe.AddIngredient(ItemID.IceBlock, 20);
-        recipe.AddRecipeGroup(RecipeGroupID.IronBar, 5);
+        recipe.AddRecipeGroup(nameof(ItemID.SilverBar), 8);
         recipe.AddTile(TileID.Anvils);
         recipe.Register();
     }

@@ -14,7 +14,7 @@ namespace Reverie.Content.Projectiles.Frostbark;
 public class BorealHewerProj : ModProjectile, IDrawPrimitive
 {
 
-    public override string Texture => $"Reverie/Assets/Textures/Items/Frostbark/BorealHewer";
+    public override string Texture => $"Reverie/Assets/Textures/Items/Frostbark/BorealHewerItem";
     public int MaxStickies => 1;
     private bool isStuck = false;
     private bool isReturning = false;
@@ -151,6 +151,7 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
 
 
     private Vector2 shakeOffset = Vector2.Zero;
+
     private void HandleReturn(Player player)
     {
         Projectile.tileCollide = false;
@@ -188,18 +189,6 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
         }
     }
 
-    private void DealTreeDamage(Player player)
-    {
-        var x = (int)(Projectile.Center.X / 16);
-        var y = (int)(Projectile.Center.Y / 16);
-
-        // Check if the tile is a tree
-        if (Main.tile[x, y].TileType == TileID.Trees)
-        {
-            player.PickTile(x, y, 45);
-        }
-    }
-
     public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
     {
         if (!stickingToNPC && !stickingToTile && stickToNPC)
@@ -209,6 +198,9 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
             oldRotation = Projectile.rotation;
 
             offset = target.Center - Projectile.Center + Projectile.velocity * 0.75f;
+
+            // Stop the projectile's movement when sticking to NPC
+            Projectile.velocity = Vector2.Zero;
 
             stickingToNPC = true;
 

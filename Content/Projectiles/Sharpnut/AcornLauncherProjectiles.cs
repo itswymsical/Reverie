@@ -19,8 +19,7 @@ public class AcornLauncherProj : ModProjectile
         set => Projectile.ai[0] = (int)value;
     }
 
-    private const float CHARGE_TIME = 33f;
-    private const float FIRE_RATE = 18f;
+    private const float CHARGE_TIME = 34f;
 
     public override void SetDefaults()
     {
@@ -49,7 +48,6 @@ public class AcornLauncherProj : ModProjectile
         Projectile.Center = owner.Center;
         if (Main.myPlayer == Projectile.owner)
         {
-            // Only change direction on the controlling player's side
             Projectile.direction = Main.MouseWorld.X > owner.Center.X ? 1 : -1;
             Projectile.netUpdate = true;
         }
@@ -57,7 +55,7 @@ public class AcornLauncherProj : ModProjectile
         owner.ChangeDir(Projectile.direction);
         Projectile.spriteDirection = Projectile.direction;
 
-        Projectile.rotation = aimDirection.ToRotation(); // + (Projectile.spriteDirection == -1 ? MathHelper.Pi : 0)
+        Projectile.rotation = aimDirection.ToRotation();
 
         if (Main.myPlayer == Projectile.owner)
         {
@@ -67,26 +65,24 @@ public class AcornLauncherProj : ModProjectile
                 if (Projectile.ai[1] >= CHARGE_TIME)
                 {
                     State = AIState.Firing;
-                    Projectile.ai[1] = 0;
                 }
             }
             else if (State == AIState.Firing)
             {
-                Projectile.ai[1]++;
-                if (Projectile.ai[1] >= FIRE_RATE && owner.HasAmmo(owner.HeldItem))
+                if (owner.HasAmmo(owner.HeldItem))
                 {
                     FireProjectile(owner, aimDirection);
-                    Projectile.ai[1] = 0;
-                    State = AIState.Charging;
                 }
+                State = AIState.Charging;
+                Projectile.ai[1] = 0;
             }
         }
 
-        // Update player animation
         SetOwnerAnimation(owner);
 
         return false;
     }
+
     public override bool PreDraw(ref Color lightColor)
     {
         var texture = ModContent.Request<Texture2D>(Texture).Value;
@@ -94,21 +90,7 @@ public class AcornLauncherProj : ModProjectile
         var drawPos = Projectile.Center - Main.screenPosition;
         var spriteEffects = Projectile.spriteDirection == 1 ? SpriteEffects.None : SpriteEffects.FlipVertically;
 
-        // No need for sprite effects or rotation adjustments
         Main.EntitySpriteDraw(texture, drawPos, null, lightColor, Projectile.rotation, origin, Projectile.scale, spriteEffects, 0);
-
-        // Draw charge progress bar
-        if (State == AIState.Charging)
-        {
-            var chargeProgress = Projectile.ai[1] / CHARGE_TIME;
-            var barOffset = new Vector2(0, 30).RotatedBy(Projectile.rotation);
-            var barPosition = drawPos + barOffset;
-            var barRect = new Rectangle((int)barPosition.X - 15, (int)barPosition.Y, 30, 5);
-            var barColor = Color.Lerp(Color.Red, Color.Green, chargeProgress);
-
-            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, barRect, Color.White * 0.5f);
-            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Rectangle(barRect.X, barRect.Y, (int)(barRect.Width * chargeProgress), barRect.Height), barColor);
-        }
 
         return false;
     }

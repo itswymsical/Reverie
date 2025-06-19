@@ -2,7 +2,7 @@
 
 namespace Reverie.Content.Items.Frostbark;
 
-public class BorealHewer : ModItem
+public class BorealHewerItem : ModItem
 {
     public override void SetDefaults()
     {
@@ -11,7 +11,6 @@ public class BorealHewer : ModItem
         Item.width = Item.height = 50;
         Item.useTime = Item.useAnimation = 24;
         Item.knockBack = 1.2f;
-        Item.axe = 9;
         Item.crit = 9;
         Item.value = Item.sellPrice(silver: 12);
         Item.rare = ItemRarityID.Blue;
@@ -31,7 +30,7 @@ public class BorealHewer : ModItem
         var recipe = CreateRecipe();
         recipe.AddIngredient(ItemID.BorealWood, 16);
         recipe.AddIngredient(ItemID.IceBlock, 8);
-        recipe.AddRecipeGroup(RecipeGroupID.IronBar, 4);
+        recipe.AddRecipeGroup(nameof(ItemID.SilverBar), 4);
         recipe.AddTile(TileID.Anvils);
         recipe.Register();
     }

@@ -1,11 +1,13 @@
-﻿using Reverie.Core.Graphics;
+﻿using ReLogic.Utilities;
+using Reverie.Core.Graphics;
 using Reverie.Core.Interfaces;
 using Reverie.Core.Loaders;
 using Reverie.Utilities;
 using System.Collections.Generic;
 using System.Linq;
-using Terraria.Graphics.Effects;
-using static Reverie.Reverie;
+using Terraria.Audio;
+using Terraria.Map;
+
 
 namespace Reverie.Content.Projectiles.Lodestone;
 
@@ -21,9 +23,24 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
 
     private List<Vector2> cache;
     private Trail trail;
-    private Trail trail2;
-    private Color color = new(255, 255, 255);
+    private Color vacuumColor1 = new(150, 150, 150);
+    private Color currentTargetColor = new(255, 100, 150); // Dynamic target color that changes based on tile
     private readonly Vector2 Size = new(100, 50);
+
+    // Sound tracking
+    private SlotId startupSoundId = SlotId.Invalid;
+    private SlotId loopSoundId = SlotId.Invalid;
+    private bool hasPlayedStartup = false;
+    private bool hasStartedLoop = false;
+    private int soundTimer = 0;
+
+    // Sine wave parameters
+    private readonly int SINE_POINTS = 30;
+    private float sineAmplitude = 25f;
+    private float sineFrequency = 0.8f;
+    private float animationSpeed = 0.15f;
+    private List<Vector2> sineTrailPoints;
+
     public override void SetDefaults()
     {
         Projectile.width = 26;
@@ -38,6 +55,9 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
     {
         ManageCaches();
         ManageTrail();
+        HandleSounds();
+        UpdateTargetColor();
+
         var owner = Main.player[Projectile.owner];
         if (!owner.active || owner.dead || !owner.channel)
         {
@@ -69,186 +89,6 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
         miningTimer++;
     }
 
-    private void ManageCaches()
-    {
-        var player = Main.LocalPlayer;
-        var pos = Projectile.Center + player.DirectionTo(Projectile.Center) * (Size.Length() * Main.rand.NextFloat(0.5f, 1.1f)) + Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.0f, 4.0f);
-
-        if (cache == null)
-        {
-            cache = [];
-
-            for (var i = 0; i < 15; i++)
-            {
-                cache.Add(pos);
-            }
-        }
-
-        cache.Add(pos);
-
-        while (cache.Count > 15)
-        {
-            cache.RemoveAt(0);
-        }
-    }
-
-    private List<List<Vector2>> fieldLines;
-    private readonly int FIELD_LINE_COUNT = 6;
-    private readonly int POINTS_PER_LINE = 20;
-    private float magnetStrength = 0.8f;
-    private float gravityStrength = 0.2f;
-
-    private void InitializeFieldLines()
-    {
-        fieldLines = new List<List<Vector2>>();
-        for (int i = 0; i < FIELD_LINE_COUNT; i++)
-        {
-            var line = new List<Vector2>();
-            // Spread lines in a semicircle pattern from projectile front
-            float angle = MathHelper.Lerp(-MathHelper.PiOver2, MathHelper.PiOver2, i / (float)(FIELD_LINE_COUNT - 1));
-            Vector2 dir = Projectile.rotation.ToRotationVector2().RotatedBy(angle);
-            Vector2 startPos = Projectile.Center;
-
-            for (int j = 0; j < POINTS_PER_LINE; j++)
-            {
-                line.Add(startPos);
-            }
-            fieldLines.Add(line);
-        }
-    }
-
-    private void UpdateFieldLines()
-    {
-        if (fieldLines == null || fieldLines.Count == 0)
-        {
-            InitializeFieldLines();
-            return;
-        }
-
-        Vector2 targetPos = Main.MouseWorld;
-
-        for (int i = 0; i < fieldLines.Count; i++)
-        {
-            var line = fieldLines[i];
-
-            // Calculate base angle for this field line
-            float baseAngle = MathHelper.Lerp(-MathHelper.PiOver2, MathHelper.PiOver2, i / (float)(FIELD_LINE_COUNT - 1));
-
-            // Start from the projectile position
-            line[0] = Projectile.Center;
-
-            // Update each point in the line 
-            for (int j = 1; j < line.Count; j++)
-            {
-                // Previous position affects next position (continuity)
-                Vector2 prevPos = line[j - 1];
-
-                // Direction to target (magnetic pull)
-                Vector2 dirToTarget = Vector2.Normalize(targetPos - prevPos);
-
-                // Direction based on projectile facing (magnetic field direction)  
-                Vector2 fieldDir = Projectile.rotation.ToRotationVector2().RotatedBy(baseAngle * (1f - (float)j / line.Count));
-
-                // Combined direction with weights
-                Vector2 direction = (fieldDir * (1f - (float)j / line.Count) +
-                                   dirToTarget * ((float)j / line.Count) * magnetStrength);
-                direction.Normalize();
-
-                // Add some gravity effect for fluidity
-                direction.Y += gravityStrength * ((float)j / line.Count);
-                direction.Normalize();
-
-                // Calculate new position
-                float stepLength = 6f + (j * 0.5f); // Lines extend further as they progress  
-                Vector2 newPos = prevPos + direction * stepLength;
-
-                // Add some noise for a more fluid look
-                newPos += Main.rand.NextVector2Circular(0.5f, 0.5f) * ((float)j / line.Count);
-
-                line[j] = newPos;
-            }
-        }
-    }
-
-    private void ManageTrail()
-    {
-        UpdateFieldLines();
-
-        // Use colors that suggest magnetism - blue/purple tones
-        Color magnetColor1 = new Color(75, 105, 255); // Blue  
-        Color magnetColor2 = new Color(180, 100, 255); // Purple
-
-        if (trail == null || trail2 == null)
-        {
-            trail = new Trail(Main.instance.GraphicsDevice, POINTS_PER_LINE, new RoundedTip(8),
-                factor => 25f * (1f - factor), // Thicker near the magnet, thinner at the ends
-                factor => {
-                    if (factor.X >= 0.98f) return Color.White * 0;
-                    // Fade from blue to purple
-                    return Color.Lerp(magnetColor1, magnetColor2, factor.X) * 0.5f * (1f - factor.X);
-                });
-
-            trail2 = new Trail(Main.instance.GraphicsDevice, POINTS_PER_LINE, new RoundedTip(8),
-                factor => 15f * (1f - factor), // Inner trail is thinner  
-                factor => {
-                    if (factor.X >= 0.98f) return Color.White * 0;
-                    // Brighter inner core
-                    return Color.Lerp(Color.White, magnetColor1, factor.X * 0.5f) * 0.7f * (1f - factor.X);
-                });
-        }
-
-        // Only update trail positions if we have valid field lines
-        if (fieldLines != null && fieldLines.Count > 0)
-        {
-            // Alternate rendering different field lines 
-            int lineToRender = (int)(Main.GameUpdateCount / 5) % fieldLines.Count;
-
-            trail.Positions = fieldLines[lineToRender].ToArray();
-            trail2.Positions = fieldLines[lineToRender].ToArray();
-
-            // Set the next positions for smooth animation
-            trail.NextPosition = fieldLines[lineToRender].Last();
-            trail2.NextPosition = fieldLines[lineToRender].Last();
-        }
-    }
-
-    public void DrawPrimitives()
-    {
-        var effect = ShaderLoader.GetShader("pixelTrail").Value;
-
-        if (effect != null && fieldLines != null)
-        {
-            var world = Matrix.CreateTranslation(-Main.screenPosition.ToVector3());
-            var view = Main.GameViewMatrix.TransformationMatrix;
-            var projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
-
-            effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.01f);
-            effect.Parameters["repeats"]?.SetValue(5f);
-            effect.Parameters["pixelation"]?.SetValue(3f); // Lower pixelation for smoother look
-            effect.Parameters["resolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
-            effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
-            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Star09").Value);
-
-            // Draw all the field lines one after another
-            for (int i = 0; i < fieldLines.Count; i++)
-            {
-                // Skip some frames for performance
-                if (i % 2 == Main.GameUpdateCount % 2)
-                {
-                    trail.Positions = fieldLines[i].ToArray();
-                    trail2.Positions = fieldLines[i].ToArray();
-
-                    // Apply slight variations to make each line unique  
-                    effect.Parameters["pixelation"]?.SetValue(3f + (i * 0.2f));
-                    effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.05f + (i * 0.1f));
-
-                    trail?.Render(effect);
-                    trail2?.Render(effect);
-                }
-            }
-        }
-    }
-
     private void MagnetizeTiles(Player owner) // quite whimsical \(~.~)/ 
     {
         var start = Projectile.Center - new Vector2(Projectile.width, Projectile.height) / 2;
@@ -268,7 +108,7 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
                 var tileX = (int)(checkPos.X / 16f);
                 var tileY = (int)(checkPos.Y / 16f);
                 Tile tile = Main.tile[tileX, tileY];
-                if (tile.HasTile && Main.tileSpelunker[tile.TileType] 
+                if (tile.HasTile && Main.tileSpelunker[tile.TileType]
                     && (tile.TileType is not 82 or 83 or 84) || tile.TileType is TileID.Hellstone)
                 {
                     if (miningTimer % MINING_SPEED is 0)
@@ -278,27 +118,6 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
                 }
             }
         }
-    }
-
-    public override void OnKill(int timeLeft)
-    {
-        foreach (var itemIndex in magnetizedItems)
-        {
-            if (itemIndex < Main.item.Length && Main.item[itemIndex].active)
-            {
-                var item = Main.item[itemIndex];
-                item.beingGrabbed = false;
-
-                item.velocity *= 0.5f;
-
-                item.velocity.Y -= 1f;
-
-                item.noGrabDelay = 0;
-            }
-        }
-
-        magnetizedItems.Clear();
-        base.OnKill(timeLeft);
     }
 
     private static void BreakTile(int x, int y, Player player)
@@ -311,6 +130,7 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
         }
     }
 
+    #region Helper Methods
     private void VacuumItems()
     {
         magnetizedItems.Clear();
@@ -336,6 +156,87 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
         }
     }
 
+    private void HandleSounds()
+    {
+        if (Projectile.owner != Main.myPlayer) return;
+
+        soundTimer++;
+
+        if (!hasPlayedStartup)
+        {
+            var startupStyle = new SoundStyle($"{SFX_DIRECTORY}OreVacuum_Start")
+            {
+                Volume = 0.8f,
+                MaxInstances = 1,
+                SoundLimitBehavior = SoundLimitBehavior.ReplaceOldest
+            };
+
+            startupSoundId = SoundEngine.PlaySound(startupStyle, Projectile.Center);
+            hasPlayedStartup = true;
+        }
+
+        int startupDurationTicks = 77;
+
+        if (hasPlayedStartup && !hasStartedLoop && soundTimer >= startupDurationTicks)
+        {
+            var loopStyle = new SoundStyle($"{SFX_DIRECTORY}OreVacuum_Loop")
+            {
+                Volume = 0.6f,
+                IsLooped = true,
+                MaxInstances = 1,
+                SoundLimitBehavior = SoundLimitBehavior.ReplaceOldest
+            };
+
+            loopSoundId = SoundEngine.PlaySound(loopStyle, Projectile.Center);
+            hasStartedLoop = true;
+        }
+
+        if (hasStartedLoop && SoundEngine.TryGetActiveSound(loopSoundId, out var activeSound))
+        {
+            if (activeSound != null)
+            {
+                activeSound.Position = Projectile.Center;
+            }
+        }
+    }
+
+    public override void OnKill(int timeLeft)
+    {
+        if (Projectile.owner == Main.myPlayer)
+        {
+            if (SoundEngine.TryGetActiveSound(loopSoundId, out var loopSound))
+            {
+                loopSound?.Stop();
+            }
+
+            var endStyle = new SoundStyle($"{SFX_DIRECTORY}OreVacuum_End")
+            {
+                Volume = 0.7f,
+                MaxInstances = 1
+            };
+
+            SoundEngine.PlaySound(endStyle, Projectile.Center);
+        }
+
+        foreach (var itemIndex in magnetizedItems)
+        {
+            if (itemIndex < Main.item.Length && Main.item[itemIndex].active)
+            {
+                var item = Main.item[itemIndex];
+                item.beingGrabbed = false;
+
+                item.velocity *= 0.5f;
+
+                item.velocity.Y -= 1f;
+
+                item.noGrabDelay = 0;
+            }
+        }
+
+        magnetizedItems.Clear();
+        base.OnKill(timeLeft);
+    }
+
     private void SetOwnerAnimation(Player owner)
     {
         owner.ChangeDir(Projectile.direction);
@@ -345,4 +246,244 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
 
         owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, (owner.Center - Main.MouseWorld).ToRotation() + MathHelper.PiOver2);
     }
+    #endregion
+
+    #region Color Helper Methods
+    private void UpdateTargetColor()
+    {
+        Vector2 mousePos = Main.MouseWorld;
+        int tileX = (int)(mousePos.X / 16f);
+        int tileY = (int)(mousePos.Y / 16f);
+
+        if (tileX >= 0 && tileX < Main.maxTilesX && tileY >= 0 && tileY < Main.maxTilesY)
+        {
+            Tile tile = Main.tile[tileX, tileY];
+            Color targetColor = new Color(135, 206, 235);
+
+            if (tile != null && tile.HasTile)
+            {
+                targetColor = GetTileMapColor(tile.TileType, tileX, tileY);
+                targetColor = EnhanceColor(targetColor);
+            }
+            else if (tile != null && tile.WallType > 0)
+            {
+                targetColor = GetWallMapColor(tile.WallType);
+                targetColor = EnhanceColor(targetColor);
+            }
+
+            float lerpSpeed = 0.1f;
+            currentTargetColor = Color.Lerp(currentTargetColor, targetColor, lerpSpeed);
+        }
+    }
+
+    private Color GetTileMapColor(int tileType, int x, int y)
+    {
+        try
+        {
+            MapTile mapTile = Main.Map[x, y];
+
+            Color mapColor = MapHelper.GetMapTileXnaColor(ref mapTile);
+
+            if (mapColor != Color.Black && mapColor != Color.Transparent &&
+                (mapColor.R > 0 || mapColor.G > 0 || mapColor.B > 0))
+            {
+                return mapColor;
+            }
+
+            ModTile modTile = TileLoader.GetTile(tileType);
+            if (modTile != null)
+            {
+                return GetFallbackTileColor(tileType);
+            }
+        }
+        catch
+        {
+
+        }
+
+        return GetFallbackTileColor(tileType);
+    }
+
+    private Color GetFallbackTileColor(int tileType)
+    {
+        // Provide nice fallback colors for common tiles
+        return tileType switch
+        {
+            TileID.Dirt => new Color(139, 91, 71),
+            TileID.Stone => new Color(128, 128, 128),
+            TileID.Grass => new Color(71, 133, 71),
+            TileID.Iron => new Color(205, 127, 50),
+            TileID.Copper => new Color(184, 115, 51),
+            TileID.Gold => new Color(255, 215, 0),
+            TileID.Silver => new Color(192, 192, 192),
+            TileID.Sand => new Color(255, 218, 143),
+            TileID.WoodBlock => new Color(150, 111, 51),
+            TileID.CorruptGrass => new Color(104, 86, 164),
+            TileID.CrimsonGrass => new Color(200, 45, 85),
+            TileID.HallowedGrass => new Color(120, 185, 225),
+            TileID.Tin => new Color(145, 145, 105),
+            TileID.Lead => new Color(85, 89, 118),
+            TileID.Tungsten => new Color(132, 220, 85),
+            TileID.Platinum => new Color(154, 192, 220),
+            TileID.Demonite => new Color(123, 97, 163),
+            TileID.Crimtane => new Color(200, 45, 85),
+            TileID.Meteorite => new Color(95, 61, 53),
+            TileID.Obsidian => new Color(49, 40, 58),
+            TileID.Hellstone => new Color(200, 89, 89),
+            TileID.Cobalt => new Color(43, 109, 167),
+            TileID.Mythril => new Color(89, 140, 89),
+            TileID.Adamantite => new Color(214, 109, 109),
+            TileID.Chlorophyte => new Color(128, 200, 89),
+            _ => new Color(100, 149, 237) // air
+        };
+    }
+
+    private Color GetWallMapColor(int wallType)
+    {
+        try
+        {
+            return wallType switch
+            {
+                WallID.DirtUnsafe => new Color(139, 91, 71),
+                WallID.Stone => new Color(100, 100, 100),
+                WallID.Wood => new Color(120, 91, 51),
+                WallID.Grass => new Color(51, 113, 51),
+                WallID.EbonstoneUnsafe => new Color(84, 66, 144),
+                WallID.CrimstoneUnsafe => new Color(180, 25, 65),
+                WallID.PearlstoneBrickUnsafe => new Color(100, 165, 205),
+                _ => new Color(64, 64, 64)
+            };
+        }
+        catch
+        {
+
+        }
+
+        return new Color(64, 64, 64);
+    }
+
+    private Color EnhanceColor(Color originalColor)
+    {
+        Vector3 hsv = Main.rgbToHsl(originalColor);
+
+        hsv.Y = Math.Max(hsv.Y, 0.6f);
+        hsv.Z = Math.Max(hsv.Z, 0.7f);
+
+        Color enhanced = Main.hslToRgb(hsv);
+        enhanced.A = 255;
+
+        return enhanced;
+    }
+    #endregion
+
+    #region Rendering
+    private void UpdateSineTrail()
+    {
+        if (sineTrailPoints == null)
+        {
+            sineTrailPoints = new List<Vector2>();
+        }
+
+        sineTrailPoints.Clear();
+
+        Vector2 startPos = Projectile.Center;
+        Vector2 endPos = Main.MouseWorld;
+        Vector2 direction = Vector2.Normalize(endPos - startPos);
+        Vector2 perpendicular = new Vector2(-direction.Y, direction.X); // Perpendicular for sine wave oscillation
+
+        float totalDistance = Vector2.Distance(startPos, endPos);
+        totalDistance = Math.Min(totalDistance, MAGNET_RANGE); // Clamp to max range
+
+        float timeOffset = Main.GameUpdateCount * animationSpeed;
+
+        for (int i = 0; i < SINE_POINTS; i++)
+        {
+            float progress = (float)i / (SINE_POINTS - 1);
+
+            // Base position along the line from projectile to mouse
+            Vector2 basePos = Vector2.Lerp(startPos, startPos + direction * totalDistance, progress);
+
+            // Calculate sine wave offset
+            float sineInput = progress * sineFrequency * MathHelper.TwoPi + timeOffset;
+            float sineValue = (float)Math.Sin(sineInput);
+
+            // Create vacuum effect: amplitude INCREASES as we get closer to the target
+            float vacuumAmplitude = sineAmplitude * (0.2f + progress * 1.2f); // Start small, get bigger toward end
+
+            // Add animated pulsing effect
+            float pulse = 1f + 0.3f * (float)Math.Sin(timeOffset * 2f);
+            vacuumAmplitude *= pulse;
+
+            // Apply sine wave perpendicular to the main direction
+            Vector2 offset = perpendicular * sineValue * vacuumAmplitude;
+
+            Vector2 finalPos = basePos + offset;
+            sineTrailPoints.Add(finalPos);
+        }
+    }
+
+    private void ManageCaches()
+    {
+        cache = [Projectile.Center];
+        UpdateSineTrail();
+
+        while (cache.Count > 20)
+        {
+            cache.RemoveAt(0);
+        }
+    }
+
+    private void ManageTrail()
+    {
+        if (trail == null)
+        {
+            trail = new Trail(Main.instance.GraphicsDevice, SINE_POINTS, new RoundedTip(8),
+                factor => {
+                    // Thickness increases from start to end for vacuum effect
+                    float thickness = MathHelper.Lerp(4f, 46f, factor); // Start thin (4px), end thick (25px)
+                    return thickness;
+                },
+                factor => {
+                    // Dynamic color based on position along trail and target tile
+                    float progress = factor.X; // 0 = start, 1 = end
+                    if (factor.X >= 0.98f) return Color.Transparent;
+                    // Color lerp from vacuum base color to target tile color
+                    Color lerpedColor = Color.Lerp(vacuumColor1, currentTargetColor, progress);
+
+                    // Add some animated intensity
+                    float intensity = 0.8f + 0.2f * (float)Math.Sin(Main.GameUpdateCount * 0.2f + progress * 3f);
+
+                    return lerpedColor * intensity;
+                }
+            );
+        }
+
+        if (sineTrailPoints != null && sineTrailPoints.Count > 0)
+        {
+            trail.Positions = sineTrailPoints.ToArray();
+            trail.NextPosition = sineTrailPoints[^1];
+        }
+    }
+
+    public void DrawPrimitives()
+    {
+        var effect = ShaderLoader.GetShader("pixelTrail").Value;
+
+        if (effect != null && trail != null)
+        {
+            var world = Matrix.CreateTranslation(-Main.screenPosition.ToVector3());
+            var view = Main.GameViewMatrix.TransformationMatrix;
+            var projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
+
+            effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.9f);
+            effect.Parameters["repeats"]?.SetValue(3f);
+            effect.Parameters["pixelation"]?.SetValue(2f);
+            effect.Parameters["resolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
+            effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
+            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}RibbonTrail").Value);
+
+            trail?.Render(effect);
+        }
+    }
+    #endregion
 }

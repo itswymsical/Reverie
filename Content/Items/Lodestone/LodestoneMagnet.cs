@@ -15,7 +15,6 @@ public class LodestoneMagnet : ModItem
         Item.value = Item.sellPrice(gold: 1);
 
         Item.useStyle = ItemUseStyleID.Shoot;
-        Item.UseSound = SoundID.Item18;
         Item.rare = ItemRarityID.Green;
         Item.autoReuse = false;
         Item.noMelee = true;
