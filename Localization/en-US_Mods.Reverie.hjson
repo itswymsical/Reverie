@@ -13,12 +13,12 @@ Items: {
 
 	BorealHewerItem: {
 		DisplayName: Boreal Hewer
-		Tooltip: ""
-	}
-
-	BorealHewer: {
-		DisplayName: Boreal Hewer
-		Tooltip: ""
+		Tooltip:
+			'''
+			Toss an axe that sticks to enemies and tiles
+			The hewer will return to you after a short delay
+			Has a small chance to inflict 'Frostburn'
+			'''
 	}
 
 	FlailstormItem: {
@@ -28,7 +28,12 @@ Items: {
 
 	Flailstorm: {
 		DisplayName: Flailstorm
-		Tooltip: ""
+		Tooltip:
+			'''
+			Charging the flail increases damage and generates a cloud of ice
+			the longer you charge the flailstorm, the stronger knockback you deal
+			Hitting an enemy when the flailstorm is charged will leave a large ice explosion.
+			'''
 	}
 
 	FrostbarkGreavesItem: {
