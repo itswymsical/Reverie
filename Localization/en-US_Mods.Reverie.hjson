@@ -78,7 +78,7 @@ Items: {
 
 	MagnetizedCoil: {
 		DisplayName: Magnetized Coil
-		Tooltip: ""
+		Tooltip: "Used to craft intuitive tech"
 	}
 
 	SeedBagItem: {
@@ -192,7 +192,7 @@ Items: {
 	}
 
 	LodestoneChestplate: {
-		DisplayName: Lodestone Chestplate
+		DisplayName: Lodestone Apron
 		Tooltip: Increases damage reduction by 2%
 	}
 
@@ -203,7 +203,7 @@ Items: {
 
 	LodestoneLeggings: {
 		DisplayName: Lodestone Skirt
-		Tooltip: Increases run acceleration by 18%
+		Tooltip: Increases run acceleration by 10%
 	}
 
 	PeatBlock: {

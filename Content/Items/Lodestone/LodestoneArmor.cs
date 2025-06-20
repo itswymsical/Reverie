@@ -15,7 +15,7 @@ public class LodestoneLeggings : ModItem
 
     public override void UpdateEquip(Player player)
     {
-        player.runAcceleration *= 1.18f;
+        player.runAcceleration *= 1.1f;
     }
 
     public override void AddRecipes()
