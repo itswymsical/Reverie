@@ -133,7 +133,7 @@ public class ReveriePlayer : ModPlayer
         int dustIndex = Dust.NewDust(dustPosition, DUST_SIZE, DUST_SIZE, ModContent.DustType<SandHazeDust>());
         
         Main.dust[dustIndex].velocity.X -= Main.windSpeedCurrent;
-        Main.dust[dustIndex].velocity.Y -= Main.windSpeedCurrent;
+        //Main.dust[dustIndex].velocity.Y -= Main.windSpeedCurrent;
         if (Player.ZoneSandstorm)
         {
             Main.dust[dustIndex].velocity.Y += SANDSTORM_UPWARD_VELOCITY;
