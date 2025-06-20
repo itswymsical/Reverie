@@ -310,7 +310,6 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
         return tileType switch
         {
             TileID.Dirt => new Color(139, 91, 71),
-            TileID.Stone => new Color(128, 128, 128),
             TileID.Grass => new Color(71, 133, 71),
             TileID.Iron => new Color(205, 127, 50),
             TileID.Copper => new Color(184, 115, 51),
@@ -334,7 +333,7 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
             TileID.Mythril => new Color(89, 140, 89),
             TileID.Adamantite => new Color(214, 109, 109),
             TileID.Chlorophyte => new Color(128, 200, 89),
-            _ => new Color(100, 149, 237) // air
+            _ => new Color(150, 150, 150) // air
         };
     }
 

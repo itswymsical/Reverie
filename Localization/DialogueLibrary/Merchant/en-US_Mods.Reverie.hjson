@@ -1,4 +1,4 @@
-DialogueLibrary: {
+﻿DialogueLibrary: {
 	Merchant: {
 		MerchantIntro: {
 			Line1: Hey! Nice to meet ya. I'm the local merchant around here.
@@ -35,8 +35,8 @@ DialogueLibrary: {
 		}
 
 		MineCopperInProgress: {
-			Line1: I swear copper’s got a smell... like dusty potential.
-			Line2: Don’t be shy, dig deep! The good stuff’s never on the surface.
+			Line1: Nice work. Can't start an economy without a currency.
+			Line2: Now all you gotta do is dig up the goods. Don’t be shy, dig deep!.
 		}
 	}
 }

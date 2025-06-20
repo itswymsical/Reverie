@@ -27,9 +27,11 @@ public class SlimeGlobal : GlobalNPC
 
     public override void SetDefaults(NPC npc)
     {
-        if (npc.type != NPCAIStyleID.Slime) return;
+        if (npc.aiStyle != NPCAIStyleID.Slime) return;
+
         npc.HitSound = new SoundStyle($"{SFX_DIRECTORY}SlimeHit") with { Volume = 0.46f, PitchVariance = 0.3f, MaxInstances = 8 };
         npc.DeathSound = new SoundStyle($"{SFX_DIRECTORY}SlimeKilled") with { Volume = 0.76f, PitchVariance = 0.2f, MaxInstances = 8 };
+
     }
 
     public override void AI(NPC npc)

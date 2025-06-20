@@ -12,7 +12,6 @@ public class WorldGenSystem : ModSystem
     public override void Load()
     {
         //WorldGen.DetourPass((PassLegacy)WorldGen.VanillaGenPasses["Generate Ice Biome"], Detour_Tundra);
-        //WorldGen.DetourPass((PassLegacy)WorldGen.VanillaGenPasses["Guide"], Detour_Town);
         WorldGen.DetourPass((PassLegacy)WorldGen.VanillaGenPasses["Shinies"], Detour_Ores);
     }
     private void Detour_Ores(WorldGen.orig_GenPassDetour orig, object self, GenerationProgress progress, GameConfiguration configuration)
@@ -29,27 +28,18 @@ public class WorldGenSystem : ModSystem
 
         tundraPass.Apply(progress, configuration);
     }
-
-    private void Detour_Town(WorldGen.orig_GenPassDetour orig, object self, GenerationProgress progress, GameConfiguration configuration)
-    {
-        var guidePass = new BeginningTownPass();
-
-        guidePass.Apply(progress, configuration);
-    }
     */
     public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
     {
         var tundraIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Generate Ice Biome"));
-        var sunflowerIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Sunflowers"));
+        var grassIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Spreading Grass"));
 
-        //var structIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Stalac"));
+        if (grassIndex != 1)
+        {
+            tasks.Insert(grassIndex + 1, new DecorPass());
+        }
 
         var spawnIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Guide"));
-
-        //if (structIndex >= 0)
-        //{
-        //    tasks.Insert(structIndex + 1, new StillspirePass());
-        //}
 
         if (spawnIndex != 1)
         {
