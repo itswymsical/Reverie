@@ -13,6 +13,7 @@ using SubworldLibrary;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria.UI;
+using Terraria.WorldBuilding;
 
 namespace Reverie.Common.Players;
 
@@ -130,9 +131,9 @@ public class ReveriePlayer : ModPlayer
     {
         Vector2 dustPosition = new((tileX - 2) * 16, (tileY - 1) * 16);
         int dustIndex = Dust.NewDust(dustPosition, DUST_SIZE, DUST_SIZE, ModContent.DustType<SandHazeDust>());
-
-        Main.dust[dustIndex].velocity.X -= Main.windSpeedCurrent / WIND_VELOCITY_FACTOR;
-
+        
+        Main.dust[dustIndex].velocity.X -= Main.windSpeedCurrent;
+        Main.dust[dustIndex].velocity.Y -= Main.windSpeedCurrent;
         if (Player.ZoneSandstorm)
         {
             Main.dust[dustIndex].velocity.Y += SANDSTORM_UPWARD_VELOCITY;

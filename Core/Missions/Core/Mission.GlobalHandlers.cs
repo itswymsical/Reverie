@@ -86,7 +86,7 @@ public class ObjectiveEventNPC : GlobalNPC
 
     public override bool? CanChat(NPC npc)
     {
-        return (npc.friendly || npc.CanBeTalkedTo || npc.townNPC) && !DialogueManager.Instance.IsAnyActive();
+        return ((npc.friendly && !npc.CountsAsACritter) || npc.CanBeTalkedTo || npc.townNPC) && !DialogueManager.Instance.IsAnyActive();
     }
 
     public override void GetChat(NPC npc, ref string chat)
@@ -94,56 +94,6 @@ public class ObjectiveEventNPC : GlobalNPC
         base.GetChat(npc, ref chat);
         OnNPCChat?.Invoke(npc, ref chat);
     }
-
-    //public override void EditSpawnPool(IDictionary<int, float> pool, NPCSpawnInfo spawnInfo)
-    //{
-    //    var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-    //    var AFallingStar = mPlayer.GetMission(MissionID.AFallingStar);
-
-    //    if (AFallingStar?.Progress == MissionProgress.Active)
-    //    {
-    //        var currentSet = AFallingStar.Objective[AFallingStar.CurrentIndex];
-    //        if (spawnInfo.PlayerInTown && AFallingStar.CurrentIndex >= 5)
-    //        {
-    //            if (AFallingStar.CurrentIndex >= 3 && Main.LocalPlayer.ZoneOverworldHeight)
-    //            {
-    //                pool.Add(NPCID.BlueSlime, 0.08f);
-    //                pool.Add(NPCID.GreenSlime, 0.102f);
-    //            }
-    //        }
-    //    }
-    //    else
-    //        base.EditSpawnPool(pool, spawnInfo);
-    //}
-
-    //public override void EditSpawnRate(Player player, ref int spawnRate, ref int maxSpawns)
-    //{
-    //    var mPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-
-    //    var AFallingStar = mPlayer.GetMission(MissionID.AFallingStar);
-
-    //    if (AFallingStar?.Progress == MissionProgress.Active && player.ZoneOverworldHeight)
-    //    {
-    //        var currentSet = AFallingStar.Objective[AFallingStar.CurrentIndex];
-    //        if (AFallingStar.CurrentIndex >= 4)
-    //        {
-    //            spawnRate = 3;
-    //            maxSpawns = 7;
-    //        }
-    //        if (AFallingStar.CurrentIndex >= 5)
-    //        {
-    //            spawnRate = 2;
-    //            maxSpawns = 9;
-    //        }
-    //        else if (AFallingStar.CurrentIndex >= 9)
-    //        {
-    //            spawnRate = 2;
-    //            maxSpawns = 11;
-    //        }
-    //    }
-    //    else
-    //        base.EditSpawnRate(player, ref spawnRate, ref maxSpawns);
-    //}
 
     public override void AI(NPC npc)
     {

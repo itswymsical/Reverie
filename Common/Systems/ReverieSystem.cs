@@ -31,7 +31,7 @@ public class ReverieSystem : ModSystem
     public override void ModifyTimeRate(ref double timeRate, ref double tileUpdateRate, ref double eventUpdateRate)
     {
         base.ModifyTimeRate(ref timeRate, ref tileUpdateRate, ref eventUpdateRate);
-        timeRate /= 2;
+        //timeRate /= 2;
     }
 
     public override void PostUpdateWorld()

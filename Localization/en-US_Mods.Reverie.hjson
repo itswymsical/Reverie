@@ -1,4 +1,4 @@
-UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -67,8 +67,13 @@ Items: {
 	}
 
 	LodestoneMagnet: {
-		DisplayName: Lodestone Magnet
-		Tooltip: Point and hold the magnet at a chunk of ore to vacuum it towards you.
+		DisplayName: Dusty Ol' Magnetizer
+		Tooltip:
+			'''
+			Magnetizes ores out the ground with it's high powered vaccum
+			Sucks so strong, it can pass through tiles!
+			Cannot mine ores stronger than platinum
+			'''
 	}
 
 	MagnetizedCoil: {
@@ -294,11 +299,11 @@ Items: {
 
 	MagnoliaItem: {
 		DisplayName: Magnolia Flower
-		Tooltip: Produces floral pheromones
+		Tooltip: "'charismatic' amongst other flowers..."
 	}
 
 	SalicifoliaPheromonesItem: {
-		DisplayName: Salicifolia Pheromones
+		DisplayName: Magnolia Pheromones
 		Tooltip: When sprayed on growing herbs, they advance to their next growth stage.
 	}
 

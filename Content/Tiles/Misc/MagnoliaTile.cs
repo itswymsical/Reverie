@@ -36,8 +36,7 @@ namespace Reverie.Content.Tiles.Misc
 			TileObjectData.newTile.CopyFrom(TileObjectData.StyleAlch);
 			TileObjectData.newTile.AnchorValidTiles = [
 				TileID.Grass,
-				TileID.HallowedGrass,
-				//ModContent.TileType<ExampleBlock>()
+				TileID.LivingWood,
 			];
 
 			TileObjectData.newTile.AnchorAlternateTiles = [
