@@ -1,4 +1,4 @@
-﻿displayName = [c/73d5ff:Reverie]
-author = Reverie Team
+﻿displayName = Reverie
+author = wymsical
 version = 0.1
 modReferences =  StructureHelper, SubworldLibrary
