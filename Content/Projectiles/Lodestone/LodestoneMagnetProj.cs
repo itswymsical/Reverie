@@ -23,8 +23,8 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
 
     private List<Vector2> cache;
     private Trail trail;
-    private Color vacuumColor1 = new(150, 150, 150);
-    private Color currentTargetColor = new(255, 100, 150); // Dynamic target color that changes based on tile
+    private Color vacuumColor1 = new(94, 94, 94);
+    private Color currentTargetColor = new(150, 150, 150);
     private readonly Vector2 Size = new(100, 50);
 
     // Sound tracking
