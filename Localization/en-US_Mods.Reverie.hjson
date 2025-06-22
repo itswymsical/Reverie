@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -78,7 +78,7 @@ Items: {
 
 	MagnetizedCoil: {
 		DisplayName: Magnetized Coil
-		Tooltip: "Used to craft intuitive tech"
+		Tooltip: Used to craft intuitive tech
 	}
 
 	SeedBagItem: {
