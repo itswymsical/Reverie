@@ -60,8 +60,9 @@ public class AcornLauncherItem : ModItem
     public override void AddRecipes()
     {
         var recipe = CreateRecipe();
-        recipe.AddRecipeGroup(RecipeGroupID.Wood, 16);
-        recipe.AddIngredient(ModContent.ItemType<AlluviumOreItem>(), 7);
+        recipe.AddRecipeGroup(RecipeGroupID.Wood, 22);
+        recipe.AddIngredient(ItemID.Acorn, 8);
+        recipe.AddIngredient(ItemID.IllegalGunParts);
         recipe.AddTile(TileID.Anvils);
         recipe.Register();
     }

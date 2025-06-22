@@ -1,9 +1,5 @@
 ﻿using Reverie.Content.Tiles.Misc;
-using Reverie.Content.Tiles.Rainforest.Surface;
-using System;
 using System.Collections.Generic;
-using Terraria;
-using Terraria.ID;
 using Terraria.IO;
 using Terraria.WorldBuilding;
 
@@ -160,7 +156,7 @@ public class OrePass : GenPass
                 {
                     Tile tile = Main.tile[checkX, checkY];
                     if (tile.HasTile && (tile.TileType == TileID.LivingWood ||
-                        tile.TileType == (ushort)ModContent.TileType<OxisolTile>()))
+                        tile.TileType == TileID.ClayBlock))
                     {
                         return false;
                     }

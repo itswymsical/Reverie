@@ -1,5 +1,5 @@
-﻿using Reverie.Content.Tiles.Rainforest;
-using Reverie.Content.Tiles.Rainforest.Surface;
+﻿using Reverie.Content.Tiles.Canopy;
+using Reverie.Content.Tiles.Canopy;
 using Reverie.Content.Tiles.Taiga;
 
 namespace Reverie.Common.Tiles;
@@ -14,8 +14,7 @@ internal class TileCounts : ModSystem
 
     public override void TileCountsAvailable(ReadOnlySpan<int> tileCounts)
     {
-        surfaceCanopyBlockCount = tileCounts[ModContent.TileType<RainforestGrassTile>()];
-        surfaceCanopyBlockCount = tileCounts[ModContent.TileType<OxisolTile>()];
+        surfaceCanopyBlockCount = tileCounts[ModContent.TileType<CanopyGrassTile>()];
 
         undergroundCanopyBlockCount = tileCounts[ModContent.TileType<WoodgrassTile>()];
 

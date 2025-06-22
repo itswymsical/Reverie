@@ -316,6 +316,11 @@ Items: {
 		DisplayName: Kapok Tree Debug Wand
 		Tooltip: ""
 	}
+
+	SmallTanglewoodTreeDebugWand: {
+		DisplayName: Small Tanglewood Tree Debug Wand
+		Tooltip: ""
+	}
 }
 
 Projectiles: {

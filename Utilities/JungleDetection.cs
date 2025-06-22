@@ -1,4 +1,4 @@
-﻿using Reverie.Common.WorldGeneration.Rainforest;
+﻿using Reverie.Common.WorldGeneration.Canopy;
 using Terraria.WorldBuilding;
 
 namespace Reverie.Utilities;

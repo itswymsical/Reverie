@@ -1,8 +1,6 @@
-﻿using Reverie.Content.Tiles.Rainforest.Surface.Trees;
-using Reverie.Core.Dialogue;
+﻿using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Utilities;
-using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.Localization;
 
