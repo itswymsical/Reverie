@@ -1,4 +1,5 @@
 ﻿using Reverie.Content.Tiles;
+using Reverie.Content.Tiles.Misc;
 using Terraria.IO;
 using Terraria.WorldBuilding;
 

@@ -166,7 +166,7 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
         {
             var startupStyle = new SoundStyle($"{SFX_DIRECTORY}OreVacuum_Start")
             {
-                Volume = 0.8f,
+                Volume = 0.4f,
                 MaxInstances = 1,
                 SoundLimitBehavior = SoundLimitBehavior.ReplaceOldest
             };
@@ -181,7 +181,7 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
         {
             var loopStyle = new SoundStyle($"{SFX_DIRECTORY}OreVacuum_Loop")
             {
-                Volume = 0.6f,
+                Volume = 0.4f,
                 IsLooped = true,
                 MaxInstances = 1,
                 SoundLimitBehavior = SoundLimitBehavior.ReplaceOldest
@@ -211,7 +211,7 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
 
             var endStyle = new SoundStyle($"{SFX_DIRECTORY}OreVacuum_End")
             {
-                Volume = 0.7f,
+                Volume = 0.4f,
                 MaxInstances = 1
             };
 

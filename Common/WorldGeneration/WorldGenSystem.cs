@@ -12,8 +12,6 @@ public class WorldGenSystem : ModSystem
 {
     public override void Load()
     {
-        //WorldGen.DetourPass((PassLegacy)WorldGen.VanillaGenPasses["Generate Ice Biome"], Detour_Tundra);
-        //WorldGen.DetourPass((PassLegacy)WorldGen.VanillaGenPasses["Guide"], Detour_Town);
         WorldGen.DetourPass((PassLegacy)WorldGen.VanillaGenPasses["Shinies"], Detour_Ores);
     }
     private void Detour_Ores(WorldGen.orig_GenPassDetour orig, object self, GenerationProgress progress, GameConfiguration configuration)
@@ -23,30 +21,20 @@ public class WorldGenSystem : ModSystem
         orePass.Apply(progress, configuration);
     }
 
-    /*
-    private void Detour_Tundra(WorldGen.orig_GenPassDetour orig, object self, GenerationProgress progress, GameConfiguration configuration)
-    {
-        var tundraPass = new TundraPass();
-
-        tundraPass.Apply(progress, configuration);
-    }
-
-    private void Detour_Town(WorldGen.orig_GenPassDetour orig, object self, GenerationProgress progress, GameConfiguration configuration)
-    {
-        var guidePass = new BeginningTownPass();
-
-        guidePass.Apply(progress, configuration);
-    }
-    */
     public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
     {
-        var tundraIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Generate Ice Biome"));
+        //var tundraIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Generate Ice Biome"));
+        var decorIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Spreading Grass"));
 
         var canopyIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Full Desert"));
 
         var spawnIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Guide"));
-        var corruptIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Corruption"));
-        tasks.RemoveAt(corruptIndex);
+
+        if (decorIndex != 1)
+        {
+            tasks.Insert(decorIndex + 1, new DecorPass());
+        }
+
         if (canopyIndex != 1)
         {
             tasks.Insert(canopyIndex + 1, new RainforestBase());
