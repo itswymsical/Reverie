@@ -74,7 +74,7 @@ public abstract class TanglewoodTree : ModTile
         TileID.Sets.GetsCheckedForLeaves[Type] = true;
         TileMaterials.SetForTileId(Type, TileMaterials._materialsByName["Plant"]);
 
-        AddMapEntry(Color.SaddleBrown, Language.GetText("MapObject.Tree"));
+        AddMapEntry(new Color(151, 107, 75), Language.GetText("MapObject.Tree"));
         DustType = DustID.t_LivingWood;
         HitSound = SoundID.Dig;
 

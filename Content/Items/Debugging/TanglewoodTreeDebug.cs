@@ -36,12 +36,12 @@ public class SmallTanglewoodTreeDebugWand : ModItem
             var tryX = tileX + Main.rand.Next(-1, 2);
             var tryY = tileY + attempts; // Try lower positions
 
-            success = SmallTanglewoodTree.GrowTanglewoodTree(tryX, tryY);
+            success = MediumTanglewoodTree.GrowTanglewoodTree(tryX, tryY);
 
             if (success)
             {
                 // Success feedback
-                Main.NewText($"Small Tanglewood tree grown at ({tryX}, {tryY}) after {attempts + 1} attempts", Color.Green);
+                Main.NewText($"Tanglewood tree grown at ({tryX}, {tryY}) after {attempts + 1} attempts", Color.Green);
 
                 // Enhanced visual effect
                 var effectPos = new Vector2(tryX, tryY) * 16;
