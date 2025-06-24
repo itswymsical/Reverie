@@ -64,11 +64,8 @@ public class SmallTanglewoodTree : TanglewoodTree
     protected override WeightedRandom<int> GetTreeDrops()
     {
         var drop = new WeightedRandom<int>();
-        drop.Add(ItemID.None, 0.65f);
-        drop.Add(ItemID.Acorn, 0.25f);
-        drop.Add(ItemID.Wood, 0.08f);
-        drop.Add(ItemID.Apple, 0.015f);
-        drop.Add(ItemID.LifeCrystal, 0.005f);
+        drop.Add(ItemID.Acorn, 0.075f);
+        drop.Add(ItemID.Apple, 0.02f);
         return drop;
     }
 

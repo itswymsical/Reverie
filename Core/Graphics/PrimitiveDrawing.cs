@@ -54,61 +54,36 @@ public class PrimitiveDrawing : HookGroup
     }
 }
 
-public class Primitives : IDisposable
+public class Primitives
 {
-    private DynamicVertexBuffer vertexBuffer;
-    private DynamicIndexBuffer indexBuffer;
-
     private readonly GraphicsDevice device;
-
-    public bool IsDisposed { get; private set; }
+    private ArraySegment<VertexPositionColorTexture> vertices;
+    private ArraySegment<short> indices;
 
     public Primitives(GraphicsDevice device, int maxVertices, int maxIndices)
     {
         this.device = device;
-
-        if (device != null)
-        {
-            Main.QueueMainThreadAction(() =>
-            {
-                vertexBuffer = new DynamicVertexBuffer(device, typeof(VertexPositionColorTexture), maxVertices, BufferUsage.None);
-                indexBuffer = new DynamicIndexBuffer(device, IndexElementSize.SixteenBits, maxIndices, BufferUsage.None);
-            });
-        }
     }
 
     public void Render(Effect effect)
     {
-        if (vertexBuffer is null || indexBuffer is null)
-            return;
-
-        device.SetVertexBuffer(vertexBuffer);
-        device.Indices = indexBuffer;
-
-        foreach (var pass in effect.CurrentTechnique.Passes)
+        foreach (EffectPass pass in effect.CurrentTechnique.Passes)
         {
             pass.Apply();
-            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vertexBuffer.VertexCount, 0, indexBuffer.IndexCount / 3);
+            device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, vertices.Array, vertices.Offset, vertices.Count, indices.Array, indices.Offset, indices.Count / 3);
         }
     }
 
     public void SetVertices(VertexPositionColorTexture[] vertices)
     {
-        vertexBuffer?.SetData(0, vertices, 0, vertices.Length, VertexPositionColorTexture.VertexDeclaration.VertexStride, SetDataOptions.Discard);
+        this.vertices = vertices;
     }
 
     public void SetIndices(short[] indices)
     {
-        indexBuffer?.SetData(0, indices, 0, indices.Length, SetDataOptions.Discard);
+        this.indices = indices;
     }
 
-    public void Dispose()
-    {
-        IsDisposed = true;
-
-        vertexBuffer?.Dispose();
-        indexBuffer?.Dispose();
-    }
 }
 
 public interface ITrailTip
@@ -124,7 +99,7 @@ public delegate float TrailWidthFunction(float factorAlongTrail);
 
 public delegate Color TrailColorFunction(Vector2 textureCoordinates);
 
-public class Trail : IDisposable
+public class Trail
 {
     private readonly Primitives primitives;
 
@@ -296,17 +271,12 @@ public class Trail : IDisposable
 
     public void Render(Effect effect)
     {
-        if (Positions == null && !(primitives?.IsDisposed ?? true))
+        if (Positions == null)
             return;
 
         SetupMeshes();
 
         primitives.Render(effect);
-    }
-
-    public void Dispose()
-    {
-        primitives?.Dispose();
     }
 }
 

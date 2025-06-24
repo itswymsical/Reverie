@@ -1,7 +1,5 @@
 ﻿using Reverie.Content.Tiles.Canopy;
-using Reverie.Content.Tiles.Canopy;
 using Reverie.lib;
-using Terraria.GameContent.Biomes;
 using Terraria.IO;
 using Terraria.WorldBuilding;
 
@@ -10,7 +8,7 @@ namespace Reverie.Common.WorldGeneration.Canopy;
 public class CanopyFoliagePass : GenPass
 {
     #region Fields
-    private RainforestBounds _canopyBounds;
+    private CanopyBounds _canopyBounds;
     private FastNoiseLite _decorationNoise;
     #endregion
 
@@ -30,14 +28,18 @@ public class CanopyFoliagePass : GenPass
             return;
         }
 
-        progress.Message = "Sprucing up the Woodland Canopy...";
-        Intitialize_DecoNoise();
+        progress.Message = "Sprucing up the Canopy...";
+
+        _decorationNoise = new FastNoiseLite(WorldGen.genRand.Next());
+        _decorationNoise.SetNoiseType(FastNoiseLite.NoiseType.ValueCubic);
+        _decorationNoise.SetFrequency(0.05f);
+
         DoGrassAndFoliage(progress);
     }
 
-    private RainforestBounds DetectCanopyBounds()
+    private CanopyBounds DetectCanopyBounds()
     {
-        var bounds = new RainforestBounds
+        var bounds = new CanopyBounds
         {
             MinX = Main.maxTilesX,
             MaxX = 0,
@@ -76,14 +78,7 @@ public class CanopyFoliagePass : GenPass
 
         Tile tile = Main.tile[x, y];
         return tile.HasTile && (tile.TileType == TileID.LivingWood ||
-                               tile.TileType == TileID.ClayBlock);
-    }
-
-    private void Intitialize_DecoNoise()
-    {
-        _decorationNoise = new FastNoiseLite(WorldGen.genRand.Next());
-        _decorationNoise.SetNoiseType(FastNoiseLite.NoiseType.ValueCubic);
-        _decorationNoise.SetFrequency(0.05f);
+                               tile.TileType == (ushort)ModContent.TileType<ClayLoamTile>());
     }
 
     private void SpreadGrass(int x, int y)
@@ -92,27 +87,25 @@ public class CanopyFoliagePass : GenPass
 
         if (!tile.HasTile) return;
 
-        // Surface grass: Convert OxisolTile to CanopyGrassTile if exposed to air
-        if (tile.TileType == TileID.ClayBlock)
+        if (tile.TileType == ModContent.TileType<ClayLoamTile>())
         {
             if (IsExposedToAir(x, y))
             {
-                TryPlaceCanopyGrass(x, y, (ushort)ModContent.TileType<CanopyGrassTile>());
+                TryDoGrass(x, y, (ushort)ModContent.TileType<CanopyGrassTile>());
             }
         }
-        // Underground grass: Convert LivingWood to WoodgrassTile if exposed to air
+
         else if (tile.TileType == TileID.LivingWood)
         {
             if (IsExposedToAir(x, y))
             {
-                TryPlaceCanopyGrass(x, y, (ushort)ModContent.TileType<WoodgrassTile>());
+                TryDoGrass(x, y, (ushort)ModContent.TileType<WoodgrassTile>());
             }
         }
     }
 
     private bool IsExposedToAir(int x, int y)
     {
-        // Check all 8 neighbors (including diagonals) for ANY air exposure
         for (int checkX = x - 1; checkX <= x + 1; checkX++)
         {
             for (int checkY = y - 1; checkY <= y + 1; checkY++)
@@ -122,7 +115,6 @@ public class CanopyFoliagePass : GenPass
 
                 Tile neighborTile = Framing.GetTileSafely(checkX, checkY);
 
-                // If ANY neighbor is air, this tile should become grass
                 if (!neighborTile.HasTile)
                 {
                     return true;
@@ -133,7 +125,7 @@ public class CanopyFoliagePass : GenPass
         return false; // No air exposure found
     }
 
-    private void TryPlaceCanopyGrass(int tileX, int tileY, ushort grassType)
+    private void TryDoGrass(int tileX, int tileY, ushort grassType)
     {
         Tile tile = Framing.GetTileSafely(tileX, tileY);
 
@@ -155,7 +147,6 @@ public class CanopyFoliagePass : GenPass
         int totalTiles = canopyRect.Width * canopyRect.Height;
         int processedTiles = 0;
 
-        // First Pass: Spread grass on appropriate tiles (selective conversion)
         progress.Message = "Spreading canopy grass...";
 
         for (int x = canopyRect.Left; x <= canopyRect.Right; x++)
@@ -173,8 +164,7 @@ public class CanopyFoliagePass : GenPass
             }
         }
 
-        // Second Pass: Cleanup isolated tiles
-        progress.Message = "Cleaning up isolated tiles...";
+        progress.Message = "Cleaning up tiles...";
         processedTiles = 0;
 
         for (int x = canopyRect.Left; x <= canopyRect.Right; x++)
@@ -188,11 +178,10 @@ public class CanopyFoliagePass : GenPass
                 }
 
                 if (!WorldGen.InWorld(x, y)) continue;
-                CleanupIsolatedTiles(x, y);
+                CleanupTiles(x, y);
             }
         }
 
-        // Third Pass: Add decorations
         progress.Message = "Adding foliage and decorations...";
         processedTiles = 0;
 
@@ -212,7 +201,7 @@ public class CanopyFoliagePass : GenPass
         }
     }
 
-    private void CleanupIsolatedTiles(int x, int y)
+    private void CleanupTiles(int x, int y)
     {
         Tile tile = Framing.GetTileSafely(x, y);
 
@@ -220,9 +209,8 @@ public class CanopyFoliagePass : GenPass
 
         bool isCanopyTile = tile.TileType == (ushort)ModContent.TileType<CanopyGrassTile>() ||
                            tile.TileType == (ushort)ModContent.TileType<WoodgrassTile>() ||
-                           tile.TileType == TileID.ClayBlock ||
-                           tile.TileType == TileID.LivingWood ||
-                           tile.TileType == TileID.Dirt;
+                           tile.TileType == (ushort)ModContent.TileType<ClayLoamTile>() ||
+                           tile.TileType == TileID.LivingWood;
 
         if (!isCanopyTile) return;
 

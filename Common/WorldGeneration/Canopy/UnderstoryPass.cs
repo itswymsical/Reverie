@@ -17,7 +17,7 @@ public class UndergroundRainforestConfiguration
     public float HorizontalExpansionFactor { get; set; } = 0.009f;
 }
 
-public class RainforestBounds
+public class CanopyBounds
 {
     public int MinX { get; set; }
     public int MaxX { get; set; }
@@ -32,7 +32,7 @@ public class UnderstoryPass : GenPass
 {
     #region Fields
     private readonly UndergroundRainforestConfiguration _config;
-    private RainforestBounds _rainforestBounds;
+    private CanopyBounds _rainforestBounds;
     private JungleBounds _jungleBounds;
     private FastNoiseLite _caveNoise;
     private FastNoiseLite _densityNoise;
@@ -89,9 +89,9 @@ public class UnderstoryPass : GenPass
         CalculateRainforestBoundsFromJungle();
     }
 
-    private RainforestBounds DetectExistingSurfaceRainforest()
+    private CanopyBounds DetectExistingSurfaceRainforest()
     {
-        var bounds = new RainforestBounds
+        var bounds = new CanopyBounds
         {
             MinX = Main.maxTilesX,
             MaxX = 0,
@@ -136,7 +136,7 @@ public class UnderstoryPass : GenPass
             return bounds;
         }
 
-        return new RainforestBounds(); // Invalid - no surface rainforest found
+        return new CanopyBounds(); // Invalid - no surface rainforest found
     }
 
     private bool IsRainforestSurfaceTile(int x, int y)
@@ -200,7 +200,7 @@ public class UnderstoryPass : GenPass
             int canopyRight = jungleRect.Left - jungleOffset;
             int canopyLeft = Math.Max(canopyRight - rainforestWidth, 200);
 
-            _rainforestBounds = new RainforestBounds
+            _rainforestBounds = new CanopyBounds
             {
                 MinX = canopyLeft,
                 MaxX = canopyRight,
@@ -213,7 +213,7 @@ public class UnderstoryPass : GenPass
             int rainforestLeft = jungleRect.Right + jungleOffset;
             int rainforestRight = Math.Min(rainforestLeft + rainforestWidth, Main.maxTilesX - 200);
 
-            _rainforestBounds = new RainforestBounds
+            _rainforestBounds = new CanopyBounds
             {
                 MinX = rainforestLeft,
                 MaxX = rainforestRight,
@@ -224,7 +224,7 @@ public class UnderstoryPass : GenPass
 
         if (_rainforestBounds.MaxX - _rainforestBounds.MinX < 100)
         {
-            _rainforestBounds = new RainforestBounds();
+            _rainforestBounds = new CanopyBounds();
         }
     }
     #endregion

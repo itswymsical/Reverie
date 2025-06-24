@@ -1,4 +1,5 @@
-﻿using Reverie.lib;
+﻿using Reverie.Content.Tiles.Canopy;
+using Reverie.lib;
 using Reverie.Utilities;
 using Terraria.IO;
 using Terraria.WorldBuilding;
@@ -7,10 +8,10 @@ namespace Reverie.Common.WorldGeneration.Canopy;
 
 public class CanopyConfiguration
 {
-    public float HillFrequency { get; set; } = 0.087f;
-    public int BaseHeightOffset { get; set; } = 0;
-    public int HillHeightVariation { get; set; } = 16;
-    public int SurfaceDepth { get; set; } = (int)(Main.maxTilesY * 0.078f);
+    public float HillFrequency { get; set; } = 0.0105f;
+    public int BaseHeightOffset { get; set; } = -8;
+    public int HillHeightVariation { get; set; } = 20;
+    public int SurfaceDepth { get; set; } = (int)(Main.maxTilesY * 0.075f);
 
 }
 
@@ -41,31 +42,25 @@ public class CanopyBase : GenPass
 
     protected override void ApplyPass(GenerationProgress progress, GameConfiguration configuration)
     {
-        progress.Message = "Analyzing biome boundaries...";
+        progress.Message = "checking biome bounds...";
 
-        Initialize();
+        _hillNoise = new FastNoiseLite();
+        _hillNoise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2S);
+        _hillNoise.SetFractalType(FastNoiseLite.FractalType.FBm);
+        _hillNoise.SetFractalOctaves(3);
+        _hillNoise.SetFrequency(_config.HillFrequency);
 
-        // Multi-layered jungle detection approach
         _jungleBounds = JungleDetection.DetectJungleBoundaries();
 
         if (!_jungleBounds.IsValid)
         {
-            progress.Message = "Failed to detect jungle boundaries - skipping Canopy generation";
+            progress.Message = "Failed to find jungle bounds - skipping Canopy";
             return;
         }
 
-        progress.Message = "The Canopy";
+        progress.Message = "Growing a Rainforest";
         CalculateRainforestBounds();
         GenerateTerrain(progress);
-    }
-
-    private void Initialize()
-    {
-        _hillNoise = new FastNoiseLite();
-        _hillNoise.SetNoiseType(FastNoiseLite.NoiseType.ValueCubic);
-        _hillNoise.SetFractalType(FastNoiseLite.FractalType.FBm);
-        _hillNoise.SetFractalOctaves(3);
-        _hillNoise.SetFrequency(_config.HillFrequency);
     }
 
     #region Jungle & Desert Detection
@@ -254,23 +249,17 @@ public class CanopyBase : GenPass
     {
         progress.Message = "Preparing Canopy terrain...";
 
-        // Step 1: Find edge heights for contouring
+        //Find edge heights for contouring
         int leftEdgeHeight = GetTerrainHeightAt(_canopyLeft - 1);
         int rightEdgeHeight = GetTerrainHeightAt(_canopyRight + 1);
 
         progress.Message = "Clearing terrain...";
-
-        // Step 2: Clear terrain
         ClearArea();
 
         progress.Message = "Canopy Erosion...";
-
-        // Step 3: Generate terrain heights
         int[] terrainHeights = GenerateTerrainHeights(leftEdgeHeight, rightEdgeHeight);
 
         progress.Message = "Building Canopy columns...";
-
-        // Step 4: Fill terrain columns
         int totalColumns = _canopyRight - _canopyLeft;
         for (int i = 0; i < totalColumns; i++)
         {
@@ -293,15 +282,27 @@ public class CanopyBase : GenPass
             tile.WallType = WallID.FlowerUnsafe;
             tile.WallColor = PaintID.DeepLimePaint;
         }
-        else if (depthFromSurface <= 10)
+        else if (depthFromSurface <= _config.SurfaceDepth * 0.14f)
         {
-            tile.TileType = TileID.ClayBlock;
+            tile.TileType = (ushort)ModContent.TileType<ClayLoamTile>();
             tile.WallType = WallID.FlowerUnsafe;
             tile.WallColor = PaintID.DeepLimePaint;
         }
-        else
+        else if (depthFromSurface <= _config.SurfaceDepth * 0.28f)
         {
             tile.TileType = TileID.ClayBlock;
+        }
+        else if (depthFromSurface <= _config.SurfaceDepth * 0.42f)
+        {
+            tile.TileType = TileID.Mud;
+        }
+        else if (depthFromSurface <= _config.SurfaceDepth * 0.56f)
+        {
+            tile.TileType = TileID.Silt;
+        }
+        else
+        {
+            tile.HasTile = true;
         }
     }
 
@@ -324,7 +325,6 @@ public class CanopyBase : GenPass
 
     private void ClearArea()
     {
-        // Clear from much higher up to ensure all existing terrain is removed
         int clearStartY = Math.Max(0, (int)Main.worldSurface - 300);
         int clearEndY = (int)Main.worldSurface - 30;
 
@@ -345,27 +345,23 @@ public class CanopyBase : GenPass
         int width = _canopyRight - _canopyLeft;
         int[] heights = new int[width];
 
-        // Calculate base height, but ensure it's reasonable relative to world surface
         int baseHeight = (leftEdgeHeight + rightEdgeHeight) / 2;
 
         // Make sure we're generating terrain at a proper surface level
         int targetSurfaceHeight = (int)Main.worldSurface - _config.BaseHeightOffset;
         baseHeight = Math.Min(baseHeight, targetSurfaceHeight);
 
-        // Ensure base height isn't too deep - we want visible hills
         baseHeight = Math.Max(baseHeight, (int)Main.worldSurface - 180);
 
         for (int i = 0; i < width; i++)
         {
             int x = _canopyLeft + i;
-            float normalizedPosition = (float)i / (width - 1); // 0.0 to 1.0 across the biome
+            float normalizedPosition = (float)i / (width - 1);
 
-            // Generate noise-based height variation with more intensity
             float primaryNoise = _hillNoise.GetNoise(x * 0.5f, 0f);
             float secondaryNoise = _hillNoise.GetNoise(x * 1.2f, 100f) * 0.3f;
             float combinedNoise = primaryNoise + secondaryNoise;
 
-            // Increase height variation for more prominent terrain
             int noiseHeight = (int)(combinedNoise * _config.HillHeightVariation * 1.5f); // 50% more variation
 
             // Apply edge tapering for smooth transitions
@@ -378,61 +374,54 @@ public class CanopyBase : GenPass
             // Combine contoured base with tapered noise
             heights[i] = contourHeight + taperedNoiseHeight;
 
-            // Ensure reasonable bounds - allow for more height variation
             heights[i] = Math.Clamp(heights[i],
-                Math.Min(leftEdgeHeight, rightEdgeHeight) - 100, // Allow deeper valleys
-                Math.Max(leftEdgeHeight, rightEdgeHeight) + 60);  // Allow higher peaks
+                Math.Min(leftEdgeHeight, rightEdgeHeight) - 100,
+                Math.Max(leftEdgeHeight, rightEdgeHeight) + 60);
         }
 
         return heights;
     }
 
-    private int GetContourHeight(float normalizedPosition, int baseHeight, int leftEdgeHeight, int rightEdgeHeight, float taperFactor)
+    private int GetContourHeight(float normalizedPosition, int baseHeight, int lHeight, int rHeight, float taperFactor)
     {
-        // In the center, use base height
-        if (taperFactor >= 0.8f) // Reduced threshold for more center area
+        // use base height at the center
+        if (taperFactor >= 0.8f)
         {
             return baseHeight;
         }
 
-        // Near edges, blend towards edge heights more gradually
         float edgeInfluence = (1f - taperFactor) * 0.9f; // Reduce edge influence for smoother transitions
 
         if (normalizedPosition < 0.5f)
         {
             float leftInfluence = (0.5f - normalizedPosition) * 2f * edgeInfluence;
-            return (int)(baseHeight * (1f - leftInfluence) + leftEdgeHeight * leftInfluence);
+            return (int)(baseHeight * (1f - leftInfluence) + lHeight * leftInfluence);
         }
         else
         {
             float rightInfluence = (normalizedPosition - 0.5f) * 2f * edgeInfluence;
-            return (int)(baseHeight * (1f - rightInfluence) + rightEdgeHeight * rightInfluence);
+            return (int)(baseHeight * (1f - rightInfluence) + rHeight * rightInfluence);
         }
     }
 
     private float GetTaperFactor(float normalizedPosition, int width)
     {
-        // Create taper zones at edges (20% of biome width or 100 tiles max)
         float taperZone = Math.Min(100f, width * 0.2f) / width;
 
         float distanceFromEdge;
         if (normalizedPosition < taperZone)
         {
-            // Left edge taper
             distanceFromEdge = normalizedPosition / taperZone;
         }
         else if (normalizedPosition > 1f - taperZone)
         {
-            // Right edge taper
             distanceFromEdge = (1f - normalizedPosition) / taperZone;
         }
         else
         {
-            // Center area - full strength
             return 1f;
         }
 
-        // Smooth cosine curve for natural tapering
         return (float)(0.5 * (1 + Math.Cos(Math.PI * (1 - distanceFromEdge))));
     }
 

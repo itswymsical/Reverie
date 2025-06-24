@@ -321,6 +321,11 @@ Items: {
 		DisplayName: Small Tanglewood Tree Debug Wand
 		Tooltip: ""
 	}
+
+	MediumTanglewoodTreeDebugWand: {
+		DisplayName: Medium Tanglewood Tree Debug Wand
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
@@ -401,6 +406,8 @@ NPCs: {
 			LikeNPC_Princess: I like {NPCName}.
 			Princess_LovesNPC: I like {NPCName}.
 		}
+
+		Census.SpawnCondition: Conditions unknown
 	}
 
 	Argie: {
@@ -416,6 +423,8 @@ NPCs: {
 			LikeNPC_Princess: I like {NPCName}.
 			Princess_LovesNPC: I like {NPCName}.
 		}
+
+		Census.SpawnCondition: Conditions unknown
 	}
 
 	Stumpy: {

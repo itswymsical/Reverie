@@ -1,12 +1,10 @@
 ﻿using Reverie.Common.Tiles;
-using Reverie.Content.Tiles.Taiga;
-using System.Collections.Generic;
 
 namespace Reverie.Content.Tiles.Canopy;
 
 public class CanopyGrassTile : GrassTile
 {
-    protected override int DirtType => TileID.ClayBlock;
+    protected override int DirtType => ModContent.TileType<ClayLoamTile>();
     //public override List<int> PlantTypes => [ModContent.TileType<SnowTaigaPlants>()];
     public override void SetStaticDefaults()
     {
@@ -14,7 +12,7 @@ public class CanopyGrassTile : GrassTile
         Main.tileSolid[Type] = true;
         Main.tileMergeDirt[Type] = true;
 
-        Merge(TileID.Mud, TileID.Stone, Type, TileID.Sand);
+        Merge(TileID.Mud, TileID.Stone, Type, DirtType, TileID.Sand, TileID.ClayBlock, TileID.Silt);
         Main.tileBlockLight[Type] = true;
 
         DustType = DustID.JungleGrass;
@@ -22,7 +20,7 @@ public class CanopyGrassTile : GrassTile
 
         VanillaFallbackOnModDeletion = TileID.JungleGrass;
 
-        AddMapEntry(new Color(100, 170, 33));
+        AddMapEntry(new Color(113, 186, 39));
     }
 
     public override bool HasWalkDust()
@@ -33,14 +31,5 @@ public class CanopyGrassTile : GrassTile
     public override void WalkDust(ref int dustType, ref bool makeDust, ref Color color)
     {
         dustType = DustID.JungleGrass;
-    }
-
-    public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
-    {
-        if (!effectOnly)
-        {
-            fail = true;
-            Framing.GetTileSafely(i, j).TileType = TileID.ClayBlock;
-        }
     }
 }

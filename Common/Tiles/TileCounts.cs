@@ -14,7 +14,7 @@ internal class TileCounts : ModSystem
 
     public override void TileCountsAvailable(ReadOnlySpan<int> tileCounts)
     {
-        surfaceCanopyBlockCount = tileCounts[ModContent.TileType<CanopyGrassTile>()];
+        surfaceCanopyBlockCount = tileCounts[ModContent.TileType<ClayLoamTile>()];
 
         undergroundCanopyBlockCount = tileCounts[ModContent.TileType<WoodgrassTile>()];
 
