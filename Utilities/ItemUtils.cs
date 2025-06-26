@@ -62,6 +62,17 @@ public static class ItemUtils
         "Cobalt", "Palladium", "Mythril", "Orichalcum", "Adamantite", "Titanium"
     ];
 
+    public static bool IsGem(this Item item)
+    {
+        return item.type == ItemID.Amethyst
+            || item.type == ItemID.Topaz
+            || item.type == ItemID.Sapphire
+            || item.type == ItemID.Emerald
+            || item.type == ItemID.Ruby
+            || item.type == ItemID.Diamond
+            || item.type == ItemID.Amber;
+    }
+
     public static bool IsAMetalItem(Item item)
     {
         foreach (string keyword in MetalKeywords)
