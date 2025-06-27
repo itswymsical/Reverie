@@ -44,7 +44,7 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
     public override void SetDefaults()
     {
         Projectile.width = 26;
-        Projectile.height = 32;
+        Projectile.height = 26;
         Projectile.tileCollide = false;
         Projectile.ignoreWater = true;
         Projectile.penetrate = -1;
@@ -66,11 +66,11 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
         }
 
         var aimDirection = Vector2.Normalize(Main.MouseWorld - owner.Center);
-        Projectile.Center = owner.Center + aimDirection * 22f;
+        Projectile.Center = owner.Center + aimDirection * 32f;
 
         if (Main.myPlayer == Projectile.owner)
         {
-            Projectile.rotation = (Main.MouseWorld - Projectile.Center).ToRotation();
+            Projectile.rotation = aimDirection.ToRotation(); // Use the same aimDirection calculated earlier
             Projectile.netUpdate = true;
 
             Projectile.direction = Main.MouseWorld.X > owner.Center.X ? 1 : -1;
@@ -438,18 +438,14 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
         {
             trail = new Trail(Main.instance.GraphicsDevice, SINE_POINTS, new RoundedTip(8),
                 factor => {
-                    // Thickness increases from start to end for vacuum effect
-                    float thickness = MathHelper.Lerp(4f, 46f, factor); // Start thin (4px), end thick (25px)
+                    float thickness = MathHelper.Lerp(10f, 40f, factor);
                     return thickness;
                 },
                 factor => {
-                    // Dynamic color based on position along trail and target tile
-                    float progress = factor.X; // 0 = start, 1 = end
-                    if (factor.X >= 0.98f) return Color.Transparent;
-                    // Color lerp from vacuum base color to target tile color
+                    float progress = factor.X;
+                    if (factor.X >= 0.98f || factor.X <= 0.05f) return Color.Transparent;
                     Color lerpedColor = Color.Lerp(vacuumColor1, currentTargetColor, progress);
 
-                    // Add some animated intensity
                     float intensity = 0.8f + 0.2f * (float)Math.Sin(Main.GameUpdateCount * 0.2f + progress * 3f);
 
                     return lerpedColor * intensity;
@@ -483,6 +479,18 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
 
             trail?.Render(effect);
         }
+    }
+
+    public override bool PreDraw(ref Color lightColor)
+    {
+        var texture = ModContent.Request<Texture2D>(Texture).Value;
+        var origin = new Vector2(texture.Width * 0.5f, texture.Height * 0.5f);
+        var offset = origin + new Vector2(16, 0);
+        var drawPos = Projectile.Center - Main.screenPosition;
+        var spriteEffects = Main.player[Projectile.owner].direction == 1 ? SpriteEffects.None : SpriteEffects.FlipVertically;
+
+        Main.EntitySpriteDraw(texture, drawPos, null, lightColor, Projectile.rotation, offset, Projectile.scale, spriteEffects, 0);
+        return false;
     }
     #endregion
 }

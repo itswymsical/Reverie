@@ -25,6 +25,7 @@ public class FlowerSatchelItem : ModItem
         Item.rare = ItemRarityID.Green;
         Item.width = Item.height = 26;
         Item.maxStack = 1;
+
         Item.value = Item.sellPrice(gold: 1);
 
         if (items == null)

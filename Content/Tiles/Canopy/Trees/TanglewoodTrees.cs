@@ -100,9 +100,9 @@ public abstract class TanglewoodTree : ModTile
     public static float GetSway(int i, int j, double factor = 0)
     {
         if (factor == 0)
-            factor = Main.GameUpdateCount * (Main.windSpeedCurrent * Main.windPhysicsStrength) - 3;
+            factor = Main.GameUpdateCount * Main.windPhysicsStrength;
 
-        return (float)Math.Sin(factor + i * 0.1f + j * 0.01f) * 0.024f;
+        return (float)Math.Sin(factor + i * 0.1f + j * 0.01f);
     }
 
     /// <summary>
