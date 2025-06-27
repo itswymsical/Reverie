@@ -279,14 +279,11 @@ public class CanopyBase : GenPass
         if (depthFromSurface == 1)
         {
             tile.HasTile = false;
-            tile.WallType = WallID.FlowerUnsafe;
-            tile.WallColor = PaintID.DeepLimePaint;
         }
         else if (depthFromSurface <= _config.SurfaceDepth * 0.14f)
         {
             tile.TileType = (ushort)ModContent.TileType<ClayLoamTile>();
             tile.WallType = WallID.FlowerUnsafe;
-            tile.WallColor = PaintID.DeepLimePaint;
         }
         else if (depthFromSurface <= _config.SurfaceDepth * 0.28f)
         {
