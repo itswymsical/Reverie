@@ -39,7 +39,7 @@ public class WorldGenSystem : ModSystem
         {
             tasks.Insert(canopyIndex + 1, new CanopyBase());
             //tasks.Insert(canopyIndex + 2, new UnderstoryPass());
-            tasks.Insert(canopyIndex + 3, new CanopyFoliagePass());
+            tasks.Insert(canopyIndex + 2, new CanopyFoliagePass());
         }  
         
         //if (spawnIndex != 1)

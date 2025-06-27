@@ -1,5 +1,6 @@
 ﻿
 using Reverie.Common.Players;
+using Reverie.Common.Systems;
 using Reverie.Core.Interfaces;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -126,6 +127,13 @@ public sealed partial class Reverie : Mod
             .AddIngredient(ItemID.FallenStar, 4)
             .AddCondition(Condition.InSnow)
             .AddTile(TileID.IceMachine)
+            .Register();
+
+        Recipe fertilizer = Recipe.Create(ItemID.Fertilizer);
+        fertilizer.AddIngredient(ItemID.PoopBlock, 3)
+            .AddRecipeGroup(nameof(ItemID.Bass))
+            .AddRecipeGroup(nameof(ItemID.DirtBlock), 3)
+            .AddTile(TileID.WorkBenches)
             .Register();
     }
     public enum MessageType : byte

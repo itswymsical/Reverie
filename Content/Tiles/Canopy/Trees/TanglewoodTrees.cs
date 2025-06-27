@@ -39,7 +39,7 @@ public abstract class TanglewoodTree : ModTile
     /// Number of trunk texture variants available
     /// </summary>
     public virtual int TrunkTextureCount => 10;
-
+    public virtual int WoodType => ItemID.Wood;
     private int TreeHeight => WorldGen.genRand.Next(MinHeight, MaxHeight);
 
     /// <summary>
@@ -74,7 +74,7 @@ public abstract class TanglewoodTree : ModTile
         TileID.Sets.GetsCheckedForLeaves[Type] = true;
         TileMaterials.SetForTileId(Type, TileMaterials._materialsByName["Plant"]);
 
-        AddMapEntry(Color.SaddleBrown, Language.GetText("MapObject.Tree"));
+        AddMapEntry(new Color(151, 107, 75), Language.GetText("MapObject.Tree"));
         DustType = DustID.t_LivingWood;
         HitSound = SoundID.Dig;
 
@@ -100,9 +100,9 @@ public abstract class TanglewoodTree : ModTile
     public static float GetSway(int i, int j, double factor = 0)
     {
         if (factor == 0)
-            factor = Main.GameUpdateCount * (Main.windSpeedCurrent * Main.windPhysicsStrength) - 3;
+            factor = Main.GameUpdateCount * Main.windPhysicsStrength;
 
-        return (float)Math.Sin(factor + i * 0.1f + j * 0.01f) * 0.024f;
+        return (float)Math.Sin(factor + i * 0.1f + j * 0.01f);
     }
 
     /// <summary>
@@ -185,9 +185,13 @@ public abstract class TanglewoodTree : ModTile
 
     public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
     {
-        if (fail && WorldGen.genRand.NextBool(3))
+        if (fail && WorldGen.genRand.NextBool(8))
         {
             OnShakeTree(i, j);
+        }
+        if (!fail)
+        {
+            Item.NewItem(new EntitySource_TileBreak(i * 16, j * 16), i * 16, j * 16, 16, 16, WoodType, Main.rand.Next(1, 3));
         }
     }
 
