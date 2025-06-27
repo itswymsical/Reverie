@@ -138,7 +138,7 @@ public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
         for (var i = 0; i < Main.maxItems; i++)
         {
             var item = Main.item[i];
-            if (item.active && item.noGrabDelay is 0 && item.type is not ItemID.None && ItemUtils.IsAMetalItem(item))
+            if (item.active && item.noGrabDelay is 0 && item.type is not ItemID.None && (ItemUtils.IsAMetalItem(item) || ItemUtils.IsGem(item)))
             {
                 var distance = Vector2.Distance(item.Center, Projectile.Center);
                 if (distance <= ITEM_VACUUM_RANGE)

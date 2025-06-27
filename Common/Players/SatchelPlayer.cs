@@ -633,7 +633,7 @@ public static class FlowerEffectConfig
                 var daybloom = flowerCounts[ItemID.Daybloom];
                 var blinkroot = flowerCounts[ItemID.Blinkroot];
 
-                var enduranceBonus = shiverthorn * 0.005f;
+                var enduranceBonus = shiverthorn * 0.002f;
                 var lifeBonus = daybloom * 2;
                 var miningBonus = blinkroot * 0.0075f;
 

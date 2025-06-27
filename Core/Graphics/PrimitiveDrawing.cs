@@ -85,7 +85,6 @@ public class Primitives
     }
 
 }
-
 public interface ITrailTip
 {
     int ExtraVertices { get; }
@@ -135,7 +134,7 @@ public class Trail
     /// </summary>
     public Vector2 NextPosition { get; set; }
 
-    private const float defaultWidth = 16;
+    private const float DEFAULT_WIDTH = 16;
 
     public Trail(GraphicsDevice device, int maxPointCount, ITrailTip tip, TrailWidthFunction trailWidthFunction, TrailColorFunction trailColorFunction)
     {
@@ -177,7 +176,7 @@ public class Trail
             var factorAlongTrail = (float)k / (Positions.Length - 1);
 
             // Uses the trail width function to decide the width of the trail at this point (if no function, use 
-            var width = trailWidthFunction?.Invoke(factorAlongTrail) ?? defaultWidth;
+            var width = trailWidthFunction?.Invoke(factorAlongTrail) ?? DEFAULT_WIDTH;
 
             var current = Positions[k];
             var next = k == Positions.Length - 1 ? Positions[^1] + (Positions[^1] - Positions[^2]) : Positions[k + 1];

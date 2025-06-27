@@ -322,9 +322,13 @@ Items: {
 		Tooltip: ""
 	}
 
-	MediumTanglewoodTreeDebugWand: {
-		DisplayName: Medium Tanglewood Tree Debug Wand
-		Tooltip: ""
+	SharpnutDaggerItem: {
+		DisplayName: Sharpnut Dagger
+		Tooltip:
+			'''
+			When tossed, the Sharput Dagger impales enemies
+			You deal 8% more damage when you connect a dagger to the same spot on a target
+			'''
 	}
 }
 
@@ -356,6 +360,7 @@ Projectiles: {
 	ShiverthornSeedProj.DisplayName: Shiverthorn Seed
 	WaterleafSeedProj.DisplayName: Waterleaf Seed
 	MagnoliaPheromonesProj.DisplayName: Magnolia Pheromones
+	SharpnutDaggerProj.DisplayName: Sharpnut Dagger Proj
 }
 
 Configs: {
