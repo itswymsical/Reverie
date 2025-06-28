@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -120,7 +120,6 @@ Items: {
 		DisplayName: Woodgrass Seeds
 		Tooltip: ""
 	}
-
 
 	Bramblebow: {
 		DisplayName: Bramblebow
@@ -281,6 +280,21 @@ Items: {
 		DisplayName: Microlith
 		Tooltip: When you break an ore chunk, it has a small chance to drop x1-x3 the ore value
 	}
+
+	DialogueTest: {
+		DisplayName: Dialogue Test
+		Tooltip: ""
+	}
+
+	PlayCutscene: {
+		DisplayName: Play Cutscene
+		Tooltip: ""
+	}
+
+	SeedBedItem: {
+		DisplayName: Seed Bed Item
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
@@ -312,6 +326,7 @@ Projectiles: {
 	WaterleafSeedProj.DisplayName: Waterleaf Seed
 	MagnoliaPheromonesProj.DisplayName: Magnolia Pheromones
 	SharpnutDaggerProj.DisplayName: Sharpnut Dagger
+	LodestoneMagnetizerProj.DisplayName: Lodestone Magnetizer Proj
 }
 
 Configs: {
@@ -447,9 +462,14 @@ Configs: {
 NPCs: {
 	WardenArm.DisplayName: Warden Arm
 	WoodenWarden.DisplayName: Wooden Warden
+	Fungore.DisplayName: Fungore
+	EchoKnight.DisplayName: Echo Knight
+	Shelledrake.DisplayName: Shelledrake
+	NullHerald.DisplayName: Null Herald
+	ArchiverChronicleNPC.DisplayName: Archiver Chronicle
 
-	Tamer: {
-		DisplayName: Tamer
+	Argie: {
+		DisplayName: Argie
 
 		TownNPCMood: {
 			Content: I am content.
@@ -461,25 +481,6 @@ NPCs: {
 			LikeNPC_Princess: I like {NPCName}.
 			Princess_LovesNPC: I like {NPCName}.
 		}
-
-		Census.SpawnCondition: N/A
-	}
-
-	Argie: {
-		DisplayName: Argie
-
-		TownNPCMood: {
-			Content: I am content.
-			NoHome: What? I don't have a home? NOT TRUE!
-			FarFromHome: Hey friend, what is this place? 
-			LoveSpace: SO SPACIOUS! *blorgle-giggawibble*
-			DislikeCrowded: Too Crowded? I mean, I guess it's a bit crowded.
-			HateCrowded: There's too many people here! I can't even see the ceiling!
-			LikeNPC_Truffle: {NPCName} is a mushroom, fun fact.
-			Truffle_LovesNPC: I like {NPCName}, she's so sweet.
-		}
-
-		Census.SpawnCondition: I am the eminence of shrooms, thou who seek to findeth art, shall endeavor an endless escapade.
 	}
 
 	Stumpy: {
@@ -497,11 +498,20 @@ NPCs: {
 		}
 	}
 
-	Fungore.DisplayName: Fungore
-	EchoKnight.DisplayName: Echo Knight
-	Shelledrake.DisplayName: Shelledrake
-	NullHerald.DisplayName: Null Herald
-	ArchiverChronicleNPC.DisplayName: Archiver Chronicle
+	Tamer: {
+		DisplayName: Tamer
+
+		TownNPCMood: {
+			Content: I am content.
+			NoHome: I hate not having a home.
+			FarFromHome: I am too far from home.
+			LoveSpace: I love having so much space.
+			DislikeCrowded: I dislike how crowded I am.
+			HateCrowded: I hate how crowded I am.
+			LikeNPC_Princess: I like {NPCName}.
+			Princess_LovesNPC: I like {NPCName}.
+		}
+	}
 }
 
 Biomes: {
