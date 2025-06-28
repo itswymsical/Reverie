@@ -35,11 +35,11 @@ public class MicrolithGlobalTile : GlobalTile
         Player player = Main.player[Main.myPlayer];
         int itemType = TileLoader.GetItemDropFromTypeAndStyle(type);
         bool shinyOre = Main.tileSpelunker[type] && (type != TileID.Pots || type != TileID.Containers 
-            || type != TileID.Heart || type != TileID.LifeCrystalBoulder || type != TileID.LifeFruit || (type >= 63 && type <= 68));
+            || type != TileID.Heart || type != TileID.LifeCrystalBoulder || type != TileID.LifeFruit || !(type >= 63 && type <= 68));
 
         if (player.GetModPlayer<ReveriePlayer>().microlithEquipped)
         {
-            if ((TileID.Sets.Ore[type] || !shinyOre) && Main.rand.NextFloat() < 0.75f)
+            if ((TileID.Sets.Ore[type] || shinyOre) && Main.rand.NextFloat() < 0.15f)
             {
                 int extraItems = Main.rand.Next(1, 3);
                 harvestApplied = true;
