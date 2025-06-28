@@ -3,7 +3,7 @@ using Terraria.DataStructures;
 
 namespace Reverie.Content.Items.Lodestone;
 
-public class LodestoneMagnet : ModItem
+public class LodestoneMagnetizerItem : ModItem
 {
     public override void SetDefaults()
     {
@@ -21,7 +21,7 @@ public class LodestoneMagnet : ModItem
         Item.noUseGraphic = true;
         Item.channel = true;
         Item.shootSpeed = 7f;
-        Item.shoot = ModContent.ProjectileType<LodestoneMagnetProj>();
+        Item.shoot = ModContent.ProjectileType<LodestoneMagnetizerProj>();
     }
     public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
     {
@@ -30,11 +30,11 @@ public class LodestoneMagnet : ModItem
         {
             position += muzzleOffset;
         }
-        Projectile.NewProjectile(source, position, Vector2.Zero, ModContent.ProjectileType<LodestoneMagnetProj>(), damage, knockback, player.whoAmI);
+        Projectile.NewProjectile(source, position, Vector2.Zero, ModContent.ProjectileType<LodestoneMagnetizerProj>(), damage, knockback, player.whoAmI);
         return false;
     }
     public override bool CanUseItem(Player player)
-        => player.ownedProjectileCounts[ModContent.ProjectileType<LodestoneMagnetProj>()] <= 0;
+        => player.ownedProjectileCounts[ModContent.ProjectileType<LodestoneMagnetizerProj>()] <= 0;
 
     public override void AddRecipes()
     {

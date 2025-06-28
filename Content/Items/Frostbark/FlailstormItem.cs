@@ -2,7 +2,7 @@
 
 namespace Reverie.Content.Items.Frostbark;
 
-public class Flailstorm : ModItem
+public class FlailstormItem : ModItem
 {
     public override void SetDefaults()
     {

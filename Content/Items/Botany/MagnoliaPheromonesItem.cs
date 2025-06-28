@@ -4,7 +4,7 @@ using Reverie.Content.Projectiles.Misc;
 
 namespace Reverie.Content.Items.Botany;
 
-public class SalicifoliaPheromonesItem : ModItem
+public class MagnoliaPheromonesItem : ModItem
 {
     public override void SetStaticDefaults()
     {

@@ -11,7 +11,7 @@ using Terraria.Map;
 
 namespace Reverie.Content.Projectiles.Lodestone;
 
-public class LodestoneMagnetProj : ModProjectile, IDrawPrimitive
+public class LodestoneMagnetizerProj : ModProjectile, IDrawPrimitive
 {
     private const float MAGNET_RANGE = 200f;
     private const float ITEM_VACUUM_RANGE = 300f;

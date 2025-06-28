@@ -6,11 +6,6 @@ Conditions: {
 }
 
 Items: {
-	DialogueTest: {
-		DisplayName: Dialogue Player
-		Tooltip: ""
-	}
-
 	BorealHewerItem: {
 		DisplayName: Boreal Hewer
 		Tooltip:
@@ -23,11 +18,6 @@ Items: {
 
 	FlailstormItem: {
 		DisplayName: Flailstorm
-		Tooltip: ""
-	}
-
-	Flailstorm: {
-		DisplayName: Flailstorm
 		Tooltip:
 			'''
 			Charging the flail increases damage and generates a cloud of ice
@@ -36,18 +26,8 @@ Items: {
 			'''
 	}
 
-	FrostbarkGreavesItem: {
-		DisplayName: Frostbark Greaves
-		Tooltip: ""
-	}
-
 	FrostbarkGreaves: {
 		DisplayName: Frostbark Greaves
-		Tooltip: ""
-	}
-
-	FrostbarkHauberkItem: {
-		DisplayName: Frostbark Hauberk
 		Tooltip: ""
 	}
 
@@ -56,17 +36,12 @@ Items: {
 		Tooltip: ""
 	}
 
-	FrostbarkHelmItem: {
-		DisplayName: Frostbark Helm
-		Tooltip: ""
-	}
-
 	FrostbarkHelm: {
 		DisplayName: Frostbark Helm
 		Tooltip: ""
 	}
 
-	LodestoneMagnet: {
+	LodestoneMagnetizerItem: {
 		DisplayName: Dusty Ol' Magnetizer
 		Tooltip:
 			'''
@@ -146,15 +121,6 @@ Items: {
 		Tooltip: ""
 	}
 
-	CobblestoneItem: {
-		DisplayName: Cobblestone
-		Tooltip: ""
-	}
-
-	LoamItem: {
-		DisplayName: Loam
-		Tooltip: ""
-	}
 
 	Bramblebow: {
 		DisplayName: Bramblebow
@@ -171,11 +137,6 @@ Items: {
 		Tooltip: Shines upon the Ethereal Horizons
 	}
 
-	SylvanwaldeTranslocator: {
-		DisplayName: Sylvanwalde Translocator
-		Tooltip: ""
-	}
-
 	BustedTranslocator: {
 		DisplayName: Busted Translocator
 		Tooltip: "'Use at your own descretion'"
@@ -183,11 +144,6 @@ Items: {
 
 	ArchiverChronicleI: {
 		DisplayName: Archiver Chronicle I
-		Tooltip: ""
-	}
-
-	ObjTest: {
-		DisplayName: Obj Test
 		Tooltip: ""
 	}
 
@@ -204,16 +160,6 @@ Items: {
 	LodestoneLeggings: {
 		DisplayName: Lodestone Skirt
 		Tooltip: Increases run acceleration by 10%
-	}
-
-	PeatBlock: {
-		DisplayName: Peat Block
-		Tooltip: ""
-	}
-
-	TaigaGrassSeeds: {
-		DisplayName: Taiga Grass Seeds
-		Tooltip: ""
 	}
 
 	BloomcapItem: {
@@ -266,11 +212,6 @@ Items: {
 		Tooltip: ""
 	}
 
-	PlayCutscene: {
-		DisplayName: Cutscene Renderer
-		Tooltip: renders a cutscene
-	}
-
 	TombBrickWallItem: {
 		DisplayName: Tomb Brick Wall
 		Tooltip: ""
@@ -299,17 +240,17 @@ Items: {
 
 	MagnoliaItem: {
 		DisplayName: Magnolia Flower
-		Tooltip: "'charismatic' amongst other flowers..."
+		Tooltip: "'charismatic amongst other flowers...'"
 	}
 
-	SalicifoliaPheromonesItem: {
+	MagnoliaPheromonesItem: {
 		DisplayName: Magnolia Pheromones
 		Tooltip: When sprayed on growing herbs, they advance to their next growth stage.
 	}
 
 	TileTemplateItem: {
 		DisplayName: Tile Template Item
-		Tooltip: Debugging Item - used to help spriters learn tiles
+		Tooltip: Debugging Item - used to help spriters learn block tiling
 	}
 
 	KapokTreeDebugWand: {
@@ -338,7 +279,7 @@ Items: {
 
 	MicrolithItem: {
 		DisplayName: Microlith
-		Tooltip: When you break an ore/shiny tile, it has a small chance to drop x1-3 the value
+		Tooltip: When you break an ore chunk, it has a small chance to drop x1-x3 the ore value
 	}
 }
 
@@ -370,7 +311,7 @@ Projectiles: {
 	ShiverthornSeedProj.DisplayName: Shiverthorn Seed
 	WaterleafSeedProj.DisplayName: Waterleaf Seed
 	MagnoliaPheromonesProj.DisplayName: Magnolia Pheromones
-	SharpnutDaggerProj.DisplayName: Sharpnut Dagger Proj
+	SharpnutDaggerProj.DisplayName: Sharpnut Dagger
 }
 
 Configs: {
@@ -521,7 +462,7 @@ NPCs: {
 			Princess_LovesNPC: I like {NPCName}.
 		}
 
-		Census.SpawnCondition: Conditions unknown
+		Census.SpawnCondition: N/A
 	}
 
 	Argie: {
@@ -529,16 +470,16 @@ NPCs: {
 
 		TownNPCMood: {
 			Content: I am content.
-			NoHome: I hate not having a home.
-			FarFromHome: I am too far from home.
-			LoveSpace: I love having so much space.
-			DislikeCrowded: I dislike how crowded I am.
-			HateCrowded: I hate how crowded I am.
-			LikeNPC_Princess: I like {NPCName}.
-			Princess_LovesNPC: I like {NPCName}.
+			NoHome: What? I don't have a home? NOT TRUE!
+			FarFromHome: Hey friend, what is this place? 
+			LoveSpace: SO SPACIOUS! *blorgle-giggawibble*
+			DislikeCrowded: Too Crowded? I mean, I guess it's a bit crowded.
+			HateCrowded: There's too many people here! I can't even see the ceiling!
+			LikeNPC_Truffle: {NPCName} is a mushroom, fun fact.
+			Truffle_LovesNPC: I like {NPCName}, she's so sweet.
 		}
 
-		Census.SpawnCondition: Conditions unknown
+		Census.SpawnCondition: I am the eminence of shrooms, thou who seek to findeth art, shall endeavor an endless escapade.
 	}
 
 	Stumpy: {
@@ -606,6 +547,6 @@ Biomes: {
 }
 
 Keybinds: {
-	"Fast-Forward Dialogue.DisplayName": Fast- Forward  Dialogue
-	"Skip Cutscene.DisplayName": Skip  Cutscene
+	"Fast-Forward Dialogue.DisplayName": Fast-Forward Dialogue
+	"Skip Cutscene.DisplayName": Skip Cutscene
 }
