@@ -1,4 +1,4 @@
-UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -309,7 +309,7 @@ Items: {
 
 	TileTemplateItem: {
 		DisplayName: Tile Template Item
-		Tooltip: ""
+		Tooltip: Debugging Item - used to help spriters learn tiles
 	}
 
 	KapokTreeDebugWand: {
@@ -327,7 +327,7 @@ Items: {
 		Tooltip:
 			'''
 			When tossed, the Sharput Dagger impales enemies
-			You deal 8% more damage when you connect a dagger to the same spot on a target
+			You deal 10% more damage on your target per impaled dagger
 			'''
 	}
 

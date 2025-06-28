@@ -1,4 +1,5 @@
-﻿using Reverie.Content.Projectiles;
+﻿using Reverie.Content.Items.Lodestone;
+using Reverie.Content.Projectiles;
 using Terraria.DataStructures;
 
 namespace Reverie.Content.Items;
@@ -75,5 +76,13 @@ public class SeedBagItem : ModItem
         }
 
         return false;
+    }
+    public override void AddRecipes()
+    {
+        CreateRecipe()
+        .AddIngredient(ItemID.Seed, 10)
+        .AddIngredient(ItemID.Silk, 8)
+        .AddTile(TileID.WorkBenches)
+        .Register();
     }
 }

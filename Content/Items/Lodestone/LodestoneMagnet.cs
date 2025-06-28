@@ -12,7 +12,7 @@ public class LodestoneMagnet : ModItem
 
         Item.autoReuse = Item.useTurn = true;
 
-        Item.value = Item.sellPrice(gold: 1);
+        Item.value = Item.sellPrice(gold: 4);
 
         Item.useStyle = ItemUseStyleID.Shoot;
         Item.rare = ItemRarityID.Green;
@@ -38,11 +38,11 @@ public class LodestoneMagnet : ModItem
 
     public override void AddRecipes()
     {
-        var recipe = CreateRecipe();
-        recipe.AddIngredient<LodestoneItem>(25);
-        recipe.AddIngredient<MagnetizedCoil>(15);
-        recipe.AddRecipeGroup(nameof(ItemID.SilverBar), 10);
-        recipe.AddTile(TileID.Anvils);
-        recipe.Register();
+        CreateRecipe()
+        .AddIngredient<LodestoneItem>(25)
+        .AddIngredient<MagnetizedCoil>(8)
+        .AddRecipeGroup(nameof(ItemID.CopperBar), 15)
+        .AddTile(TileID.Anvils)
+        .Register();
     }
 }

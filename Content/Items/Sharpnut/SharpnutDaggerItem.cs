@@ -29,7 +29,7 @@ public class SharpnutDaggerItem : ModItem
         CreateRecipe()
             .AddIngredient(ItemID.Acorn, 8)
             .AddRecipeGroup(RecipeGroupID.Wood, 18)
-            .AddTile(TileID.Anvils)
+            .AddTile(TileID.LivingLoom)
             .Register();
     }
 }

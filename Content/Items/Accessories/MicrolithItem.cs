@@ -16,11 +16,20 @@ public class MicrolithItem : ModItem
         Item.accessory = true;
         Item.rare = ItemRarityID.Blue;
         Item.width = Item.height = 32;
-        Item.value = Item.sellPrice(silver: 1);
+        Item.value = Item.sellPrice(gold: 1, silver: 8);
     }
     public override void UpdateAccessory(Player player, bool hideVisual)
     {
         player.GetModPlayer<ReveriePlayer>().microlithEquipped = true;
+    }
+    public override void AddRecipes()
+    {
+        CreateRecipe()
+        .AddIngredient(ItemID.SiltBlock, 45)
+        .AddIngredient(ItemID.StoneBlock, 30)
+        .AddIngredient(ItemID.AncientChisel)
+        .AddTile(TileID.Furnaces)
+        .Register();
     }
 }
 
@@ -173,7 +182,7 @@ public class HarvestNotification : IInGameNotification
 }
 
 
-// Helper class to manage notifications and prevent duplicates
+// Helper class to manage and prevent duplicates
 public static class HarvestNotificationManager
 {
     private static readonly List<HarvestNotification> ActiveNotifications = [];

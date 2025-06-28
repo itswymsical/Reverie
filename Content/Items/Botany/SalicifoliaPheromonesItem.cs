@@ -6,8 +6,6 @@ namespace Reverie.Content.Items.Botany;
 
 public class SalicifoliaPheromonesItem : ModItem
 {
-    public override string Texture => PLACEHOLDER;
-
     public override void SetStaticDefaults()
     {
         base.SetStaticDefaults();
@@ -20,7 +18,7 @@ public class SalicifoliaPheromonesItem : ModItem
 
         Item.width = Item.height = 26;
         Item.rare = ItemRarityID.White;
-        Item.value = Item.sellPrice(silver: 1);
+        Item.value = Item.sellPrice(copper: 18);
         Item.consumable = true;
         Item.useStyle = ItemUseStyleID.Swing;
         Item.useTime = Item.useAnimation = 19;

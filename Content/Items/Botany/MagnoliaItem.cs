@@ -19,7 +19,7 @@ public class MagnoliaItem : ModItem
 
         Item.width = Item.height = 26;
         Item.rare = ItemRarityID.White;
-        Item.value = Item.sellPrice(copper: 45);
+        Item.value = Item.sellPrice(copper: 15);
 
         Item.maxStack = Item.CommonMaxStack;
 
