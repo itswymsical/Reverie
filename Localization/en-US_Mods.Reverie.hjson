@@ -338,7 +338,7 @@ Items: {
 
 	MicrolithItem: {
 		DisplayName: Microlith
-		Tooltip: When you break a shiny, it has a small chance to drop 1-3 times the value
+		Tooltip: When you break an ore/shiny tile, it has a small chance to drop x1-3 the value
 	}
 }
 
@@ -401,6 +401,105 @@ Configs: {
 			Label: B
 			Tooltip: ""
 		}
+	}
+
+	SandHazeConfig: {
+		DisplayName: Sand Haze Config
+
+		Headers: {
+			QuickSettings: Quick Settings Header
+			SandHazeRendering: Sand Haze Rendering Header
+			WindEffects: Wind Effects Header
+			Performance: Performance Header
+		}
+
+		Preset: {
+			Label: Preset
+			Tooltip: Quick preset configurations for sand haze intensity
+		}
+
+		EnableSandHaze: {
+			Label: Enable Sand Haze
+			Tooltip: Toggles sand haze effect on/off
+		}
+
+		HorizontalRange: {
+			Label: Horizontal Range
+			Tooltip: How far horizontally the sand haze extends from the player (in tiles)
+		}
+
+		VerticalRange: {
+			Label: Vertical Range
+			Tooltip: How far vertically the sand haze extends from the player (in tiles)
+		}
+
+		DustSpawnChance: {
+			Label: Dust Spawn Chance
+			Tooltip: Higher values = less dust spawned (1 in X chance)
+		}
+
+		DustSize: {
+			Label: Dust Size
+			Tooltip: Size of individual dust particles
+		}
+
+		WindVelocityFactor: {
+			Label: Wind Velocity Factor
+			Tooltip: How much wind affects dust movement
+		}
+
+		SandstormUpwardVelocity: {
+			Label: Sandstorm Upward Velocity
+			Tooltip: Additional upward velocity during sandstorms
+		}
+
+		PerformanceMode: {
+			Label: Performance Mode
+			Tooltip: Reduces dust density for better performance
+		}
+
+		EffectiveHorizontalRange: {
+			Label: Effective Horizontal Range
+			Tooltip: ""
+		}
+
+		EffectiveVerticalRange: {
+			Label: Effective Vertical Range
+			Tooltip: ""
+		}
+
+		EffectiveDustSpawnChance: {
+			Label: Effective Dust Spawn Chance
+			Tooltip: ""
+		}
+
+		EffectiveDustSize: {
+			Label: Effective Dust Size
+			Tooltip: ""
+		}
+
+		EffectiveWindVelocityFactor: {
+			Label: Effective Wind Velocity Factor
+			Tooltip: ""
+		}
+
+		EffectiveSandstormUpwardVelocity: {
+			Label: Effective Sandstorm Upward Velocity
+			Tooltip: ""
+		}
+
+		EffectiveEnableSandHaze: {
+			Label: Effective Enable Sand Haze
+			Tooltip: ""
+		}
+	}
+
+	SandHazePreset: {
+		Tooltip: ""
+		OFF.Label: O F F
+		Low.Label: Low
+		Medium.Label: Medium
+		High.Label: High
 	}
 }
 

@@ -1,4 +1,5 @@
-﻿using Reverie.Common.Subworlds.Archaea;
+﻿using Reverie.Common.Configs;
+using Reverie.Common.Subworlds.Archaea;
 using Reverie.Common.UI.Missions;
 
 using Reverie.Content.Dusts;
@@ -71,19 +72,13 @@ public class ReveriePlayer : ModPlayer
         microlithEquipped = false;
     }
 
+
     //public override void ModifyStartingInventory(IReadOnlyDictionary<string, List<Item>> itemsByMod, bool mediumCoreDeath)
     //{
     //    itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperShortsword);
     //    itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperPickaxe);
     //    itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperAxe);
     //}
-
-    private const int SAND_HAZE_RANGE_X = 55;
-    private const int SAND_HAZE_RANGE_Y = 30;
-    private const int DUST_SPAWN_CHANCE = 95;
-    private const int DUST_SIZE = 5;
-    private const float WIND_VELOCITY_FACTOR = 5.6f;
-    private const float SANDSTORM_UPWARD_VELOCITY = 0.07f;
 
     private bool IsSandTile(Tile tile) => tile.HasTile && (
         tile.TileType == TileID.Sand ||
@@ -96,10 +91,15 @@ public class ReveriePlayer : ModPlayer
 
     private void DrawSandHaze()
     {
-        int startX = (int)(Player.position.X / 16) - SAND_HAZE_RANGE_X;
-        int endX = (int)(Player.position.X / 16) + SAND_HAZE_RANGE_X;
-        int startY = (int)(Player.position.Y / 16) - SAND_HAZE_RANGE_Y;
-        int endY = (int)(Player.position.Y / 16) + SAND_HAZE_RANGE_Y;
+        var config = ModContent.GetInstance<SandHazeConfig>();
+
+        if (!config.EffectiveEnableSandHaze)
+            return;
+
+        int startX = (int)(Player.position.X / 16) - config.EffectiveHorizontalRange;
+        int endX = (int)(Player.position.X / 16) + config.EffectiveHorizontalRange;
+        int startY = (int)(Player.position.Y / 16) - config.EffectiveVerticalRange;
+        int endY = (int)(Player.position.Y / 16) + config.EffectiveVerticalRange;
 
         for (int x = startX; x < endX; x++)
         {
@@ -108,7 +108,7 @@ public class ReveriePlayer : ModPlayer
                 if (x < 0 || x >= Main.maxTilesX || y < 2 || y >= Main.maxTilesY)
                     continue;
 
-                if (IsSandTile(Main.tile[x, y]) && HasAirAbove(x, y) && Main.rand.NextBool(DUST_SPAWN_CHANCE))
+                if (IsSandTile(Main.tile[x, y]) && HasAirAbove(x, y) && Main.rand.NextBool(config.EffectiveDustSpawnChance))
                 {
                     SpawnSandDust(x, y);
                 }
@@ -118,14 +118,15 @@ public class ReveriePlayer : ModPlayer
 
     private void SpawnSandDust(int tileX, int tileY)
     {
+        var config = ModContent.GetInstance<SandHazeConfig>();
+
         Vector2 dustPosition = new((tileX - 2) * 16, (tileY - 1) * 16);
-        int dustIndex = Dust.NewDust(dustPosition, DUST_SIZE, DUST_SIZE, ModContent.DustType<SandHazeDust>());
-        
-        Main.dust[dustIndex].velocity.X -= Main.windSpeedCurrent;
-        //Main.dust[dustIndex].velocity.Y -= Main.windSpeedCurrent;
+        int dustIndex = Dust.NewDust(dustPosition, config.EffectiveDustSize, config.EffectiveDustSize, ModContent.DustType<SandHazeDust>());
+        Main.dust[dustIndex].velocity.X -= Main.windSpeedCurrent * config.EffectiveWindVelocityFactor;
+
         if (Player.ZoneSandstorm)
         {
-            Main.dust[dustIndex].velocity.Y += SANDSTORM_UPWARD_VELOCITY;
+            Main.dust[dustIndex].velocity.Y += config.EffectiveSandstormUpwardVelocity;
         }
     }
 }
