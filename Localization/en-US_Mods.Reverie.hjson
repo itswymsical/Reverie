@@ -1,4 +1,4 @@
-UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -329,6 +329,16 @@ Items: {
 			When tossed, the Sharput Dagger impales enemies
 			You deal 8% more damage when you connect a dagger to the same spot on a target
 			'''
+	}
+
+	MediumTanglewoodTreeDebugWand: {
+		DisplayName: Medium Tanglewood Tree Debug Wand
+		Tooltip: ""
+	}
+
+	MicrolithItem: {
+		DisplayName: Microlith
+		Tooltip: "When you break a shiny, it has a small chance to drop 1-3 times the value"
 	}
 }
 

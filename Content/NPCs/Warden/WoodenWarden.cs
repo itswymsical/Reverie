@@ -4,6 +4,7 @@ using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.GameContent.Bestiary;
 using Terraria.Graphics.CameraModifiers;
+using Terraria.Localization;
 
 namespace Reverie.Content.NPCs.Warden
 {
@@ -234,7 +235,6 @@ namespace Reverie.Content.NPCs.Warden
                 if (NPC.collideY) // Check if NPC hits the ground
                 {
                     NPC.noTileCollide = false;
-                    //Main.player[NPC.target].GetModPlayer<ReveriePlayer>().ScreenShakeIntensity = Math.Abs(NPC.velocity.Y * 1.75f);
                     CameraSystem.shake = 33;
     
                     SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}WardenDeath_2")
@@ -346,7 +346,7 @@ namespace Reverie.Content.NPCs.Warden
             string[] OverloadQuotes =
             [
                 " was flattened into a pancake.",
-                "'s body was contorted into a human twig.",
+                "'s body was contorted into a twig.",
                 " was crushed by massive amounts of wood.",
                 "--... really? that's how you died?"
             ];
@@ -361,6 +361,7 @@ namespace Reverie.Content.NPCs.Warden
             {
                 modifiers.Knockback += 3f;
                 target.Hurt(PlayerDeathReason.ByCustomReason(target.name + SlamQuotes()), 70, 0, knockback: 1f);
+
             }
             else if (State == AIState.Recovering)
             {

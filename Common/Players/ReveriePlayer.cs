@@ -23,7 +23,7 @@ public class ReveriePlayer : ModPlayer
     private Mission currentMission;
     public bool magnetizedFall;
     public bool lodestoneKB;
-
+    public bool microlithEquipped;
     public override void PostUpdate()
     {
         if (Main.LocalPlayer.ZoneDesert || SubworldSystem.IsActive<ArchaeaSub>())
@@ -68,18 +68,7 @@ public class ReveriePlayer : ModPlayer
     {
         magnetizedFall = false;
         lodestoneKB = false;
-    }
-    public override void ModifyDrawLayerOrdering(IDictionary<PlayerDrawLayer, PlayerDrawLayer.Position> positions)
-    {
-        base.ModifyDrawLayerOrdering(positions);
-
-        if (Main.gameMenu) return;
-
-        //if (positions.ContainsKey(ModContent.GetInstance<AuraLayer>()))
-        //{
-        //    positions[ModContent.GetInstance<AuraLayer>()] =
-        //        new PlayerDrawLayer.AfterParent(PlayerDrawLayers.BackAcc);
-        //}
+        microlithEquipped = false;
     }
 
     //public override void ModifyStartingInventory(IReadOnlyDictionary<string, List<Item>> itemsByMod, bool mediumCoreDeath)

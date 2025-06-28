@@ -1,4 +1,5 @@
-﻿using Reverie.Content.Items.Tiles.Taiga;
+﻿using Reverie.Content.Items.Accessories;
+using Reverie.Content.Items.Tiles.Taiga;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Utilities;
@@ -27,12 +28,6 @@ public class ReverieSystem : ModSystem
         SkipCutsceneKeybind = null;
     }
 
-    public override void ModifyTimeRate(ref double timeRate, ref double tileUpdateRate, ref double eventUpdateRate)
-    {
-        base.ModifyTimeRate(ref timeRate, ref tileUpdateRate, ref eventUpdateRate);
-        //timeRate /= 2;
-    }
-
     public override void PostUpdateWorld()
     {
         base.PostUpdateWorld();
@@ -44,6 +39,7 @@ public class ReverieSystem : ModSystem
                 mission.Update();
             }
         }
+        HarvestNotificationManager.UpdateNotifications();
     }
 
     public override void AddRecipeGroups()

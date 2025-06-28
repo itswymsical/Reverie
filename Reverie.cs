@@ -119,7 +119,7 @@ public sealed partial class Reverie : Mod
     }
 
     [Obsolete]
-    public override void AddRecipes()
+    public override void AddRecipes()/* tModPorter Note: Removed. Use ModSystem.AddRecipes */
     {
 
         Recipe iceBlade = Recipe.Create(ItemID.IceBlade);
