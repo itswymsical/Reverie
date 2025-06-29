@@ -52,6 +52,7 @@ public class SeedBedPlantSupport : ModSystem
                     tileType == TileID.ClayPot ||
                     tileType == TileID.PlanterBox ||
                     tileType == SeedBedType);
+
             }
 
             Mod.Logger.Debug("Successfully patched PlaceTile for SeedBed plant support");
@@ -167,13 +168,20 @@ public class SeedBedPlantSupport : ModSystem
         var tile = Framing.GetTileSafely(i, j);
         var tileBelow = Framing.GetTileSafely(i, j + 1);
 
-        // Allow herb growth on seedbeds
         if (IsHerbTile(tile.TileType) && tileBelow.HasTile && tileBelow.TileType == SeedBedType)
         {
             var originalType = tileBelow.TileType;
             tileBelow.TileType = TileID.ClayPot;
 
-            orig(i, j);
+            // 8x faster growth rate
+            for (int attempts = 0; attempts < 8; attempts++)
+            {
+                orig(i, j);
+
+                var currentTile = Framing.GetTileSafely(i, j);
+                if (currentTile.TileType != tile.TileType)
+                    break;
+            }
 
             tileBelow.TileType = (ushort)originalType;
             return;
@@ -181,7 +189,6 @@ public class SeedBedPlantSupport : ModSystem
 
         orig(i, j);
     }
-
     private void Hook_CheckAlch_SeedBedSupport(On_WorldGen.orig_CheckAlch orig, int x, int y)
     {
         var herb = Framing.GetTileSafely(x, y);
