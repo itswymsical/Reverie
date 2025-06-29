@@ -15,7 +15,7 @@ public class SeedBedTile : ModTile
         Main.tileSolidTop[Type] = true;
         Main.tileFrameImportant[Type] = true;
         Main.tileLavaDeath[Type] = true;
-        Main.tileBlockLight[Type] = false;
+        Main.tileBlockLight[Type] = true;
         Main.tileLighted[Type] = false;
 
         TileObjectData.newTile.CopyFrom(TileObjectData.Style1x1);
@@ -30,7 +30,7 @@ public class SeedBedTile : ModTile
 
         TileObjectData.newTile.AnchorInvalidTiles = [TileID.MagicalIceBlock];
         TileID.Sets.IgnoredByNpcStepUp[Type] = true;
-        TileMaterials.SetForTileId(Type, TileMaterials._materialsByName["Plant"]);
+        //TileMaterials.SetForTileId(Type, TileMaterials._materialsByName["Plants"]);
 
         AddMapEntry(new Color(247, 124, 124), Language.GetText("Mods.Reverie.Tiles.SeedbedTile.MapEntry"));
         DustType = DustID.Dirt;

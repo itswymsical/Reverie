@@ -14,6 +14,7 @@ public class SeedBedPlantSupport : ModSystem
         {
             IL_WorldGen.PlaceTile += IL_PlaceTile_SeedBedSupport;
             IL_WorldGen.GrowAlch += IL_GrowAlch_SeedBedSupport;
+            IL_WorldGen.CheckAlch += IL_CheckAlch_SeedBedSupport;
             Mod.Logger.Info("Seedbed planter box IL Edit enabled");
         }
         catch (Exception e)
@@ -21,6 +22,7 @@ public class SeedBedPlantSupport : ModSystem
             Mod.Logger.Warn($"IL editing failed ({e.Message}), using fallback method hooks");
             On_WorldGen.PlaceTile += Hook_PlaceTile_SeedBedSupport;
             On_WorldGen.GrowAlch += Hook_GrowAlch_SeedBedSupport;
+            On_WorldGen.CheckAlch += Hook_CheckAlch_SeedBedSupport;
         }
     }
 
@@ -78,7 +80,52 @@ public class SeedBedPlantSupport : ModSystem
                     tileType == SeedBedType);
             }
 
+            c.Index = 0;
+            while (c.TryGotoNext(i => i.MatchLdcI4(TileID.PlanterBox)))
+            {
+                c.Index++;
+                c.EmitDelegate<Func<int, int, bool>>((tileType, originalConstant) =>
+                    tileType == TileID.ClayPot ||
+                    tileType == TileID.PlanterBox ||
+                    tileType == SeedBedType);
+            }
+
             Mod.Logger.Debug("Successfully patched GrowAlch for SeedBed herb support");
+        }
+        catch (Exception e)
+        {
+            MonoModHooks.DumpIL(ModContent.GetInstance<Mod>(), il);
+            Mod.Logger.Error(e);
+            throw;
+        }
+    }
+
+    private void IL_CheckAlch_SeedBedSupport(ILContext il)
+    {
+        try
+        {
+            var c = new ILCursor(il);
+
+            while (c.TryGotoNext(i => i.MatchLdcI4(TileID.ClayPot)))
+            {
+                c.Index++;
+                c.EmitDelegate<Func<int, int, bool>>((tileType, originalConstant) =>
+                    tileType == TileID.ClayPot ||
+                    tileType == TileID.PlanterBox ||
+                    tileType == SeedBedType);
+            }
+
+            c.Index = 0;
+            while (c.TryGotoNext(i => i.MatchLdcI4(TileID.PlanterBox)))
+            {
+                c.Index++;
+                c.EmitDelegate<Func<int, int, bool>>((tileType, originalConstant) =>
+                    tileType == TileID.ClayPot ||
+                    tileType == TileID.PlanterBox ||
+                    tileType == SeedBedType);
+            }
+
+            Mod.Logger.Debug("Successfully patched CheckAlch for SeedBed herb support");
         }
         catch (Exception e)
         {
@@ -135,6 +182,26 @@ public class SeedBedPlantSupport : ModSystem
         orig(i, j);
     }
 
+    private void Hook_CheckAlch_SeedBedSupport(On_WorldGen.orig_CheckAlch orig, int x, int y)
+    {
+        var herb = Framing.GetTileSafely(x, y);
+        var tileBelow = Framing.GetTileSafely(x, y + 1);
+
+        // Protect herbs on seedbeds during validation
+        if (IsHerbTile(herb.TileType) && tileBelow.HasTile && tileBelow.TileType == SeedBedType)
+        {
+            var originalType = tileBelow.TileType;
+            tileBelow.TileType = TileID.ClayPot;
+
+            orig(x, y);
+
+            tileBelow.TileType = (ushort)originalType;
+            return;
+        }
+
+        orig(x, y);
+    }
+
     #endregion
 
     #region Helper Methods
@@ -168,7 +235,9 @@ public class SeedBedPlantSupport : ModSystem
     {
         IL_WorldGen.PlaceTile -= IL_PlaceTile_SeedBedSupport;
         IL_WorldGen.GrowAlch -= IL_GrowAlch_SeedBedSupport;
+        IL_WorldGen.CheckAlch -= IL_CheckAlch_SeedBedSupport;
         On_WorldGen.PlaceTile -= Hook_PlaceTile_SeedBedSupport;
         On_WorldGen.GrowAlch -= Hook_GrowAlch_SeedBedSupport;
+        On_WorldGen.CheckAlch -= Hook_CheckAlch_SeedBedSupport;
     }
 }

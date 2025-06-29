@@ -21,7 +21,7 @@ public class LodestoneLeggings : ModItem
     public override void AddRecipes()
     {
         var recipe = CreateRecipe();
-        recipe.AddIngredient(ModContent.ItemType<LodestoneItem>(), 4);
+        recipe.AddIngredient(ModContent.ItemType<LodestoneItem>(), 8);
         recipe.AddIngredient(ModContent.ItemType<MagnetizedCoil>(), 2);
         recipe.AddTile(TileID.Anvils);
         recipe.Register();
@@ -45,8 +45,8 @@ public class LodestoneChestplate : ModItem
     public override void AddRecipes()
     {
         var recipe = CreateRecipe();
-        recipe.AddIngredient(ModContent.ItemType<LodestoneItem>(), 6);
-        recipe.AddIngredient(ModContent.ItemType<MagnetizedCoil>(), 2);
+        recipe.AddIngredient(ModContent.ItemType<LodestoneItem>(), 12);
+        recipe.AddIngredient(ModContent.ItemType<MagnetizedCoil>(), 4);
         recipe.AddTile(TileID.Anvils);
         recipe.Register();
     }
@@ -101,7 +101,7 @@ public class LodestoneHelmet : ModItem
     public override void AddRecipes()
     {
         var recipe = CreateRecipe();
-        recipe.AddIngredient(ModContent.ItemType<LodestoneItem>(), 3);
+        recipe.AddIngredient(ModContent.ItemType<LodestoneItem>(), 8);
         recipe.AddIngredient(ModContent.ItemType<MagnetizedCoil>(), 3);
         recipe.AddTile(TileID.Anvils);
         recipe.Register();

@@ -1,4 +1,4 @@
-UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -377,10 +377,10 @@ Configs: {
 		DisplayName: Sand Haze Config
 
 		Headers: {
-			QuickSettings: Quick Settings Header
-			SandHazeRendering: Sand Haze Rendering Header
-			WindEffects: Wind Effects Header
-			Performance: Performance Header
+			QuickSettings: Quick Settings
+			SandHazeRendering: Sand Haze Rendering
+			WindEffects: Wind Effects
+			Performance: Performance
 		}
 
 		Preset: {
@@ -466,7 +466,7 @@ Configs: {
 
 	SandHazePreset: {
 		Tooltip: ""
-		OFF.Label: O F F
+		OFF.Label: OFF
 		Low.Label: Low
 		Medium.Label: Medium
 		High.Label: High

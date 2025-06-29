@@ -16,7 +16,7 @@ public class TaigaPass : GenPass
 
     private static void GenerateTaiga(GenerationProgress progress)
     {
-        int depth = (int)Main.worldSurface + 140;
+        int depth = (int)Main.worldSurface + 100;
 
         // Calculate taiga position based on dungeon side and spawn point
         int taigaLeft, taigaRight;

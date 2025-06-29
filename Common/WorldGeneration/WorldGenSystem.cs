@@ -1,6 +1,5 @@
-﻿using Reverie.Common.WorldGeneration.Structures;
+﻿using Reverie.Common.WorldGeneration.Canopy;
 using Reverie.Common.WorldGeneration.Taiga;
-using Reverie.Common.WorldGeneration.Canopy;
 using System.Collections.Generic;
 using Terraria.GameContent.Generation;
 using Terraria.IO;
@@ -23,7 +22,7 @@ public class WorldGenSystem : ModSystem
 
     public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
     {
-        //var tundraIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Generate Ice Biome"));
+        var tundraIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Generate Ice Biome"));
         var decorIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Spreading Grass"));
 
         var canopyIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Full Desert"));
@@ -40,12 +39,12 @@ public class WorldGenSystem : ModSystem
             tasks.Insert(canopyIndex + 1, new CanopyBase());
             //tasks.Insert(canopyIndex + 2, new UnderstoryPass());
             tasks.Insert(canopyIndex + 2, new CanopyFoliagePass());
-        }  
-        
-        //if (spawnIndex != 1)
-        //{
-        //    tasks.Insert(spawnIndex + 1, new TaigaPass());
-        //    tasks.Insert(spawnIndex + 2, new TaigaPlantPass());
-        //}     
+        }
+
+        if (spawnIndex != 1)
+        {
+            tasks.Insert(spawnIndex + 1, new TaigaPass());
+            tasks.Insert(spawnIndex + 2, new TaigaPlantPass());
+        }
     }
 }
