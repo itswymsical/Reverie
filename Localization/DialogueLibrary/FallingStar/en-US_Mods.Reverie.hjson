@@ -1,228 +1,39 @@
 ﻿DialogueLibrary: {
 	AFallingStar: {
-		Music: "12"
-
-		Cutscene: {
-			Line1: {
-				Text: Hey! <pause:45>Do you guys hear that?
-				Speaker: Guide
-				Voice: excited
-				Emote: "1"
-				Speed: "1.1"
-			}
-		}
-
-		Intro: {
-			Line1: {
-				Text: <shake:5>WHAT THE HELL?!?!</shake>
-				Speaker: Guide
-				Voice: shocked
-				Emote: "2"
-				Speed: "1.4"
-			}
-		}
-
 		CrashLanding: {
 			Line1: {
-				Text:That's...<pause:15> one way to make an <fast:2>entrance</fast>...
+				Text:  <shake:1>WHAT THE HELL?!?!</shake>
 				Speaker: Guide
-				Voice: calm
 				Emote: "0"
 				Speed: "1.0"
 			}
 
 			Line2: {
-				Text: This place just keeps getting <sine:3>weirder</sine> and <sine:3>weirder</sine>...
+				Text: This place just keeps getting weirder and weirder...
 				Speaker: Guide
-				Voice: thoughtful
 				Emote: "1"
 				Speed: "0.9"
 			}
 
 			Line3: {
-				Text: <pause:45>How are you <shake:2>still alive</shake>?
+				Text: <pause:45>How are you still alive?
 				Speaker: Guide
-				Voice: shocked
 				Emote: "2"
 				Speed: "1.2"
 			}
 
 			Line4: {
-				Text: <pause:30>Y'know what, <pause:45>I don't even wanna ask.
+				Text: Y'know what,<pause:10> I don't even wanna ask.
 				Speaker: Guide
-				Voice: calm
 				Emote: "0"
 				Speed: "1.0"
 			}
 
 			Line5: {
-				Text: How's about you come <fast:2>meet the townsfolk</fast>?
+				Text: How's about you come meet the townsfolk?
 				Speaker: Guide
-				Voice: excited
-				Emote: "0"
-				Speed: "1.1"
-			}
-		}
-
-		GatheringResources: {
-			Line1: {
-				Text: <pause:30>Where did you fall from <sine:2>exactly</sine>?
-				Speaker: Guide
-				Voice: thoughtful
-				Emote: "1"
-				Speed: "1.0"
-			}
-
-			Line2: {
-				Text: That was a pretty <shake:2>gnarly</shake> landing. <pause:60>I'll assume you're no normal Terrarian judging how you <fast:2>survived</fast> that fall.
-				Speaker: Guide
-				Voice: excited
-				Emote: "0"
-				Speed: "1.1"
-			}
-
-			Line3: {
-				Text: It's <slow:2>odd</slow> though... <pause:45>You look like us, yet you give off an <sine:4>otherworldly presence</sine>...
-				Speaker: Guide
-				Voice: mysterious
-				Emote: "1"
-				Speed: "0.9"
-			}
-
-			Line4: {
-				Text: Around here, <pause:30><fast:2>everyone works</fast> for their portions. <pause:60>If you want to survive, you'll have to gather resources.
-				Speaker: Guide
-				Voice: calm
 				Emote: "0"
 				Speed: "1.0"
-			}
-
-			Line5: {
-				Text: Explore around the area a bit. <pause:45>There's a <sine:3>lot to see</sine> in this world of ours.
-				Speaker: Guide
-				Voice: excited
-				Emote: "0"
-				Speed: "1.1"
-			}
-
-			Line6: {
-				Text: Before you go, <pause:30>I have this for ya. <pause:60>It's a little something to help you get started. <pause:45>If you're looking for tools, ask the <fast:2>Merchant</fast>.
-				Speaker: Guide
-				Voice: calm
-				Emote: "0"
-				Speed: "1.0"
-			}
-		}
-
-		ArchiverChronicleIFound: {
-			Line1: {
-				Text: <shake:3>Whoa!</shake> <pause:45>I'm seeing some kind of <sine:4>mirror signal</sine>...
-				Speaker: Guide
-				Voice: shocked
-				Emote: "2"
-				Speed: "1.2"
-			}
-
-			Line2: {
-				Text: It's reflecting <sine:3>strange runes</sine> onto the <fast:2>MirrorNet</fast>.
-				Speaker: Guide
-				Voice: mysterious
-				Emote: "1"
-				Speed: "1.0"
-			}
-
-			Line3: {
-				Text: <pause:60>Mind if I take a look at it? <pause:45>I'll try <slow:2>deciphering</slow> it while you explore.
-				Speaker: Guide
-				Voice: thoughtful
-				Emote: "0"
-				Speed: "0.95"
-			}
-		}
-
-		GuideReadsChronicleI: {
-			Line1: {
-				Text: <slow:3>Fascinating</slow>... <pause:60>even <shake:2>bad handwriting</shake> transcends time.
-				Speaker: Guide
-				Voice: wise
-				Emote: "1"
-				Speed: "0.9"
-			}
-
-			Line2: {
-				Text: <pause:45>I'll see what I can do with this while you're out.
-				Speaker: Guide
-				Voice: calm
-				Emote: "0"
-				Speed: "1.0"
-			}
-
-			Line3: {
-				Text: I think I can make out some of the <sine:2>inscriptions</sine>, <pause:30>but it's a bit <shake:1>jumbled</shake>.
-				Speaker: Guide
-				Voice: thoughtful
-				Emote: "1"
-				Speed: "0.95"
-			}
-		}
-
-		ChronicleDecoded: {
-			Music: "15"
-
-			Line1: {
-				Text: <fast:2>Hey!</fast> <pause:45>I think I figured out what the <sine:3>runes</sine> mean.
-				Speaker: Guide
-				Voice: excited
-				Emote: "0"
-				Speed: "1.2"
-			}
-
-			Line2: {
-				Text: It looks like the person who wrote this was named <shake:2>'Laine L.'</shake> <pause:60>Apparently they used to be part of a historian group called <sine:4>"Archivers"</sine>.
-				Speaker: Guide
-				Voice: thoughtful
-				Emote: "1"
-				Speed: "1.0"
-			}
-
-			Line3: {
-				Text: They were trying to find a way to <sine:3>travel between dimensions</sine>, <pause:60>and stop some <shake:3>force of evil</shake>.
-				Speaker: Guide
-				Voice: mysterious
-				Emote: "1"
-				Speed: "0.9"
-			}
-
-			Line4: {
-				Text: The Chronicle doesn't say specifically what that <shake:2>evil</shake> is, <pause:45>but it seems like they were trying to stop it from <shake:4>destroying the world</shake>.
-				Speaker: Guide
-				Voice: wise
-				Emote: "2"
-				Speed: "0.8"
-			}
-
-			Line5: {
-				Text: Also, it mentions <fast:2>soldiers</fast> residing here in Terraria, <pause:60>and a place called the <sine:4>Stillspire Outpost</sine>.
-				Speaker: Guide
-				Voice: thoughtful
-				Emote: "1"
-				Speed: "1.0"
-			}
-
-			Line6: {
-				Text: I've never heard of that place before, <pause:45>but it sounds like it would belong to the <shake:3>Corruption</shake>. <pause:60>I'd stay <fast:3>far away</fast> from there if I were you.
-				Speaker: Guide
-				Voice: shocked
-				Emote: "2"
-				Speed: "1.1"
-			}
-
-			Line7: {
-				Text: <pause:90>Then again... <pause:60>you're not exactly the <sine:2>average Terrarian</sine>, are you? <pause:45>Maybe you could <fast:2>handle it</fast>.
-				Speaker: Guide
-				Voice: thoughtful
-				Emote: "0"
-				Speed: "0.9"
 			}
 		}
 	}

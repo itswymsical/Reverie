@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Terraria;
-using Terraria.UI;
+﻿using Reverie.Core.Cinematics;
+using Reverie.Core.Cinematics.Camera;
+using System.Collections.Generic;
 
 namespace Reverie.Core.Dialogue;
 
@@ -11,7 +9,7 @@ public sealed class DialogueManager
     private static readonly DialogueManager instance = new();
     public static DialogueManager Instance => instance;
 
-    private readonly Dictionary<string, List<DialogueData>> cache = new();
+    private readonly Dictionary<string, List<string>> cachedLineKeys = new();
     private DialogueBox activeDialogue = null;
     private int? currentMusic = null;
     private int previousMusic = -1;
@@ -22,65 +20,50 @@ public sealed class DialogueManager
 
     public bool IsUIHidden { get; private set; }
 
-    /// <summary>
-    /// Start a dialogue sequence using the simplified DialogueBuilder approach
-    /// </summary>
-    public bool StartDialogue(string dialogueKey, bool zoomIn = false, bool letterbox = true)
+    public bool StartDialogue(string dialogueKey, int lineCount, bool zoomIn = false, bool letterbox = true)
     {
-        Main.NewText($"[DEBUG] Starting dialogue: {dialogueKey}", Color.Cyan);
-
         if (IsAnyActive())
-        {
-            Main.NewText("[DEBUG] Dialogue already active", Color.Yellow);
             return false;
-        }
 
-        // Get or build dialogue using DialogueBuilder
-        if (!cache.TryGetValue(dialogueKey, out var dialogueLines))
+
+        var lineKeys = new List<string>();
+        for (int i = 1; i <= lineCount; i++)
         {
-            Main.NewText("[DEBUG] Building dialogue from localization", Color.Cyan);
-            dialogueLines = DialogueBuilder.BuildSequenceFromLocalization(dialogueKey);
-
-            if (dialogueLines == null || dialogueLines.Count == 0)
-            {
-                Main.NewText($"[ERROR] No dialogue found for key: {dialogueKey}", Color.Red);
-                return false;
-            }
-
-            cache[dialogueKey] = dialogueLines;
-            Main.NewText($"[DEBUG] Built {dialogueLines.Count} dialogue lines", Color.Green);
+            lineKeys.Add($"Line{i}");
         }
 
-        // Setup UI state
         Main.CloseNPCChatOrSign();
         if (letterbox)
         {
-            try
-            {
-                // Letterbox.Show(); // If you have this system
-            }
-            catch { /* Ignore if letterbox system missing */ }
+            Letterbox.Show();
         }
         IsUIHidden = letterbox;
 
-        // Create dialogue box with DialogueData list
-        activeDialogue = DialogueBox.Create(dialogueLines, zoomIn);
+        activeDialogue = DialogueBox.CreateWithLineKeys(dialogueKey, lineKeys, zoomIn);
         if (activeDialogue == null)
         {
-            Main.NewText("[ERROR] Failed to create dialogue box", Color.Red);
+            Main.NewText("[ERROR] Failed to create dialogue card", Color.Red);
             return false;
         }
 
-        // Setup music (optional - check first line for music info)
-        if (dialogueLines.Count > 0)
+        try
         {
-            // You could add music support to DialogueData if needed
-            // var firstLine = dialogueLines[0];
-            // if (firstLine.MusicID.HasValue) { ... }
+            var musicKey = $"DialogueLibrary.{dialogueKey}.Music";
+            var musicLoc = Reverie.Instance.GetLocalization(musicKey);
+            if (!string.IsNullOrEmpty(musicLoc.Value) && int.TryParse(musicLoc.Value, out int music))
+            {
+                previousMusic = Main.musicBox2;
+                currentMusic = music;
+                Main.musicBox2 = music;
+            }
+        }
+        catch (Exception ex)
+        {
+            Main.NewText($"[WARNING] Music setup failed: {ex.Message}", Color.Yellow);
         }
 
-        Main.NewText("[DEBUG] Dialogue started successfully", Color.Green);
-        return true;
+        activeDialogue = DialogueBox.CreateWithLineKeys(dialogueKey, lineKeys, zoomIn);
+        return activeDialogue != null;
     }
 
     public void Update()
@@ -107,9 +90,6 @@ public sealed class DialogueManager
         if (activeDialogue != null)
         {
             Vector2 adjustedPosition = bottomAnchorPosition;
-            // Adjust for letterbox if needed
-            // adjustedPosition.Y -= Letterbox.LetterboxHeight;
-
             activeDialogue.DrawInGame(spriteBatch, adjustedPosition);
         }
     }
@@ -118,31 +98,19 @@ public sealed class DialogueManager
     {
         if (activeDialogue != null && !isZoomedIn && activeDialogue.ShouldZoom)
         {
-            try
-            {
-                // ZoomHandler.SetZoomAnimation(ZOOM_LEVEL, ZOOM_TIME);
-                isZoomedIn = true;
-            }
-            catch { /* Ignore if zoom system missing */ }
+            ZoomHandler.SetZoomAnimation(ZOOM_LEVEL, ZOOM_TIME);
+            isZoomedIn = true;
         }
         else if (activeDialogue == null && isZoomedIn)
         {
-            try
-            {
-                // ZoomHandler.SetZoomAnimation(1f, ZOOM_TIME);
-                isZoomedIn = false;
-            }
-            catch { /* Ignore if zoom system missing */ }
+            ZoomHandler.SetZoomAnimation(1f, ZOOM_TIME);
+            isZoomedIn = false;
         }
     }
 
     private void EndDialogue()
     {
-        try
-        {
-            // Letterbox.Hide();
-        }
-        catch { /* Ignore if letterbox system missing */ }
+       Letterbox.Hide();
 
         IsUIHidden = false;
 
@@ -154,12 +122,8 @@ public sealed class DialogueManager
 
         if (isZoomedIn)
         {
-            try
-            {
-                // ZoomHandler.SetZoomAnimation(1f, ZOOM_TIME);
-                isZoomedIn = false;
-            }
-            catch { /* Ignore if zoom system missing */ }
+          ZoomHandler.SetZoomAnimation(1f, ZOOM_TIME);
+          isZoomedIn = false;
         }
 
         activeDialogue = null;
@@ -167,37 +131,5 @@ public sealed class DialogueManager
     }
 
     public bool IsAnyActive() => activeDialogue != null;
-
-    public void ClearCache() => cache.Clear();
-
-    /// <summary>
-    /// Test method to start a single dialogue line
-    /// </summary>
-    public bool StartSingleLine(string dialogueKey, string lineKey, bool zoomIn = false)
-    {
-        Main.NewText($"[DEBUG] Starting single line: {dialogueKey}.{lineKey}", Color.Cyan);
-
-        if (IsAnyActive())
-            return false;
-
-        var dialogueData = DialogueBuilder.BuildLineFromLocalization(dialogueKey, lineKey);
-        if (dialogueData == null)
-        {
-            Main.NewText($"[ERROR] Failed to build line: {dialogueKey}.{lineKey}", Color.Red);
-            return false;
-        }
-
-        // Create single-line dialogue
-        var singleLineList = new List<DialogueData> { dialogueData };
-        activeDialogue = DialogueBox.Create(singleLineList, zoomIn);
-
-        if (activeDialogue == null)
-        {
-            Main.NewText("[ERROR] Failed to create single-line dialogue", Color.Red);
-            return false;
-        }
-
-        Main.NewText("[DEBUG] Single line dialogue started", Color.Green);
-        return true;
-    }
+    public void ClearCache() => cachedLineKeys.Clear();
 }

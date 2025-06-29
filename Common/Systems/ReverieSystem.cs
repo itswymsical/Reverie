@@ -15,8 +15,6 @@ public class ReverieSystem : ModSystem
     public static ModKeybind SkipCutsceneKeybind { get; private set; }
     public override void Load()
     {
-        Reverie.Instance.Logger.Info("NPCManager for dialogue initialized...");
-
         FFDialogueKeybind = KeybindLoader.RegisterKeybind(Mod, "Fast-Forward Dialogue", "V");
         SkipCutsceneKeybind = KeybindLoader.RegisterKeybind(Mod, "Skip Cutscene", "Q");
 

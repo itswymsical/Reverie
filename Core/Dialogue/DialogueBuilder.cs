@@ -32,7 +32,6 @@ public static class DialogueBuilder
     {
         string baseKey = $"DialogueLibrary.{dialogueKey}.{lineKey}";
 
-        // Get required text
         string textKey = $"{baseKey}.Text";
         var textLocalization = Reverie.Instance.GetLocalization(textKey);
         if (string.IsNullOrEmpty(textLocalization.Value))
@@ -40,13 +39,12 @@ public static class DialogueBuilder
 
         string rawText = textLocalization.Value;
 
-        // Parse optional properties with safe defaults
         string speaker = GetOptionalValue($"{baseKey}.Speaker", "Unknown");
         int emote = GetOptionalInt($"{baseKey}.Emote", 0);
-        string voice = GetOptionalValue($"{baseKey}.Voice", "default");
+
         float speed = GetOptionalFloat($"{baseKey}.Speed", 1.0f);
 
-        // Parse the text and effects (using the working system's logic)
+        // Parse the text and effects
         var (plainText, effects) = ParseTextAndEffects(rawText);
 
         return new DialogueData
@@ -54,14 +52,13 @@ public static class DialogueBuilder
             PlainText = plainText,
             Effects = effects,
             Speaker = speaker,
-            SpeakerColor = GetSpeakerColor(speaker), // Simple color mapping
+            SpeakerColor = GetSpeakerColor(speaker),
             Emote = emote,
-            Voice = voice,
             Speed = speed,
             BaseDelay = 3,
             TextColor = Color.White,
-            BackgroundColor = GetSpeakerColor(speaker) * 0.5f, // Use speaker color for background
-            TypeSound = GetVoiceSound(voice)
+            BackgroundColor = GetSpeakerColor(speaker) * 0.5f,
+            TypeSound = GetVoiceSound(speaker) // Use speaker instead of voice
         };
     }
 
@@ -86,13 +83,13 @@ public static class DialogueBuilder
             markupRemovals.Add((match.Index, match.Length));
         }
 
-        // Second pass: Find all paired tags like <shake>text</shake>
-        var pairedRegex = new Regex(@"<(\w+)(?::(\d+))?>(.*?)</\1>");
+        // Second pass: Find all paired tags including new pitch tag
+        var pairedRegex = new Regex(@"<(\w+)(?::([0-9.]+))?>(.*?)</\1>");
         foreach (Match match in pairedRegex.Matches(rawText))
         {
             var effectType = match.Groups[1].Value.ToLower();
             var hasValue = match.Groups[2].Success;
-            var value = hasValue ? int.Parse(match.Groups[2].Value) : 2;
+            var valueStr = match.Groups[2].Value;
             var content = match.Groups[3].Value;
 
             var cleanStartPos = CalculateCleanPosition(rawText, match.Index, markupRemovals);
@@ -102,10 +99,11 @@ public static class DialogueBuilder
             {
                 var effect = effectType switch
                 {
-                    "shake" => new DialogueEffect { Type = EffectType.Shake, Intensity = value },
-                    "sine" => new DialogueEffect { Type = EffectType.Sine, Intensity = value },
-                    "fast" => new DialogueEffect { Type = EffectType.Speed, Duration = value },
-                    "slow" => new DialogueEffect { Type = EffectType.Speed, Duration = -value },
+                    "shake" => new DialogueEffect { Type = EffectType.Shake, Intensity = hasValue ? int.Parse(valueStr) : 2 },
+                    "sine" => new DialogueEffect { Type = EffectType.Sine, Intensity = hasValue ? int.Parse(valueStr) : 2 },
+                    "fast" => new DialogueEffect { Type = EffectType.Speed, Duration = hasValue ? int.Parse(valueStr) : 2 },
+                    "slow" => new DialogueEffect { Type = EffectType.Speed, Duration = hasValue ? -int.Parse(valueStr) : -2 },
+                    "pitch" => new DialogueEffect { Type = EffectType.Pitch, PitchModifier = hasValue ? float.Parse(valueStr) : 1.2f }, // New pitch effect
                     _ => null
                 };
 
@@ -186,22 +184,22 @@ public static class DialogueBuilder
         return defaultValue;
     }
 
-    private static SoundStyle GetVoiceSound(string voice)
+    private static SoundStyle GetVoiceSound(string speaker)
     {
-        return voice.ToLower() switch
+        return speaker.ToLower() switch
         {
-            "shocked" => SoundID.NPCHit1,
-            "calm" => SoundID.MenuTick,
-            "excited" => SoundID.Chat,
-            "thoughtful" => SoundID.MenuTick,
-            "wise" => SoundID.MenuClose,
-            "mysterious" => SoundID.Zombie3,
-            _ => SoundID.MenuTick
+            "guide" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Guide/Speech"),
+            "player" or "you" => SoundID.MenuTick,
+            "merchant" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Merchant/Speech"),
+            "nurse" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Nurse/Speech"),
+            "demolitionist" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Demolitionist/Speech"),
+            "goblin tinkerer" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Gobblin"),
+            "mechanic" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Mechanic"),
+            _ => SoundID.MenuTick // Default
         };
     }
 }
 
-// Simple DialogueData class (adapted from working system)
 public class DialogueData
 {
     public string PlainText { get; init; } = string.Empty;
@@ -209,20 +207,18 @@ public class DialogueData
     public string Speaker { get; init; } = string.Empty;
     public Color SpeakerColor { get; init; } = Color.White;
     public int Emote { get; init; }
-    public string Voice { get; init; } = "default";
     public float Speed { get; init; } = 1.0f;
     public int BaseDelay { get; init; } = 3;
     public Color TextColor { get; init; } = Color.White;
     public Color BackgroundColor { get; init; } = Color.Black;
     public SoundStyle TypeSound { get; init; } = SoundID.MenuTick;
 }
-
-// Keep the same DialogueEffect from working system
 public class DialogueEffect
 {
     public EffectType Type { get; init; }
     public int Duration { get; init; }
     public int Intensity { get; init; } = 1;
+    public float PitchModifier { get; init; } = 1.0f;
     public SoundStyle? Sound { get; init; }
 }
 
@@ -232,5 +228,6 @@ public enum EffectType
     Shake,
     Speed,
     Sound,
-    Sine
+    Sine,
+    Pitch
 }

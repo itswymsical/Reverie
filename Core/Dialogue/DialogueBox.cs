@@ -1,10 +1,8 @@
-﻿using System;
+﻿using ReLogic.Content;
+using Reverie.Common.Systems;
+using Reverie.Utilities;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Reverie.Utilities;
-using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.GameInput;
@@ -18,88 +16,63 @@ public class DialogueBox : IInGameNotification
     private const float ANIMATION_DURATION = 30f;
     private const float PANEL_WIDTH = 420f;
     private const int AUTO_REMOVE_DELAY = 200;
+    private const string UI_ASSET_DIRECTORY = "Reverie/Assets/Textures/UI/";
 
     private bool isRemoved;
     private float animationProgress;
-    private int autoRemoveTimer;
+
     private bool isLastDialogue;
     private Vector2 targetPosition;
     private Vector2 startPosition;
 
-    // Text display state
     private int charDisplayTimer;
     private int charIndex;
     private float pauseTimer;
 
-    // Dialogue state - simplified to use DialogueData
-    private readonly Queue<DialogueData> dialogueQueue = new();
-    private DialogueData currentDialogue;
+    private readonly string dialogueKey;
+    private readonly Queue<string> lineKeys = new();
+    private DialogueData currentDialogue = null;
     private int currentLineIndex;
+
+    private float currentPitchModifier = 1.0f;
+
+    private static Texture2D ArrowTexture => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/ArrowForward", AssetRequestMode.ImmediateLoad).Value;
+    private static Texture2D PortraitFrameTexture => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortraitFrame", AssetRequestMode.ImmediateLoad).Value;
     #endregion
 
     #region Properties
     public bool ShouldZoom { get; set; }
     public bool ShouldBeRemoved => isRemoved && animationProgress >= ANIMATION_DURATION;
     public float Opacity => isRemoved ? 1f - animationProgress / ANIMATION_DURATION : MathHelper.Clamp(animationProgress / ANIMATION_DURATION, 0f, 1f);
-
-    private static Texture2D ArrowTexture
-    {
-        get
-        {
-            try
-            {
-                return ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/ArrowForward").Value;
-            }
-            catch (Exception ex)
-            {
-                Main.NewText($"[ERROR] Failed to load ArrowTexture: {ex.Message}", Color.Red);
-                return TextureAssets.MagicPixel.Value;
-            }
-        }
-    }
-
-    private static Texture2D PortraitFrameTexture
-    {
-        get
-        {
-            try
-            {
-                return ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortraitFrame").Value;
-            }
-            catch (Exception ex)
-            {
-                Main.NewText($"[ERROR] Failed to load PortraitFrameTexture: {ex.Message}", Color.Red);
-                return TextureAssets.MagicPixel.Value;
-            }
-        }
-    }
     #endregion
 
     #region Public Methods
-    public static DialogueBox Create(List<DialogueData> dialogueLines, bool zoomIn)
+    public static DialogueBox CreateWithLineKeys(string dialogueKey, List<string> lineKeys, bool zoomIn)
     {
-        var box = new DialogueBox
+        var box = new DialogueBox(dialogueKey)
         {
             ShouldZoom = zoomIn
         };
 
-        // Queue all dialogue lines
-        foreach (var line in dialogueLines)
+        foreach (var lineKey in lineKeys)
         {
-            box.dialogueQueue.Enqueue(line);
+            box.lineKeys.Enqueue(lineKey);
         }
 
-        // Start first line
+        Main.NewText($"[DEBUG] DialogueBox created with {lineKeys.Count} line keys", Color.Green);
         box.NextLine();
-
         return box;
+    }
+
+    private DialogueBox(string dialogueKey)
+    {
+        this.dialogueKey = dialogueKey;
     }
 
     public void Update()
     {
         UpdateAnimation();
         UpdateTextDisplay();
-        UpdateAutoRemove();
         HandleInput();
     }
 
@@ -110,6 +83,7 @@ public class DialogueBox : IInGameNotification
         SetupPositions(bottomAnchorPosition);
 
         DrawPanel(spriteBatch);
+        DrawPortrait(spriteBatch);
         DrawText(spriteBatch);
         DrawArrow(spriteBatch);
     }
@@ -132,22 +106,46 @@ public class DialogueBox : IInGameNotification
     }
     #endregion
 
-    #region Private Methods
+    #region Private Methods - Core Logic
     private void NextLine()
     {
-        if (dialogueQueue.Count > 0)
+        if (lineKeys.Count > 0)
         {
-            currentDialogue = dialogueQueue.Dequeue();
+            var lineKey = lineKeys.Dequeue();
+            Main.NewText($"[DEBUG] Parsing line: {lineKey}", Color.Cyan);
+
+            currentDialogue = DialogueBuilder.BuildLineFromLocalization(dialogueKey, lineKey);
+
+            if (currentDialogue == null)
+            {
+                Main.NewText($"[ERROR] Failed to parse line: {lineKey}", Color.Red);
+                // Try next line or end dialogue
+                if (lineKeys.Count > 0)
+                {
+                    NextLine();
+                    return;
+                }
+                else
+                {
+                    isRemoved = true;
+                    return;
+                }
+            }
+
+            // Reset display state for new line
             charIndex = 0;
-            autoRemoveTimer = 0;
+
             pauseTimer = 0f;
             currentLineIndex++;
+
+            Main.NewText($"[DEBUG] Line parsed: '{currentDialogue.PlainText[..Math.Min(20, currentDialogue.PlainText.Length)]}...'", Color.Green);
         }
         else
         {
             isRemoved = true;
             isLastDialogue = true;
             animationProgress = 0f;
+            Main.NewText("[DEBUG] No more lines, ending dialogue", Color.Gray);
         }
     }
 
@@ -191,15 +189,17 @@ public class DialogueBox : IInGameNotification
 
                 if (charIndex <= currentDialogue.PlainText.Length)
                 {
-                    SoundEngine.PlaySound(currentDialogue.TypeSound, Main.LocalPlayer.position);
+                    var sound = currentDialogue.TypeSound;
+                    if (currentPitchModifier != 1.0f)
+                    {
+                        sound = sound with { Pitch = currentPitchModifier - 1.0f };
+                    }
+
+                    SoundEngine.PlaySound(sound, Main.LocalPlayer.position);
+
+                    // Reset pitch modifier after playing (or keep it for continuous effect)
+                    // currentPitchModifier = 1.0f; // Uncomment to reset after each character
                 }
-            }
-        }
-        else
-        {
-            if (autoRemoveTimer == 0)
-            {
-                autoRemoveTimer = AUTO_REMOVE_DELAY;
             }
         }
     }
@@ -215,30 +215,23 @@ public class DialogueBox : IInGameNotification
                 if (effect.Sound != null)
                     SoundEngine.PlaySound(effect.Sound.Value, Main.LocalPlayer.position);
                 break;
+            case EffectType.Pitch:
+                // Store the pitch modifier for the next character sound
+                currentPitchModifier = effect.PitchModifier;
+                break;
         }
     }
 
-    private void UpdateAutoRemove()
-    {
-        if (autoRemoveTimer > 0)
-        {
-            autoRemoveTimer--;
-            if (autoRemoveTimer == 0)
-            {
-                NextLine();
-            }
-        }
-    }
 
     private void HandleInput()
     {
-        if (PlayerInput.Triggers.Current.Jump || PlayerInput.Triggers.Current.Inventory)
+        if (ReverieSystem.FFDialogueKeybind.JustPressed)
         {
             if (currentDialogue != null && charIndex < currentDialogue.PlainText.Length)
             {
                 ForceComplete();
             }
-            else if (dialogueQueue.Count > 0)
+            else if (lineKeys.Count > 0)
             {
                 NextLine();
             }
@@ -248,7 +241,9 @@ public class DialogueBox : IInGameNotification
             }
         }
     }
+    #endregion
 
+    #region Drawing
     private void SetupPositions(Vector2 bottomAnchorPosition)
     {
         if (targetPosition == Vector2.Zero)
@@ -266,21 +261,44 @@ public class DialogueBox : IInGameNotification
         var panelRectangle = Utils.CenteredRectangle(panelPosition, panelSize);
 
         var isHovering = panelRectangle.Contains(Main.MouseScreen.ToPoint());
-        var panelColor = currentDialogue.BackgroundColor * (isHovering ? 0.75f : 0.5f) * Opacity;
+        var panelColor = currentDialogue.SpeakerColor * (isHovering ? 0.75f : 0.5f) * Opacity;
 
         DrawUtils.DrawPanel(spriteBatch, panelRectangle, panelColor);
 
         if (isHovering) OnMouseOver();
-
-        DrawSpeakerName(spriteBatch, panelRectangle);
     }
 
-    private void DrawSpeakerName(SpriteBatch spriteBatch, Rectangle panelRectangle)
+    private void DrawPortrait(SpriteBatch spriteBatch)
+    {
+        var panelSize = CalculatePanelSize();
+        var panelPosition = CalculatePanelPosition(panelSize);
+        var panelRectangle = Utils.CenteredRectangle(panelPosition, panelSize);
+
+        Vector2 iconSize = new(92, 92);
+        Vector2 iconPosition = new(panelRectangle.Left - iconSize.X - 28f, panelRectangle.Center.Y - 50f);
+
+        var portraitTexture = GetSpeakerPortraitTexture(currentDialogue.Speaker);
+
+        Vector2 frameSize = new(PortraitFrameTexture.Width, PortraitFrameTexture.Height);
+        var framePosition = iconPosition - (frameSize - iconSize) / 2;
+        spriteBatch.Draw(PortraitFrameTexture, framePosition, null, Color.White * Opacity, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 0f);
+
+        if (portraitTexture != null)
+        {
+            var sourceRect = GetSpeakerFrameRect(currentDialogue.Speaker, currentDialogue.Emote, 92, 92);
+            spriteBatch.Draw(portraitTexture.Value, iconPosition, sourceRect, Color.White * Opacity, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 0f);
+        }
+
+        DrawSpeakerName(spriteBatch, iconPosition, iconSize);
+    }
+
+    private void DrawSpeakerName(SpriteBatch spriteBatch, Vector2 iconPosition, Vector2 iconSize)
     {
         var speakerName = currentDialogue.Speaker;
-        var namePosition = new Vector2(panelRectangle.X + 10f, panelRectangle.Y - 25f);
+        var nameTextSize = FontAssets.ItemStack.Value.MeasureString(speakerName);
+        Vector2 nameTextPosition = new(iconPosition.X + (iconSize.X + 16f) / 2 - nameTextSize.X / 2, iconPosition.Y + iconSize.Y + 24f);
 
-        Utils.DrawBorderString(spriteBatch, speakerName, namePosition, currentDialogue.SpeakerColor * Opacity, 1f, anchorx: 0f, anchory: 0.5f);
+        Utils.DrawBorderString(spriteBatch, speakerName, nameTextPosition, Color.White * Opacity, 1f, anchorx: 0f, anchory: 0.5f);
     }
 
     private void DrawText(SpriteBatch spriteBatch)
@@ -293,18 +311,18 @@ public class DialogueBox : IInGameNotification
         var textPosition = panelRectangle.TopLeft() + new Vector2(10f, 20f);
         var wrappedText = WrapText(displayText, PANEL_WIDTH - 20f);
 
-        int globalCharIndex = 0;
+        var globalCharIndex = 0;
 
         for (var i = 0; i < wrappedText.Length; i++)
         {
-            var linePos = textPosition + new Vector2(0f, i * FontAssets.ItemStack.Value.LineSpacing);
+            var linePos = textPosition + new Vector2(3f, i * FontAssets.ItemStack.Value.LineSpacing);
             var charOffset = 0;
 
-            foreach (char c in wrappedText[i])
+            foreach (var c in wrappedText[i])
             {
                 var charPos = linePos + new Vector2(charOffset, 0f);
 
-                // Apply effects if present
+                // Apply text effects (shake, sine wave, etc.)
                 if (currentDialogue.Effects.ContainsKey(globalCharIndex))
                 {
                     var effect = currentDialogue.Effects[globalCharIndex];
@@ -329,8 +347,8 @@ public class DialogueBox : IInGameNotification
                     }
                 }
 
-                Utils.DrawBorderString(spriteBatch, c.ToString(), charPos, currentDialogue.TextColor * Opacity, .9f, anchorx: 0f, anchory: 0.5f);
-                charOffset += (int)FontAssets.ItemStack.Value.MeasureString(c.ToString()).X;
+                Utils.DrawBorderString(spriteBatch, c.ToString(), charPos, currentDialogue.TextColor * Opacity, .99f, anchorx: 0f, anchory: 0.3f);
+                charOffset += (int)FontAssets.ItemStack.Value.MeasureString(c.ToString()).X + 1;
                 globalCharIndex++;
             }
         }
@@ -338,19 +356,20 @@ public class DialogueBox : IInGameNotification
 
     private void DrawArrow(SpriteBatch spriteBatch)
     {
-        if (currentDialogue == null || charIndex < currentDialogue.PlainText.Length || (dialogueQueue.Count == 0 && isLastDialogue))
+        if (currentDialogue == null || charIndex < currentDialogue.PlainText.Length || lineKeys.Count == 0 && isLastDialogue)
             return;
 
         var panelSize = CalculatePanelSize();
         var panelPosition = CalculatePanelPosition(panelSize);
         var panelRectangle = Utils.CenteredRectangle(panelPosition, panelSize);
 
+        var arrowScale = 0.75f;
+        var arrowPosition = panelRectangle.BottomRight() - new Vector2(ArrowTexture.Width * arrowScale + 10, ArrowTexture.Height * arrowScale + 10);
 
-        var arrowPosition = panelRectangle.BottomRight() - new Vector2(30, 20);
         var yOffset = (float)Math.Sin(Main.GameUpdateCount * 0.1f) * 3f;
         arrowPosition.Y += yOffset;
 
-        spriteBatch.Draw(ArrowTexture, arrowPosition, null, Color.White * Opacity, 0f, Vector2.Zero, 0.75f, SpriteEffects.None, 0f);
+        spriteBatch.Draw(ArrowTexture, arrowPosition, null, Color.White * Opacity, 0f, Vector2.Zero, arrowScale, SpriteEffects.None, 0f);
     }
 
     private void OnMouseOver()
@@ -359,7 +378,7 @@ public class DialogueBox : IInGameNotification
 
         Main.LocalPlayer.mouseInterface = true;
 
-        if (!Main.mouseLeft || !Main.mouseLeftRelease || (isLastDialogue && isRemoved)) return;
+        if (!Main.mouseLeft || !Main.mouseLeftRelease || isLastDialogue && isRemoved) return;
 
         Main.mouseLeftRelease = false;
 
@@ -367,7 +386,7 @@ public class DialogueBox : IInGameNotification
         {
             ForceComplete();
         }
-        else if (dialogueQueue.Count > 0)
+        else if (lineKeys.Count > 0)
         {
             NextLine();
         }
@@ -375,6 +394,35 @@ public class DialogueBox : IInGameNotification
         {
             Close();
         }
+    }
+    #endregion
+
+    #region Helper Methods
+    private Asset<Texture2D> GetSpeakerPortraitTexture(string speakerName)
+    {
+        return speakerName.ToLower() switch
+        {
+            "guide" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Guide"),
+            "player" or "you" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Player"),
+            _ => null // No portrait for unknown speakers
+        };
+    }
+
+    private int GetSpeakerFrameCount(string speakerName)
+    {
+        return speakerName.ToLower() switch
+        {
+            "guide" => 2,
+            "player" or "you" => 1,
+            _ => 1
+        };
+    }
+
+    private Rectangle GetSpeakerFrameRect(string speakerName, int emoteFrame, int frameWidth, int frameHeight)
+    {
+        var frameCount = GetSpeakerFrameCount(speakerName);
+        var safeFrame = Math.Max(0, Math.Min(emoteFrame, frameCount - 1));
+        return new Rectangle(safeFrame * frameWidth, 0, frameWidth, frameHeight);
     }
 
     private Vector2 CalculatePanelSize()
@@ -387,7 +435,7 @@ public class DialogueBox : IInGameNotification
         var textHeight = FontAssets.ItemStack.Value.LineSpacing * lineCount;
 
         var panelHeight = textHeight + 40f;
-        return new Vector2(PANEL_WIDTH + 18, Math.Max(panelHeight, 80f));
+        return new Vector2(PANEL_WIDTH + 18, Math.Max(panelHeight, 100f) * 1.14f);
     }
 
     private Vector2 CalculatePanelPosition(Vector2 panelSize)
