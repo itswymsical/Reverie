@@ -1,5 +1,4 @@
-﻿using Reverie.Core.Dialogue;
-using Reverie.Core.Missions.Core;
+﻿using Reverie.Core.Missions.Core;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria.Audio;
@@ -444,20 +443,6 @@ public class ScreenIndicatorManager : ModSystem
             var animationType = args.Length > 1 ? (AnimationType?)args[1] : null;
             indicator = (T)(object)MissionIndicator.CreateForNPC(npc, mission, animationType);
         }
-        else if (typeof(T) == typeof(DialogueIndicator))
-        {
-            var npcData = (NPCData)args[0];
-            var dialogueKey = (string)args[1];
-            var lineCount = (int)args[2];
-            var zoomIn = args.Length > 3 ? (bool)args[3] : false;
-            var defaultDelay = args.Length > 4 ? (int)args[4] : 2;
-            var defaultEmote = args.Length > 5 ? (int)args[5] : 0;
-            var musicId = args.Length > 6 ? (int?)args[6] : null;
-            var animationType = args.Length > 7 ? (AnimationType?)args[7] : null;
-            var modifications = args.Length > 8 ? ((int line, int delay, int emote)[])args[8] : new (int, int, int)[0];
-
-            indicator = (T)(object)DialogueIndicator.CreateForNPC(npc, npcData, dialogueKey, lineCount, zoomIn, defaultDelay, defaultEmote, musicId, animationType, modifications);
-        }
         else
         {
             throw new NotSupportedException($"Indicator type {typeof(T).Name} not supported");
@@ -574,7 +559,7 @@ public class ScreenIndicatorManager : ModSystem
         npcTracking.Clear();
     }
 
-    // Convenience methods for specific indicator types
+    // Convenience methods for mission indicators only
     public MissionIndicator CreateMissionIndicator(Vector2 worldPosition, Mission mission, AnimationType? animationType = null)
     {
         return CreateIndicator<MissionIndicator>(worldPosition, mission, animationType);
@@ -585,21 +570,6 @@ public class ScreenIndicatorManager : ModSystem
         return CreateIndicatorForNPC<MissionIndicator>(npc, mission.ID, mission, animationType);
     }
 
-    public DialogueIndicator CreateDialogueIndicator(Vector2 worldPosition, NPCData npcData, string dialogueKey, int lineCount,
-        bool zoomIn = false, int defaultDelay = 2, int defaultEmote = 0, int? musicId = null, AnimationType? animationType = null,
-        params (int line, int delay, int emote)[] modifications)
-    {
-        return CreateIndicator<DialogueIndicator>(worldPosition, npcData, dialogueKey, lineCount, zoomIn, defaultDelay, defaultEmote, musicId, animationType, modifications);
-    }
-
-    public DialogueIndicator CreateDialogueIndicatorForNPC(NPC npc, NPCData npcData, string dialogueKey, int lineCount,
-        bool zoomIn = false, int defaultDelay = 2, int defaultEmote = 0, int? musicId = null, AnimationType? animationType = null,
-        params (int line, int delay, int emote)[] modifications)
-    {
-        return CreateIndicatorForNPC<DialogueIndicator>(npc, dialogueKey, npcData, dialogueKey, lineCount, zoomIn, defaultDelay, defaultEmote, musicId, animationType, modifications);
-    }
-
-    // Legacy support - remove when old managers are deleted
+    // Legacy support for missions
     public void RemoveIndicatorsForMission(int missionID) => RemoveIndicatorsForKey(missionID);
-    public void RemoveIndicatorsForDialogue(string dialogueKey) => RemoveIndicatorsForKey(dialogueKey);
 }

@@ -44,7 +44,7 @@ public class ReveriePlayer : ModPlayer
             inventoryInit = true;
         }
 
-        DialogueManager.Instance.UpdateActive();
+        DialogueManager.Instance.Update();
     }
 
     public override void SetControls()

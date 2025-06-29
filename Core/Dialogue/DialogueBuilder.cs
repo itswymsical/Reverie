@@ -1,153 +1,236 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Terraria.Localization;
+﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using Terraria.Audio;
+using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace Reverie.Core.Dialogue;
 
-public class DialogueBuilder
+public static class DialogueBuilder
 {
-    private const string BASE_KEY = "DialogueLibrary.";
-
-    /// <summary>
-    /// Builds a dialogue sequence from a category and sequence name
-    /// </summary>
-    /// <param name="category">Category of the dialogue (e.g., "Chronicle_01")</param>
-    /// <param name="sequence">Sequence name (e.g., "Chapter1")</param>
-    /// <param name="lineCount">Number of lines in the sequence</param>
-    /// <param name="defaultDelay">Default delay between characters</param>
-    /// <param name="defaultEmote">Default emote frame</param>
-    /// <param name="musicId">Music ID to play during dialogue</param>
-    /// <param name="modifications">Line-specific modifications</param>
-    /// <returns>A constructed DialogueSequence</returns>
-    public static DialogueSequence Build(
-        string category,
-        string sequence,
-        int lineCount,
-        int defaultDelay = 2,
-        int defaultEmote = 0,
-        int? musicId = null,
-        params (int line, int delay, int emote)[] modifications)
+    public static List<DialogueData> BuildSequenceFromLocalization(string dialogueKey)
     {
-        var entries = new DialogueEntry[lineCount];
-        var modDict = modifications.ToDictionary(x => x.line);
+        var dialogueLines = new List<DialogueData>();
+        int lineIndex = 1;
 
-        for (int i = 1; i <= lineCount; i++)
+        // Build each line until we can't find any more
+        while (true)
         {
-            if (modDict.TryGetValue(i, out var mod))
+            var lineData = BuildLineFromLocalization(dialogueKey, $"Line{lineIndex}");
+            if (lineData == null)
+                break;
+
+            dialogueLines.Add(lineData);
+            lineIndex++;
+        }
+
+        return dialogueLines;
+    }
+
+    public static DialogueData BuildLineFromLocalization(string dialogueKey, string lineKey)
+    {
+        string baseKey = $"DialogueLibrary.{dialogueKey}.{lineKey}";
+
+        // Get required text
+        string textKey = $"{baseKey}.Text";
+        var textLocalization = Reverie.Instance.GetLocalization(textKey);
+        if (string.IsNullOrEmpty(textLocalization.Value))
+            return null;
+
+        string rawText = textLocalization.Value;
+
+        // Parse optional properties with safe defaults
+        string speaker = GetOptionalValue($"{baseKey}.Speaker", "Unknown");
+        int emote = GetOptionalInt($"{baseKey}.Emote", 0);
+        string voice = GetOptionalValue($"{baseKey}.Voice", "default");
+        float speed = GetOptionalFloat($"{baseKey}.Speed", 1.0f);
+
+        // Parse the text and effects (using the working system's logic)
+        var (plainText, effects) = ParseTextAndEffects(rawText);
+
+        return new DialogueData
+        {
+            PlainText = plainText,
+            Effects = effects,
+            Speaker = speaker,
+            SpeakerColor = GetSpeakerColor(speaker), // Simple color mapping
+            Emote = emote,
+            Voice = voice,
+            Speed = speed,
+            BaseDelay = 3,
+            TextColor = Color.White,
+            BackgroundColor = GetSpeakerColor(speaker) * 0.5f, // Use speaker color for background
+            TypeSound = GetVoiceSound(voice)
+        };
+    }
+
+    private static (string plainText, Dictionary<int, DialogueEffect> effects) ParseTextAndEffects(string rawText)
+    {
+        var effects = new Dictionary<int, DialogueEffect>();
+        var markupRemovals = new List<(int start, int length)>();
+
+        // First pass: Find all pause tags
+        var pauseRegex = new Regex(@"<pause(?::(\d+))?>");
+        foreach (Match match in pauseRegex.Matches(rawText))
+        {
+            var duration = match.Groups[1].Success ? int.Parse(match.Groups[1].Value) : 60;
+            var cleanPosition = CalculateCleanPosition(rawText, match.Index, markupRemovals);
+
+            effects[cleanPosition] = new DialogueEffect
             {
-                entries[i - 1] = new DialogueEntry(category, sequence, i, mod.delay, mod.emote);
-            }
-            else
+                Type = EffectType.Pause,
+                Duration = duration
+            };
+
+            markupRemovals.Add((match.Index, match.Length));
+        }
+
+        // Second pass: Find all paired tags like <shake>text</shake>
+        var pairedRegex = new Regex(@"<(\w+)(?::(\d+))?>(.*?)</\1>");
+        foreach (Match match in pairedRegex.Matches(rawText))
+        {
+            var effectType = match.Groups[1].Value.ToLower();
+            var hasValue = match.Groups[2].Success;
+            var value = hasValue ? int.Parse(match.Groups[2].Value) : 2;
+            var content = match.Groups[3].Value;
+
+            var cleanStartPos = CalculateCleanPosition(rawText, match.Index, markupRemovals);
+
+            // Add effect for each character in the content
+            for (int i = 0; i < content.Length; i++)
             {
-                entries[i - 1] = new DialogueEntry(category, sequence, i, defaultDelay, defaultEmote);
+                var effect = effectType switch
+                {
+                    "shake" => new DialogueEffect { Type = EffectType.Shake, Intensity = value },
+                    "sine" => new DialogueEffect { Type = EffectType.Sine, Intensity = value },
+                    "fast" => new DialogueEffect { Type = EffectType.Speed, Duration = value },
+                    "slow" => new DialogueEffect { Type = EffectType.Speed, Duration = -value },
+                    _ => null
+                };
+
+                if (effect != null)
+                    effects[cleanStartPos + i] = effect;
             }
+
+            // Record the tags for removal
+            var openingTagLength = match.Length - content.Length - $"</{effectType}>".Length;
+            var closingTagLength = $"</{effectType}>".Length;
+
+            markupRemovals.Add((match.Index, openingTagLength));
+            markupRemovals.Add((match.Index + openingTagLength + content.Length, closingTagLength));
         }
 
-        return new DialogueSequence(entries, musicId);
+        // Create clean text by removing all markup
+        var cleanText = Regex.Replace(rawText, @"<[^>]*>", "");
+        return (cleanText, effects);
     }
 
-    /// <summary>
-    /// Builds a dialogue sequence from a full dialogue key
-    /// </summary>
-    /// <param name="dialogueKey">The full dialogue key in format "Category.Sequence"</param>
-    /// <param name="lineCount">Number of lines in the sequence</param>
-    /// <param name="defaultDelay">Default delay between characters</param>
-    /// <param name="defaultEmote">Default emote frame</param>
-    /// <param name="musicId">Music ID to play during dialogue</param>
-    /// <param name="modifications">Line-specific modifications</param>
-    /// <returns>A constructed DialogueSequence</returns>
-    public static DialogueSequence BuildByKey(
-        string dialogueKey,
-        int lineCount,
-        int defaultDelay = 2,
-        int defaultEmote = 0,
-        int? musicId = null,
-        params (int line, int delay, int emote)[] modifications)
+    private static int CalculateCleanPosition(string text, int markupIndex, List<(int start, int length)> previousRemovals)
     {
-        string[] parts = dialogueKey.Split('.');
-        if (parts.Length != 2)
+        int totalRemoved = 0;
+        foreach (var (start, length) in previousRemovals)
         {
-            throw new System.ArgumentException($"Dialogue key must be in format 'Category.Sequence'. Got: {dialogueKey}");
+            if (start < markupIndex)
+                totalRemoved += length;
         }
-
-        return Build(parts[0], parts[1], lineCount, defaultDelay, defaultEmote, musicId, modifications);
+        return markupIndex - totalRemoved;
     }
 
-    /// <summary>
-    /// Builds a simple one-line dialogue
-    /// </summary>
-    /// <param name="category">Category of the dialogue</param>
-    /// <param name="sequence">Sequence name</param>
-    /// <param name="delay">Character display delay</param>
-    /// <param name="emote">Emote frame to display</param>
-    /// <param name="musicId">Music ID to play</param>
-    /// <returns>A constructed DialogueSequence with one line</returns>
-    public static DialogueSequence SimpleLine(
-        string category,
-        string sequence,
-        int delay = 2,
-        int emote = 0,
-        int? musicId = null)
+    private static Color GetSpeakerColor(string speaker)
     {
-        return Build(category, sequence, 1, delay, emote, musicId);
-    }
-
-    /// <summary>
-    /// Builds a simple one-line dialogue from a full key
-    /// </summary>
-    /// <param name="dialogueKey">The full dialogue key in format "Category.Sequence"</param>
-    /// <param name="delay">Character display delay</param>
-    /// <param name="emote">Emote frame to display</param>
-    /// <param name="musicId">Music ID to play</param>
-    /// <returns>A constructed DialogueSequence with one line</returns>
-    public static DialogueSequence SimpleLineByKey(
-        string dialogueKey,
-        int delay = 2,
-        int emote = 0,
-        int? musicId = null)
-    {
-        string[] parts = dialogueKey.Split('.');
-        if (parts.Length != 2)
+        // Simple color mapping without complex registry
+        return speaker.ToLower() switch
         {
-            throw new System.ArgumentException($"Dialogue key must be in format 'Category.Sequence'. Got: {dialogueKey}");
-        }
+            "guide" => new Color(64, 109, 164),
+            "player" => new Color(100, 150, 200),
+            "you" => new Color(100, 150, 200),
+            _ => new Color(180, 180, 180) // Default gray
+        };
+    }
 
-        return SimpleLine(parts[0], parts[1], delay, emote, musicId);
+    private static string GetOptionalValue(string key, string defaultValue)
+    {
+        try
+        {
+            var localization = Reverie.Instance.GetLocalization(key);
+            return !string.IsNullOrEmpty(localization.Value) ? localization.Value : defaultValue;
+        }
+        catch
+        {
+            return defaultValue;
+        }
+    }
+
+    private static int GetOptionalInt(string key, int defaultValue)
+    {
+        try
+        {
+            var localization = Reverie.Instance.GetLocalization(key);
+            if (!string.IsNullOrEmpty(localization.Value) && int.TryParse(localization.Value, out int result))
+                return result;
+        }
+        catch { }
+        return defaultValue;
+    }
+
+    private static float GetOptionalFloat(string key, float defaultValue)
+    {
+        try
+        {
+            var localization = Reverie.Instance.GetLocalization(key);
+            if (!string.IsNullOrEmpty(localization.Value) && float.TryParse(localization.Value, out float result))
+                return result;
+        }
+        catch { }
+        return defaultValue;
+    }
+
+    private static SoundStyle GetVoiceSound(string voice)
+    {
+        return voice.ToLower() switch
+        {
+            "shocked" => SoundID.NPCHit1,
+            "calm" => SoundID.MenuTick,
+            "excited" => SoundID.Chat,
+            "thoughtful" => SoundID.MenuTick,
+            "wise" => SoundID.MenuClose,
+            "mysterious" => SoundID.Zombie3,
+            _ => SoundID.MenuTick
+        };
     }
 }
 
-public readonly struct DialogueEntry
+// Simple DialogueData class (adapted from working system)
+public class DialogueData
 {
-    public readonly string Key;
-    public readonly int Delay;
-    public readonly int EmoteFrame;
-    public readonly Color? EntryTextColor;
-    public readonly NPCData SpeakingNPC;
-    private readonly LocalizedText _localizedText;
-    private const string BASE_KEY = "DialogueLibrary.";
-
-    public DialogueEntry(string category, string sequence, int line, int delay = 2, int emoteFrame = 0,
-        Color? entryTextColor = null, NPCData speakingNPC = null)
-    {
-        Key = $"{BASE_KEY}{category}.{sequence}.Line{line}";
-        _localizedText = Reverie.Instance.GetLocalization(Key);
-        Delay = delay;
-        EmoteFrame = emoteFrame;
-        EntryTextColor = entryTextColor;
-        SpeakingNPC = speakingNPC;
-    }
-
-    public LocalizedText GetText() => _localizedText;
+    public string PlainText { get; init; } = string.Empty;
+    public Dictionary<int, DialogueEffect> Effects { get; init; } = new();
+    public string Speaker { get; init; } = string.Empty;
+    public Color SpeakerColor { get; init; } = Color.White;
+    public int Emote { get; init; }
+    public string Voice { get; init; } = "default";
+    public float Speed { get; init; } = 1.0f;
+    public int BaseDelay { get; init; } = 3;
+    public Color TextColor { get; init; } = Color.White;
+    public Color BackgroundColor { get; init; } = Color.Black;
+    public SoundStyle TypeSound { get; init; } = SoundID.MenuTick;
 }
 
-public class DialogueSequence
+// Keep the same DialogueEffect from working system
+public class DialogueEffect
 {
-    public IReadOnlyList<DialogueEntry> Entries { get; }
-    public int? MusicID { get; }
+    public EffectType Type { get; init; }
+    public int Duration { get; init; }
+    public int Intensity { get; init; } = 1;
+    public SoundStyle? Sound { get; init; }
+}
 
-    public DialogueSequence(IEnumerable<DialogueEntry> entries, int? musicId = null)
-    {
-        Entries = new List<DialogueEntry>(entries);
-        MusicID = musicId;
-    }
+public enum EffectType
+{
+    Pause,
+    Shake,
+    Speed,
+    Sound,
+    Sine
 }

@@ -1,104 +1,229 @@
-DialogueLibrary: {
+﻿DialogueLibrary: {
 	AFallingStar: {
-		Cutscene.Line1: Hey! Do you guys hear that?
-		Intro.Line1: WHAT THE HELL?!?!
+		Music: "12"
+
+		Cutscene: {
+			Line1: {
+				Text: Hey! <pause:45>Do you guys hear that?
+				Speaker: Guide
+				Voice: excited
+				Emote: "1"
+				Speed: "1.1"
+			}
+		}
+
+		Intro: {
+			Line1: {
+				Text: <shake:5>WHAT THE HELL?!?!</shake>
+				Speaker: Guide
+				Voice: shocked
+				Emote: "2"
+				Speed: "1.4"
+			}
+		}
 
 		CrashLanding: {
-			Line1: That's one way to make an entrance...
-			Line2: This place just keeps getting weirder and weirder...
-			Line3: How are you still alive?
-			Line4: Y'know what, I don't even wanna ask.
-			Line5: How's about you come meet the townsfolk?
+			Line1: {
+				Text:That's...<pause:15> one way to make an <fast:2>entrance</fast>...
+				Speaker: Guide
+				Voice: calm
+				Emote: "0"
+				Speed: "1.0"
+			}
+
+			Line2: {
+				Text: This place just keeps getting <sine:3>weirder</sine> and <sine:3>weirder</sine>...
+				Speaker: Guide
+				Voice: thoughtful
+				Emote: "1"
+				Speed: "0.9"
+			}
+
+			Line3: {
+				Text: <pause:45>How are you <shake:2>still alive</shake>?
+				Speaker: Guide
+				Voice: shocked
+				Emote: "2"
+				Speed: "1.2"
+			}
+
+			Line4: {
+				Text: <pause:30>Y'know what, <pause:45>I don't even wanna ask.
+				Speaker: Guide
+				Voice: calm
+				Emote: "0"
+				Speed: "1.0"
+			}
+
+			Line5: {
+				Text: How's about you come <fast:2>meet the townsfolk</fast>?
+				Speaker: Guide
+				Voice: excited
+				Emote: "0"
+				Speed: "1.1"
+			}
 		}
 
 		GatheringResources: {
-			Line1: where did you fall from exactly?
-			Line2: That was a pretty gnarly landing, I'll assume your no normal Terrarian judging how you survived that fall.
-			Line3: It's odd though. you look like us, yet you give off an otherworldy presence...
-			Line4: Around here, everyone works for their portions. If you want to survive, you'll have to gather resources.
-			Line5: Explore around the area a bit, there's a lot to see in this world of ours.
-			Line6: Before you go, I have this for ya. It's a little something to help you get started. If you're looking for tools, ask the Merchant.
-		}
+			Line1: {
+				Text: <pause:30>Where did you fall from <sine:2>exactly</sine>?
+				Speaker: Guide
+				Voice: thoughtful
+				Emote: "1"
+				Speed: "1.0"
+			}
 
-		ExploreBiomes: {
-			Line1: Done chatting already? Cool! Open your inventory, you'll see a task list near your armor slots.
-			Line2: That's the Mirror-Net log, it tracks your progress and gives you hints on what to do next.
-			Line3: It also shows you new job listings, so be sure to check it often.
-			Line4: As a starter, I suggest you gather some resources and explore the biomes around here.
-			Line5: Let me know if you find anything interesting, good luck out there!
-		}
+			Line2: {
+				Text: That was a pretty <shake:2>gnarly</shake> landing. <pause:60>I'll assume you're no normal Terrarian judging how you <fast:2>survived</fast> that fall.
+				Speaker: Guide
+				Voice: excited
+				Emote: "0"
+				Speed: "1.1"
+			}
 
-		ChimeResponse: {
-			Line1: What was that sound?
-			Line2: Did anyone else hear that?
+			Line3: {
+				Text: It's <slow:2>odd</slow> though... <pause:45>You look like us, yet you give off an <sine:4>otherworldly presence</sine>...
+				Speaker: Guide
+				Voice: mysterious
+				Emote: "1"
+				Speed: "0.9"
+			}
+
+			Line4: {
+				Text: Around here, <pause:30><fast:2>everyone works</fast> for their portions. <pause:60>If you want to survive, you'll have to gather resources.
+				Speaker: Guide
+				Voice: calm
+				Emote: "0"
+				Speed: "1.0"
+			}
+
+			Line5: {
+				Text: Explore around the area a bit. <pause:45>There's a <sine:3>lot to see</sine> in this world of ours.
+				Speaker: Guide
+				Voice: excited
+				Emote: "0"
+				Speed: "1.1"
+			}
+
+			Line6: {
+				Text: Before you go, <pause:30>I have this for ya. <pause:60>It's a little something to help you get started. <pause:45>If you're looking for tools, ask the <fast:2>Merchant</fast>.
+				Speaker: Guide
+				Voice: calm
+				Emote: "0"
+				Speed: "1.0"
+			}
 		}
 
 		ArchiverChronicleIFound: {
-			Line1: Whoa. I'm seeing some kind of mirror signal...
-			Line2: It's reflecting strange runes onto the MirrorNet.
-			Line3: Mind if I take a look at it? I'll try deciphering it while you explore.
+			Line1: {
+				Text: <shake:3>Whoa!</shake> <pause:45>I'm seeing some kind of <sine:4>mirror signal</sine>...
+				Speaker: Guide
+				Voice: shocked
+				Emote: "2"
+				Speed: "1.2"
+			}
+
+			Line2: {
+				Text: It's reflecting <sine:3>strange runes</sine> onto the <fast:2>MirrorNet</fast>.
+				Speaker: Guide
+				Voice: mysterious
+				Emote: "1"
+				Speed: "1.0"
+			}
+
+			Line3: {
+				Text: <pause:60>Mind if I take a look at it? <pause:45>I'll try <slow:2>deciphering</slow> it while you explore.
+				Speaker: Guide
+				Voice: thoughtful
+				Emote: "0"
+				Speed: "0.95"
+			}
 		}
 
 		GuideReadsChronicleI: {
-			Line1: Fascinating... even bad handwriting transcends time.
-			Line2: I'll see what I can do with this while you're out.
-			Line3: I think I can make out some of the inscriptions, but it's a bit jumbled.
+			Line1: {
+				Text: <slow:3>Fascinating</slow>... <pause:60>even <shake:2>bad handwriting</shake> transcends time.
+				Speaker: Guide
+				Voice: wise
+				Emote: "1"
+				Speed: "0.9"
+			}
+
+			Line2: {
+				Text: <pause:45>I'll see what I can do with this while you're out.
+				Speaker: Guide
+				Voice: calm
+				Emote: "0"
+				Speed: "1.0"
+			}
+
+			Line3: {
+				Text: I think I can make out some of the <sine:2>inscriptions</sine>, <pause:30>but it's a bit <shake:1>jumbled</shake>.
+				Speaker: Guide
+				Voice: thoughtful
+				Emote: "1"
+				Speed: "0.95"
+			}
 		}
 
 		ChronicleDecoded: {
-			Line1: Hey, I think I figured out what the runes mean.
-			Line2: It looks like the person who wrote this was named 'Laine L.', apparently they used to be part of a historian group called "Archivers".
-			Line3: They were trying to find a way to travel between dimensions, and stop some force of evil.
-			Line4: The Chronicle doesn't say specifically what that evil is, but it seems like they were trying to stop it from destroying the world.
-			Line5: Also, it mentions of soliders residing here in Terraria, and a place called the Stillspire Outpost.
-			Line6: I've never heard of that place before, but it sounds like it would belong to the Corruption. I'd stay far away from there if I were you.
-			Line7: Then again, your not exactly the average Terrarian, are you? Maybe you could handle it.
-		}
+			Music: "15"
 
-		WildlifeWoes: {
-			Line1: Hey, we've got a lot of slimes prancing about.
-			Line2: Nothing to worry about! they're pretty feeble.
-			Line3: Clear them out, we'll be able to explore the area more safely.
-		}
+			Line1: {
+				Text: <fast:2>Hey!</fast> <pause:45>I think I figured out what the <sine:3>runes</sine> mean.
+				Speaker: Guide
+				Voice: excited
+				Emote: "0"
+				Speed: "1.2"
+			}
 
-		SlimeInfestation: {
-			Line1: There's definitely something going on with these slimes.
-			Line2: I've never seen this aggressive before... something must be agitating the ecosystem.
-		}
+			Line2: {
+				Text: It looks like the person who wrote this was named <shake:2>'Laine L.'</shake> <pause:60>Apparently they used to be part of a historian group called <sine:4>"Archivers"</sine>.
+				Speaker: Guide
+				Voice: thoughtful
+				Emote: "1"
+				Speed: "1.0"
+			}
 
-		SlimeInfestation_Commentary: {
-			Line1: Hey, i'm kind of in some trouble here with the slimes, hehe...
-			Line2: I could really use your help!
-		}
+			Line3: {
+				Text: They were trying to find a way to <sine:3>travel between dimensions</sine>, <pause:60>and stop some <shake:3>force of evil</shake>.
+				Speaker: Guide
+				Voice: mysterious
+				Emote: "1"
+				Speed: "0.9"
+			}
 
-		SlimeRain: {
-			Line1: You've gotta be kidding me...
-			Line2: I've never seen anything like it... the slimes are raining from the sky!
-		}
+			Line4: {
+				Text: The Chronicle doesn't say specifically what that <shake:2>evil</shake> is, <pause:45>but it seems like they were trying to stop it from <shake:4>destroying the world</shake>.
+				Speaker: Guide
+				Voice: wise
+				Emote: "2"
+				Speed: "0.8"
+			}
 
-		SlimeRain_Commentary: {
-			Line1: Slimes falling from the sky? What's next, flying pigs?
-			// Reminder: Add a callback in the future to this line when a pigron is discovered.
-			
-			Line2: I thought I'd seen it all, but this takes the cake!
-		}
+			Line5: {
+				Text: Also, it mentions <fast:2>soldiers</fast> residing here in Terraria, <pause:60>and a place called the <sine:4>Stillspire Outpost</sine>.
+				Speaker: Guide
+				Voice: thoughtful
+				Emote: "1"
+				Speed: "1.0"
+			}
 
-		SlimeRain_Warning: {
-			Line1: This is getting kind of out of hand...
-			Line2: Maybe you should build an arena to fight them off?
-		}
+			Line6: {
+				Text: I've never heard of that place before, <pause:45>but it sounds like it would belong to the <shake:3>Corruption</shake>. <pause:60>I'd stay <fast:3>far away</fast> from there if I were you.
+				Speaker: Guide
+				Voice: shocked
+				Emote: "2"
+				Speed: "1.1"
+			}
 
-		KS_Encounter: {
-			Line1: That's one big ass slime... Must be there king, or something.
-			Line2: I think you pissed it off by killing so many of it's servants.
-			Line3: Heh, didn't know that would cause this to happen. My bad.
-		}
-
-		KingSlimeDefeat: {
-			Line1: That was too much to handle...
-			Line2: I don't have a good feeling about the nature of the creature aggression.
-			Line3: They've been like this since you arrived...
-			Line4: and you do have that glowy aura...
+			Line7: {
+				Text: <pause:90>Then again... <pause:60>you're not exactly the <sine:2>average Terrarian</sine>, are you? <pause:45>Maybe you could <fast:2>handle it</fast>.
+				Speaker: Guide
+				Voice: thoughtful
+				Emote: "0"
+				Speed: "0.9"
+			}
 		}
 	}
 }

@@ -1,196 +1,203 @@
-﻿using Reverie.Common.UI.Dialogue;
-using Reverie.Core.Cinematics;
-using Reverie.Core.Cinematics.Camera;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Terraria;
+using Terraria.UI;
 
 namespace Reverie.Core.Dialogue;
 
 public sealed class DialogueManager
 {
-    private static readonly DialogueManager instance;
+    private static readonly DialogueManager instance = new();
     public static DialogueManager Instance => instance;
 
-    static DialogueManager()
-    {
-        instance = new DialogueManager();
-    }
-
-    private DialogueManager() { }
-
-    private readonly Dictionary<string, NPCData> _npcDialogueData = [];
-
-    // Cache for dialogues to avoid rebuilding frequently used ones
-    private readonly Dictionary<string, DialogueSequence> _dialogueCache = [];
-
-    private DialogueBox _activeDialogue = null;
-    private int? _currentMusic = null;
-    private string _currentDialogueKey = null;
-    private int _previousMusic = -1;
+    private readonly Dictionary<string, List<DialogueData>> cache = new();
+    private DialogueBox activeDialogue = null;
+    private int? currentMusic = null;
+    private int previousMusic = -1;
+    private bool isZoomedIn = false;
 
     private const float ZOOM_LEVEL = 1.55f;
     private const int ZOOM_TIME = 80;
 
-    private bool _isZoomedIn = false;
-
     public bool IsUIHidden { get; private set; }
 
-    public void RegisterNPC(string npcId, NPCData npcData)
-        => _npcDialogueData[npcId] = npcData;
-
-    public DialogueBox GetActiveDialogue() => _activeDialogue;
-
-    public NPCData GetNPCData(string npcId) => _npcDialogueData.TryGetValue(npcId, out var npcData) ? npcData : null;
-
     /// <summary>
-    /// Starts a dialogue directly using a <seealso cref="DialogueSequence"/>.
-    /// NOTE: Its better to use the overloaded method with a localization key.
+    /// Start a dialogue sequence using the simplified DialogueBuilder approach
     /// </summary>
-    public bool StartDialogue(NPCData npcData, DialogueSequence dialogue, string dialogueKey, bool zoomIn = false,
-            string nextDialogueKey = null, NPCData nextNpcData = null, bool nextZoomIn = false)
+    public bool StartDialogue(string dialogueKey, bool zoomIn = false, bool letterbox = true)
     {
-        Main.LocalPlayer.SetTalkNPC(-1);
-        //Letterbox.Show();
-        IsUIHidden = true;
+        Main.NewText($"[DEBUG] Starting dialogue: {dialogueKey}", Color.Cyan);
+
         if (IsAnyActive())
         {
+            Main.NewText("[DEBUG] Dialogue already active", Color.Yellow);
             return false;
         }
 
-        if (dialogue != null)
+        // Get or build dialogue using DialogueBuilder
+        if (!cache.TryGetValue(dialogueKey, out var dialogueLines))
         {
-            _activeDialogue = DialogueBox.CreateNewSequence(npcData, dialogue, zoomIn);
-            ChangeMusic(dialogue.MusicID);
-            _currentDialogueKey = dialogueKey;
+            Main.NewText("[DEBUG] Building dialogue from localization", Color.Cyan);
+            dialogueLines = DialogueBuilder.BuildSequenceFromLocalization(dialogueKey);
 
-            return true;
+            if (dialogueLines == null || dialogueLines.Count == 0)
+            {
+                Main.NewText($"[ERROR] No dialogue found for key: {dialogueKey}", Color.Red);
+                return false;
+            }
+
+            cache[dialogueKey] = dialogueLines;
+            Main.NewText($"[DEBUG] Built {dialogueLines.Count} dialogue lines", Color.Green);
         }
 
-        return false;
-    }
-
-    /// <summary>
-    /// Starts a dialogue by localization key.
-    /// </summary>
-    public bool StartDialogue(NPCData npcData, string dialogueKey, int lineCount, bool zoomIn = false, int defaultDelay = 2, int defaultEmote = 0, int? musicId = null,
-             bool letterbox = false, params(int line, int delay, int emote)[] modifications)
-    {
-        DialogueSequence dialogue;
+        // Setup UI state
+        Main.CloseNPCChatOrSign();
         if (letterbox)
         {
-            Letterbox.Show();
+            try
+            {
+                // Letterbox.Show(); // If you have this system
+            }
+            catch { /* Ignore if letterbox system missing */ }
         }
-        // Check cache first
-        if (!_dialogueCache.TryGetValue(dialogueKey, out dialogue))
+        IsUIHidden = letterbox;
+
+        // Create dialogue box with DialogueData list
+        activeDialogue = DialogueBox.Create(dialogueLines, zoomIn);
+        if (activeDialogue == null)
         {
-            dialogue = DialogueBuilder.BuildByKey(dialogueKey, lineCount, defaultDelay, defaultEmote, musicId, modifications);
-
-            // Cache the dialogue for future use
-            _dialogueCache[dialogueKey] = dialogue;
+            Main.NewText("[ERROR] Failed to create dialogue box", Color.Red);
+            return false;
         }
 
-        return StartDialogue(npcData, dialogue, dialogueKey, zoomIn);
+        // Setup music (optional - check first line for music info)
+        if (dialogueLines.Count > 0)
+        {
+            // You could add music support to DialogueData if needed
+            // var firstLine = dialogueLines[0];
+            // if (firstLine.MusicID.HasValue) { ... }
+        }
+
+        Main.NewText("[DEBUG] Dialogue started successfully", Color.Green);
+        return true;
     }
 
-    /// <summary>
-    /// Clears the dialogue cache to free up memory.
-    /// </summary>
-    public void ClearDialogueCache()
+    public void Update()
     {
-        _dialogueCache.Clear();
-    }
-
-    private void EndDialogue()
-    {
-        Letterbox.Hide();
-        IsUIHidden = false;
-
-        if (_currentDialogueKey != null)
+        if (activeDialogue != null)
         {
-            _currentDialogueKey = null;
-        }
-
-        if (_currentMusic.HasValue)
-        {
-            Main.musicBox2 = _previousMusic;
-            _currentMusic = null;
-        }
-
-        if (_isZoomedIn)
-        {
-            ZoomHandler.SetZoomAnimation(1f, ZOOM_TIME);
-            _isZoomedIn = false;
-        }
-
-        _activeDialogue = null;
-    }
-
-    public void UpdateActive()
-    {
-        if (_activeDialogue != null)
-        {
-            if (_activeDialogue.ShouldBeRemoved)
+            if (activeDialogue.ShouldBeRemoved)
             {
                 EndDialogue();
             }
             else
             {
-                Letterbox.Update();
+                activeDialogue.Update();
+                UpdateZoom();
 
-                _activeDialogue.Update();
-                if (_currentMusic.HasValue)
-                {
-                    Main.musicBox2 = _currentMusic.Value;
-                }
+                if (currentMusic.HasValue)
+                    Main.musicBox2 = currentMusic.Value;
             }
-        }
-
-        UpdateZoom();
-    }
-
-    private void UpdateZoom()
-    {
-        if (_activeDialogue != null && !_isZoomedIn && _activeDialogue.ShouldZoom)
-        {
-            ZoomHandler.SetZoomAnimation(ZOOM_LEVEL, ZOOM_TIME);
-            _isZoomedIn = true;
-        }
-        else if (_activeDialogue == null && _isZoomedIn)
-        {
-            ZoomHandler.SetZoomAnimation(1f, ZOOM_TIME);
-            _isZoomedIn = false;
-        }
-    }
-
-    private void ChangeMusic(int? musicID)
-    {
-        if (musicID.HasValue)
-        {
-            _previousMusic = Main.musicBox2;
-            _currentMusic = musicID.Value;
-            Main.musicBox2 = musicID.Value;
         }
     }
 
     public void Draw(SpriteBatch spriteBatch, Vector2 bottomAnchorPosition)
     {
-        if (_activeDialogue == null) return;
+        if (activeDialogue != null)
+        {
+            Vector2 adjustedPosition = bottomAnchorPosition;
+            // Adjust for letterbox if needed
+            // adjustedPosition.Y -= Letterbox.LetterboxHeight;
 
-        Letterbox.DrawCinematic(spriteBatch);
-        Vector2 adjustedPosition = bottomAnchorPosition;
-        adjustedPosition.Y -= Letterbox.LetterboxHeight;
-
-        _activeDialogue.DrawInGame(spriteBatch, adjustedPosition);
+            activeDialogue.DrawInGame(spriteBatch, adjustedPosition);
+        }
     }
 
-    public bool IsDialogueActive(string dialogueKey)
-        => _activeDialogue != null && _currentDialogueKey == dialogueKey;
-
-    public bool EntryIsActive(string dialogueKey, int entryIndex)
+    private void UpdateZoom()
     {
-        return _activeDialogue != null &&
-               _currentDialogueKey == dialogueKey &&
-               _activeDialogue.IsCurrentEntry(entryIndex);
+        if (activeDialogue != null && !isZoomedIn && activeDialogue.ShouldZoom)
+        {
+            try
+            {
+                // ZoomHandler.SetZoomAnimation(ZOOM_LEVEL, ZOOM_TIME);
+                isZoomedIn = true;
+            }
+            catch { /* Ignore if zoom system missing */ }
+        }
+        else if (activeDialogue == null && isZoomedIn)
+        {
+            try
+            {
+                // ZoomHandler.SetZoomAnimation(1f, ZOOM_TIME);
+                isZoomedIn = false;
+            }
+            catch { /* Ignore if zoom system missing */ }
+        }
     }
 
-    public bool IsAnyActive() => _activeDialogue != null;
+    private void EndDialogue()
+    {
+        try
+        {
+            // Letterbox.Hide();
+        }
+        catch { /* Ignore if letterbox system missing */ }
+
+        IsUIHidden = false;
+
+        if (currentMusic.HasValue)
+        {
+            Main.musicBox2 = previousMusic;
+            currentMusic = null;
+        }
+
+        if (isZoomedIn)
+        {
+            try
+            {
+                // ZoomHandler.SetZoomAnimation(1f, ZOOM_TIME);
+                isZoomedIn = false;
+            }
+            catch { /* Ignore if zoom system missing */ }
+        }
+
+        activeDialogue = null;
+        Main.NewText("[DEBUG] Dialogue ended", Color.Gray);
+    }
+
+    public bool IsAnyActive() => activeDialogue != null;
+
+    public void ClearCache() => cache.Clear();
+
+    /// <summary>
+    /// Test method to start a single dialogue line
+    /// </summary>
+    public bool StartSingleLine(string dialogueKey, string lineKey, bool zoomIn = false)
+    {
+        Main.NewText($"[DEBUG] Starting single line: {dialogueKey}.{lineKey}", Color.Cyan);
+
+        if (IsAnyActive())
+            return false;
+
+        var dialogueData = DialogueBuilder.BuildLineFromLocalization(dialogueKey, lineKey);
+        if (dialogueData == null)
+        {
+            Main.NewText($"[ERROR] Failed to build line: {dialogueKey}.{lineKey}", Color.Red);
+            return false;
+        }
+
+        // Create single-line dialogue
+        var singleLineList = new List<DialogueData> { dialogueData };
+        activeDialogue = DialogueBox.Create(singleLineList, zoomIn);
+
+        if (activeDialogue == null)
+        {
+            Main.NewText("[ERROR] Failed to create single-line dialogue", Color.Red);
+            return false;
+        }
+
+        Main.NewText("[DEBUG] Single line dialogue started", Color.Green);
+        return true;
+    }
 }

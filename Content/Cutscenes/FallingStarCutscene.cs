@@ -470,12 +470,5 @@ public class FallingStarCutscene : Cutscene
         silhouetteActive = false;
 
         EnablePlayerMovement();
-        DialogueManager.Instance.StartDialogue(NPCManager.GuideData, DialogueKeys.FallingStar.CrashLanding, lineCount: 5, zoomIn: true, letterbox: true,
-        modifications:
-        [(line: 1, delay: 2, emote: 1),
-        (line: 2, delay: 2, emote: 2),
-        (line: 3, delay: 2, emote: 3),
-        (line: 4, delay: 2, emote: 4),
-        (line: 5, delay: 2, emote: 0)]);
     }
 }

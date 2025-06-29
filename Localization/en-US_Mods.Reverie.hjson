@@ -319,6 +319,16 @@ Items: {
 		DisplayName: Spawn Mission Indicator
 		Tooltip: ""
 	}
+
+	DialogueDebug: {
+		DisplayName: Dialogue Debug
+		Tooltip: ""
+	}
+
+	FreezeTrackingDialogueDebug: {
+		DisplayName: Freeze Tracking Dialogue Debug
+		Tooltip: ""
+	}
 }
 
 Projectiles: {

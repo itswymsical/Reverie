@@ -36,6 +36,7 @@
 	  </Reference>
 	</ItemGroup>
 	<ItemGroup>
+	  <Folder Include="Common\UI\Dialogue\" />
 	  <Folder Include="Core\Animation\" />
 	</ItemGroup>
 
