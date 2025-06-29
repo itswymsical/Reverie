@@ -1,9 +1,6 @@
 ﻿using Reverie.Core.Dialogue;
-using Reverie.Core.Indicators;
-using System.Collections.Generic;
 using Terraria.Audio;
 using Terraria.GameContent;
-using Terraria.UI;
 
 namespace Reverie.Core.Indicators;
 
@@ -23,25 +20,17 @@ public class DialogueIndicator : ScreenIndicator
 
     private readonly Texture2D iconTexture;
 
-    private float hoverFadeIn = 0f;
-    private const float HOVER_FADE_SPEED = 0.1f;
-
-    private float wagTimer = 0f;
-    private bool isWagging = false;
-    private const float WAG_DURATION = 1f;
-    private const float WAG_INTENSITY = 0.3f;
-
     private const int PANEL_WIDTH = 250;
     private const int PADDING = 10;
 
-    private readonly float bobAmount = (float)Math.PI * 0.5f;
-
     public static bool ShowDebugHitbox = false;
+
+    public override AnimationType AnimationStyle => AnimationType.Wag;
 
     public DialogueIndicator(Vector2 worldPosition, NPCData npcData, string dialogueKey, int lineCount,
         bool zoomIn = false, int defaultDelay = 2, int defaultEmote = 0, int? musicId = null,
-        params (int line, int delay, int emote)[] modifications)
-         : base(worldPosition, 40, 40)
+        AnimationType? animationType = null, params (int line, int delay, int emote)[] modifications)
+         : base(worldPosition, 40, 40, animationType)
     {
         this.npcData = npcData;
         this.dialogueKey = dialogueKey;
@@ -65,47 +54,17 @@ public class DialogueIndicator : ScreenIndicator
 
     public static DialogueIndicator CreateForNPC(NPC npc, NPCData npcData, string dialogueKey, int lineCount,
         bool zoomIn = false, int defaultDelay = 2, int defaultEmote = 0, int? musicId = null,
-        params (int line, int delay, int emote)[] modifications)
+        AnimationType? animationType = null, params (int line, int delay, int emote)[] modifications)
     {
-        var indicator = new DialogueIndicator(npc.Top, npcData, dialogueKey, lineCount, zoomIn, defaultDelay, defaultEmote, musicId, modifications);
+        var indicator = new DialogueIndicator(npc.Top, npcData, dialogueKey, lineCount, zoomIn, defaultDelay, defaultEmote, musicId, animationType, modifications);
         indicator.TrackEntity(npc, new Vector2(0, -50));
         return indicator;
     }
 
     protected override void CustomUpdate()
     {
-        if (IsHovering && hoverFadeIn < 1f)
-        {
-            hoverFadeIn += HOVER_FADE_SPEED;
-            if (hoverFadeIn > 1f) hoverFadeIn = 1f;
-
-            if (JustHovered)
-            {
-                SoundEngine.PlaySound(SoundID.MenuTick);
-                // Start the finger wag animation
-                isWagging = true;
-                wagTimer = 0f;
-            }
-        }
-        else if (!IsHovering && hoverFadeIn > 0f)
-        {
-            hoverFadeIn -= HOVER_FADE_SPEED;
-            if (hoverFadeIn < 0f) hoverFadeIn = 0f;
-        }
-
-        // Update wag animation
-        if (isWagging)
-        {
-            wagTimer += 1f / 60f; // Assuming 60 FPS
-            if (wagTimer >= WAG_DURATION)
-            {
-                isWagging = false;
-                wagTimer = 0f;
-            }
-        }
-
-        // Always apply gentle bobbing
-        Offset = new Vector2(0, (float)Math.Sin(AnimationTimer * 0.8f) * bobAmount);
+        // Custom dialogue-specific update logic can go here
+        // Animation logic is now handled by the base class
     }
 
     private void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPos, float opacity)
@@ -113,17 +72,9 @@ public class DialogueIndicator : ScreenIndicator
         if (iconTexture == null)
             return;
 
-        var scale = IsHovering ? 1.2f : 1f;
+        var scale = GetAnimationScale();
         var glowColor = IsHovering ? Color.LightBlue : Color.White * 0.9f;
-
-        // Finger wag rotation - only when wagging
-        var rotation = 0f;
-        if (isWagging)
-        {
-            // Create a gentle left-right wag motion
-            var progress = wagTimer / WAG_DURATION;
-            rotation = (float)Math.Sin(progress * Math.PI * 4) * WAG_INTENSITY * (1f - progress);
-        }
+        var rotation = GetAnimationRotation();
 
         spriteBatch.Draw(
             iconTexture,
@@ -144,7 +95,7 @@ public class DialogueIndicator : ScreenIndicator
 
         if (IsHovering)
         {
-            DrawPanel(spriteBatch, worldPos, opacity * hoverFadeIn);
+            DrawPanel(spriteBatch, worldPos, opacity * GetHoverOpacity());
         }
     }
 
@@ -330,177 +281,5 @@ public class DialogueIndicator : ScreenIndicator
         {
             ModContent.GetInstance<Reverie>().Logger.Error($"Error starting dialogue: {ex.Message}");
         }
-    }
-}
-/// <summary>
-/// Manages the creation and tracking of dialogue indicators in the world
-/// </summary>
-public class DialogueIndicatorManager : ModSystem
-{
-    public static DialogueIndicatorManager Instance { get; set; }
-    public DialogueIndicatorManager() => Instance = this;
-
-    private readonly List<DialogueIndicator> indicators = [];
-    private readonly Dictionary<int, DialogueIndicator> npcIndicators = [];
-    private readonly Dictionary<int, string> npcDialogueTracking = [];
-
-    public override void Unload()
-    {
-        if (!Main.dedServ)
-        {
-            Instance = null;
-        }
-        indicators.Clear();
-        npcIndicators.Clear();
-        npcDialogueTracking.Clear();
-    }
-
-    public override void OnWorldUnload()
-    {
-        base.OnWorldUnload();
-        indicators.Clear();
-        npcIndicators.Clear();
-        npcDialogueTracking.Clear();
-    }
-
-    public DialogueIndicator CreateIndicator(Vector2 worldPosition, NPCData npcData, string dialogueKey, int lineCount,
-        bool zoomIn = false, int defaultDelay = 2, int defaultEmote = 0, int? musicId = null,
-        params (int line, int delay, int emote)[] modifications)
-    {
-        var indicator = new DialogueIndicator(worldPosition, npcData, dialogueKey, lineCount, zoomIn, defaultDelay, defaultEmote, musicId, modifications);
-        indicators.Add(indicator);
-        return indicator;
-    }
-
-    public DialogueIndicator CreateIndicatorForNPC(NPC npc, NPCData npcData, string dialogueKey, int lineCount,
-        bool zoomIn = false, int defaultDelay = 2, int defaultEmote = 0, int? musicId = null,
-        params (int line, int delay, int emote)[] modifications)
-    {
-        int npcIndex = npc.whoAmI;
-
-        if (npcIndicators.ContainsKey(npcIndex))
-        {
-            if (npcDialogueTracking.ContainsKey(npcIndex) && npcDialogueTracking[npcIndex] != dialogueKey)
-            {
-                var oldIndicator = npcIndicators[npcIndex];
-                indicators.Remove(oldIndicator);
-                npcIndicators.Remove(npcIndex);
-
-                var indicator = DialogueIndicator.CreateForNPC(npc, npcData, dialogueKey, lineCount, zoomIn, defaultDelay, defaultEmote, musicId, modifications);
-                indicators.Add(indicator);
-                npcIndicators[npcIndex] = indicator;
-                npcDialogueTracking[npcIndex] = dialogueKey;
-                return indicator;
-            }
-
-            return npcIndicators[npcIndex];
-        }
-
-        var newIndicator = DialogueIndicator.CreateForNPC(npc, npcData, dialogueKey, lineCount, zoomIn, defaultDelay, defaultEmote, musicId, modifications);
-        indicators.Add(newIndicator);
-        npcIndicators[npcIndex] = newIndicator;
-        npcDialogueTracking[npcIndex] = dialogueKey;
-
-        return newIndicator;
-    }
-
-    public void RemoveIndicatorForNPC(int npcIndex)
-    {
-        if (npcIndicators.TryGetValue(npcIndex, out DialogueIndicator indicator))
-        {
-            indicators.Remove(indicator);
-            npcIndicators.Remove(npcIndex);
-
-            if (npcDialogueTracking.ContainsKey(npcIndex))
-            {
-                npcDialogueTracking.Remove(npcIndex);
-            }
-        }
-    }
-
-    public void RemoveIndicatorsForDialogue(string dialogueKey)
-    {
-        var npcsToRemove = new List<int>();
-
-        foreach (var kvp in npcDialogueTracking)
-        {
-            if (kvp.Value == dialogueKey)
-            {
-                npcsToRemove.Add(kvp.Key);
-            }
-        }
-
-        foreach (var npcIndex in npcsToRemove)
-        {
-            RemoveIndicatorForNPC(npcIndex);
-        }
-    }
-
-    public bool HasIndicatorForNPC(int npcIndex)
-    {
-        return npcIndicators.ContainsKey(npcIndex);
-    }
-
-    public string GetDialogueForNPC(int npcIndex)
-    {
-        return npcDialogueTracking.TryGetValue(npcIndex, out string dialogueKey) ? dialogueKey : null;
-    }
-
-    public override void PostUpdateEverything()
-    {
-        for (var i = indicators.Count - 1; i >= 0; i--)
-        {
-            indicators[i].Update();
-
-            if (!indicators[i].IsVisible)
-            {
-                foreach (var kvp in npcIndicators)
-                {
-                    if (kvp.Value == indicators[i])
-                    {
-                        npcIndicators.Remove(kvp.Key);
-                        if (npcDialogueTracking.ContainsKey(kvp.Key))
-                        {
-                            npcDialogueTracking.Remove(kvp.Key);
-                        }
-                        break;
-                    }
-                }
-
-                indicators.RemoveAt(i);
-            }
-        }
-    }
-
-    public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
-    {
-        int invasionIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Invasion Progress Bars"));
-        if (invasionIndex != -1)
-        {
-            layers.Insert(invasionIndex + 1, new LegacyGameInterfaceLayer(
-                "Reverie: Dialogue Indicators",
-                delegate
-                {
-                    Instance.Draw(Main.spriteBatch);
-                    return true;
-                },
-                InterfaceScaleType.Game)
-            );
-        }
-    }
-
-    public void Draw(SpriteBatch spriteBatch)
-    {
-        foreach (var indicator in indicators)
-        {
-            indicator.Draw(spriteBatch);
-        }
-    }
-
-    public void ClearAllIndicators()
-    {
-        indicators.Clear();
-        npcIndicators.Clear();
-        npcDialogueTracking.Clear();
     }
 }

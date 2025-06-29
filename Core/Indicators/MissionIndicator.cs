@@ -1,34 +1,23 @@
-﻿using Reverie.Core.Indicators;
-using Reverie.Core.Missions;
+﻿using Reverie.Core.Missions;
 using Reverie.Core.Missions.Core;
-using System.Collections.Generic;
-using Terraria.Audio;
 using Terraria.GameContent;
-using Terraria.UI;
 
 namespace Reverie.Core.Indicators;
 
-/// <summary>
-/// An indicator of missions, appears in the world and shows mission details
-/// </summary>
 public class MissionIndicator : ScreenIndicator
 {
     private readonly Mission mission;
-
     private readonly Texture2D iconTexture;
-
-    private float hoverFadeIn = 0f;
-    private const float HOVER_FADE_SPEED = 0.1f;
 
     private const int PANEL_WIDTH = 220;
     private const int PADDING = 10;
 
-    private readonly float bobAmount = (float)Math.PI;
-
     public static bool ShowDebugHitbox = false;
 
-    public MissionIndicator(Vector2 worldPosition, Mission mission)
-         : base(worldPosition, 48, 48)
+    public override AnimationType AnimationStyle => AnimationType.Wag;
+
+    public MissionIndicator(Vector2 worldPosition, Mission mission, AnimationType? animationType = null)
+         : base(worldPosition, 48, 48, animationType)
     {
         this.mission = mission;
 
@@ -41,51 +30,37 @@ public class MissionIndicator : ScreenIndicator
         }
 
         OnDrawWorld = DrawIndicator;
-
         OnClick += HandleClick;
     }
 
-    public static MissionIndicator CreateForNPC(NPC npc, Mission mission)
+    public static MissionIndicator CreateForNPC(NPC npc, Mission mission, AnimationType? animationType = null)
     {
-        var indicator = new MissionIndicator(npc.Top, mission);
+        var indicator = new MissionIndicator(npc.Top, mission, animationType);
         indicator.TrackEntity(npc, new Vector2(0, -40));
         return indicator;
     }
 
     protected override void CustomUpdate()
     {
-        if (IsHovering && hoverFadeIn < 1f)
-        {
-            hoverFadeIn += HOVER_FADE_SPEED;
-            if (hoverFadeIn > 1f) hoverFadeIn = 1f;
-
-            if (JustHovered)
-                SoundEngine.PlaySound(SoundID.MenuTick);
-        }
-        else if (!IsHovering && hoverFadeIn > 0f)
-        {
-            hoverFadeIn -= HOVER_FADE_SPEED;
-            if (hoverFadeIn < 0f) hoverFadeIn = 0f;
-        }
-
-        Offset = new Vector2(0, (float)Math.Sin(AnimationTimer) * bobAmount);
+        // Custom mission-specific update logic can go here
+        // Animation logic is now handled by the base class
     }
-
 
     private void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPos, float opacity)
     {
         if (iconTexture == null)
             return;
 
-        var scale = IsHovering ? 1.1f : 1f;
+        var scale = GetAnimationScale();
         var glowColor = IsHovering ? Color.White : Color.White * 0.8f;
+        var rotation = GetAnimationRotation();
 
         spriteBatch.Draw(
             iconTexture,
             worldPos,
             null,
             glowColor * opacity,
-            0f,
+            rotation,
             new Vector2(iconTexture.Width / 2, iconTexture.Height / 2),
             scale,
             SpriteEffects.None,
@@ -99,17 +74,15 @@ public class MissionIndicator : ScreenIndicator
 
         if (IsHovering)
         {
-            DrawPanel(spriteBatch, worldPos, opacity * hoverFadeIn);
+            DrawPanel(spriteBatch, worldPos, opacity * GetHoverOpacity());
         }
     }
 
     private void DrawDebugHitbox(SpriteBatch spriteBatch, Vector2 worldPos, float opacity)
     {
-        // Don't apply zoom to the hitbox dimensions - use the original Width/Height
         var scaledWidth = Width;
         var scaledHeight = Height;
 
-        // Calculate hitbox rectangle centered on worldPos (drawing in world space)
         var hitboxRect = new Rectangle(
             (int)worldPos.X - scaledWidth / 2,
             (int)worldPos.Y - scaledHeight / 2,
@@ -117,65 +90,20 @@ public class MissionIndicator : ScreenIndicator
             scaledHeight
         );
 
-        // Create a 1x1 white pixel texture for drawing rectangles
         var pixel = TextureAssets.MagicPixel.Value;
 
-        // Draw hitbox border (red for normal, green for hovering)
         var borderColor = IsHovering ? Color.Lime : Color.Red;
         borderColor *= opacity * 0.8f;
 
-        // Draw border lines (top, bottom, left, right)
+        // Draw border lines
         spriteBatch.Draw(pixel, new Rectangle(hitboxRect.X, hitboxRect.Y, hitboxRect.Width, 2), borderColor);
         spriteBatch.Draw(pixel, new Rectangle(hitboxRect.X, hitboxRect.Bottom - 2, hitboxRect.Width, 2), borderColor);
         spriteBatch.Draw(pixel, new Rectangle(hitboxRect.X, hitboxRect.Y, 2, hitboxRect.Height), borderColor);
         spriteBatch.Draw(pixel, new Rectangle(hitboxRect.Right - 2, hitboxRect.Y, 2, hitboxRect.Height), borderColor);
 
-        // Draw semi-transparent fill
         var fillColor = IsHovering ? Color.Lime : Color.Red;
         fillColor *= opacity * 0.2f;
         spriteBatch.Draw(pixel, hitboxRect, fillColor);
-
-        // Enhanced debug info to track coordinate issues
-        var zoom = Main.GameViewMatrix.Zoom.Y;
-        var screenPos = WorldToScreen(worldPos);
-
-        // Get additional debug info
-        var baseWorldPos = WorldPosition; // The stored world position
-        var currentOffset = Offset; // Current animation offset
-        var trackingInfo = "";
-        if (trackingEntity != null)
-        {
-            if (trackingEntity is NPC npc)
-            {
-                trackingInfo = $"NPC.Top: {npc.Top}\nTrackOffset: {trackingOffset}\nNPC.Pos: {npc.position}";
-            }
-        }
-
-        var debugText = $"BaseWorldPos: {baseWorldPos}\nCurrentOffset: {currentOffset}\nFinalWorldPos: {worldPos}\nScreenPos: {screenPos}\nScreenPosition: {Main.screenPosition}\nZoom: {zoom:F2}\nMouse: {Main.MouseScreen}\nHover: {IsHovering}\n{trackingInfo}";
-
-        Utils.DrawBorderStringFourWay(
-            spriteBatch,
-            FontAssets.MouseText.Value,
-            debugText,
-            hitboxRect.X,
-            hitboxRect.Y - 200,
-            Color.Yellow * opacity,
-            Color.Black * opacity,
-            Vector2.Zero,
-            0.6f
-        );
-
-        // Draw center crosshair
-        var centerX = hitboxRect.X + hitboxRect.Width / 2;
-        var centerY = hitboxRect.Y + hitboxRect.Height / 2;
-        spriteBatch.Draw(pixel, new Rectangle(centerX - 5, centerY - 1, 10, 2), Color.White * opacity);
-        spriteBatch.Draw(pixel, new Rectangle(centerX - 1, centerY - 5, 2, 10), Color.White * opacity);
-
-        // Helper method for WorldToScreen conversion
-        Vector2 WorldToScreen(Vector2 worldPosition)
-        {
-            return Vector2.Transform(worldPosition - Main.screenPosition, Main.GameViewMatrix.TransformationMatrix);
-        }
     }
 
     private void DrawPanel(SpriteBatch spriteBatch, Vector2 screenPos, float opacity)
@@ -220,7 +148,6 @@ public class MissionIndicator : ScreenIndicator
             panelHeight
         );
 
-        // Draw mission details
         var textY = panelRect.Y + PADDING;
 
         // Mission name
@@ -294,7 +221,6 @@ public class MissionIndicator : ScreenIndicator
                 if (reward.type <= 0)
                     continue;
 
-                // Draw item icon
                 spriteBatch.Draw(
                     TextureAssets.Item[reward.type].Value,
                     new Vector2(rewardX, textY),
@@ -307,7 +233,6 @@ public class MissionIndicator : ScreenIndicator
                     0f
                 );
 
-                // Draw item count if more than 1
                 if (reward.stack > 1)
                 {
                     Utils.DrawBorderStringFourWay(
@@ -368,161 +293,5 @@ public class MissionIndicator : ScreenIndicator
         {
             ModContent.GetInstance<Reverie>().Logger.Error($"Error starting mission: {ex.Message}");
         }
-    }
-}
-
-/// <summary>
-/// Manages the creation and tracking of mission indicators in the world
-/// </summary>
-public class MissionIndicatorManager : ModSystem
-{
-    public static MissionIndicatorManager Instance { get; set; }
-    public MissionIndicatorManager() => Instance = this;
-
-    private readonly List<MissionIndicator> indicators = [];
-
-    private readonly Dictionary<int, MissionIndicator> npcIndicators = [];
-    private Dictionary<int, int> npcMissionTracking = [];
-
-    public override void Unload()
-    {
-        if (!Main.dedServ)
-        {
-            Instance = null;
-        }
-        indicators.Clear();
-        npcIndicators.Clear();
-    }
-    public override void OnWorldUnload()
-    {
-        base.OnWorldUnload();
-
-        indicators.Clear();
-        npcIndicators.Clear();
-    }
-
-    public MissionIndicator CreateIndicator(Vector2 worldPosition, Mission mission)
-    {
-        var indicator = new MissionIndicator(worldPosition, mission);
-        indicators.Add(indicator);
-        return indicator;
-    }
-
-    public MissionIndicator CreateIndicatorForNPC(NPC npc, Mission mission)
-    {
-        int npcIndex = npc.whoAmI;
-
-        if (npcIndicators.ContainsKey(npcIndex))
-        {
-            if (npcMissionTracking.ContainsKey(npcIndex) && npcMissionTracking[npcIndex] != mission.ID)
-            {
-                var oldIndicator = npcIndicators[npcIndex];
-                indicators.Remove(oldIndicator);
-                npcIndicators.Remove(npcIndex);
-
-                var indicator = MissionIndicator.CreateForNPC(npc, mission);
-                indicators.Add(indicator);
-                npcIndicators[npcIndex] = indicator;
-                npcMissionTracking[npcIndex] = mission.ID;
-                return indicator;
-            }
-
-            return npcIndicators[npcIndex];
-        }
-
-        var newIndicator = MissionIndicator.CreateForNPC(npc, mission);
-        indicators.Add(newIndicator);
-        npcIndicators[npcIndex] = newIndicator;
-        npcMissionTracking[npcIndex] = mission.ID;
-
-        return newIndicator;
-    }
-
-    public void RemoveIndicatorForNPC(int npcIndex)
-    {
-        if (npcIndicators.TryGetValue(npcIndex, out MissionIndicator indicator))
-        {
-            indicators.Remove(indicator);
-            npcIndicators.Remove(npcIndex);
-
-            if (npcMissionTracking.ContainsKey(npcIndex))
-            {
-                npcMissionTracking.Remove(npcIndex);
-            }
-        }
-    }
-
-    public void RemoveIndicatorsForMission(int missionID)
-    {
-        // Create a list of NPCs to remove
-        var npcsToRemove = new List<int>();
-
-        // Find all NPCs with indicators for this mission
-        foreach (var kvp in npcMissionTracking)
-        {
-            if (kvp.Value == missionID)
-            {
-                npcsToRemove.Add(kvp.Key);
-            }
-        }
-
-        // Remove each indicator
-        foreach (var npcIndex in npcsToRemove)
-        {
-            RemoveIndicatorForNPC(npcIndex);
-        }
-    }
-
-    public override void PostUpdateEverything()
-    {
-        for (var i = indicators.Count - 1; i >= 0; i--)
-        {
-            indicators[i].Update();
-
-            if (!indicators[i].IsVisible)
-            {
-                foreach (var kvp in npcIndicators)
-                {
-                    if (kvp.Value == indicators[i])
-                    {
-                        npcIndicators.Remove(kvp.Key);
-                        break;
-                    }
-                }
-
-                indicators.RemoveAt(i);
-            }
-        }
-    }
-
-    public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
-    {
-        int invasionIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Invasion Progress Bars"));
-        if (invasionIndex != -1)
-        {
-            layers.Insert(invasionIndex + 1, new LegacyGameInterfaceLayer(
-                "Reverie: Mission Indicators",
-                delegate {
-                    Instance.Draw(Main.spriteBatch);
-                    return true;
-                },
-                InterfaceScaleType.Game)
-            );
-        }
-    }
-
-    public void Draw(SpriteBatch spriteBatch)
-    {
-        foreach (var indicator in indicators)
-        {
-            indicator.Draw(spriteBatch);
-        }
-    }
-
-    public void ClearAllNotifications()
-    {
-        indicators.Clear();
-        npcIndicators.Clear();
-        npcMissionTracking.Clear();
     }
 }

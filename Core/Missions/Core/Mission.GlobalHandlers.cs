@@ -112,11 +112,11 @@ public class ObjectiveEventNPC : GlobalNPC
                 if (mission == null)
                     return;
 
-                MissionIndicatorManager.Instance.CreateIndicatorForNPC(npc, mission);
+                ScreenIndicatorManager.Instance.CreateMissionIndicatorForNPC(npc, mission);
             }
             else
             {
-                MissionIndicatorManager.Instance.RemoveIndicatorForNPC(npc.whoAmI);
+                ScreenIndicatorManager.Instance.RemoveIndicatorForNPC(npc.whoAmI);
             }
         }
     }

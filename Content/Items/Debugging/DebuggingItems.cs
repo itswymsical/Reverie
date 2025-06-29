@@ -68,7 +68,7 @@ public class SpawnMissionIndicator : ModItem
         {
             if (Main.myPlayer == player.whoAmI)
             {
-                MissionIndicatorManager.Instance.CreateIndicator(Main.MouseWorld, mission);
+                ScreenIndicatorManager.Instance.CreateMissionIndicator(Main.MouseWorld, mission);
                 Main.NewText($"Placed at position [X:{Main.MouseWorld.X} Y:{Main.MouseWorld.Y}]");
             }
            
@@ -76,7 +76,7 @@ public class SpawnMissionIndicator : ModItem
         else
         {
             Main.NewText($"[Cleared All Indicators] | Right-click to place an Indicator.");
-            MissionIndicatorManager.Instance.ClearAllNotifications();
+            ScreenIndicatorManager.Instance.ClearAllIndicators();
         }
 
         return true;
@@ -103,7 +103,7 @@ public class SpawnDialogueIndicator : ModItem
         {
             if (Main.myPlayer == player.whoAmI)
             {
-                DialogueIndicatorManager.Instance.CreateIndicator(
+                ScreenIndicatorManager.Instance.CreateDialogueIndicator(
                  Main.MouseWorld,
                  NPCManager.GuideData,
                  DialogueKeys.FallingStar.Intro,
@@ -120,7 +120,7 @@ public class SpawnDialogueIndicator : ModItem
         else
         {
             Main.NewText($"[Cleared All Indicators] | Right-click to place an Indicator.");
-            DialogueIndicatorManager.Instance.ClearAllIndicators();
+            ScreenIndicatorManager.Instance.ClearAllIndicators();
         }
 
         return true;
