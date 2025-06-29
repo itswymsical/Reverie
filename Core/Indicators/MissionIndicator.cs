@@ -1,15 +1,17 @@
-﻿using Reverie.Core.Missions;
+﻿using Reverie.Core.Indicators;
+using Reverie.Core.Missions;
 using Reverie.Core.Missions.Core;
-using Reverie.Utilities;
+using System.Collections.Generic;
 using Terraria.Audio;
 using Terraria.GameContent;
+using Terraria.UI;
 
-namespace Reverie.Core.Entities;
+namespace Reverie.Core.Indicators;
 
 /// <summary>
 /// An indicator of missions, appears in the world and shows mission details
 /// </summary>
-public class MissionIndicator : UIEntity
+public class MissionIndicator : ScreenIndicator
 {
     private readonly Mission mission;
 
@@ -181,24 +183,24 @@ public class MissionIndicator : UIEntity
         if (mission == null)
             return;
 
-        float zoom = Main.GameViewMatrix.Zoom.X;
+        var zoom = Main.GameViewMatrix.Zoom.X;
 
-        int lineCount = 3;
+        var lineCount = 3;
         if (mission.Objective.Count > 0)
         {
             lineCount += mission.Objective[0].Objectives.Count;
         }
 
-        int panelHeight = 20 + (lineCount * 20) + PADDING * 2;
+        var panelHeight = 20 + lineCount * 20 + PADDING * 2;
 
         // Position panel to the right of the icon
-        float panelX = screenPos.X + (Width * zoom / 2) + 10;
-        float panelY = screenPos.Y - (panelHeight / 2);
+        var panelX = screenPos.X + Width * zoom / 2 + 10;
+        var panelY = screenPos.Y - panelHeight / 2;
 
         // Adjust if panel would go off screen
         if (panelX + PANEL_WIDTH > Main.screenWidth)
         {
-            panelX = screenPos.X - (Width * zoom / 2) - PANEL_WIDTH - 10;
+            panelX = screenPos.X - Width * zoom / 2 - PANEL_WIDTH - 10;
         }
 
         if (panelY + panelHeight > Main.screenHeight)
@@ -211,7 +213,7 @@ public class MissionIndicator : UIEntity
             panelY = 10;
         }
 
-        Rectangle panelRect = new Rectangle(
+        var panelRect = new Rectangle(
             (int)panelX,
             (int)panelY,
             PANEL_WIDTH,
@@ -219,7 +221,7 @@ public class MissionIndicator : UIEntity
         );
 
         // Draw mission details
-        int textY = panelRect.Y + PADDING;
+        var textY = panelRect.Y + PADDING;
 
         // Mission name
         Utils.DrawBorderStringFourWay(
@@ -236,7 +238,7 @@ public class MissionIndicator : UIEntity
         textY += 25;
 
         // Employer name
-        string employerName = "Unknown";
+        var employerName = "Unknown";
         if (mission.ProviderNPC > 0)
         {
             employerName = Lang.GetNPCNameValue(mission.ProviderNPC);
@@ -286,7 +288,7 @@ public class MissionIndicator : UIEntity
             textY += 20;
 
             // Draw item rewards
-            int rewardX = panelRect.X + PADDING;
+            var rewardX = panelRect.X + PADDING;
             foreach (var reward in mission.Rewards)
             {
                 if (reward.type <= 0)
@@ -366,5 +368,161 @@ public class MissionIndicator : UIEntity
         {
             ModContent.GetInstance<Reverie>().Logger.Error($"Error starting mission: {ex.Message}");
         }
+    }
+}
+
+/// <summary>
+/// Manages the creation and tracking of mission indicators in the world
+/// </summary>
+public class MissionIndicatorManager : ModSystem
+{
+    public static MissionIndicatorManager Instance { get; set; }
+    public MissionIndicatorManager() => Instance = this;
+
+    private readonly List<MissionIndicator> indicators = [];
+
+    private readonly Dictionary<int, MissionIndicator> npcIndicators = [];
+    private Dictionary<int, int> npcMissionTracking = [];
+
+    public override void Unload()
+    {
+        if (!Main.dedServ)
+        {
+            Instance = null;
+        }
+        indicators.Clear();
+        npcIndicators.Clear();
+    }
+    public override void OnWorldUnload()
+    {
+        base.OnWorldUnload();
+
+        indicators.Clear();
+        npcIndicators.Clear();
+    }
+
+    public MissionIndicator CreateIndicator(Vector2 worldPosition, Mission mission)
+    {
+        var indicator = new MissionIndicator(worldPosition, mission);
+        indicators.Add(indicator);
+        return indicator;
+    }
+
+    public MissionIndicator CreateIndicatorForNPC(NPC npc, Mission mission)
+    {
+        int npcIndex = npc.whoAmI;
+
+        if (npcIndicators.ContainsKey(npcIndex))
+        {
+            if (npcMissionTracking.ContainsKey(npcIndex) && npcMissionTracking[npcIndex] != mission.ID)
+            {
+                var oldIndicator = npcIndicators[npcIndex];
+                indicators.Remove(oldIndicator);
+                npcIndicators.Remove(npcIndex);
+
+                var indicator = MissionIndicator.CreateForNPC(npc, mission);
+                indicators.Add(indicator);
+                npcIndicators[npcIndex] = indicator;
+                npcMissionTracking[npcIndex] = mission.ID;
+                return indicator;
+            }
+
+            return npcIndicators[npcIndex];
+        }
+
+        var newIndicator = MissionIndicator.CreateForNPC(npc, mission);
+        indicators.Add(newIndicator);
+        npcIndicators[npcIndex] = newIndicator;
+        npcMissionTracking[npcIndex] = mission.ID;
+
+        return newIndicator;
+    }
+
+    public void RemoveIndicatorForNPC(int npcIndex)
+    {
+        if (npcIndicators.TryGetValue(npcIndex, out MissionIndicator indicator))
+        {
+            indicators.Remove(indicator);
+            npcIndicators.Remove(npcIndex);
+
+            if (npcMissionTracking.ContainsKey(npcIndex))
+            {
+                npcMissionTracking.Remove(npcIndex);
+            }
+        }
+    }
+
+    public void RemoveIndicatorsForMission(int missionID)
+    {
+        // Create a list of NPCs to remove
+        var npcsToRemove = new List<int>();
+
+        // Find all NPCs with indicators for this mission
+        foreach (var kvp in npcMissionTracking)
+        {
+            if (kvp.Value == missionID)
+            {
+                npcsToRemove.Add(kvp.Key);
+            }
+        }
+
+        // Remove each indicator
+        foreach (var npcIndex in npcsToRemove)
+        {
+            RemoveIndicatorForNPC(npcIndex);
+        }
+    }
+
+    public override void PostUpdateEverything()
+    {
+        for (var i = indicators.Count - 1; i >= 0; i--)
+        {
+            indicators[i].Update();
+
+            if (!indicators[i].IsVisible)
+            {
+                foreach (var kvp in npcIndicators)
+                {
+                    if (kvp.Value == indicators[i])
+                    {
+                        npcIndicators.Remove(kvp.Key);
+                        break;
+                    }
+                }
+
+                indicators.RemoveAt(i);
+            }
+        }
+    }
+
+    public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
+    {
+        int invasionIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Invasion Progress Bars"));
+        if (invasionIndex != -1)
+        {
+            layers.Insert(invasionIndex + 1, new LegacyGameInterfaceLayer(
+                "Reverie: Mission Indicators",
+                delegate {
+                    Instance.Draw(Main.spriteBatch);
+                    return true;
+                },
+                InterfaceScaleType.Game)
+            );
+        }
+    }
+
+    public void Draw(SpriteBatch spriteBatch)
+    {
+        foreach (var indicator in indicators)
+        {
+            indicator.Draw(spriteBatch);
+        }
+    }
+
+    public void ClearAllNotifications()
+    {
+        indicators.Clear();
+        npcIndicators.Clear();
+        npcMissionTracking.Clear();
     }
 }

@@ -1,6 +1,6 @@
-﻿namespace Reverie.Core.Entities;
+﻿namespace Reverie.Core.Indicators;
 
-public class UIEntity
+public class ScreenIndicator
 {
     #region Properties
     public Vector2 WorldPosition { get; set; }
@@ -32,7 +32,7 @@ public class UIEntity
     public delegate void DrawDelegate(SpriteBatch spriteBatch, Vector2 worldPos, float opacity);
     public DrawDelegate OnDrawWorld;
 
-    public UIEntity(Vector2 worldPosition, int width, int height)
+    public ScreenIndicator(Vector2 worldPosition, int width, int height)
     {
         WorldPosition = worldPosition;
         Width = width;

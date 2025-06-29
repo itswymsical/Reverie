@@ -1,5 +1,5 @@
 ﻿using Reverie.Common.UI.Missions;
-using Reverie.Core.Entities;
+using Reverie.Core.Indicators;
 using Reverie.Core.Missions.Core;
 using Reverie.Core.Missions.System;
 using Reverie.Utilities;

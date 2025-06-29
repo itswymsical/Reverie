@@ -1,41 +1,13 @@
 ﻿using Reverie.Common.UI.Missions;
-using Reverie.Core.Entities;
+using Reverie.Core.Indicators;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Terraria.UI;
 using Reverie.Content.Cutscenes;
 using Reverie.Core.Cinematics;
+using Reverie.Core.Indicators;
 
 namespace Reverie.Content.Items.Debugging;
-
-public class DialogueTest : ModItem
-{
-    public override string Texture => PLACEHOLDER;
-    public override void SetDefaults()
-    {
-        Item.useTime = Item.useAnimation = 20;
-        Item.value = Item.buyPrice(0);
-        Item.rare = ItemRarityID.Quest;
-        Item.useStyle = ItemUseStyleID.HoldUp;
-    }
-    public override bool? UseItem(Player player)
-    {
-        if (Main.myPlayer == player.whoAmI)
-            DialogueManager.Instance.StartDialogue(
-               NPCManager.MerchantData,
-               DialogueKeys.Merchant.MerchantIntro,
-               lineCount: 5,
-               zoomIn: true, 
-               modifications: 
-               [(line: 1, delay: 3, emote: 0), 
-                (line: 2, delay: 3, emote: 1),
-                (line: 3, delay: 3, emote: 0),
-                (line: 4, delay: 3, emote: 0),
-                (line: 5, delay: 3, emote: 1)]);
-
-        return true;
-    }
-}
 
 public class PlayCutscene : ModItem
 {
@@ -77,7 +49,7 @@ public class MissionCompleteIndicator : ModItem
     }
 }
 
-public class SpawnUserInterfaceEntity : ModItem
+public class SpawnMissionIndicator : ModItem
 {
     public override string Texture => PLACEHOLDER;
     public override void SetDefaults()
@@ -105,6 +77,50 @@ public class SpawnUserInterfaceEntity : ModItem
         {
             Main.NewText($"[Cleared All Indicators] | Right-click to place an Indicator.");
             MissionIndicatorManager.Instance.ClearAllNotifications();
+        }
+
+        return true;
+    }
+    public override bool AltFunctionUse(Player player)
+    {
+        return true;
+    }
+}
+
+public class SpawnDialogueIndicator : ModItem
+{
+    public override string Texture => PLACEHOLDER;
+    public override void SetDefaults()
+    {
+        Item.useTime = Item.useAnimation = 20;
+        Item.value = Item.buyPrice(0);
+        Item.rare = ItemRarityID.Quest;
+        Item.useStyle = ItemUseStyleID.HoldUp;
+    }
+    public override bool? UseItem(Player player)
+    {
+        if (player.altFunctionUse != 0)
+        {
+            if (Main.myPlayer == player.whoAmI)
+            {
+                DialogueIndicatorManager.Instance.CreateIndicator(
+                 Main.MouseWorld,
+                 NPCManager.GuideData,
+                 DialogueKeys.FallingStar.Intro,
+                 3,
+                 zoomIn: true,
+                 defaultDelay: 2,
+                 defaultEmote: 0,
+                 musicId: null
+             );
+                Main.NewText($"Placed at position [X:{Main.MouseWorld.X} Y:{Main.MouseWorld.Y}]");
+            }
+
+        }
+        else
+        {
+            Main.NewText($"[Cleared All Indicators] | Right-click to place an Indicator.");
+            DialogueIndicatorManager.Instance.ClearAllIndicators();
         }
 
         return true;

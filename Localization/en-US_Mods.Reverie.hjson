@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -308,6 +308,16 @@ Items: {
 			Scares the crap out of critters, leaving them to flee
 			scared critters will drop poo
 			'''
+	}
+
+	SpawnDialogueIndicator: {
+		DisplayName: Spawn Dialogue Indicator
+		Tooltip: ""
+	}
+
+	SpawnMissionIndicator: {
+		DisplayName: Spawn Mission Indicator
+		Tooltip: ""
 	}
 }
 

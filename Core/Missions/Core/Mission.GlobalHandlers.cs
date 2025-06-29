@@ -1,5 +1,5 @@
 ﻿using Reverie.Core.Dialogue;
-using Reverie.Core.Entities;
+using Reverie.Core.Indicators;
 using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
 using System.Collections.Generic;
