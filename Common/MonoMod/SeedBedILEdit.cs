@@ -14,7 +14,7 @@ public class SeedBedPlantSupport : ModSystem
         {
             IL_WorldGen.PlaceTile += IL_PlaceTile_SeedBedSupport;
             IL_WorldGen.GrowAlch += IL_GrowAlch_SeedBedSupport;
-            Mod.Logger.Info("SeedBed plant support enabled via IL editing");
+            Mod.Logger.Info("Seedbed planter box IL Edit enabled");
         }
         catch (Exception e)
         {

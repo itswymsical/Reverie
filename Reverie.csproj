@@ -10,15 +10,19 @@
 	<ItemGroup>
 	  <AdditionalFiles Remove="Common\Items\Configs\**" />
 	  <AdditionalFiles Remove="Common\Projectiles\**" />
+	  <AdditionalFiles Remove="Content\Missions\Stylist\**" />
 	  <AdditionalFiles Remove="Dialouge\**" />
 	  <Compile Remove="Common\Items\Configs\**" />
 	  <Compile Remove="Common\Projectiles\**" />
+	  <Compile Remove="Content\Missions\Stylist\**" />
 	  <Compile Remove="Dialouge\**" />
 	  <EmbeddedResource Remove="Common\Items\Configs\**" />
 	  <EmbeddedResource Remove="Common\Projectiles\**" />
+	  <EmbeddedResource Remove="Content\Missions\Stylist\**" />
 	  <EmbeddedResource Remove="Dialouge\**" />
 	  <None Remove="Common\Items\Configs\**" />
 	  <None Remove="Common\Projectiles\**" />
+	  <None Remove="Content\Missions\Stylist\**" />
 	  <None Remove="Dialouge\**" />
 	</ItemGroup>
 
@@ -32,7 +36,6 @@
 	  </Reference>
 	</ItemGroup>
 	<ItemGroup>
-	  <Folder Include="Content\Missions\Stylist\" />
 	  <Folder Include="Core\Animation\" />
 	</ItemGroup>
 

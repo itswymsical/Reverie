@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -292,12 +292,22 @@ Items: {
 	}
 
 	SeedBedItem: {
-		DisplayName: SeedBed
+		DisplayName: Seedbed
 		Tooltip:
-        '''
-        Used to plant food, herbs, and flowers.
-        Grows plants faster than normal soil or planter boxes!
-        '''
+			'''
+			Used to plant food, herbs, and flowers
+			Grows plants faster than normal soil and planter boxes!
+			'''
+	}
+
+	BeastWhistleItem: {
+		DisplayName: Beast Whistle
+		Tooltip:
+			'''
+			'you are a terrible person...'
+			Scares the crap out of critters, leaving them to flee
+			scared critters will drop poo
+			'''
 	}
 }
 
