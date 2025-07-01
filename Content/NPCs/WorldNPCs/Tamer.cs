@@ -48,15 +48,4 @@ public class Tamer : WorldNPCActor
 
         button2 = "Missions";
     }
-    public override void OnChatButtonClicked(bool firstButton, ref string shopName)
-    {
-        if (!firstButton)
-        {
-            DialogueManager.Instance.StartDialogue(
-                    NPCManager.Default,
-                    DialogueKeys.TamerMissions.Chapter1,
-                    lineCount: 2,
-                    zoomIn: true);
-        }
-    }
 }

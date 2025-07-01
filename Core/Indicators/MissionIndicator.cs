@@ -40,7 +40,7 @@ public class MissionIndicator : ScreenIndicator
         return indicator;
     }
 
-    protected override void CustomUpdate()
+    protected override void PostUpdate()
     {
         // Custom mission-specific update logic can go here
         // Animation logic is now handled by the base class

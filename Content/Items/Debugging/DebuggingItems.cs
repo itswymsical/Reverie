@@ -1,31 +1,9 @@
 ﻿using Reverie.Common.UI.Missions;
 using Reverie.Core.Indicators;
-using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Terraria.UI;
-using Reverie.Content.Cutscenes;
-using Reverie.Core.Cinematics;
-using Reverie.Core.Indicators;
 
 namespace Reverie.Content.Items.Debugging;
-
-public class PlayCutscene : ModItem
-{
-    public override string Texture => PLACEHOLDER;
-    public override void SetDefaults()
-    {
-        Item.useTime = Item.useAnimation = 20;
-        Item.value = Item.buyPrice(0);
-        Item.rare = ItemRarityID.Quest;
-        Item.useStyle = ItemUseStyleID.HoldUp;
-    }
-    public override bool? UseItem(Player player)
-    {
-        if (Main.myPlayer == player.whoAmI)
-            CutsceneSystem.PlayCutscene(new FallingStarCutscene());
-        return true;
-    }
-}
 
 public class MissionCompleteIndicator : ModItem
 {
@@ -103,16 +81,9 @@ public class SpawnDialogueIndicator : ModItem
         {
             if (Main.myPlayer == player.whoAmI)
             {
-                ScreenIndicatorManager.Instance.CreateDialogueIndicator(
-                 Main.MouseWorld,
-                 NPCManager.GuideData,
-                 DialogueKeys.FallingStar.Intro,
-                 3,
-                 zoomIn: true,
-                 defaultDelay: 2,
-                 defaultEmote: 0,
-                 musicId: null
-             );
+                ScreenIndicatorManager.Instance.CreateDialogueIndicator(Main.MouseWorld, 
+                    "AFallingStar.CrashLanding", 9, "Guide", true, true, AnimationType.Wag);
+
                 Main.NewText($"Placed at position [X:{Main.MouseWorld.X} Y:{Main.MouseWorld.Y}]");
             }
 

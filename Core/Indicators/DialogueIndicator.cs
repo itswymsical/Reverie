@@ -5,41 +5,32 @@ using Terraria.GameContent;
 namespace Reverie.Core.Indicators;
 
 /// <summary>
-/// An indicator for dialogue, appears in the world and shows dialogue preview
+/// An indicator/button for dialogue
 /// </summary>
 public class DialogueIndicator : ScreenIndicator
 {
-    private readonly NPCData npcData;
     private readonly string dialogueKey;
     private readonly int lineCount;
     private readonly bool zoomIn;
-    private readonly int defaultDelay;
-    private readonly int defaultEmote;
-    private readonly int? musicId;
-    private readonly (int line, int delay, int emote)[] modifications;
+    private readonly bool letterbox;
+    private readonly string speakerName;
 
     private readonly Texture2D iconTexture;
 
-    private const int PANEL_WIDTH = 250;
-    private const int PADDING = 10;
-
-    public static bool ShowDebugHitbox = false;
-
+    private const int PANEL_WIDTH = 280;
+    private const int PADDING = 12;
     public override AnimationType AnimationStyle => AnimationType.Wag;
 
-    public DialogueIndicator(Vector2 worldPosition, NPCData npcData, string dialogueKey, int lineCount,
-        bool zoomIn = false, int defaultDelay = 2, int defaultEmote = 0, int? musicId = null,
-        AnimationType? animationType = null, params (int line, int delay, int emote)[] modifications)
+    public DialogueIndicator(Vector2 worldPosition, string dialogueKey, int lineCount,
+        string speakerName = "Unknown", bool zoomIn = false, bool letterbox = true,
+        AnimationType? animationType = null)
          : base(worldPosition, 40, 40, animationType)
     {
-        this.npcData = npcData;
         this.dialogueKey = dialogueKey;
         this.lineCount = lineCount;
         this.zoomIn = zoomIn;
-        this.defaultDelay = defaultDelay;
-        this.defaultEmote = defaultEmote;
-        this.musicId = musicId;
-        this.modifications = modifications;
+        this.letterbox = letterbox;
+        this.speakerName = speakerName;
 
         iconTexture = TextureAssets.Chat2.Value;
         if (iconTexture != null)
@@ -52,19 +43,26 @@ public class DialogueIndicator : ScreenIndicator
         OnClick += HandleClick;
     }
 
-    public static DialogueIndicator CreateForNPC(NPC npc, NPCData npcData, string dialogueKey, int lineCount,
-        bool zoomIn = false, int defaultDelay = 2, int defaultEmote = 0, int? musicId = null,
-        AnimationType? animationType = null, params (int line, int delay, int emote)[] modifications)
+    public static DialogueIndicator CreateForNPC(NPC npc, string dialogueKey, int lineCount,
+        bool zoomIn = false, bool letterbox = true, AnimationType? animationType = null)
     {
-        var indicator = new DialogueIndicator(npc.Top, npcData, dialogueKey, lineCount, zoomIn, defaultDelay, defaultEmote, musicId, animationType, modifications);
+        // Use the NPC's given name if available, otherwise use type name
+        string speakerName = (!string.IsNullOrEmpty(npc.GivenName) && npc.GivenName != npc.TypeName)
+            ? npc.GivenName
+            : npc.TypeName;
+
+        var indicator = new DialogueIndicator(npc.Top, dialogueKey, lineCount, speakerName, zoomIn, letterbox, animationType);
         indicator.TrackEntity(npc, new Vector2(0, -50));
         return indicator;
     }
 
-    protected override void CustomUpdate()
+    protected override void PostUpdate()
     {
-        // Custom dialogue-specific update logic can go here
-        // Animation logic is now handled by the base class
+        // Hide indicator if dialogue is already active
+        if (DialogueManager.Instance.IsAnyActive())
+        {
+            IsVisible = false;
+        }
     }
 
     private void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPos, float opacity)
@@ -88,63 +86,26 @@ public class DialogueIndicator : ScreenIndicator
             0f
         );
 
-        if (ShowDebugHitbox)
-        {
-            DrawDebugHitbox(spriteBatch, worldPos, opacity);
-        }
-
         if (IsHovering)
         {
             DrawPanel(spriteBatch, worldPos, opacity * GetHoverOpacity());
         }
     }
 
-    private void DrawDebugHitbox(SpriteBatch spriteBatch, Vector2 worldPos, float opacity)
-    {
-        var scaledWidth = Width;
-        var scaledHeight = Height;
-
-        var hitboxRect = new Rectangle(
-            (int)worldPos.X - scaledWidth / 2,
-            (int)worldPos.Y - scaledHeight / 2,
-            scaledWidth,
-            scaledHeight
-        );
-
-        var pixel = TextureAssets.MagicPixel.Value;
-        var borderColor = IsHovering ? Color.Cyan : Color.Blue;
-        borderColor *= opacity * 0.8f;
-
-        // Draw border
-        spriteBatch.Draw(pixel, new Rectangle(hitboxRect.X, hitboxRect.Y, hitboxRect.Width, 2), borderColor);
-        spriteBatch.Draw(pixel, new Rectangle(hitboxRect.X, hitboxRect.Bottom - 2, hitboxRect.Width, 2), borderColor);
-        spriteBatch.Draw(pixel, new Rectangle(hitboxRect.X, hitboxRect.Y, 2, hitboxRect.Height), borderColor);
-        spriteBatch.Draw(pixel, new Rectangle(hitboxRect.Right - 2, hitboxRect.Y, 2, hitboxRect.Height), borderColor);
-
-        var fillColor = IsHovering ? Color.Cyan : Color.Blue;
-        fillColor *= opacity * 0.2f;
-        spriteBatch.Draw(pixel, hitboxRect, fillColor);
-    }
 
     private void DrawPanel(SpriteBatch spriteBatch, Vector2 screenPos, float opacity)
     {
-        if (npcData == null)
-            return;
-
         float zoom = Main.GameViewMatrix.Zoom.X;
 
-        // Calculate panel height based on content
-        int lineCount = 2; // NPC name + preview text
-        if (musicId.HasValue)
-            lineCount++;
+        int lineCount = 3;
+        bool hasMusic = TryGetMusicId(out _);
+        if (hasMusic) lineCount++;
 
         int panelHeight = 20 + (lineCount * 22) + PADDING * 2;
 
-        // Position panel to the right of the icon
         float panelX = screenPos.X + (Width * zoom / 2) + 15;
         float panelY = screenPos.Y - (panelHeight / 2);
 
-        // Keep panel on screen
         if (panelX + PANEL_WIDTH > Main.screenWidth)
         {
             panelX = screenPos.X - (Width * zoom / 2) - PANEL_WIDTH - 15;
@@ -167,61 +128,24 @@ public class DialogueIndicator : ScreenIndicator
             panelHeight
         );
 
-        // Draw semi-transparent background
-        var pixel = TextureAssets.MagicPixel.Value;
-        spriteBatch.Draw(pixel, panelRect, npcData.BoxColor * 0.3f * opacity);
-
-        // Draw border
-        var borderColor = npcData.BoxColor * opacity;
-        spriteBatch.Draw(pixel, new Rectangle(panelRect.X, panelRect.Y, panelRect.Width, 2), borderColor);
-        spriteBatch.Draw(pixel, new Rectangle(panelRect.X, panelRect.Bottom - 2, panelRect.Width, 2), borderColor);
-        spriteBatch.Draw(pixel, new Rectangle(panelRect.X, panelRect.Y, 2, panelRect.Height), borderColor);
-        spriteBatch.Draw(pixel, new Rectangle(panelRect.Right - 2, panelRect.Y, 2, panelRect.Height), borderColor);
+        var speakerColor = GetDisplayColor();
 
         int textY = panelRect.Y + PADDING;
 
-        // NPC name
         Utils.DrawBorderStringFourWay(
             spriteBatch,
             FontAssets.MouseText.Value,
-            npcData.NpcName,
+            speakerName,
             panelRect.X + PADDING,
             textY,
-            npcData.BoxColor * opacity,
+            speakerColor * opacity,
             Color.Black * opacity,
             Vector2.Zero,
             1f
         );
         textY += 25;
 
-        // Try to get first dialogue line as preview
-        string previewText = "Talk to start dialogue";
-        try
-        {
-            var dialogue = DialogueBuilder.BuildByKey(dialogueKey, lineCount, defaultDelay, defaultEmote, musicId, modifications);
-            if (dialogue.Entries.Count > 0)
-            {
-                var firstEntry = dialogue.Entries[0];
-                var localizedText = firstEntry.GetText();
-                if (localizedText != null)
-                {
-                    string fullText = localizedText.Value;
-                    // Truncate if too long
-                    if (fullText.Length > 80)
-                    {
-                        previewText = fullText.Substring(0, 77) + "...";
-                    }
-                    else
-                    {
-                        previewText = fullText;
-                    }
-                }
-            }
-        }
-        catch
-        {
-            // Keep default preview text
-        }
+        string previewText = GetPreview();
 
         Utils.DrawBorderStringFourWay(
             spriteBatch,
@@ -236,8 +160,7 @@ public class DialogueIndicator : ScreenIndicator
         );
         textY += 25;
 
-        // Music indicator if present
-        if (musicId.HasValue)
+        if (hasMusic)
         {
             Utils.DrawBorderStringFourWay(
                 spriteBatch,
@@ -250,36 +173,93 @@ public class DialogueIndicator : ScreenIndicator
                 Vector2.Zero,
                 0.8f
             );
+            textY += 20;
         }
 
         Utils.DrawBorderStringFourWay(
             spriteBatch,
             FontAssets.MouseText.Value,
             "Click to start",
-            panelRect.X + 4,
-            panelRect.Y + panelHeight + 5,
+            panelRect.X + PADDING,
+            textY,
             Color.Yellow * opacity,
             Color.Black * opacity,
-            default,
+            Vector2.Zero,
             0.8f
         );
+    }
+
+    private string GetPreview()
+    {
+        try
+        {
+            var firstLineData = DialogueBuilder.BuildLineFromLocalization(dialogueKey, "Line1");
+            if (firstLineData != null && !string.IsNullOrEmpty(firstLineData.PlainText))
+            {
+                string fullText = firstLineData.PlainText;
+                fullText = fullText.Replace("\n", " ").Replace("\r", "");
+                if (fullText.Length > 60)
+                {
+                    return fullText.Substring(0, 57) + "...";
+                }
+                return fullText;
+            }
+        }
+        catch
+        {
+            // Fall through to default
+        }
+
+        return "Talk to start";
+    }
+
+    private bool TryGetMusicId(out int musicId)
+    {
+        musicId = -1;
+        try
+        {
+            var musicKey = $"DialogueLibrary.{dialogueKey}.Music";
+            var musicLoc = Instance.GetLocalization(musicKey);
+            if (!string.IsNullOrEmpty(musicLoc.Value) && int.TryParse(musicLoc.Value, out musicId))
+            {
+                return true;
+            }
+        }
+        catch { }
+        return false;
+    }
+
+    private Color GetDisplayColor()
+    {
+        return speakerName.ToLower() switch
+        {
+            "guide" => new Color(64, 109, 164),
+            "player" => new Color(100, 150, 200),
+            "you" => new Color(100, 150, 200),
+            _ => new Color(180, 180, 180)
+        };
     }
 
     private void HandleClick()
     {
         try
         {
-            bool success = DialogueManager.Instance.StartDialogue(npcData, dialogueKey, lineCount, zoomIn, defaultDelay, defaultEmote, musicId, false, modifications);
+            bool success = DialogueManager.Instance.StartDialogue(dialogueKey, lineCount, zoomIn, letterbox);
 
             if (success)
             {
-                SoundEngine.PlaySound(npcData.TalkSFX);
+                SoundEngine.PlaySound(SoundID.MenuTick);
                 IsVisible = false;
+            }
+            else
+            {
+                Main.NewText("[ERROR] Failed to start dialogue", Color.Red);
             }
         }
         catch (Exception ex)
         {
             ModContent.GetInstance<Reverie>().Logger.Error($"Error starting dialogue: {ex.Message}");
+            Main.NewText($"[ERROR] Dialogue error: {ex.Message}", Color.Red);
         }
     }
 }

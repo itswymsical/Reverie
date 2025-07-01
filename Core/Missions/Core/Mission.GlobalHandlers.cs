@@ -101,7 +101,7 @@ public class ObjectiveEventNPC : GlobalNPC
 
         if (npc.isLikeATownNPC)
         {
-            npc.ForceBubbleChatState();
+            //npc.ForceBubbleChatState();
 
             var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
 
@@ -197,7 +197,7 @@ public class ObjectiveEventPlayer : ModPlayer
     public override void PostUpdate()
     {
         base.PostUpdate();
-        TriggerEvents();
+        //TriggerEvents();
 
         timer++;
         if (timer > 7 * 60)

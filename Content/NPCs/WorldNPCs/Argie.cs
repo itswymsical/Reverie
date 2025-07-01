@@ -59,15 +59,4 @@ public class Argie : WorldNPCActor
 
         button2 = "Missions";
     }
-    public override void OnChatButtonClicked(bool firstButton, ref string shopName)
-    {
-        if (firstButton)
-        {
-            DialogueManager.Instance.StartDialogue(
-                    NPCManager.Default,
-                    DialogueKeys.Argie.Introduction,
-                    lineCount: 4,
-                    zoomIn: false, musicId: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}ArgiesTheme"));
-        }
-    }
 }

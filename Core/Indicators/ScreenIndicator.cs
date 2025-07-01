@@ -122,15 +122,11 @@ public class ScreenIndicator
             OnClick?.Invoke();
         }
 
-        CustomUpdate();
+        PostUpdate();
     }
 
-    /// <summary>
-    /// Handles all animation logic based on the Type property
-    /// </summary>
     protected virtual void UpdateAnimations()
     {
-        // Handle hover fade for all animation types
         if (IsHovering && hoverFadeIn < 1f)
         {
             hoverFadeIn += HOVER_FADE_SPEED;
@@ -148,7 +144,6 @@ public class ScreenIndicator
             if (hoverFadeIn < 0f) hoverFadeIn = 0f;
         }
 
-        // Update specific animation
         if (animationActive)
         {
             animationTimer += 1f / 60f;
@@ -181,13 +176,9 @@ public class ScreenIndicator
             }
         }
 
-        // Apply base offset based on animation type
         ApplyAnimationOffset();
     }
 
-    /// <summary>
-    /// Starts the animation when hovering begins
-    /// </summary>
     protected virtual void StartAnimation()
     {
         if (AnimationStyle != AnimationType.Hover)
@@ -197,30 +188,23 @@ public class ScreenIndicator
         }
     }
 
-    /// <summary>
-    /// Applies offset based on current animation
-    /// </summary>
     protected virtual void ApplyAnimationOffset()
     {
         switch (AnimationStyle)
         {
             case AnimationType.Hover:
-                // Simple gentle bobbing
                 Offset = new Vector2(0, (float)Math.Sin(AnimationTimer * 0.8f) * 3f);
                 break;
 
             case AnimationType.Wag:
-                // Gentle bobbing (rotation handled in GetAnimationRotation)
                 Offset = new Vector2(0, (float)Math.Sin(AnimationTimer * 0.8f) * 2.5f);
                 break;
 
             case AnimationType.Swivel:
-                // Gentle bobbing (rotation handled in GetAnimationRotation)
                 Offset = new Vector2(0, (float)Math.Sin(AnimationTimer * 0.8f) * 3.5f);
                 break;
 
             case AnimationType.Shake:
-                // Base bobbing plus shake offset when active
                 var baseOffset = new Vector2(0, (float)Math.Sin(AnimationTimer * 0.8f) * 2f);
                 if (animationActive)
                 {
@@ -235,9 +219,6 @@ public class ScreenIndicator
         }
     }
 
-    /// <summary>
-    /// Gets rotation value for current animation (used in draw methods)
-    /// </summary>
     public virtual float GetAnimationRotation()
     {
         if (!animationActive)
@@ -246,15 +227,13 @@ public class ScreenIndicator
         switch (AnimationStyle)
         {
             case AnimationType.Wag:
-                // Quick left-right finger wag that slows down
                 var wagProgress = animationTimer / WAG_DURATION;
-                var wagIntensity = WAG_INTENSITY * (1f - wagProgress * wagProgress); // Quadratic falloff
+                var wagIntensity = WAG_INTENSITY * (1f - wagProgress * wagProgress);
                 return (float)Math.Sin(wagProgress * Math.PI * 5) * wagIntensity;
 
             case AnimationType.Swivel:
-                // Smooth circular swivel motion
                 var swivelProgress = animationTimer / SWIVEL_DURATION;
-                var swivelIntensity = SWIVEL_INTENSITY * (float)Math.Sin(swivelProgress * Math.PI); // Sine wave falloff
+                var swivelIntensity = SWIVEL_INTENSITY * (float)Math.Sin(swivelProgress * Math.PI);
                 return swivelProgress * (float)Math.PI * 2 * swivelIntensity;
 
             default:
@@ -262,9 +241,6 @@ public class ScreenIndicator
         }
     }
 
-    /// <summary>
-    /// Gets scale multiplier for current animation
-    /// </summary>
     public virtual float GetAnimationScale()
     {
         var baseScale = 1f;
@@ -291,29 +267,21 @@ public class ScreenIndicator
         return baseScale;
     }
 
-    /// <summary>
-    /// Gets opacity multiplier for hover fade
-    /// </summary>
     public virtual float GetHoverOpacity() => hoverFadeIn;
 
     /// <summary>
-    /// Override in derived classes for custom update logic
+    /// extra update logic after the main update loop
     /// </summary>
-    protected virtual void CustomUpdate() { }
+    protected virtual void PostUpdate() { }
 
-    /// <summary>
-    /// Checks if the mouse is hovering over this entity
-    /// </summary>
     public bool CheckHovering()
     {
         if (!IsVisible)
             return false;
 
-        // Convert world position to screen position for mouse checking
         var worldPosWithOffset = WorldPosition + Offset;
         var screenPos = WorldToScreen(worldPosWithOffset);
 
-        // Use zoom for scaling the hitbox
         var zoom = Main.GameViewMatrix.Zoom.X;
         var scaledWidth = (int)(Width * zoom);
         var scaledHeight = (int)(Height * zoom);
@@ -336,10 +304,9 @@ public class ScreenIndicator
         if (!IsVisible)
             return;
 
-        // Use world position directly - no conversion needed since we're in world space
+        // Use world position directly, no conversion needed since we're in world space
         var worldPosWithOffset = WorldPosition + Offset;
 
-        // Call custom draw method if provided
         OnDrawWorld?.Invoke(spriteBatch, worldPosWithOffset, 1f);
     }
 
@@ -355,17 +322,11 @@ public class ScreenIndicator
         OnDrawWorld?.Invoke(spriteBatch, screenPos, 1f);
     }
 
-    /// <summary>
-    /// Converts world coordinates to screen coordinates
-    /// </summary>
     public static Vector2 WorldToScreen(Vector2 worldPos)
     {
         return Vector2.Transform(worldPos - Main.screenPosition, Main.GameViewMatrix.TransformationMatrix);
     }
 
-    /// <summary>
-    /// Converts screen coordinates to world coordinates
-    /// </summary>
     public static Vector2 ScreenToWorld(Vector2 screenPos)
     {
         return Vector2.Transform(screenPos, Matrix.Invert(Main.GameViewMatrix.TransformationMatrix)) + Main.screenPosition;
@@ -446,17 +407,13 @@ public class ScreenIndicatorManager : ModSystem
         }
         else if (typeof(T) == typeof(DialogueIndicator))
         {
-            var npcData = (NPCData)args[0];
-            var dialogueKey = (string)args[1];
-            var lineCount = (int)args[2];
-            var zoomIn = args.Length > 3 ? (bool)args[3] : false;
-            var defaultDelay = args.Length > 4 ? (int)args[4] : 2;
-            var defaultEmote = args.Length > 5 ? (int)args[5] : 0;
-            var musicId = args.Length > 6 ? (int?)args[6] : null;
-            var animationType = args.Length > 7 ? (AnimationType?)args[7] : null;
-            var modifications = args.Length > 8 ? ((int line, int delay, int emote)[])args[8] : new (int, int, int)[0];
+            var dialogueKey = (string)args[0];
+            var lineCount = (int)args[1];
+            var zoomIn = args.Length > 2 ? (bool)args[2] : false;
+            var letterbox = args.Length > 3 ? (bool)args[3] : true;
+            var animationType = args.Length > 4 ? (AnimationType?)args[4] : null;
 
-            indicator = (T)(object)DialogueIndicator.CreateForNPC(npc, npcData, dialogueKey, lineCount, zoomIn, defaultDelay, defaultEmote, musicId, animationType, modifications);
+            indicator = (T)(object)DialogueIndicator.CreateForNPC(npc, dialogueKey, lineCount, zoomIn, letterbox, animationType);
         }
         else
         {
@@ -500,7 +457,6 @@ public class ScreenIndicatorManager : ModSystem
         {
             indicators.Remove(indicator);
 
-            // Remove from NPC tracking if applicable
             var npcEntry = npcIndicators.FirstOrDefault(kvp => kvp.Value == indicator);
             if (npcEntry.Key != 0)
             {
@@ -585,21 +541,15 @@ public class ScreenIndicatorManager : ModSystem
         return CreateIndicatorForNPC<MissionIndicator>(npc, mission.ID, mission, animationType);
     }
 
-    public DialogueIndicator CreateDialogueIndicator(Vector2 worldPosition, NPCData npcData, string dialogueKey, int lineCount,
-        bool zoomIn = false, int defaultDelay = 2, int defaultEmote = 0, int? musicId = null, AnimationType? animationType = null,
-        params (int line, int delay, int emote)[] modifications)
+    public DialogueIndicator CreateDialogueIndicator(Vector2 worldPosition, string dialogueKey, int lineCount,
+        string speakerName = "Unknown", bool zoomIn = false, bool letterbox = true, AnimationType? animationType = null)
     {
-        return CreateIndicator<DialogueIndicator>(worldPosition, npcData, dialogueKey, lineCount, zoomIn, defaultDelay, defaultEmote, musicId, animationType, modifications);
+        return CreateIndicator<DialogueIndicator>(worldPosition, dialogueKey, lineCount, speakerName, zoomIn, letterbox, animationType);
     }
 
-    public DialogueIndicator CreateDialogueIndicatorForNPC(NPC npc, NPCData npcData, string dialogueKey, int lineCount,
-        bool zoomIn = false, int defaultDelay = 2, int defaultEmote = 0, int? musicId = null, AnimationType? animationType = null,
-        params (int line, int delay, int emote)[] modifications)
+    public DialogueIndicator CreateDialogueIndicatorForNPC(NPC npc, string dialogueKey, int lineCount,
+        bool zoomIn = false, bool letterbox = true, AnimationType? animationType = null)
     {
-        return CreateIndicatorForNPC<DialogueIndicator>(npc, dialogueKey, npcData, dialogueKey, lineCount, zoomIn, defaultDelay, defaultEmote, musicId, animationType, modifications);
+        return CreateIndicatorForNPC<DialogueIndicator>(npc, dialogueKey, dialogueKey, lineCount, zoomIn, letterbox, animationType);
     }
-
-    // Legacy support - remove when old managers are deleted
-    public void RemoveIndicatorsForMission(int missionID) => RemoveIndicatorsForKey(missionID);
-    public void RemoveIndicatorsForDialogue(string dialogueKey) => RemoveIndicatorsForKey(dialogueKey);
 }
