@@ -47,7 +47,7 @@ public class DialogueBox : IInGameNotification
     #endregion
 
     #region Public Methods
-    public static DialogueBox CreateWithLineKeys(string dialogueKey, List<string> lineKeys, bool zoomIn)
+    public static DialogueBox CreateDialogue(string dialogueKey, List<string> lineKeys, bool zoomIn)
     {
         var box = new DialogueBox(dialogueKey)
         {
@@ -105,14 +105,14 @@ public class DialogueBox : IInGameNotification
     }
     #endregion
 
-    #region Private Methods - Core Logic
+    #region Core Logic
     private void NextLine()
     {
         if (lineKeys.Count > 0)
         {
             var lineKey = lineKeys.Dequeue();
 
-            currentDialogue = DialogueBuilder.BuildLineFromLocalization(dialogueKey, lineKey);
+            currentDialogue = DialogueBuilder.BuildLine(dialogueKey, lineKey);
 
             if (currentDialogue == null)
             {
@@ -217,7 +217,6 @@ public class DialogueBox : IInGameNotification
         }
     }
 
-
     private void HandleInput()
     {
         if (ReverieSystem.FFDialogueKeybind.JustPressed)
@@ -243,7 +242,7 @@ public class DialogueBox : IInGameNotification
     {
         if (targetPosition == Vector2.Zero)
         {
-            var panelSize = CalculatePanelSize();
+            var panelSize = CalculateSize();
             targetPosition = bottomAnchorPosition + new Vector2(0f, -panelSize.Y * 0.5f);
             startPosition = targetPosition + new Vector2(0f, panelSize.Y + 70f);
         }
@@ -251,8 +250,8 @@ public class DialogueBox : IInGameNotification
 
     private void DrawPanel(SpriteBatch spriteBatch)
     {
-        var panelSize = CalculatePanelSize();
-        var panelPosition = CalculatePanelPosition(panelSize);
+        var panelSize = CalculateSize();
+        var panelPosition = CalculatePosition(panelSize);
         var panelRectangle = Utils.CenteredRectangle(panelPosition, panelSize);
 
         var isHovering = panelRectangle.Contains(Main.MouseScreen.ToPoint());
@@ -265,15 +264,14 @@ public class DialogueBox : IInGameNotification
 
     private void DrawPortrait(SpriteBatch spriteBatch)
     {
-        var panelSize = CalculatePanelSize();
-        var panelPosition = CalculatePanelPosition(panelSize);
+        var panelSize = CalculateSize();
+        var panelPosition = CalculatePosition(panelSize);
         var panelRectangle = Utils.CenteredRectangle(panelPosition, panelSize);
 
         Vector2 iconSize = new(92, 92);
         Vector2 iconPosition = new(panelRectangle.Left - iconSize.X - 28f, panelRectangle.Center.Y - 50f);
 
-        // Use SpeakerType for texture lookup instead of Speaker
-        var portraitTexture = GetSpeakerPortraitTexture(currentDialogue.SpeakerType);
+        var portraitTexture = GetPortrait(currentDialogue.SpeakerType);
 
         Vector2 frameSize = new(PortraitFrameTexture.Width, PortraitFrameTexture.Height);
         var framePosition = iconPosition - (frameSize - iconSize) / 2;
@@ -281,8 +279,7 @@ public class DialogueBox : IInGameNotification
 
         if (portraitTexture != null)
         {
-            // Use SpeakerType for frame calculation
-            var sourceRect = GetSpeakerFrameRect(currentDialogue.SpeakerType, currentDialogue.Emote, 92, 92);
+            var sourceRect = GetFrameRect(currentDialogue.SpeakerType, currentDialogue.Emote, 92, 92);
             if (currentDialogue.SpeakerType != "player")
                 spriteBatch.Draw(portraitTexture.Value, iconPosition, sourceRect, Color.White * Opacity, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 0f);
         }
@@ -301,8 +298,8 @@ public class DialogueBox : IInGameNotification
 
     private void DrawText(SpriteBatch spriteBatch)
     {
-        var panelSize = CalculatePanelSize();
-        var panelPosition = CalculatePanelPosition(panelSize);
+        var panelSize = CalculateSize();
+        var panelPosition = CalculatePosition(panelSize);
         var panelRectangle = Utils.CenteredRectangle(panelPosition, panelSize);
 
         var displayText = currentDialogue.PlainText[..Math.Min(charIndex, currentDialogue.PlainText.Length)];
@@ -357,8 +354,8 @@ public class DialogueBox : IInGameNotification
         if (currentDialogue == null || charIndex < currentDialogue.PlainText.Length || lineKeys.Count == 0 && isLastDialogue)
             return;
 
-        var panelSize = CalculatePanelSize();
-        var panelPosition = CalculatePanelPosition(panelSize);
+        var panelSize = CalculateSize();
+        var panelPosition = CalculatePosition(panelSize);
         var panelRectangle = Utils.CenteredRectangle(panelPosition, panelSize);
 
         var arrowScale = 0.75f;
@@ -396,7 +393,7 @@ public class DialogueBox : IInGameNotification
     #endregion
 
     #region Helper Methods
-    private Asset<Texture2D> GetSpeakerPortraitTexture(string speakerName)
+    private Asset<Texture2D> GetPortrait(string speakerName)
     {
         return speakerName.ToLower() switch
         {
@@ -410,7 +407,7 @@ public class DialogueBox : IInGameNotification
         };
     }
 
-    private int GetSpeakerFrameCount(string speakerName)
+    private int GetFrameCount(string speakerName)
     {
         return speakerName.ToLower() switch
         {
@@ -425,15 +422,14 @@ public class DialogueBox : IInGameNotification
         };
     }
 
-    private Rectangle GetSpeakerFrameRect(string speakerName, int emoteFrame, int frameWidth, int frameHeight)
+    private Rectangle GetFrameRect(string speakerName, int emoteFrame, int frameWidth, int frameHeight)
     {
-        var frameCount = GetSpeakerFrameCount(speakerName);
+        var frameCount = GetFrameCount(speakerName);
         var safeFrame = Math.Max(0, Math.Min(emoteFrame, frameCount - 1));
-        // For vertical strips: X stays 0, Y moves down by frame height
         return new Rectangle(0, safeFrame * frameHeight, frameWidth, frameHeight);
     }
 
-    private Vector2 CalculatePanelSize()
+    private Vector2 CalculateSize()
     {
         if (currentDialogue == null) return new Vector2(PANEL_WIDTH + 18, 100);
 
@@ -446,7 +442,7 @@ public class DialogueBox : IInGameNotification
         return new Vector2(PANEL_WIDTH + 18, Math.Max(panelHeight, 100f) * 1.14f);
     }
 
-    private Vector2 CalculatePanelPosition(Vector2 panelSize)
+    private Vector2 CalculatePosition(Vector2 panelSize)
     {
         var t = isRemoved ? animationProgress / ANIMATION_DURATION : 1f - animationProgress / ANIMATION_DURATION;
         var currentPosition = Vector2.Lerp(targetPosition, startPosition, t);

@@ -6,7 +6,7 @@ namespace Reverie.Core.Dialogue;
 
 public static class DialogueBuilder
 {
-    public static List<DialogueData> BuildSequenceFromLocalization(string dialogueKey)
+    public static List<DialogueData> BuildSequence(string dialogueKey)
     {
         var dialogueLines = new List<DialogueData>();
         int lineIndex = 1;
@@ -14,7 +14,7 @@ public static class DialogueBuilder
         // Build each line until we can't find any more
         while (true)
         {
-            var lineData = BuildLineFromLocalization(dialogueKey, $"Line{lineIndex}");
+            var lineData = BuildLine(dialogueKey, $"Line{lineIndex}");
             if (lineData == null)
                 break;
 
@@ -25,7 +25,7 @@ public static class DialogueBuilder
         return dialogueLines;
     }
 
-    public static DialogueData BuildLineFromLocalization(string dialogueKey, string lineKey)
+    public static DialogueData BuildLine(string dialogueKey, string lineKey)
     {
         string baseKey = $"DialogueLibrary.{dialogueKey}.{lineKey}";
 
@@ -37,13 +37,13 @@ public static class DialogueBuilder
         string rawText = textLocalization.Value;
 
         string speakerType = GetOptionalValue($"{baseKey}.Speaker", "Unknown");
-        string displayName = ResolveSpeakerName(speakerType); // Use resolved name for display
+        string displayName = ResolveName(speakerType); // Use resolved name for display
         int emote = GetOptionalInt($"{baseKey}.Emote", 0);
 
         float speed = GetOptionalFloat($"{baseKey}.Speed", 1.0f);
 
         // Process speaker name replacements first, then parse effects
-        var processedText = ProcessSpeakerNameReplacements(rawText);
+        var processedText = ProcessName(rawText);
         var (plainText, effects) = ParseTextAndEffects(processedText);
 
         return new DialogueData
@@ -52,13 +52,13 @@ public static class DialogueBuilder
             Effects = effects,
             Speaker = displayName,
             SpeakerType = speakerType,
-            SpeakerColor = GetSpeakerColor(speakerType),
+            SpeakerColor = GetColor(speakerType),
             Emote = emote,
             Speed = speed,
             BaseDelay = 3,
             TextColor = Color.White,
-            BackgroundColor = GetSpeakerColor(speakerType) * 0.5f,
-            TypeSound = GetVoiceSound(speakerType)
+            BackgroundColor = GetColor(speakerType) * 0.5f,
+            TypeSound = GetVoice(speakerType)
         };
     }
 
@@ -72,7 +72,7 @@ public static class DialogueBuilder
         foreach (Match match in pauseRegex.Matches(rawText))
         {
             var duration = match.Groups[1].Success ? int.Parse(match.Groups[1].Value) : 60;
-            var cleanPosition = CalculateCleanPosition(rawText, match.Index, markupRemovals);
+            var cleanPosition = CleanPosition(rawText, match.Index, markupRemovals);
 
             effects[cleanPosition] = new DialogueEffect
             {
@@ -92,7 +92,7 @@ public static class DialogueBuilder
             var valueStr = match.Groups[2].Value;
             var content = match.Groups[3].Value;
 
-            var cleanStartPos = CalculateCleanPosition(rawText, match.Index, markupRemovals);
+            var cleanStartPos = CleanPosition(rawText, match.Index, markupRemovals);
 
             // Add effect for each character in the content
             for (int i = 0; i < content.Length; i++)
@@ -124,7 +124,7 @@ public static class DialogueBuilder
         return (cleanText, effects);
     }
 
-    private static int CalculateCleanPosition(string text, int markupIndex, List<(int start, int length)> previousRemovals)
+    private static int CleanPosition(string text, int markupIndex, List<(int start, int length)> previousRemovals)
     {
         int totalRemoved = 0;
         foreach (var (start, length) in previousRemovals)
@@ -135,10 +135,10 @@ public static class DialogueBuilder
         return markupIndex - totalRemoved;
     }
 
-    private static string ResolveSpeakerName(string speakerType)
+    private static string ResolveName(string speakerType)
     {
         // Find the NPC by type name
-        var npc = FindNPCByTypeName(speakerType);
+        var npc = FindNPCName(speakerType);
 
         // If found and has a given name, use it. Otherwise use the type name.
         if (npc != null && !string.IsNullOrEmpty(npc.GivenName) && npc.GivenName != npc.TypeName)
@@ -149,7 +149,7 @@ public static class DialogueBuilder
         return speakerType;
     }
 
-    private static NPC FindNPCByTypeName(string typeName)
+    private static NPC FindNPCName(string typeName)
     {
         string lowerTypeName = typeName.ToLower();
 
@@ -168,7 +168,7 @@ public static class DialogueBuilder
         return null;
     }
     
-    private static Color GetSpeakerColor(string speaker)
+    private static Color GetColor(string speaker)
     {
         // Simple color mapping without complex registry
         return speaker.ToLower() switch
@@ -217,7 +217,7 @@ public static class DialogueBuilder
         return defaultValue;
     }
 
-    private static SoundStyle GetVoiceSound(string speaker)
+    private static SoundStyle GetVoice(string speaker)
     {
         return speaker.ToLower() switch
         {
@@ -264,7 +264,7 @@ public static class DialogueBuilder
         };
     }
 
-    private static string ProcessSpeakerNameReplacements(string text)
+    private static string ProcessName(string text)
     {
         var speakerNameRegex = new Regex(@"\{speakerName:([^}]+)\}", RegexOptions.IgnoreCase);
 
@@ -279,7 +279,7 @@ public static class DialogueBuilder
             }
             else
             {
-                resolvedName = ResolveSpeakerName(targetType);
+                resolvedName = ResolveName(targetType);
             }
             return resolvedName;
         });

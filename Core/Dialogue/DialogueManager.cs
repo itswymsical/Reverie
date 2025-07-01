@@ -39,7 +39,7 @@ public sealed class DialogueManager
         }
         IsUIHidden = letterbox;
 
-        activeDialogue = DialogueBox.CreateWithLineKeys(dialogueKey, lineKeys, zoomIn);
+        activeDialogue = DialogueBox.CreateDialogue(dialogueKey, lineKeys, zoomIn);
         if (activeDialogue == null)
         {
             if (letterbox)

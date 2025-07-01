@@ -193,7 +193,7 @@ public class DialogueIndicator : ScreenIndicator
     {
         try
         {
-            var firstLineData = DialogueBuilder.BuildLineFromLocalization(dialogueKey, "Line1");
+            var firstLineData = DialogueBuilder.BuildLine(dialogueKey, "Line1");
             if (firstLineData != null && !string.IsNullOrEmpty(firstLineData.PlainText))
             {
                 string fullText = firstLineData.PlainText;
