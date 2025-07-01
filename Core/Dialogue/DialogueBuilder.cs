@@ -1,9 +1,6 @@
-﻿using Microsoft.Xna.Framework;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Terraria.Audio;
-using Terraria.ID;
-using Terraria.ModLoader;
 
 namespace Reverie.Core.Dialogue;
 
@@ -39,26 +36,29 @@ public static class DialogueBuilder
 
         string rawText = textLocalization.Value;
 
-        string speaker = GetOptionalValue($"{baseKey}.Speaker", "Unknown");
+        string speakerType = GetOptionalValue($"{baseKey}.Speaker", "Unknown");
+        string displayName = ResolveSpeakerName(speakerType); // Use resolved name for display
         int emote = GetOptionalInt($"{baseKey}.Emote", 0);
 
         float speed = GetOptionalFloat($"{baseKey}.Speed", 1.0f);
 
-        // Parse the text and effects
-        var (plainText, effects) = ParseTextAndEffects(rawText);
+        // Process speaker name replacements first, then parse effects
+        var processedText = ProcessSpeakerNameReplacements(rawText);
+        var (plainText, effects) = ParseTextAndEffects(processedText);
 
         return new DialogueData
         {
             PlainText = plainText,
             Effects = effects,
-            Speaker = speaker,
-            SpeakerColor = GetSpeakerColor(speaker),
+            Speaker = displayName,
+            SpeakerType = speakerType,
+            SpeakerColor = GetSpeakerColor(speakerType),
             Emote = emote,
             Speed = speed,
             BaseDelay = 3,
             TextColor = Color.White,
-            BackgroundColor = GetSpeakerColor(speaker) * 0.5f,
-            TypeSound = GetVoiceSound(speaker) // Use speaker instead of voice
+            BackgroundColor = GetSpeakerColor(speakerType) * 0.5f,
+            TypeSound = GetVoiceSound(speakerType)
         };
     }
 
@@ -135,6 +135,39 @@ public static class DialogueBuilder
         return markupIndex - totalRemoved;
     }
 
+    private static string ResolveSpeakerName(string speakerType)
+    {
+        // Find the NPC by type name
+        var npc = FindNPCByTypeName(speakerType);
+
+        // If found and has a given name, use it. Otherwise use the type name.
+        if (npc != null && !string.IsNullOrEmpty(npc.GivenName) && npc.GivenName != npc.TypeName)
+        {
+            return npc.GivenName;
+        }
+
+        return speakerType;
+    }
+
+    private static NPC FindNPCByTypeName(string typeName)
+    {
+        string lowerTypeName = typeName.ToLower();
+
+        for (int i = 0; i < Main.npc.Length; i++)
+        {
+            var npc = Main.npc[i];
+            if (npc.active && !string.IsNullOrEmpty(npc.TypeName))
+            {
+                if (npc.TypeName.ToLower() == lowerTypeName)
+                {
+                    return npc;
+                }
+            }
+        }
+
+        return null;
+    }
+    
     private static Color GetSpeakerColor(string speaker)
     {
         // Simple color mapping without complex registry
@@ -188,15 +221,68 @@ public static class DialogueBuilder
     {
         return speaker.ToLower() switch
         {
-            "guide" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Guide/Speech"),
-            "player" or "you" => SoundID.MenuTick,
-            "merchant" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Merchant/Speech"),
-            "nurse" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Nurse/Speech"),
-            "demolitionist" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Demolitionist/Speech"),
-            "goblin tinkerer" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Gobblin"),
-            "mechanic" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Mechanic"),
-            _ => SoundID.MenuTick // Default
+            "guide" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Guide/Speech")
+            {
+                Volume = 0.5f,
+                MaxInstances = 0
+            },
+            "player" or "you" => SoundID.MenuTick with
+            {
+                Volume = 0.5f,
+                MaxInstances = 0
+            },
+            "merchant" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Merchant/Speech")
+            {
+                Volume = 0.5f,
+                MaxInstances = 0
+            },
+            "nurse" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Nurse/Speech")
+            {
+                Volume = 0.5f,
+                MaxInstances = 0
+            },
+            "demolitionist" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Demolitionist/Speech")
+            {
+                Volume = 0.5f,
+                MaxInstances = 0
+            },
+            "goblin tinkerer" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Gobblin")
+            {
+                Volume = 0.5f,
+                MaxInstances = 0
+            },
+            "mechanic" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Mechanic")
+            {
+                Volume = 0.5f,
+                MaxInstances = 0
+            },
+            _ => SoundID.MenuTick with
+            {
+                Volume = 0.5f,
+                MaxInstances = 0
+            }
         };
+    }
+
+    private static string ProcessSpeakerNameReplacements(string text)
+    {
+        var speakerNameRegex = new Regex(@"\{speakerName:([^}]+)\}", RegexOptions.IgnoreCase);
+
+        return speakerNameRegex.Replace(text, match =>
+        {
+            var targetType = match.Groups[1].Value.Trim();
+            string resolvedName;
+
+            if (targetType.ToLower() == "playername" || targetType.ToLower() == "player")
+            {
+                resolvedName = Main.LocalPlayer.name;
+            }
+            else
+            {
+                resolvedName = ResolveSpeakerName(targetType);
+            }
+            return resolvedName;
+        });
     }
 }
 
@@ -205,6 +291,7 @@ public class DialogueData
     public string PlainText { get; init; } = string.Empty;
     public Dictionary<int, DialogueEffect> Effects { get; init; } = new();
     public string Speaker { get; init; } = string.Empty;
+    public string SpeakerType { get; init; } = string.Empty;
     public Color SpeakerColor { get; init; } = Color.White;
     public int Emote { get; init; }
     public float Speed { get; init; } = 1.0f;
@@ -213,6 +300,7 @@ public class DialogueData
     public Color BackgroundColor { get; init; } = Color.Black;
     public SoundStyle TypeSound { get; init; } = SoundID.MenuTick;
 }
+
 public class DialogueEffect
 {
     public EffectType Type { get; init; }

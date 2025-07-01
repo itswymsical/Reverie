@@ -2,38 +2,66 @@
 	AFallingStar: {
 		CrashLanding: {
 			Line1: {
-				Text:  <shake:1>WHAT THE HELL?!?!</shake>
-				Speaker: Guide
+				Text: Hey, {speakerName:Guide}, come get a load of this!
+				Speaker: Merchant
 				Emote: "0"
 				Speed: "1.0"
 			}
 
 			Line2: {
-				Text: This place just keeps getting weirder and weirder...
+				Text: Whats going on now...
 				Speaker: Guide
-				Emote: "1"
-				Speed: "0.9"
+				Emote: "2"
+				Speed: "0.7"
 			}
 
 			Line3: {
-				Text: <pause:45>How are you still alive?
+				Text: Oh<pause:6>, hey there! You must be the new arrival.
 				Speaker: Guide
-				Emote: "2"
-				Speed: "1.2"
+				Emote: "0"
+				Speed: "1.0"
 			}
 
 			Line4: {
-				Text: Y'know what,<pause:10> I don't even wanna ask.
+				Text: I'm {speakerName:Guide},<pause:6> nice to meet ya.
 				Speaker: Guide
 				Emote: "0"
 				Speed: "1.0"
 			}
 
 			Line5: {
-				Text: How's about you come meet the townsfolk?
+				Text: You go by<pause:6>...{speakerName:playerName}?<pause:10> Interesting name<pause:3>...
 				Speaker: Guide
 				Emote: "0"
 				Speed: "1.0"
+			}
+
+			Line6: {
+				Text: Heh,<pause:8> definitely foreign.
+				Speaker: Merchant
+				Emote: "0"
+				Speed: "1.3"
+			}
+
+			Line7: {
+				Text: "'You begin to feel immensely bored,<pause:8> as you sensed {speakerName:Guide} winding up for a tutorial lecture...'"
+				Speaker: You
+				Emote: "0"
+				Speed: "1.3"
+			}
+
+			Line8: {
+				Text: Hey!<pause:8> I should tell you about the basics of this world!
+				Speaker: Guide
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line9: {
+				Text: You know,<pause:10> they call me a <sine:2>scholar</sine> for a reason!
+				Speaker: Guide
+				Emote: "1"
+				Speed: "1.3"
 			}
 		}
 	}

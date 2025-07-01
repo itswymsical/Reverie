@@ -59,7 +59,6 @@ public class DialogueBox : IInGameNotification
             box.lineKeys.Enqueue(lineKey);
         }
 
-        Main.NewText($"[DEBUG] DialogueBox created with {lineKeys.Count} line keys", Color.Green);
         box.NextLine();
         return box;
     }
@@ -112,7 +111,6 @@ public class DialogueBox : IInGameNotification
         if (lineKeys.Count > 0)
         {
             var lineKey = lineKeys.Dequeue();
-            Main.NewText($"[DEBUG] Parsing line: {lineKey}", Color.Cyan);
 
             currentDialogue = DialogueBuilder.BuildLineFromLocalization(dialogueKey, lineKey);
 
@@ -132,20 +130,17 @@ public class DialogueBox : IInGameNotification
                 }
             }
 
-            // Reset display state for new line
+
             charIndex = 0;
 
             pauseTimer = 0f;
             currentLineIndex++;
-
-            Main.NewText($"[DEBUG] Line parsed: '{currentDialogue.PlainText[..Math.Min(20, currentDialogue.PlainText.Length)]}...'", Color.Green);
         }
         else
         {
             isRemoved = true;
             isLastDialogue = true;
             animationProgress = 0f;
-            Main.NewText("[DEBUG] No more lines, ending dialogue", Color.Gray);
         }
     }
 
@@ -277,7 +272,8 @@ public class DialogueBox : IInGameNotification
         Vector2 iconSize = new(92, 92);
         Vector2 iconPosition = new(panelRectangle.Left - iconSize.X - 28f, panelRectangle.Center.Y - 50f);
 
-        var portraitTexture = GetSpeakerPortraitTexture(currentDialogue.Speaker);
+        // Use SpeakerType for texture lookup instead of Speaker
+        var portraitTexture = GetSpeakerPortraitTexture(currentDialogue.SpeakerType);
 
         Vector2 frameSize = new(PortraitFrameTexture.Width, PortraitFrameTexture.Height);
         var framePosition = iconPosition - (frameSize - iconSize) / 2;
@@ -285,8 +281,10 @@ public class DialogueBox : IInGameNotification
 
         if (portraitTexture != null)
         {
-            var sourceRect = GetSpeakerFrameRect(currentDialogue.Speaker, currentDialogue.Emote, 92, 92);
-            spriteBatch.Draw(portraitTexture.Value, iconPosition, sourceRect, Color.White * Opacity, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 0f);
+            // Use SpeakerType for frame calculation
+            var sourceRect = GetSpeakerFrameRect(currentDialogue.SpeakerType, currentDialogue.Emote, 92, 92);
+            if (currentDialogue.SpeakerType != "player")
+                spriteBatch.Draw(portraitTexture.Value, iconPosition, sourceRect, Color.White * Opacity, 0f, Vector2.Zero, 1.2f, SpriteEffects.None, 0f);
         }
 
         DrawSpeakerName(spriteBatch, iconPosition, iconSize);
@@ -403,8 +401,12 @@ public class DialogueBox : IInGameNotification
         return speakerName.ToLower() switch
         {
             "guide" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Guide"),
-            "player" or "you" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Player"),
-            _ => null // No portrait for unknown speakers
+            "merchant" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Merchant"),
+            "nurse" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Nurse"),
+            "demolitionist" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Demolitionist"),
+            "goblin tinkerer" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/GoblinTinkerer"),
+            "mechanic" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Mechanic"),
+            _ => null
         };
     }
 
@@ -412,8 +414,13 @@ public class DialogueBox : IInGameNotification
     {
         return speakerName.ToLower() switch
         {
-            "guide" => 2,
+            "guide" => 7,
             "player" or "you" => 1,
+            "merchant" => 2,
+            "nurse" => 2,
+            "demolitionist" => 2,
+            "goblin tinkerer" => 2,
+            "mechanic" => 2,
             _ => 1
         };
     }
@@ -422,7 +429,8 @@ public class DialogueBox : IInGameNotification
     {
         var frameCount = GetSpeakerFrameCount(speakerName);
         var safeFrame = Math.Max(0, Math.Min(emoteFrame, frameCount - 1));
-        return new Rectangle(safeFrame * frameWidth, 0, frameWidth, frameHeight);
+        // For vertical strips: X stays 0, Y moves down by frame height
+        return new Rectangle(0, safeFrame * frameHeight, frameWidth, frameHeight);
     }
 
     private Vector2 CalculatePanelSize()

@@ -4,8 +4,6 @@ using Terraria.UI;
 
 namespace Reverie.Content.Items.Debugging;
 
-// Add this to your debug item to trace exactly where the freeze happens
-
 public class FreezeTrackingDialogueDebug : ModItem
 {
     public override string Texture => PLACEHOLDER;
@@ -22,7 +20,7 @@ public class FreezeTrackingDialogueDebug : ModItem
     {
         if (Main.myPlayer == player.whoAmI)
         {
-            DialogueManager.Instance.StartDialogue("AFallingStar.CrashLanding", 5, letterbox: true);
+            DialogueManager.Instance.StartDialogue("AFallingStar.CrashLanding", 9, zoomIn: true, letterbox: true);
         }
         return true;
     }

@@ -25,7 +25,6 @@ public sealed class DialogueManager
         if (IsAnyActive())
             return false;
 
-
         var lineKeys = new List<string>();
         for (int i = 1; i <= lineCount; i++)
         {
@@ -33,6 +32,7 @@ public sealed class DialogueManager
         }
 
         Main.CloseNPCChatOrSign();
+
         if (letterbox)
         {
             Letterbox.Show();
@@ -42,7 +42,11 @@ public sealed class DialogueManager
         activeDialogue = DialogueBox.CreateWithLineKeys(dialogueKey, lineKeys, zoomIn);
         if (activeDialogue == null)
         {
-            Main.NewText("[ERROR] Failed to create dialogue card", Color.Red);
+            if (letterbox)
+            {
+                Letterbox.Hide();
+                IsUIHidden = false;
+            }
             return false;
         }
 
@@ -62,12 +66,13 @@ public sealed class DialogueManager
             Main.NewText($"[WARNING] Music setup failed: {ex.Message}", Color.Yellow);
         }
 
-        activeDialogue = DialogueBox.CreateWithLineKeys(dialogueKey, lineKeys, zoomIn);
-        return activeDialogue != null;
+        return true;
     }
 
     public void Update()
     {
+        Letterbox.Update();
+
         if (activeDialogue != null)
         {
             if (activeDialogue.ShouldBeRemoved)
@@ -87,6 +92,8 @@ public sealed class DialogueManager
 
     public void Draw(SpriteBatch spriteBatch, Vector2 bottomAnchorPosition)
     {
+        Letterbox.DrawCinematic(spriteBatch, 20, 0.5f);
+
         if (activeDialogue != null)
         {
             Vector2 adjustedPosition = bottomAnchorPosition;
@@ -110,8 +117,7 @@ public sealed class DialogueManager
 
     private void EndDialogue()
     {
-       Letterbox.Hide();
-
+        Letterbox.Hide();
         IsUIHidden = false;
 
         if (currentMusic.HasValue)
@@ -122,12 +128,11 @@ public sealed class DialogueManager
 
         if (isZoomedIn)
         {
-          ZoomHandler.SetZoomAnimation(1f, ZOOM_TIME);
-          isZoomedIn = false;
+            ZoomHandler.SetZoomAnimation(1f, ZOOM_TIME);
+            isZoomedIn = false;
         }
 
         activeDialogue = null;
-        Main.NewText("[DEBUG] Dialogue ended", Color.Gray);
     }
 
     public bool IsAnyActive() => activeDialogue != null;
