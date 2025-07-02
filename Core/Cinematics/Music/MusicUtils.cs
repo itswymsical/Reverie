@@ -1,11 +1,11 @@
 ﻿namespace Reverie.Core.Cinematics.Music;
 public enum MusicFadeMode
 {
-    Instant,       // Play immediately at full volume
-    CrossFade,     // Standard cross-fade (default Terraria behavior)
-    FadeIn,        // Fade in from silence
-    FadeOut,       // Fade out current music then play new
-    NoFade         // Disable cross-fade for this track
+    Instant,
+    CrossFade,
+    FadeIn,
+    FadeOut,
+    NoFade
 }
 
 public static class MusicFadeHandler
@@ -64,16 +64,10 @@ public static class MusicFadeHandler
         }
     }
 
-    /// <summary>
-    /// Updates the music fade system - call this every frame during cutscenes
-    /// </summary>
-    /// <param name="deltaTime">Time since last frame in seconds</param>
     public static void Update(float deltaTime)
     {
-        // Ensure cutscene music stays active
         if (_isCutsceneMusicActive && _cutsceneMusicID >= 0)
         {
-            // Prevent Terraria from changing our music
             if (Main.musicBox2 != _cutsceneMusicID)
             {
                 Main.musicBox2 = _cutsceneMusicID;
@@ -96,11 +90,6 @@ public static class MusicFadeHandler
         }
     }
 
-    /// <summary>
-    /// Restores the previous music that was playing before cutscene music was set
-    /// </summary>
-    /// <param name="fadeMode">How to transition back to previous music</param>
-    /// <param name="fadeTime">Duration of fade in seconds</param>
     public static void RestorePreviousMusic(MusicFadeMode fadeMode = MusicFadeMode.CrossFade, float fadeTime = 1f)
     {
         _isCutsceneMusicActive = false;
@@ -110,7 +99,6 @@ public static class MusicFadeHandler
         {
             if (fadeMode == MusicFadeMode.FadeOut)
             {
-                // Fade out current music first, then restore
                 _currentFadeMode = MusicFadeMode.FadeOut;
                 _fadeTargetTime = fadeTime;
                 _fadeTimer = 0f;
@@ -144,11 +132,6 @@ public static class MusicFadeHandler
         }
     }
 
-    /// <summary>
-    /// Stops current music with specified fade behavior
-    /// </summary>
-    /// <param name="fadeMode">How the music should stop</param>
-    /// <param name="fadeTime">Duration of fade in seconds</param>
     public static void StopMusic(MusicFadeMode fadeMode = MusicFadeMode.FadeOut, float fadeTime = 1f)
     {
         if (fadeMode == MusicFadeMode.Instant)
@@ -174,7 +157,6 @@ public static class MusicFadeHandler
 
     private static void SetMusicInstant(int musicID)
     {
-        // Fade out current music immediately
         if (Main.curMusic > 0 && Main.curMusic < Main.musicFade.Length && Main.curMusic != musicID)
         {
             Main.musicFade[Main.curMusic] = 0f;
@@ -196,7 +178,6 @@ public static class MusicFadeHandler
 
     private static void SetMusicFadeIn(int musicID, float fadeTime)
     {
-        // Stop current music immediately for clean fade in
         if (Main.curMusic > 0 && Main.curMusic < Main.musicFade.Length && Main.curMusic != musicID)
         {
             Main.musicFade[Main.curMusic] = 0f;
@@ -212,14 +193,11 @@ public static class MusicFadeHandler
 
     private static void SetMusicFadeOut(int musicID, float fadeTime)
     {
-        // Start by fading out current music
         _isFading = true;
-        // The actual music change will happen in UpdateFadeOut when fade is complete
     }
 
     private static void SetMusicNoFade(int musicID)
     {
-        // Stop current music immediately
         if (Main.curMusic > 0 && Main.curMusic < Main.musicFade.Length && Main.curMusic != musicID)
         {
             Main.musicFade[Main.curMusic] = 0f;
@@ -262,7 +240,6 @@ public static class MusicFadeHandler
         {
             _isFading = false;
 
-            // If we're restoring music after fade out
             if (!_isCutsceneMusicActive && _storedMusicBox.HasValue)
             {
                 Main.musicBox2 = _storedMusicBox.Value;
@@ -271,7 +248,6 @@ public static class MusicFadeHandler
             }
             else
             {
-                // Fade out complete, now stop the music
                 Main.musicBox2 = 0;
             }
         }

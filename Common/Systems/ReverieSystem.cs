@@ -81,7 +81,7 @@ public class ReverieSystem : ModSystem
         Vector2 titlePos = new(Main.screenWidth / 2f - titleSize.X / 2f, Main.screenHeight / 24f - 8);
         Vector2 subtitlePos = new(Main.screenWidth / 1.93f - subtitleSize.X / 2f, Main.screenHeight / 24f + titleSize.Y + 8);
 
-        //DrawUtils.DrawText(spriteBatch, Color.Wheat, title, titlePos, 0.3f);
-        //DrawUtils.DrawText(spriteBatch, Color.Wheat, subtitle, subtitlePos, 0.3f);
+        DrawUtils.DrawText(spriteBatch, Color.Wheat, title, titlePos, 0.3f);
+        DrawUtils.DrawText(spriteBatch, Color.Wheat, subtitle, subtitlePos, 0.3f);
     }
 }
