@@ -319,6 +319,11 @@ Items: {
 		DisplayName: Spawn Mission Indicator
 		Tooltip: ""
 	}
+
+	CutscenePlayer: {
+		DisplayName: Cutscene Player
+		Tooltip: ""
+	}
 }
 
 Projectiles: {

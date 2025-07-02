@@ -1,4 +1,6 @@
 ﻿using Reverie.Common.UI.Missions;
+using Reverie.Content.Cutscenes;
+using Reverie.Core.Cinematics;
 using Reverie.Core.Indicators;
 using Reverie.Core.Missions;
 using Terraria.UI;
@@ -23,6 +25,25 @@ public class MissionCompleteIndicator : ModItem
             var mission = mplayer.GetMission(MissionID.LightEmUp);
             InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(mission));
         }
+        return true;
+    }
+}
+
+public class CutscenePlayer : ModItem
+{
+    public override string Texture => PLACEHOLDER;
+    public override void SetDefaults()
+    {
+        Item.useTime = Item.useAnimation = 20;
+        Item.value = Item.buyPrice(0);
+        Item.rare = ItemRarityID.Quest;
+        Item.useStyle = ItemUseStyleID.HoldUp;
+    }
+    public override bool? UseItem(Player player)
+    {
+        if (Main.myPlayer == player.whoAmI)
+            CutsceneSystem.PlayCutscene<IntroCutscene>();
+
         return true;
     }
 }

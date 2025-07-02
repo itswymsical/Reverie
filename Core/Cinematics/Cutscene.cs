@@ -2,6 +2,7 @@
 using Reverie.Core.Animation;
 using Reverie.Common.Systems;
 using System.Linq;
+using Reverie.Core.Cinematics.Music;
 
 namespace Reverie.Core.Cinematics;
 
@@ -17,13 +18,14 @@ public abstract class Cutscene
     public static bool NoFallDamage { get; set; }
     public static bool IsPlayerVisible { get; set; } = true;
 
-    public float LetterboxHeightPercentage { get; set; } = 0.1f;
+    public bool EnableLetterbox { get; set; } = false;
+
+    public float LetterboxHeightPercentage { get; set; } = 0.07f;
     public Color LetterboxColor { get; set; } = Color.Black;
     public EaseFunction LetterboxEasing { get; set; } = EaseFunction.EaseQuadOut;
     public int LetterboxAnimationDuration { get; set; } = 60;
 
     private int? _currentMusicID = null;
-    private int _previousMusicBox = -1;
 
     protected float ElapsedTime { get; set; }
 
@@ -59,14 +61,15 @@ public abstract class Cutscene
             _skipFadeOutStarted = false;
             _skipFadeOutTimer = 0f;
 
-            Letterbox.HeightPercentage = LetterboxHeightPercentage;
-            Letterbox.LetterboxColor = LetterboxColor;
-            Letterbox.EasingFunction = LetterboxEasing;
-            Letterbox.AnimationDurationFrames = LetterboxAnimationDuration;
+            if (EnableLetterbox)
+            {
+                Letterbox.HeightPercentage = LetterboxHeightPercentage;
+                Letterbox.LetterboxColor = LetterboxColor;
+                Letterbox.EasingFunction = LetterboxEasing;
+                Letterbox.AnimationDurationFrames = LetterboxAnimationDuration;
 
-            Letterbox.Show();
-
-            SetMusic(_currentMusicID);
+                Letterbox.Show();
+            }
 
             OnCutsceneStart();
         }
@@ -85,6 +88,7 @@ public abstract class Cutscene
     /// <param name="duration">Animation duration in frames</param>
     public virtual void Start(float letterboxHeight, Color? color = null, EaseFunction easing = null, int? duration = null)
     {
+        EnableLetterbox = true;
         LetterboxHeightPercentage = MathHelper.Clamp(letterboxHeight, 0.01f, 0.5f);
 
         if (color.HasValue)
@@ -109,12 +113,13 @@ public abstract class Cutscene
 
             ElapsedTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            Letterbox.Update();
-
-            if (_currentMusicID.HasValue)
+            if (EnableLetterbox)
             {
-                Main.musicBox2 = _currentMusicID.Value;
+                Letterbox.Update();
             }
+
+            // Update music fade handler
+            MusicFadeHandler.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
 
             if (CanSkip && !_skipFadeOutStarted)
             {
@@ -122,7 +127,6 @@ public abstract class Cutscene
                 {
                     _skipHoldTime++;
                     _isSkipping = true;
-                    // Animate loading icon
                     _skipAnimationTimer++;
                     if (_skipAnimationTimer >= SkipAnimationFrameRate)
                     {
@@ -134,7 +138,6 @@ public abstract class Cutscene
                         }
                     }
 
-                    // Check if skip is complete
                     if (_skipHoldTime >= SkipHoldDuration)
                     {
                         OnSkipTriggered();
@@ -149,7 +152,6 @@ public abstract class Cutscene
                 }
             }
 
-            // Handle skip fade out
             if (_skipFadeOutStarted)
             {
                 _skipFadeOutTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -176,41 +178,29 @@ public abstract class Cutscene
         }
     }
 
-    /// <summary>
-    /// Called when skip is triggered
-    /// </summary>
     protected virtual void OnSkipTriggered()
     {
-
         _skipFadeOutStarted = true;
         FadeColor = Color.Black;
-      
     }
 
-    /// <summary>
-    /// Called every frame to update cutscene logic
-    /// </summary>
-    /// <param name="gameTime">Game time information</param>
     protected virtual void OnCutsceneUpdate(GameTime gameTime) { }
 
     /// <summary>
     /// Sets the background music for the cutscene
     /// </summary>
     /// <param name="musicID">Music ID to play, or null to keep current music</param>
-    public void SetMusic(int? musicID)
+    /// <param name="fadeMode">How the music should transition</param>
+    /// <param name="fadeTime">Duration of fade in seconds (for FadeIn/FadeOut modes)</param>
+    public void SetMusic(int? musicID, MusicFadeMode fadeMode = MusicFadeMode.CrossFade, float fadeTime = 1f)
     {
         if (musicID.HasValue)
         {
-            _previousMusicBox = Main.musicBox2;
             _currentMusicID = musicID.Value;
-            Main.musicBox2 = musicID.Value;
+            MusicFadeHandler.SetMusic(musicID.Value, fadeMode, fadeTime);
         }
     }
 
-    /// <summary>
-    /// Draws the cutscene elements
-    /// </summary>
-    /// <param name="spriteBatch">SpriteBatch for drawing</param>
     public virtual void Draw(SpriteBatch spriteBatch)
     {
         if (!IsPlaying) return;
@@ -219,26 +209,17 @@ public abstract class Cutscene
 
         if (UsesLetterbox())
         {
-            Letterbox.DrawCinematic(spriteBatch);
-        }
-        else
-        {
             Letterbox.Draw(spriteBatch);
         }
 
         DrawCutsceneContent(spriteBatch);
 
-        // Draw skip indicator
         if (_isSkipping && !_skipFadeOutStarted)
         {
             DrawSkipIndicator(spriteBatch);
         }
     }
 
-    /// <summary>
-    /// Draws the skip indicator
-    /// </summary>
-    /// <param name="spriteBatch">SpriteBatch for drawing</param>
     public virtual void DrawSkipIndicator(SpriteBatch spriteBatch)
     {
         if (_skipIcon == null)
@@ -267,27 +248,12 @@ public abstract class Cutscene
         Utils.DrawBorderString(spriteBatch, skipText, textPosition, Color.White);
     }
 
-    /// <summary>
-    /// Whether to use the cinematic letterbox effect
-    /// </summary>
-    /// <returns>True to use cinematic letterbox, false for standard</returns>
-    protected virtual bool UsesLetterbox() => false;
+    protected virtual bool UsesLetterbox() => EnableLetterbox;
 
-    /// <summary>
-    /// Draws the cutscene-specific elements
-    /// </summary>
-    /// <param name="spriteBatch">SpriteBatch for drawing</param>
     protected virtual void DrawCutsceneContent(SpriteBatch spriteBatch) { }
 
-    /// <summary>
-    /// Determines if the cutscene has finished playing
-    /// </summary>
-    /// <returns>True if finished, false otherwise</returns>
     public abstract bool IsFinished();
 
-    /// <summary>
-    /// Ends the cutscene and restores normal gameplay
-    /// </summary>
     public virtual void End()
     {
         try
@@ -295,11 +261,14 @@ public abstract class Cutscene
             EnablePlayerMovement();
             IsPlaying = false;
 
-            Letterbox.Hide();
+            if (EnableLetterbox)
+            {
+                Letterbox.Hide();
+            }
 
             if (_currentMusicID.HasValue)
             {
-                Main.musicBox2 = _previousMusicBox;
+                MusicFadeHandler.RestorePreviousMusic();
                 _currentMusicID = null;
             }
 
@@ -311,9 +280,6 @@ public abstract class Cutscene
         }
     }
 
-    /// <summary>
-    /// Called when the cutscene ends, for cleanup
-    /// </summary>
     protected virtual void OnCutsceneEnd() { }
 
     protected static void DisableFallDamage() => NoFallDamage = true;
@@ -325,10 +291,6 @@ public abstract class Cutscene
     protected static void DisablePlayerMovement() => DisableInputs = true;
     protected static void EnablePlayerMovement() => DisableInputs = false;
 
-    /// <summary>
-    /// Draws a full-screen fade effect
-    /// </summary>
-    /// <param name="spriteBatch">SpriteBatch for drawing</param>
     protected void DrawFade(SpriteBatch spriteBatch)
     {
         if (FadeAlpha <= 0f) return;
@@ -345,15 +307,6 @@ public abstract class Cutscene
         );
     }
 
-    /// <summary>
-    /// Creates a timed fade effect
-    /// </summary>
-    /// <param name="targetAlpha">Target alpha value (0.0-1.0)</param>
-    /// <param name="duration">Duration in seconds</param>
-    /// <param name="delay">Delay before starting in seconds</param>
-    /// <param name="color">Fade color (defaults to black)</param>
-    /// <param name="easing">Easing function to use</param>
-    /// <returns>True when complete, false while in progress</returns>
     protected bool TimedFade(float targetAlpha, float duration, float delay = 0f, Color? color = null, EaseFunction easing = null)
     {
         if (color.HasValue)
@@ -383,17 +336,8 @@ public abstract class Cutscene
         return progress >= 1f;
     }
 
-    /// <summary>
-    /// Fades in from black (or specified color)
-    /// </summary>
-    /// <param name="duration">Duration in seconds</param>
-    /// <param name="delay">Delay before starting in seconds</param>
-    /// <param name="color">Fade color (defaults to black)</param>
-    /// <param name="easing">Easing function to use</param>
-    /// <returns>True when complete, false while in progress</returns>
     protected bool FadeIn(float duration, float delay = 0f, Color? color = null, EaseFunction easing = null)
     {
-        // Start from full opacity if just starting
         if (ElapsedTime <= delay && FadeAlpha == 0f)
         {
             FadeAlpha = 1f;
@@ -402,23 +346,11 @@ public abstract class Cutscene
         return TimedFade(0f, duration, delay, color, easing);
     }
 
-    /// <summary>
-    /// Fades out to black (or specified color)
-    /// </summary>
-    /// <param name="duration">Duration in seconds</param>
-    /// <param name="delay">Delay before starting in seconds</param>
-    /// <param name="color">Fade color (defaults to black)</param>
-    /// <param name="easing">Easing function to use</param>
-    /// <returns>True when complete, false while in progress</returns>
     protected bool FadeOut(float duration, float delay = 0f, Color? color = null, EaseFunction easing = null)
     {
         return TimedFade(1f, duration, delay, color, easing);
     }
 
-    /// <summary>
-    /// Gets the safe drawing area between letterboxes
-    /// </summary>
-    /// <returns>Rectangle representing the visible area</returns>
     protected Rectangle GetSafeDrawingArea()
     {
         return Letterbox.GetSafeArea();

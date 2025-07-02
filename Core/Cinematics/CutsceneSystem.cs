@@ -111,7 +111,7 @@ public class CutsceneSystem : ModSystem
     /// Starts playing a new cutscene.
     /// </summary>
     /// <param name="cutscene">The cutscene to play.</param>
-    public static void PlayCutscene(Cutscene cutscene)
+    public static void PlayCutscene<T>() where T : Cutscene, new()
     {
         try
         {
@@ -120,8 +120,7 @@ public class CutsceneSystem : ModSystem
                 ModContent.GetInstance<Reverie>().Logger.Warn("Attempting to start a new cutscene while one is already in progress. Ending the current cutscene.");
                 CurrentCutscene.End();
             }
-
-            CurrentCutscene = cutscene;
+            CurrentCutscene = new T();
             CurrentCutscene.Start();
         }
         catch (Exception ex)

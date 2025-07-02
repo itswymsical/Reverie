@@ -1,7 +1,8 @@
 ﻿using Reverie.Common.Configs;
 using Reverie.Common.Subworlds.Archaea;
+using Reverie.Common.Systems;
 using Reverie.Common.UI.Missions;
-
+using Reverie.Content.Cutscenes;
 using Reverie.Content.Dusts;
 using Reverie.Content.Tiles.Archaea;
 
@@ -71,14 +72,15 @@ public class ReveriePlayer : ModPlayer
         lodestoneKB = false;
         microlithEquipped = false;
     }
+    public override void OnEnterWorld()
+    {
+        base.OnEnterWorld();
+        if (Main.netMode == NetmodeID.Server)
+            return;
 
-
-    //public override void ModifyStartingInventory(IReadOnlyDictionary<string, List<Item>> itemsByMod, bool mediumCoreDeath)
-    //{
-    //    itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperShortsword);
-    //    itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperPickaxe);
-    //    itemsByMod["Terraria"].RemoveAll(item => item.type == ItemID.CopperAxe);
-    //}
+        if (!DownedSystem.initialCutscene)
+            CutsceneSystem.PlayCutscene<IntroCutscene>();
+    }
 
     private bool IsSandTile(Tile tile) => tile.HasTile && (
         tile.TileType == TileID.Sand ||

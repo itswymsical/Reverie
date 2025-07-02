@@ -6,10 +6,13 @@ namespace Reverie.Core.Cinematics;
 public static class Letterbox
 {
     public static int LetterboxHeight { get; private set; }
-    public static float HeightPercentage { get; set; } = 0.02f;
+    public static float HeightPercentage { get; set; } = 0.07f;
     public static Color LetterboxColor { get; set; } = Color.Black;
     public static EaseFunction EasingFunction { get; set; } = EaseFunction.EaseQuadOut;
     public static int AnimationDurationFrames { get; set; } = 60;
+
+    public static int BorderSize { get; set; } = 20;
+    public static float BorderIntensity { get; set; } = 0.5f;
 
     private static int currentFrame;
     private static bool isAnimating;
@@ -33,7 +36,10 @@ public static class Letterbox
     /// <param name="heightPercentage">Optional override for height as percentage of screen</param>
     /// <param name="opacity">Optional override for max opacity (0.0-1.0)</param>
     /// <param name="easing">Optional easing function to use</param>
-    public static void Show(int? duration = null, float? heightPercentage = null, float? opacity = null, EaseFunction easing = null)
+    /// <param name="borderSize">Optional override for gradient border size</param>
+    /// <param name="borderIntensity">Optional override for gradient border intensity</param>
+    public static void Show(int? duration = null, float? heightPercentage = null, float? opacity = null,
+        EaseFunction easing = null, int? borderSize = null, float? borderIntensity = null)
     {
         if (isShowing && !isAnimating)
             return;
@@ -50,6 +56,12 @@ public static class Letterbox
 
         if (easing != null)
             EasingFunction = easing;
+
+        if (borderSize.HasValue)
+            BorderSize = Math.Max(0, borderSize.Value);
+
+        if (borderIntensity.HasValue)
+            BorderIntensity = MathHelper.Clamp(borderIntensity.Value, 0f, 1f);
 
         isShowing = true;
         isAnimating = true;
@@ -121,7 +133,7 @@ public static class Letterbox
     }
 
     /// <summary>
-    /// Draw the letterbox - call this in your game's Draw method
+    /// Draw the letterbox with cinematic gradient borders
     /// </summary>
     /// <param name="spriteBatch">The SpriteBatch to use for drawing</param>
     public static void Draw(SpriteBatch spriteBatch)
@@ -136,70 +148,114 @@ public static class Letterbox
         var alpha = LetterboxHeight / (Main.screenHeight * HeightPercentage) * targetOpacity;
         var color = LetterboxColor * alpha;
 
-        // Draw top letterbox
+        // Draw main letterbox bars
+        // Top letterbox
         spriteBatch.Draw(
             textureToDraw,
             new Rectangle(0, 0, Main.screenWidth, LetterboxHeight),
             color
         );
 
-        // Draw bottom letterbox
+        // Bottom letterbox
         spriteBatch.Draw(
             textureToDraw,
             new Rectangle(0, Main.screenHeight - LetterboxHeight, Main.screenWidth, LetterboxHeight),
             color
         );
+
+        // Draw gradient borders if enabled
+        if (BorderSize > 0)
+        {
+            DrawGradientBorders(spriteBatch, textureToDraw, alpha);
+        }
     }
 
     /// <summary>
-    /// Draw letterbox with additional cinematic border effect
+    /// Draw the gradient border effects
     /// </summary>
-    /// <param name="spriteBatch">The SpriteBatch to use for drawing</param>
-    /// <param name="borderSize">Size of the faded border in pixels</param>
-    /// <param name="borderIntensity">Intensity of the border fade (0.0-1.0)</param>
-    public static void DrawCinematic(SpriteBatch spriteBatch, int borderSize = 20, float borderIntensity = 0.5f)
+    private static void DrawGradientBorders(SpriteBatch spriteBatch, Texture2D texture, float baseAlpha)
     {
-        if (LetterboxHeight <= 0)
-            return;
-
-        Draw(spriteBatch);
-
-        // Early return if border size is invalid
-        if (borderSize <= 0)
-            return;
-
-        // Ensure we have a texture to draw
-        var textureToDraw = pixelTexture ?? TextureAssets.MagicPixel.Value;
-
-        // Calculate intensity
-        borderIntensity = MathHelper.Clamp(borderIntensity, 0f, 1f);
-
         // Top border gradient
-        for (var i = 0; i < borderSize; i++)
+        for (var i = 0; i < BorderSize; i++)
         {
-            var gradientProgress = 1f - (float)i / borderSize;
-            var alpha = gradientProgress * borderIntensity * (LetterboxHeight / (Main.screenHeight * HeightPercentage)) * targetOpacity;
+            var gradientProgress = 1f - (float)i / BorderSize;
+            var alpha = gradientProgress * BorderIntensity * baseAlpha;
             var gradientColor = LetterboxColor * alpha;
 
             spriteBatch.Draw(
-                textureToDraw,
+                texture,
                 new Rectangle(0, LetterboxHeight + i, Main.screenWidth, 1),
                 gradientColor
             );
         }
 
         // Bottom border gradient
-        for (var i = 0; i < borderSize; i++)
+        for (var i = 0; i < BorderSize; i++)
         {
-            var gradientProgress = 1f - (float)i / borderSize;
-            var alpha = gradientProgress * borderIntensity * (LetterboxHeight / (Main.screenHeight * HeightPercentage)) * targetOpacity;
+            var gradientProgress = 1f - (float)i / BorderSize;
+            var alpha = gradientProgress * BorderIntensity * baseAlpha;
             var gradientColor = LetterboxColor * alpha;
 
             spriteBatch.Draw(
-                textureToDraw,
+                texture,
                 new Rectangle(0, Main.screenHeight - LetterboxHeight - i - 1, Main.screenWidth, 1),
                 gradientColor
             );
+        }
+    }
+
+    /// <summary>
+    /// for special cases, you can draw a letterbox with custom gradient parameters
+    /// </summary>
+    /// <param name="spriteBatch">The SpriteBatch to use for drawing</param>
+    /// <param name="borderSize">Custom border size in pixels</param>
+    /// <param name="borderIntensity">Custom border intensity (0.0-1.0)</param>
+    public static void DrawWithCustomGradient(SpriteBatch spriteBatch, int borderSize, float borderIntensity)
+    {
+        if (LetterboxHeight <= 0)
+            return;
+
+        var textureToDraw = pixelTexture ?? TextureAssets.MagicPixel.Value;
+        var alpha = LetterboxHeight / (Main.screenHeight * HeightPercentage) * targetOpacity;
+        var color = LetterboxColor * alpha;
+
+        // Draw main letterbox bars
+        spriteBatch.Draw(
+            textureToDraw,
+            new Rectangle(0, 0, Main.screenWidth, LetterboxHeight),
+            color
+        );
+        spriteBatch.Draw(
+            textureToDraw,
+            new Rectangle(0, Main.screenHeight - LetterboxHeight, Main.screenWidth, LetterboxHeight),
+            color
+        );
+
+        // Draw custom gradient borders
+        if (borderSize > 0)
+        {
+            borderIntensity = MathHelper.Clamp(borderIntensity, 0f, 1f);
+
+            for (var i = 0; i < borderSize; i++)
+            {
+                var gradientProgress = 1f - (float)i / borderSize;
+                var gradientAlpha = gradientProgress * borderIntensity * alpha;
+                var gradientColor = LetterboxColor * gradientAlpha;
+
+                // Top gradient
+                spriteBatch.Draw(
+                    textureToDraw,
+                    new Rectangle(0, LetterboxHeight + i, Main.screenWidth, 1),
+                    gradientColor
+                );
+
+                // Bottom gradient
+                spriteBatch.Draw(
+                    textureToDraw,
+                    new Rectangle(0, Main.screenHeight - LetterboxHeight - i - 1, Main.screenWidth, 1),
+                    gradientColor
+                );
+            }
         }
     }
 

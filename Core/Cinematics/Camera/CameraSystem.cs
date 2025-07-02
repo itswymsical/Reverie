@@ -9,6 +9,34 @@ public class CameraSystem : ModSystem
     private static PanModifier panModifier = new();
     private static MoveModifier moveModifier = new();
 
+    private static bool _isLocked = false;
+    private static Vector2 _lockedPosition = Vector2.Zero;
+    public static bool IsLocked => _isLocked;
+    public static Vector2 LockedPosition => _lockedPosition;
+
+    public static void LockCamera(Vector2 position)
+    {
+        // Add some debugging to see what's happening
+        try
+        {
+            _isLocked = true;
+            _lockedPosition = position;
+        }
+        catch (Exception ex)
+        {
+            // Log the error to see what's actually happening
+            ModContent.GetInstance<Reverie>().Logger.Error($"LockCamera error: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Unlocks the camera, returning control to normal
+    /// </summary>
+    public static void UnlockCamera()
+    {
+        _isLocked = false;
+    }
+
     /// <summary>
     /// Sets up a panning animation for the screen. Great for use with things like boss spawns or defeats, or other events happening near the player.
     /// </summary>
@@ -86,6 +114,12 @@ public class CameraSystem : ModSystem
 
     public override void ModifyScreenPosition()
     {
+        if (_isLocked)
+        {
+            Main.screenPosition = _lockedPosition - new Vector2(Main.screenWidth / 2f, Main.screenHeight / 2f);
+            return;
+        }
+
         if (panModifier.TotalDuration > 0 && panModifier.PrimaryTarget != Vector2.Zero)
             Main.instance.CameraModifiers.Add(panModifier);
 
@@ -101,6 +135,8 @@ public class CameraSystem : ModSystem
     public static void Reset()
     {
         shake = 0;
+        _isLocked = false;
+        _lockedPosition = Vector2.Zero;
 
         panModifier.Reset();
         moveModifier.Reset();

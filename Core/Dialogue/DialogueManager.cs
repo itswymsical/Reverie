@@ -92,7 +92,7 @@ public sealed class DialogueManager
 
     public void Draw(SpriteBatch spriteBatch, Vector2 bottomAnchorPosition)
     {
-        Letterbox.DrawCinematic(spriteBatch, 20, 0.5f);
+        Letterbox.Draw(spriteBatch);
 
         if (activeDialogue != null)
         {

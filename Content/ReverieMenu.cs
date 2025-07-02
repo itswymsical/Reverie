@@ -263,7 +263,7 @@ public class ReverieMenu : ModMenu
     public override bool PreDrawLogo(SpriteBatch spriteBatch, ref Vector2 logoDrawCenter, ref float logoRotation, ref float logoScale, ref Color drawColor)
     {
         drawColor = Color.White;
-        logoScale = 1.12f;
+        logoScale = 1.4f;
         logoRotation = 0f;
         logoDrawCenter = logoDrawCenter + new Vector2(0, 20);
 
@@ -571,7 +571,7 @@ public class ReverieMenu : ModMenu
             effect.Parameters["uTime"]?.SetValue((float)Main.time * 0.0005f);
             effect.Parameters["uOpacity"]?.SetValue(1.2f);
         }
-        spriteBatch.Draw(Logo.Value, new Vector2(logoDrawCenter.X / 1.24f, logoDrawCenter.Y * 0.08f), null, drawColor, logoRotation, Vector2.Zero, logoScale, SpriteEffects.None, 0f);
+        spriteBatch.Draw(Logo.Value, new Vector2(logoDrawCenter.X / 1.35f, logoDrawCenter.Y * -0.25f), null, drawColor, logoRotation, Vector2.Zero, logoScale, SpriteEffects.None, 0f);
         spriteBatch.End();
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
         return false;
