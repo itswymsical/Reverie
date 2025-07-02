@@ -589,3 +589,17 @@ Keybinds: {
 	"Fast-Forward Dialogue.DisplayName": Fast-Forward Dialogue
 	"Skip Cutscene.DisplayName": Skip Cutscene
 }
+
+Tiles.MagnoliaTile.MapEntry: Magnolia Tile
+
+Buffs: {
+	BarkskinPotionBuff: {
+		DisplayName: Barkskin Potion Buff
+		Description: Mods.Reverie.Buffs.BarkskinPotionBuff.Description
+	}
+
+	WaterleafSlowness: {
+		DisplayName: Waterleaf Slowness
+		Description: Mods.Reverie.Buffs.WaterleafSlowness.Description
+	}
+}

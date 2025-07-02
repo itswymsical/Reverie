@@ -1,6 +1,7 @@
 ﻿using Reverie.Common.UI.Missions;
 using Reverie.Content.Cutscenes;
 using Reverie.Core.Cinematics;
+using Reverie.Core.Dialogue;
 using Reverie.Core.Indicators;
 using Reverie.Core.Missions;
 using Terraria.UI;
@@ -102,8 +103,8 @@ public class SpawnDialogueIndicator : ModItem
         {
             if (Main.myPlayer == player.whoAmI)
             {
-                ScreenIndicatorManager.Instance.CreateDialogueIndicator(Main.MouseWorld, 
-                    "AFallingStar.CrashLanding", 9, "Guide", true, true, AnimationType.Wag);
+                ScreenIndicatorManager.Instance.CreateDialogueIndicator(Main.MouseWorld,
+                    "JourneysBegin.Crash", 3);
 
                 Main.NewText($"Placed at position [X:{Main.MouseWorld.X} Y:{Main.MouseWorld.Y}]");
             }
@@ -111,6 +112,8 @@ public class SpawnDialogueIndicator : ModItem
         }
         else
         {
+            DialogueManager.Instance.StartDialogue("JourneysBegin.Crash", 3, letterbox: true, music: MusicID.AltOverworldDay);
+
             Main.NewText($"[Cleared All Indicators] | Right-click to place an Indicator.");
             ScreenIndicatorManager.Instance.ClearAllIndicators();
         }

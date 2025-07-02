@@ -20,7 +20,7 @@ public sealed class DialogueManager
 
     public bool IsUIHidden { get; private set; }
 
-    public bool StartDialogue(string dialogueKey, int lineCount, bool zoomIn = false, bool letterbox = true)
+    public bool StartDialogue(string dialogueKey, int lineCount, bool zoomIn = false, bool letterbox = true, int? music = null)
     {
         if (IsAnyActive())
             return false;
@@ -50,20 +50,11 @@ public sealed class DialogueManager
             return false;
         }
 
-        try
+        if (music.HasValue)
         {
-            var musicKey = $"DialogueLibrary.{dialogueKey}.Music";
-            var musicLoc = Reverie.Instance.GetLocalization(musicKey);
-            if (!string.IsNullOrEmpty(musicLoc.Value) && int.TryParse(musicLoc.Value, out int music))
-            {
-                previousMusic = Main.musicBox2;
-                currentMusic = music;
-                Main.musicBox2 = music;
-            }
-        }
-        catch (Exception ex)
-        {
-            Main.NewText($"[WARNING] Music setup failed: {ex.Message}", Color.Yellow);
+            previousMusic = Main.musicBox2;
+            currentMusic = music.Value - 1; // dont edit
+            Main.musicBox2 = music.Value - 1; // dont edit
         }
 
         return true;
@@ -92,7 +83,7 @@ public sealed class DialogueManager
 
     public void Draw(SpriteBatch spriteBatch, Vector2 bottomAnchorPosition)
     {
-        Letterbox.Draw(spriteBatch);
+        Letterbox.Draw(spriteBatch, 0.05f);
 
         if (activeDialogue != null)
         {

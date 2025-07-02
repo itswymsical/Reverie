@@ -1,0 +1,26 @@
+﻿DialogueLibrary: {
+	JourneysBegin: {
+		Crash: {
+			Line1: {
+				Text: <shake:1>Whoa!</shake>
+				Speaker: Guide
+				Emote: "3"
+				Speed: "1.5"
+			}
+
+			Line2: {
+				Text: Are...<pause:25> are you okay?<pause:25> screw that, you just fell from the <shake:2> sky!</shake>
+				Speaker: Guide
+				Emote: "3"
+				Speed: "1.5"
+			}
+
+			Line3: {
+				Text: This isn't even the weirdest thing in this world...
+				Speaker: Guide
+				Emote: "4"
+				Speed: "1.1"
+			}
+		}
+	}
+}

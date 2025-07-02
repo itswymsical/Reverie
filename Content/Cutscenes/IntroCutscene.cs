@@ -1,6 +1,8 @@
-﻿using Reverie.Core.Cinematics;
+﻿using Reverie.Common.Systems;
+using Reverie.Core.Cinematics;
 using Reverie.Core.Cinematics.Camera;
 using Reverie.Core.Cinematics.Music;
+using Reverie.Core.Dialogue;
 using Terraria.Audio;
 
 namespace Reverie.Content.Cutscenes;
@@ -32,7 +34,7 @@ public class IntroCutscene : Cutscene
         originalPlayerPosition = new Vector2(Main.spawnTileX * 16f + 8f, Main.spawnTileY * 16f + 8f);
 
         base.Start();
-        SetMusic(MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}DawnofReverie"), MusicFadeMode.Instant);
+        SetMusic(MusicLoader.GetMusicSlot($"{CUTSCENE_MUSIC_DIRECTORY}DawnofReverie"), MusicFadeMode.Instant);
     }
 
     protected override void OnCutsceneStart()
@@ -72,18 +74,18 @@ public class IntroCutscene : Cutscene
         var logoFadeEndTime = logoFadeOutDelay + logoFadeOutDuration;
         if (!fallSequenceStarted && ElapsedTime >= logoFadeEndTime + fallStartDelay)
         {
-            StartFallSequence();
+            StartFalling();
             fallSequenceStarted = true;
         }
 
         if (fallSequenceStarted)
         {
             fallSequenceTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
-            UpdateFallSequence();
+            UpdateFalling();
         }
     }
 
-    private void StartFallSequence()
+    private void StartFalling()
     {
 
         var fallStartPosition = new Vector2(originalPlayerPosition.X, originalPlayerPosition.Y - fallHeight);
@@ -97,7 +99,7 @@ public class IntroCutscene : Cutscene
         playerFalling = true;
     }
 
-    private void UpdateFallSequence()
+    private void UpdateFalling()
     {
         CameraSystem.LockCamera(new Vector2(originalPlayerPosition.X, originalPlayerPosition.Y - 28));
 
@@ -156,6 +158,7 @@ public class IntroCutscene : Cutscene
     {
         CameraSystem.UnlockCamera();
         CameraSystem.ReturnCamera(1);
+        DownedSystem.initialCutscene = true;
 
         EnablePlayerMovement();
 
@@ -168,6 +171,6 @@ public class IntroCutscene : Cutscene
             Main.LocalPlayer.velocity = Vector2.Zero;
         }
 
-        MusicFadeHandler.RestorePreviousMusic(MusicFadeMode.FadeOut, 9.5f);
+        DialogueManager.Instance.StartDialogue("JourneysBegin.Crash", 3, letterbox: true, music: MusicID.AltOverworldDay);
     }
 }

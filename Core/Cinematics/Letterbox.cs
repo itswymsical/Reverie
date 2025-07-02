@@ -169,6 +169,43 @@ public static class Letterbox
             DrawGradientBorders(spriteBatch, textureToDraw, alpha);
         }
     }
+    /// <summary>
+    /// Draw the letterbox with custom height percentage, for dialogue
+    /// </summary>
+    /// <param name="spriteBatch">The SpriteBatch to use for drawing</param>
+    public static void Draw(SpriteBatch spriteBatch, float heightPercent = 0.07f)
+    {
+        if (LetterboxHeight <= 0)
+            return;
+
+        // Ensure we have a texture to draw
+        var textureToDraw = pixelTexture ?? TextureAssets.MagicPixel.Value;
+
+        // Calculate alpha based on current height vs target height
+        var alpha = LetterboxHeight / (Main.screenHeight * heightPercent) * targetOpacity;
+        var color = LetterboxColor * alpha;
+
+        // Draw main letterbox bars
+        // Top letterbox
+        spriteBatch.Draw(
+            textureToDraw,
+            new Rectangle(0, 0, Main.screenWidth, LetterboxHeight),
+            color
+        );
+
+        // Bottom letterbox
+        spriteBatch.Draw(
+            textureToDraw,
+            new Rectangle(0, Main.screenHeight - LetterboxHeight, Main.screenWidth, LetterboxHeight),
+            color
+        );
+
+        // Draw gradient borders if enabled
+        if (BorderSize > 0)
+        {
+            DrawGradientBorders(spriteBatch, textureToDraw, alpha);
+        }
+    }
 
     /// <summary>
     /// Draw the gradient border effects
@@ -207,7 +244,6 @@ public static class Letterbox
     /// <summary>
     /// for special cases, you can draw a letterbox with custom gradient parameters
     /// </summary>
-    /// <param name="spriteBatch">The SpriteBatch to use for drawing</param>
     /// <param name="borderSize">Custom border size in pixels</param>
     /// <param name="borderIntensity">Custom border intensity (0.0-1.0)</param>
     public static void DrawWithCustomGradient(SpriteBatch spriteBatch, int borderSize, float borderIntensity)
