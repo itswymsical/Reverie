@@ -112,7 +112,7 @@ public class SpawnDialogueIndicator : ModItem
         }
         else
         {
-            DialogueManager.Instance.StartDialogue("JourneysBegin.Crash", 3, letterbox: true, music: MusicID.AltOverworldDay);
+            DialogueManager.Instance.StartDialogue("JourneysBegin.Crash", 4, letterbox: true, music: MusicID.AltOverworldDay);
 
             Main.NewText($"[Cleared All Indicators] | Right-click to place an Indicator.");
             ScreenIndicatorManager.Instance.ClearAllIndicators();

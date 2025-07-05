@@ -171,6 +171,6 @@ public class IntroCutscene : Cutscene
             Main.LocalPlayer.velocity = Vector2.Zero;
         }
 
-        DialogueManager.Instance.StartDialogue("JourneysBegin.Crash", 3, letterbox: true, music: MusicID.AltOverworldDay);
+        DialogueManager.Instance.StartDialogue("JourneysBegin.Crash", 4, letterbox: true, music: MusicID.AltOverworldDay);
     }
 }

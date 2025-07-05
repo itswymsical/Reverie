@@ -9,13 +9,20 @@
 			}
 
 			Line2: {
-				Text: Are...<pause:25> are you okay?<pause:25> screw that, you just fell from the <shake:2> sky!</shake>
+				Text: Are...<pause:25> are you okay?
 				Speaker: Guide
 				Emote: "3"
 				Speed: "1.5"
 			}
 
-			Line3: {
+            Line3: {
+				Text: screw that, you just fell from the <shake:1> sky!</shake>
+				Speaker: Guide
+				Emote: "3"
+				Speed: "1.5"
+			}
+
+			Line4: {
 				Text: This isn't even the weirdest thing in this world...
 				Speaker: Guide
 				Emote: "4"
