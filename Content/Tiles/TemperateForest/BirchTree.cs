@@ -35,7 +35,7 @@ public class BirchTree : ModTree
     public override int TreeLeaf() => ModContent.GoreType<BirchLeafFX>();  
 
     public override int DropWood() => ModContent.ItemType<BirchWoodItem>();
-    public virtual int CreateDust() => ModContent.DustType<BirchDust>();
+    public override int CreateDust() => ModContent.DustType<BirchDust>();
     
     public override TreeTypes CountsAsTreeType => TreeTypes.Custom;
 
