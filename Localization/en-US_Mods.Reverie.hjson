@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -337,6 +337,41 @@ Items: {
 
 	TemperateGrassSeedsItem: {
 		DisplayName: Temperate Grass Seeds
+		Tooltip: ""
+	}
+
+	BirchWallItem: {
+		DisplayName: Birch Wall Item
+		Tooltip: ""
+	}
+
+	BirchBookcaseItem: {
+		DisplayName: Birch Bookcase Item
+		Tooltip: ""
+	}
+
+	BirchCandleItem: {
+		DisplayName: Birch Candle Item
+		Tooltip: ""
+	}
+
+	BirchChairItem: {
+		DisplayName: Birch Chair Item
+		Tooltip: ""
+	}
+
+	BirchDoorItem: {
+		DisplayName: Birch Door Item
+		Tooltip: ""
+	}
+
+	BirchTableItem: {
+		DisplayName: Birch Table Item
+		Tooltip: ""
+	}
+
+	BirchWorkbenchItem: {
+		DisplayName: Birch Workbench Item
 		Tooltip: ""
 	}
 }

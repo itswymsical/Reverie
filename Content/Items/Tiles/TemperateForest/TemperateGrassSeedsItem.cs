@@ -40,12 +40,12 @@ public class TemperateGrassSeedsItem : ModItem
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
-        var placeable = tooltips.FirstOrDefault(x => x.Name == "Placeable");
-        var consumable = tooltips.FirstOrDefault(x => x.Name == "Consumable");
-        if (consumable != null)
-            tooltips.Remove(consumable);
+        //var placeable = tooltips.FirstOrDefault(x => x.Name == "Placeable");
+        //var consumable = tooltips.FirstOrDefault(x => x.Name == "Consumable");
+        //if (consumable != null)
+        //    tooltips.Remove(consumable);
 
-        tooltips.Add(placeable);
+        //tooltips.Add(placeable);
     }
 
     public override bool? UseItem(Player player)
