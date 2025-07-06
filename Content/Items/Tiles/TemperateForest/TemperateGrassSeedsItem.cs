@@ -1,13 +1,13 @@
 ﻿// Super simple code but I'm still crediting:
 // https://github.com/GabeHasWon/SpiritReforged/blob/master/Content/Savanna/Items/SavannaGrassSeeds.cs
 
-using Reverie.Content.Tiles.Taiga;
+using Reverie.Content.Tiles.TemperateForest;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Reverie.Content.Items.Tiles.Taiga;
+namespace Reverie.Content.Items.Tiles.TemperateForest;
 
-public class TaigaGrassSeedsItem : ModItem
+public class TemperateGrassSeedsItem : ModItem
 {
     public override void SetStaticDefaults()
     {
@@ -37,6 +37,7 @@ public class TaigaGrassSeedsItem : ModItem
             player.cursorItemIconID = Type;
         }
     }
+
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
         var placeable = tooltips.FirstOrDefault(x => x.Name == "Placeable");
@@ -46,14 +47,15 @@ public class TaigaGrassSeedsItem : ModItem
 
         tooltips.Add(placeable);
     }
+
     public override bool? UseItem(Player player)
     {
         if (Main.myPlayer == player.whoAmI)
         {
-            Tile tile = Framing.GetTileSafely(Player.tileTargetX, Player.tileTargetY);
-            if (tile.HasTile && tile.TileType == ModContent.TileType<PeatTile>() && player.IsTargetTileInItemRange(Item))
+            var tile = Framing.GetTileSafely(Player.tileTargetX, Player.tileTargetY);
+            if (tile.HasTile && tile.TileType == TileID.Dirt && player.IsTargetTileInItemRange(Item))
             {
-                WorldGen.PlaceTile(Player.tileTargetX, Player.tileTargetY, ModContent.TileType<TaigaGrassTile>(), forced: true);
+                WorldGen.PlaceTile(Player.tileTargetX, Player.tileTargetY, ModContent.TileType<TemperateGrassTile>(), forced: true);
 
                 if (Main.netMode != NetmodeID.SinglePlayer)
                     NetMessage.SendTileSquare(player.whoAmI, Player.tileTargetX, Player.tileTargetY);

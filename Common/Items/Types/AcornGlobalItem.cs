@@ -14,7 +14,7 @@ public sealed class AcornGlobalItem : GlobalItem
         entity.DamageType = DamageClass.Ranged;
         entity.damage = 6;
         entity.knockBack = 1f;
-        
+        entity.noMelee = true;
         entity.shootSpeed = 7f;
         
         entity.ammo = entity.type;

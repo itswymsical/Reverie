@@ -1,4 +1,4 @@
-UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -248,7 +248,7 @@ Items: {
 	}
 
 	TileTemplateItem: {
-		DisplayName: Tile Template Item
+		DisplayName: Tile Template
 		Tooltip: Debugging Item - used to help spriters learn block tiling
 	}
 
@@ -322,6 +322,21 @@ Items: {
 
 	CutscenePlayer: {
 		DisplayName: Cutscene Player
+		Tooltip: ""
+	}
+
+	BirchTreeDebugWand: {
+		DisplayName: Birch Tree Debug Wand
+		Tooltip: ""
+	}
+
+	BirchWoodItem: {
+		DisplayName: Birch Wood
+		Tooltip: ""
+	}
+
+	TemperateGrassSeedsItem: {
+		DisplayName: Temperate Grass Seeds
 		Tooltip: ""
 	}
 }

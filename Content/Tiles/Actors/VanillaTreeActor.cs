@@ -20,7 +20,7 @@ public class SnowTaigaTreeActor : ModTree
 
     public override int SaplingGrowthType(ref int style)
     {
-        style = 1;
+        style = 0;
         return TileID.Saplings;
     }
 

@@ -1,4 +1,4 @@
-﻿DialogueLibrary: {
+DialogueLibrary: {
 	JourneysBegin: {
 		Crash: {
 			Line1: {
@@ -15,7 +15,7 @@
 				Speed: "1.5"
 			}
 
-            Line3: {
+			Line3: {
 				Text: screw that, you just fell from the <shake:1> sky!</shake>
 				Speaker: Guide
 				Emote: "3"
