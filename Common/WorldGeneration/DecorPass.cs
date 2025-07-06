@@ -1,5 +1,6 @@
 ﻿using Reverie.Content.Tiles;
 using Reverie.Content.Tiles.Misc;
+using Reverie.Content.Tiles.TemperateForest;
 using Terraria.IO;
 using Terraria.WorldBuilding;
 
@@ -12,16 +13,16 @@ public class DecorPass : GenPass
 
     protected override void ApplyPass(GenerationProgress progress, GameConfiguration configuration)
     {
-        progress.Message = "Placing Forest Decor";
+        progress.Message = "Placing Decorations";
 
         for (int x = 100; x < Main.maxTilesX - 100; x++)
         {
             for (int y = (int)Main.worldSurface - 300; y < (int)Main.worldSurface; y++)
             {
-                if (WorldGen.genRand.NextBool(200))
-                {
-                    AddWoodLog(x, y);
-                }
+                //if (WorldGen.genRand.NextBool(200))
+                //{
+                //    AddWoodLog(x, y);
+                //}
                 if (WorldGen.genRand.NextBool(140))
                 {
                     AddMagnoliaFlower(x, y);

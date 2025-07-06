@@ -3,7 +3,7 @@ using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.ObjectData;
 
-namespace Reverie.Content.Tiles;
+namespace Reverie.Content.Tiles.TemperateForest;
 
 public class WoodLogTile : ModTile
 {
@@ -26,7 +26,7 @@ public class WoodLogTile : ModTile
         TileObjectData.newTile.DrawYOffset = -(height - 36);
 
         TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile, 1, 0);
-        TileObjectData.newTile.AnchorValidTiles = [TileID.Grass, TileID.Dirt];
+        TileObjectData.newTile.AnchorValidTiles = [ModContent.TileType<TemperateGrassTile>()];
 
         TileObjectData.newTile.StyleHorizontal = true;
         TileObjectData.addTile(Type);
@@ -57,7 +57,7 @@ public class WoodLogTile : ModTile
     {
         if (!fail && !effectOnly)
         {
-            if (Main.rand.NextBool(5))
+            if (Main.rand.NextBool(6))
                 Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 16, 16, ModContent.ItemType<MagnoliaItem>(), Main.rand.Next(1, 2));
             else
                 Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 16, 16, ItemID.Wood, Main.rand.Next(2, 7));

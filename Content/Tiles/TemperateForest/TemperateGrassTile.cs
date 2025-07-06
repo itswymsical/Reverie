@@ -1,11 +1,12 @@
 ﻿using Reverie.Common.Tiles;
+using System.Collections.Generic;
 
 namespace Reverie.Content.Tiles.TemperateForest;
 
 public class TemperateGrassTile : GrassTile
 {
     protected override int DirtType => TileID.Dirt;
-    //public override List<int> PlantTypes => [ModContent.TileType<TaigaPlants>()];
+    public override List<int> PlantTypes => [ModContent.TileType<TemperatePlants>()];
     public override void SetStaticDefaults()
     {
         base.SetStaticDefaults();
