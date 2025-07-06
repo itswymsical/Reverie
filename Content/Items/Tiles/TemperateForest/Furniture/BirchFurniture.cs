@@ -8,7 +8,7 @@ public class BirchWorkbenchItem : ModItem
     {
         base.SetDefaults();
         Item.value = 150;
-        //Item.DefaultToPlaceableTile(ModContent.TileType<BirchWorkbenchTile>());
+        Item.DefaultToPlaceableTile(ModContent.TileType<BirchWorkbenchTile>());
     }
     public override void AddRecipes()
     {
@@ -17,13 +17,14 @@ public class BirchWorkbenchItem : ModItem
             .Register();
     }
 }
+
 public class BirchTableItem : ModItem
 {
     public override void SetDefaults()
     {
         base.SetDefaults();
         Item.value = 150;
-        //Item.DefaultToPlaceableTile(ModContent.TileType<BirchTableTile>());
+        Item.DefaultToPlaceableTile(ModContent.TileType<BirchTableTile>());
     }
     public override void AddRecipes()
     {
@@ -33,6 +34,61 @@ public class BirchTableItem : ModItem
             .Register();
     }
 }
+
+public class BirchSofaItem : ModItem
+{
+    public override void SetDefaults()
+    {
+        base.SetDefaults();
+        Item.value = 150;
+        Item.DefaultToPlaceableTile(ModContent.TileType<BirchSofaTile>());
+    }
+    public override void AddRecipes()
+    {
+        CreateRecipe()
+            .AddIngredient<BirchWoodItem>(5)
+            .AddIngredient(ItemID.Silk, 2)
+            .AddTile(TileID.Sawmill)
+            .Register();
+    }
+}
+
+public class BirchBedItem : ModItem
+{
+    public override void SetDefaults()
+    {
+        base.SetDefaults();
+        Item.value = 150;
+        Item.DefaultToPlaceableTile(ModContent.TileType<BirchBedTile>());
+    }
+    public override void AddRecipes()
+    {
+        CreateRecipe()
+            .AddIngredient<BirchWoodItem>(15)
+            .AddIngredient(ItemID.Silk, 5)
+            .AddTile(TileID.Sawmill)
+            .Register();
+    }
+}
+
+public class BirchSinkItem : ModItem
+{
+    public override void SetDefaults()
+    {
+        base.SetDefaults();
+        Item.value = 150;
+        Item.DefaultToPlaceableTile(ModContent.TileType<BirchSinkTile>());
+    }
+    public override void AddRecipes()
+    {
+        CreateRecipe()
+            .AddIngredient<BirchWoodItem>(6)
+            .AddIngredient(ItemID.WaterBucket)
+            .AddTile(TileID.WorkBenches)
+            .Register();
+    }
+}
+
 public class BirchChairItem : ModItem
 {
     public override void SetDefaults()
@@ -49,13 +105,14 @@ public class BirchChairItem : ModItem
             .Register();
     }
 }
+
 public class BirchDoorItem : ModItem
 {
     public override void SetDefaults()
     {
         base.SetDefaults();
         Item.value = 150;
-        //Item.DefaultToPlaceableTile(ModContent.TileType<BirchTableTile>());
+        Item.DefaultToPlaceableTile(ModContent.TileType<BirchDoorClosedTile>());
     }
     public override void AddRecipes()
     {
@@ -65,6 +122,7 @@ public class BirchDoorItem : ModItem
             .Register();
     }
 }
+
 public class BirchCandleItem : ModItem
 {
     public override void SetDefaults()
@@ -82,6 +140,7 @@ public class BirchCandleItem : ModItem
             .Register();
     }
 }
+
 public class BirchBookcaseItem : ModItem
 {
     public override void SetDefaults()
@@ -95,6 +154,25 @@ public class BirchBookcaseItem : ModItem
         CreateRecipe()
             .AddIngredient<BirchWoodItem>(20)
             .AddIngredient(ItemID.Book, 10)
+            .AddTile(TileID.Sawmill)
+            .Register();
+    }
+}
+
+public class BirchClockItem : ModItem
+{
+    public override void SetDefaults()
+    {
+        base.SetDefaults();
+        Item.value = 150;
+        Item.DefaultToPlaceableTile(ModContent.TileType<BirchClockTile>());
+    }
+    public override void AddRecipes()
+    {
+        CreateRecipe()
+            .AddIngredient<BirchWoodItem>(10)
+            .AddIngredient(ItemID.Glass, 6)
+            .AddRecipeGroup(RecipeGroupID.IronBar, 3)
             .AddTile(TileID.Sawmill)
             .Register();
     }

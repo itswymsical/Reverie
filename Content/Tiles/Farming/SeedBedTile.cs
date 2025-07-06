@@ -1,4 +1,5 @@
-﻿using Reverie.Content.Tiles.Canopy;
+﻿using Reverie.Content.Items.Tiles.Farming;
+using Reverie.Content.Tiles.Canopy;
 using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.GameContent.Metadata;
@@ -30,9 +31,9 @@ public class SeedBedTile : ModTile
 
         TileObjectData.newTile.AnchorInvalidTiles = [TileID.MagicalIceBlock];
         TileID.Sets.IgnoredByNpcStepUp[Type] = true;
-        //TileMaterials.SetForTileId(Type, TileMaterials._materialsByName["Plants"]);
 
-        AddMapEntry(new Color(247, 124, 124), Language.GetText("Mods.Reverie.Tiles.SeedbedTile.MapEntry"));
+        AddMapEntry(new Color(247, 124, 124), Language.GetText("Seedbed"));
+        RegisterItemDrop(ModContent.ItemType<SeedBedItem>());
         DustType = DustID.Dirt;
         HitSound = SoundID.Dig;
 

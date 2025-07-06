@@ -1,4 +1,4 @@
-UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -325,11 +325,6 @@ Items: {
 		Tooltip: ""
 	}
 
-	BirchTreeDebugWand: {
-		DisplayName: Birch Tree Debug Wand
-		Tooltip: ""
-	}
-
 	BirchWoodItem: {
 		DisplayName: Birch Wood
 		Tooltip: ""
@@ -341,37 +336,57 @@ Items: {
 	}
 
 	BirchWallItem: {
-		DisplayName: Birch Wall Item
+		DisplayName: Birch Wood Wall
 		Tooltip: ""
 	}
 
 	BirchBookcaseItem: {
-		DisplayName: Birch Bookcase Item
+		DisplayName: Birch Wood Bookcase
 		Tooltip: ""
 	}
 
 	BirchCandleItem: {
-		DisplayName: Birch Candle Item
+		DisplayName: Birch Wood Candle
 		Tooltip: ""
 	}
 
 	BirchChairItem: {
-		DisplayName: Birch Chair Item
+		DisplayName: Birch Wood Chair
 		Tooltip: ""
 	}
 
 	BirchDoorItem: {
-		DisplayName: Birch Door Item
+		DisplayName: Birch Wood Door
 		Tooltip: ""
 	}
 
 	BirchTableItem: {
-		DisplayName: Birch Table Item
+		DisplayName: Birch Wood Table
 		Tooltip: ""
 	}
 
 	BirchWorkbenchItem: {
-		DisplayName: Birch Workbench Item
+		DisplayName: Birch Wood Workbench
+		Tooltip: ""
+	}
+
+	BirchClockItem: {
+		DisplayName: Birch Wood Clock
+		Tooltip: ""
+	}
+
+	BirchSinkItem: {
+		DisplayName: Birch Wood Sink
+		Tooltip: ""
+	}
+
+	BirchSofaItem: {
+		DisplayName: Birch Wood Sofa
+		Tooltip: ""
+	}
+
+	BirchBedItem: {
+		DisplayName: Birch Wood Bed
 		Tooltip: ""
 	}
 }
@@ -380,7 +395,6 @@ Projectiles: {
 	BirdProj.DisplayName: Bird
 	BorealHewerProj.DisplayName: Boreal Hewer
 	FlailstormProj.DisplayName: Flailstorm
-	LodestoneMagnetProj.DisplayName: Lodestone Magnet
 	SeedProj.DisplayName: Birdseed
 	AcornLauncherProj.DisplayName: Acorn Launcher
 	AcornProj.DisplayName: Acorn
@@ -405,7 +419,7 @@ Projectiles: {
 	WaterleafSeedProj.DisplayName: Waterleaf Seed
 	MagnoliaPheromonesProj.DisplayName: Magnolia Pheromones
 	SharpnutDaggerProj.DisplayName: Sharpnut Dagger
-	LodestoneMagnetizerProj.DisplayName: Lodestone Magnetizer Proj
+	LodestoneMagnetizerProj.DisplayName: Lodestone Magnetizer
 }
 
 Configs: {
