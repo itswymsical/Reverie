@@ -1,5 +1,6 @@
 ﻿using Reverie.Common.WorldGeneration.Canopy;
 using Reverie.Common.WorldGeneration.Taiga;
+using Reverie.Common.WorldGeneration.TemperateForest;
 using System.Collections.Generic;
 using Terraria.GameContent.Generation;
 using Terraria.IO;
@@ -24,11 +25,15 @@ public class WorldGenSystem : ModSystem
     {
         var tundraIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Generate Ice Biome"));
         var decorIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Spreading Grass"));
+        var forestIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Granite"));
 
         var canopyIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Full Desert"));
 
         var spawnIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Guide"));
 
+        if (forestIndex != 1)
+            tasks.Insert(forestIndex + 1, new TemperateForestPass());
+        
         if (decorIndex != 1)
         {
             tasks.Insert(decorIndex + 1, new DecorPass());
