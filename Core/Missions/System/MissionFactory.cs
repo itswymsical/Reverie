@@ -1,4 +1,5 @@
-﻿using Reverie.Core.Missions.Core;
+﻿using Reverie.Content.Missions;
+using Reverie.Core.Missions.Core;
 using Reverie.Utilities;
 using System.Collections.Generic;
 
@@ -58,7 +59,7 @@ public class MissionFactory : ModSystem
             Reverie.Instance.Logger.Info("Registering mission types...");
 
             #region Missions
-            //missionTypes[MissionID.AFallingStar] = typeof(AFallingStar);
+            missionTypes[MissionID.JourneysBegin] = typeof(Mission_JourneysBegin);
             //missionTypes[MissionID.BloomcapHunt] = typeof(BloomcapHunt);
             //missionTypes[MissionID.CopperStandard] = typeof(CopperStandard);
             //missionTypes[MissionID.LightEmUp] = typeof(LightEmUp);

@@ -3,6 +3,7 @@ using Reverie.Core.Cinematics;
 using Reverie.Core.Cinematics.Camera;
 using Reverie.Core.Cinematics.Music;
 using Reverie.Core.Dialogue;
+using Reverie.Core.Missions;
 using Terraria.Audio;
 
 namespace Reverie.Content.Cutscenes;
@@ -94,7 +95,7 @@ public class IntroCutscene : Cutscene
 
         DisableInvisibility();
 
-        EnableFallDamage();
+        DisableFallDamage();
 
         playerFalling = true;
     }
@@ -163,7 +164,7 @@ public class IntroCutscene : Cutscene
         EnablePlayerMovement();
 
         DisableInvisibility();
-        DisableFallDamage();
+        EnableFallDamage();
 
         if (!impactOccurred)
         {
@@ -172,5 +173,7 @@ public class IntroCutscene : Cutscene
         }
 
         DialogueManager.Instance.StartDialogue("JourneysBegin.Crash", 4, letterbox: true, music: MusicID.AltOverworldDay);
+        MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+        player.UnlockMission(MissionID.JourneysBegin);
     }
 }

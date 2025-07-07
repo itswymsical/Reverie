@@ -42,7 +42,7 @@ public class UnlockMissionCommand : ModCommand
     public override string Command => "unlockm";
     public override CommandType Type => CommandType.Chat | CommandType.World;
     public override string Usage => "/unlockm <missionID or name>";
-    public override string Description => "Unlocks the specified mission (e.g., 1 or 'AFallingStar').";
+    public override string Description => "Unlocks the specified mission (e.g., 1 or 'JourneysBegin').";
 
     public override void Action(CommandCaller caller, string input, string[] args)
     {
@@ -78,7 +78,7 @@ public class StartMissionCommand : ModCommand
     public override string Command => "startm";
     public override CommandType Type => CommandType.Chat | CommandType.World;
     public override string Usage => "/startm <missionID or name>";
-    public override string Description => "Starts the specified mission (e.g., 1 or 'AFallingStar').";
+    public override string Description => "Starts the specified mission (e.g., 1 or 'JourneysBegin').";
 
     public override void Action(CommandCaller caller, string input, string[] args)
     {
@@ -120,7 +120,7 @@ public class ResetMissionCommand : ModCommand
     public override string Command => "resetm";
     public override CommandType Type => CommandType.Chat | CommandType.World;
     public override string Usage => "/resetm <missionID or name>";
-    public override string Description => "Resets the specified mission (e.g., 1 or 'AFallingStar').";
+    public override string Description => "Resets the specified mission (e.g., 1 or 'JourneysBegin').";
 
     public override void Action(CommandCaller caller, string input, string[] args)
     {
@@ -156,7 +156,7 @@ public class CompleteMissionCommand : ModCommand
     public override string Command => "completem";
     public override CommandType Type => CommandType.Chat | CommandType.World;
     public override string Usage => "/completem <missionID or name>";
-    public override string Description => "Completes the specified mission (e.g., 1 or 'AFallingStar').";
+    public override string Description => "Completes the specified mission (e.g., 1 or 'JourneysBegin').";
 
     public override void Action(CommandCaller caller, string input, string[] args)
     {

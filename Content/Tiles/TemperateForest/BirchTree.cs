@@ -28,7 +28,9 @@ public class BirchTree : ModTree
 
     public override bool Shake(int x, int y, ref bool createLeaves)
     {
-        Item.NewItem(WorldGen.GetItemSource_FromTreeShake(x, y), new Vector2(x, y) * 16, ItemID.Peach);
+        if (Main.rand.NextBool(7))
+            Item.NewItem(WorldGen.GetItemSource_FromTreeShake(x, y), new Vector2(x, y) * 16, ItemID.Peach);
+
         return false;
     }
 

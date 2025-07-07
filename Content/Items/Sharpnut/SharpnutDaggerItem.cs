@@ -15,6 +15,7 @@ public class SharpnutDaggerItem : ModItem
         Item.shoot = ModContent.ProjectileType<SharpnutDaggerProj>();
         Item.shootSpeed = 10f;
         Item.value = Item.sellPrice(copper: 85);
+        Item.UseSound = SoundID.Item1;
         Item.DamageType = DamageClass.Ranged;
         Item.useStyle = ItemUseStyleID.Swing;
         Item.rare = ItemRarityID.White;

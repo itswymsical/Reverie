@@ -173,8 +173,8 @@ public class SeedBedPlantSupport : ModSystem
             var originalType = tileBelow.TileType;
             tileBelow.TileType = TileID.ClayPot;
 
-            // 8x faster growth rate
-            for (int attempts = 0; attempts < 8; attempts++)
+            // 5x faster growth rate
+            for (int attempts = 0; attempts < 5; attempts++)
             {
                 orig(i, j);
 
