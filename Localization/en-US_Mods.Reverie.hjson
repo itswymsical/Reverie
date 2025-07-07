@@ -389,6 +389,11 @@ Items: {
 		DisplayName: Birch Wood Bed
 		Tooltip: ""
 	}
+
+	MagnoliaSeedsItem: {
+		DisplayName: Magnolia Seeds
+		Tooltip: ""
+	}
 }
 
 Projectiles: {

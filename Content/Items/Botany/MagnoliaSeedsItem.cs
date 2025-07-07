@@ -1,9 +1,10 @@
 ﻿using ReLogic.Graphics;
+using Reverie.Content.Tiles.Misc;
 using Terraria.GameContent;
 
 namespace Reverie.Content.Items.Botany;
 
-public class MagnoliaItem : ModItem
+public class MagnoliaSeedsItem : ModItem
 {
     public override void SetStaticDefaults()
     {
@@ -20,6 +21,12 @@ public class MagnoliaItem : ModItem
         Item.value = Item.sellPrice(copper: 15);
 
         Item.maxStack = Item.CommonMaxStack;
+
+        Item.consumable = true;
+        Item.useStyle = ItemUseStyleID.Swing;
+        Item.useTime = Item.useAnimation = 19;
+
+        Item.createTile = ModContent.TileType<MagnoliaTile>();
     }
 
     public override bool PreDrawTooltipLine(DrawableTooltipLine line, ref int yOffset)

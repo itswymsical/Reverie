@@ -3,6 +3,7 @@ using Terraria.GameContent.Metadata;
 using Terraria.Localization;
 using Terraria.ObjectData;
 using Reverie.Content.Items.Botany;
+using Reverie.Content.Tiles.Farming;
 
 namespace Reverie.Content.Tiles.Misc
 {
@@ -41,7 +42,8 @@ namespace Reverie.Content.Tiles.Misc
 
 			TileObjectData.newTile.AnchorAlternateTiles = [
 				TileID.ClayPot,
-				TileID.PlanterBox
+				TileID.PlanterBox,
+                ModContent.TileType<SeedBedTile>()
 			];
 
 			TileObjectData.addTile(Type);
@@ -119,22 +121,32 @@ namespace Reverie.Content.Tiles.Misc
 			var nearestPlayer = Main.player[Player.FindClosest(worldPosition, 16, 16)];
 
 			var herbItemType = ModContent.ItemType<MagnoliaItem>();
-			var herbItemStack = 1;
+            var seedItemType = ModContent.ItemType<MagnoliaSeedsItem>();
 
-			if (nearestPlayer.active && (nearestPlayer.HeldItem.type == ItemID.StaffofRegrowth || nearestPlayer.HeldItem.type == ItemID.AcornAxe))
+            var herbItemStack = 1;
+            var seedItemStack = Main.rand.Next(1, 2);
+
+            if (nearestPlayer.active && (nearestPlayer.HeldItem.type == ItemID.StaffofRegrowth || nearestPlayer.HeldItem.type == ItemID.AcornAxe))
 			{
 				herbItemStack = Main.rand.Next(1, 3);
-			}
+                seedItemStack = Main.rand.Next(3, 5);
+
+            }
 			else if (stage == PlantStage.Grown)
 			{
 				herbItemStack = 1;
-			}
+                seedItemStack = Main.rand.Next(2, 3);
+            }
 
 			if (herbItemType > 0 && herbItemStack > 0)
 			{
 				yield return new Item(herbItemType, herbItemStack);
 			}
-		}
+            if (seedItemType > 0 && seedItemStack > 0)
+            {
+                yield return new Item(seedItemType, seedItemStack);
+            }
+        }
 
 		public override bool IsTileSpelunkable(int i, int j)
 		{
