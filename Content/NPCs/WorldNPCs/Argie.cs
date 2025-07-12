@@ -38,8 +38,8 @@ public class Argie : WorldNPCActor
         var bloomCap = player.GetMission(MissionID.BloomcapHunt);
 
         if (bloomCap != null &&
-            bloomCap.Availability != MissionAvailability.Completed &&
-            bloomCap.Progress != MissionProgress.Active)
+            bloomCap.Status != MissionStatus.Completed &&
+            bloomCap.Progress != MissionProgress.Ongoing)
         {
             player.UnlockMission(MissionID.BloomcapHunt);
         }
