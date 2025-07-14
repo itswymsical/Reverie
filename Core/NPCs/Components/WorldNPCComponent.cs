@@ -115,8 +115,7 @@ public class WorldNPCComponent : NPCComponent
                 return true;
         }
     }
-
-    #region Custom AI Methods
+    #region Custom AI Hooks
     private bool HandleFollowAI(NPC npc)
     {
         if (FollowingPlayer == -1 || !Main.player[FollowingPlayer].active)
@@ -127,22 +126,60 @@ public class WorldNPCComponent : NPCComponent
 
         var target = Main.player[FollowingPlayer];
 
-        // Basic collision checks
-        var foundSolidTile = false;
-        var tileX = (int)(npc.position.X + npc.width / 2) / 16;
-        var tileY = (int)(npc.position.Y + npc.height) / 16;
+        // Calculate NPC center in tile coordinates
+        var npcTileX = (int)(npc.Center.X / 16f);
+        var npcTileY = (int)(npc.Center.Y / 16f);
 
-        for (var y = -1; y < 2; y++)
+        bool shouldJump = false;
+        int npcWidth = (int)Math.Ceiling(npc.width / 16f);
+        int npcHeight = (int)Math.Ceiling(npc.height / 16f);
+
+        var xDiff = target.Center.X - npc.Center.X;
+        npc.direction = Math.Sign(xDiff);
+
+        // Check for gaps in ground or obstacles ahead
+        int scanStartX = npcTileX + (npc.direction > 0 ? npcWidth : -2);
+
+        // Check for gaps that need jumping
+        bool hasGroundAhead = false;
+        for (int x = 0; x < 3; x++) // Scan 3 tiles ahead for gaps
         {
-            if (WorldGen.SolidTile(tileX, tileY + y))
+            int checkX = scanStartX + (x * npc.direction);
+            if (WorldGen.SolidTile(checkX, npcTileY + npcHeight))
             {
-                foundSolidTile = true;
+                hasGroundAhead = true;
                 break;
             }
         }
 
-        var xDiff = target.Center.X - npc.Center.X;
-        npc.direction = Math.Sign(xDiff);
+        // If no ground ahead, prepare to jump
+        if (!hasGroundAhead)
+        {
+            shouldJump = true;
+        }
+
+        // Check for tall obstacles
+        int consecutiveBlocksUp = 0;
+        for (int x = 0; x < 2; x++) // Scan 2 tiles ahead
+        {
+            int checkX = scanStartX + (x * npc.direction);
+            for (int y = 0; y < 3; y++) // Check 3 blocks up
+            {
+                if (WorldGen.SolidTile(checkX, npcTileY - y))
+                {
+                    consecutiveBlocksUp++;
+                    if (consecutiveBlocksUp > 1) // If obstacle is taller than 1 block
+                    {
+                        shouldJump = true;
+                        break;
+                    }
+                }
+                else
+                {
+                    consecutiveBlocksUp = 0;
+                }
+            }
+        }
 
         // Handle movement
         if (Math.Abs(xDiff) > FollowDistance)
@@ -166,17 +203,23 @@ public class WorldNPCComponent : NPCComponent
             npc.velocity.X *= 0.9f;
         }
 
-        // Handle jumping
-        if (foundSolidTile)
+        // Check if NPC is on solid ground
+        bool onGround = false;
+        for (int x = 0; x < npcWidth; x++)
         {
-            // Check if there's a wall in front of us
-            var wallCheckX = tileX + npc.direction;
-            if (WorldGen.SolidTile(wallCheckX, tileY - 2) && !WorldGen.SolidTile(wallCheckX, tileY - 3))
+            if (WorldGen.SolidTile(npcTileX + x, npcTileY + npcHeight))
             {
-                npc.velocity.Y = -6.8f; // Jump height
+                onGround = true;
+                break;
             }
         }
-        else
+
+        // Handle jumping
+        if (onGround && shouldJump)
+        {
+            npc.velocity.Y = -6.8f; // Jump height
+        }
+        else if (!onGround)
         {
             // Apply gravity
             npc.velocity.Y += 0.029f;

@@ -43,13 +43,13 @@ public class GuideGlobalNPC : GlobalNPC
             {
                 case 1f: // If following
                     worldComponent.Stay(npc);
-                    Main.NewText($"{npc.GivenName}: Staying here.");
+                    Main.NewText($"<{npc.GivenName}, the {npc.TypeName}> Staying here.");
                     break;
                 case 2f: // If staying
                 case 3f: // If wandering
                 default:
                     worldComponent.Follow(npc, Main.myPlayer);
-                    Main.NewText($"{npc.GivenName}: Following you!");
+                    Main.NewText($"<{npc.GivenName}, the {npc.TypeName}> Following you!");
                     break;
             }
         }
@@ -60,11 +60,11 @@ public class GuideGlobalNPC : GlobalNPC
                 case 1f: // If following
                 case 2f: // If staying
                     worldComponent.Wander(npc);
-                    Main.NewText($"{npc.GivenName}: I'ma do my own thing.");
+                    Main.NewText($"<{npc.GivenName}, the {npc.TypeName}> I'ma do my own thing.");
                     break;
                 case 3f: // If wandering
                     worldComponent.Stay(npc);
-                    Main.NewText($"{npc.GivenName}: Make up your mind, lol. I'll be staying here.");
+                    Main.NewText($"<{npc.GivenName}, the {npc.TypeName}> Make up your mind, lol. I'll be staying here.");
                     break;
             }
         }
