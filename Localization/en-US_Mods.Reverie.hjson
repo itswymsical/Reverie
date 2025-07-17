@@ -1,4 +1,4 @@
-UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -611,8 +611,8 @@ NPCs: {
 		}
 	}
 
-	BasicNPC: {
-		DisplayName: Basic N P C
+	CivilianNPC: {
+		DisplayName: Civilian
 
 		TownNPCMood: {
 			Content: I am content.

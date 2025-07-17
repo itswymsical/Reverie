@@ -534,10 +534,7 @@ public partial class MissionPlayer : ModPlayer
 
             mission.OnMissionStart();
 
-            if (!mission.IsMainline)
-            {
-                InGameNotificationsTracker.AddNotification(new MissionAcceptNotification(mission));
-            }
+            InGameNotificationsTracker.AddNotification(new MissionAcceptNotification(mission));       
         }
     }
 

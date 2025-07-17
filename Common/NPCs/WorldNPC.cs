@@ -1,12 +1,19 @@
 ﻿using Terraria.DataStructures;
 using Terraria.GameContent;
 
+public class ClothingID
+{
+    public static int None = 0;
+    public static int Basic = 1;
+}
+
 public abstract class WorldNPC : ModNPC
 {
     public virtual int HairType { get; set; }
     public virtual Color HairColor { get; set; }
     public virtual Color SkinColor { get; set; }
     public override string Texture => INVIS;
+    public virtual int ClothingType { get; set; } = ClothingID.Basic;
 
     public override void SetStaticDefaults()
     {
@@ -88,6 +95,26 @@ public abstract class WorldNPC : ModNPC
         }
     }
 
+    private void DrawClothing(SpriteBatch spriteBatch, Vector2 drawPos, Rectangle sourceFrame, Vector2 origin, SpriteEffects effects)
+    {
+        if (ClothingType == ClothingID.None)
+            return;
+
+        Texture2D clothingTexture = ModContent.Request<Texture2D>($"Reverie/Assets/Textures/NPCs/WorldNPCs/Clothing_{ClothingType}").Value;
+
+        spriteBatch.Draw(
+            clothingTexture,
+            drawPos + new Vector2(NPC.width / 2f, NPC.height),
+            sourceFrame,
+            Color.White,
+            NPC.rotation,
+            origin,
+            NPC.scale,
+            effects,
+            0f
+        );
+    }
+
     public void DrawParts(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
         Texture2D npcTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/NPCs/WorldNPCs/Civilian_Terrarian").Value;
@@ -159,6 +186,8 @@ public abstract class WorldNPC : ModNPC
             effects,
             0f
         );
+
+        DrawClothing(spriteBatch, drawPos, sourceFrame, origin, effects);
 
         spriteBatch.Draw(
             hairTexture,

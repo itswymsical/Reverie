@@ -1,9 +1,11 @@
 ﻿using Reverie.Common.NPCs;
+using Reverie.Core.NPCs.Components;
 using System.Collections.Generic;
+using Terraria;
 
 namespace Reverie.Content.NPCs.WorldNPCs;
 
-public class BasicNPC : WorldNPC
+public class CivilianNPC : WorldNPC
 {
     // Static arrays for randomization
     private static readonly Color[] SkinColors = new Color[]
@@ -61,6 +63,7 @@ public class BasicNPC : WorldNPC
         "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores",
         "Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell"
     };
+    private WorldNPCComponent worldComponent;
 
     public override Color SkinColor { get; set; }
     public override int HairType { get; set; }
@@ -80,6 +83,15 @@ public class BasicNPC : WorldNPC
 
         // Set other NPC properties
         NPC.knockBackResist = 0.5f;
+
+        if (!NPC.TryGetGlobalNPC(out worldComponent))
+        {
+            worldComponent = new WorldNPCComponent
+            {
+                Enabled = true,
+                FollowDistance = 100f
+            };
+        }
     }
 
     private void RandomizeAppearance()
@@ -107,7 +119,8 @@ public class BasicNPC : WorldNPC
 
     public override void SetChatButtons(ref string button, ref string button2)
     {
-        button = "Chat";
+        button = "Follow/Stay";
+        button2 = "Wander/Stay";
     }
 
     public override List<string> SetNPCNameList()
@@ -126,4 +139,41 @@ public class BasicNPC : WorldNPC
         }
         return names;
     }
+    public override void OnChatButtonClicked(bool firstButton, ref string shopName)
+    {
+        if (worldComponent == null) return;
+
+        if (firstButton)
+        {
+            switch (NPC.ai[3])
+            {
+                case 1f: // If following
+                    worldComponent.Stay(NPC);
+                    Main.NewText($"<{NPC.GivenName}> Okay! I'll be here if you need anything.");
+                    break;
+                case 2f: // If staying
+                case 3f: // If wandering
+                default:
+                    worldComponent.Follow(NPC, Main.myPlayer);
+                    Main.NewText($"<{NPC.GivenName}> Following you!");
+                    break;
+            }
+        }
+        else
+        {
+            switch (NPC.ai[3])
+            {
+                case 1f: // If following
+                case 2f: // If staying
+                    worldComponent.Wander(NPC);
+                    Main.NewText($"<{NPC.GivenName}> I ought to talk to my friends...");
+                    break;
+                case 3f: // If wandering
+                    worldComponent.Stay(NPC);
+                    Main.NewText($"<{NPC.GivenName}> Okay! I'll be here if you need anything.");
+                    break;
+            }
+        }
+    }
+
 }

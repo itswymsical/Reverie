@@ -117,7 +117,7 @@ public class MissionAcceptNotification(Mission mission) : IInGameNotification
     public void Update()
     {
         if (timeLeft == DISPLAY_TIME)
-            SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}MissionAccept"));
+            SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ReverieBell"));
 
         timeLeft--;
         timeLeft = Math.Max(0, timeLeft);

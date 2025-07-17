@@ -42,7 +42,7 @@ public class IntroCutscene : Cutscene
     {
         FadeAlpha = 1f;
         FadeColor = Color.Black;
-        logoTexture = ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}Logo").Value;
+        logoTexture = ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}Logo", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
 
         var startPos = originalPlayerPosition - new Vector2(0, panDistance);
         CameraSystem.MoveCameraOut(1, startPos);
