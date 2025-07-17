@@ -80,10 +80,10 @@ public abstract class GrassTile : ModTile
             }
         }
 
-        if (CanGrowPlants && !Main.tile[i, j - 1].HasTile && Main.rand.NextBool(15))
+        if (CanGrowPlants && !Main.tile[i, j - 1].HasTile && Main.rand.NextBool(8))
         {
             int plantType = PlantTypes[Main.rand.Next(PlantTypes.Count)];
-            WorldGen.PlaceTile(i, j - 1, plantType, true);
+            WorldGen.PlaceTile(i, j - 1, plantType, true, style: Main.rand.Next(18));
 
             if (Main.netMode == NetmodeID.Server)
                 NetMessage.SendTileSquare(-1, i, j - 1, 1);

@@ -23,6 +23,7 @@ public class TemperatePlants : ModTile
         TileObjectData.newTile.AnchorValidTiles =
         [
             ModContent.TileType<TemperateGrassTile>(),
+            Type
         ];
 
         TileObjectData.newTile.LavaDeath = true;

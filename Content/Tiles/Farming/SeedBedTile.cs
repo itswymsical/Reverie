@@ -65,7 +65,6 @@ public class SeedBedTile : ModTile
         }
     }
 
-    //TODO: update framing when a center frame becomes an end frame
     void UpdateFraming(int centerI, int centerJ)
     {
         // Skip if no seedbed at this position
@@ -173,7 +172,11 @@ public class SeedBedTile : ModTile
             return false;
         }
 
-        return true;
+        // Handle custom framing
+        UpdateFraming(i, j);
+
+        // Return false to prevent vanilla framing
+        return false;
     }
 
     public override void RandomUpdate(int i, int j)
