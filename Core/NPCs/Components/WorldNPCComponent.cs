@@ -18,6 +18,8 @@ public class WorldNPCComponent : NPCComponent
     private Point HomePosition { get; set; }
     private float DefaultMovementSpeed => 2.25f;
     public float AttackDistance { get; set; } = 200f;
+    private int JumpCooldown { get; set; } = 0;
+    private const int JUMP_COOLDOWN_TICKS = 40;
     #endregion
 
     public override void SetDefaults(NPC npc)
@@ -75,6 +77,10 @@ public class WorldNPCComponent : NPCComponent
     {
         if (!Enabled) return true;
         if (npc.aiStyle == 7) return true; // Let default AI handle it
+
+        // Tick down jump cooldown
+        if (JumpCooldown > 0)
+            JumpCooldown--;
 
         // Check if there are any hostile NPCs nearby
         bool hostileNearby = false;
@@ -140,35 +146,47 @@ public class WorldNPCComponent : NPCComponent
         // Check for gaps in ground or obstacles ahead
         int scanStartX = npcTileX + (npc.direction > 0 ? npcWidth : -2);
 
-        // Check for gaps that need jumping
-        bool hasGroundAhead = false;
-        for (int x = 0; x < 3; x++) // Scan 3 tiles ahead for gaps
+        // Check for deep gaps that need jumping
+        bool hasDeepGap = false;
+        for (int x = 0; x < 2; x++)
         {
             int checkX = scanStartX + (x * npc.direction);
-            if (WorldGen.SolidTile(checkX, npcTileY + npcHeight))
+
+            // Check if there's a gap deeper than 3 tiles
+            bool foundGround = false;
+            for (int y = 0; y < 3; y++)
             {
-                hasGroundAhead = true;
+                if (WorldGen.SolidTile(checkX, npcTileY + npcHeight + y))
+                {
+                    foundGround = true;
+                    break;
+                }
+            }
+
+            if (!foundGround)
+            {
+                hasDeepGap = true;
                 break;
             }
         }
 
-        // If no ground ahead, prepare to jump
-        if (!hasGroundAhead)
+        if (hasDeepGap)
         {
             shouldJump = true;
         }
 
         // Check for tall obstacles
         int consecutiveBlocksUp = 0;
-        for (int x = 0; x < 2; x++) // Scan 2 tiles ahead
+        for (int x = 0; x < 1; x++)
         {
             int checkX = scanStartX + (x * npc.direction);
-            for (int y = 0; y < 3; y++) // Check 3 blocks up
+            for (int y = 0; y < 3; y++)
             {
-                if (WorldGen.SolidTile(checkX, npcTileY - y))
-                {
+                Tile tile = Main.tile[checkX, npcTileY - y];
+                if (tile.HasUnactuatedTile && (Main.tileSolid[tile.TileType] || tile.IsHalfBlock || tile.TopSlope || tile.BottomSlope || tile.LeftSlope || tile.RightSlope))
+                { 
                     consecutiveBlocksUp++;
-                    if (consecutiveBlocksUp > 1) // If obstacle is taller than 1 block
+                    if (consecutiveBlocksUp >= 2)
                     {
                         shouldJump = true;
                         break;
@@ -214,17 +232,18 @@ public class WorldNPCComponent : NPCComponent
             }
         }
 
-        // Handle jumping
-        if (onGround && shouldJump)
+        // Handle jumping with cooldown
+        if (onGround && shouldJump && JumpCooldown <= 0)
         {
-            npc.velocity.Y = -6.8f; // Jump height
+            npc.velocity.Y = -7f; // Jump height
+            JumpCooldown = JUMP_COOLDOWN_TICKS;
         }
         else if (!onGround)
         {
             // Apply gravity
             npc.velocity.Y += 0.029f;
-            if (npc.velocity.Y > 7f)
-                npc.velocity.Y = 7f;
+            if (npc.velocity.Y > 6.725f)
+                npc.velocity.Y = 6.725f;
         }
 
         // Simple collision
@@ -319,9 +338,9 @@ public class WorldNPCComponent : NPCComponent
         // Basic gravity and collision
         if (!Collision.SolidCollision(npc.position, npc.width, npc.height))
         {
-            npc.velocity.Y += 0.4f;
-            if (npc.velocity.Y > 10)
-                npc.velocity.Y = 10;
+            npc.velocity.Y += 0.029f;
+            if (npc.velocity.Y > 6.725f)
+                npc.velocity.Y = 6.725f;
         }
 
         Collision.StepUp(ref npc.position, ref npc.velocity, npc.width, npc.height, ref npc.stepSpeed, ref npc.gfxOffY);

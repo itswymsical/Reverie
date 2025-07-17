@@ -101,12 +101,13 @@ public abstract class WorldNPC : ModNPC
             return;
 
         Texture2D clothingTexture = ModContent.Request<Texture2D>($"Reverie/Assets/Textures/NPCs/WorldNPCs/Clothing_{ClothingType}").Value;
+        Color lightColor = Lighting.GetColor((int)(NPC.position.X + NPC.width * 0.5f) / 16, (int)(NPC.position.Y + NPC.height * 0.5f) / 16);
 
         spriteBatch.Draw(
             clothingTexture,
             drawPos + new Vector2(NPC.width / 2f, NPC.height),
             sourceFrame,
-            Color.White,
+            lightColor,
             NPC.rotation,
             origin,
             NPC.scale,
@@ -175,11 +176,14 @@ public abstract class WorldNPC : ModNPC
 
         Vector2 hairOrigin = new Vector2(hairFrame.Width / 2f, hairFrame.Height);
 
+        Color hairColor = Lighting.GetColor((int)(NPC.position.X + NPC.width * 0.5f) / 16, (int)(NPC.position.Y + NPC.height * 0.5f) / 16, HairColor);
+        Color skinColor = Lighting.GetColor((int)(NPC.position.X + NPC.width * 0.5f) / 16, (int)(NPC.position.Y + NPC.height * 0.5f) / 16, SkinColor);
+
         spriteBatch.Draw(
             npcTexture,
             drawPos + new Vector2(NPC.width / 2f, NPC.height),
             sourceFrame,
-            SkinColor,
+            skinColor,
             NPC.rotation,
             origin,
             NPC.scale,
@@ -193,7 +197,7 @@ public abstract class WorldNPC : ModNPC
             hairTexture,
             drawPos + new Vector2((NPC.width / 2f) + (NPC.spriteDirection * 2), NPC.height - 2),
             hairFrame,
-            HairColor,
+            hairColor,
             NPC.rotation,
             hairOrigin,
             NPC.scale,
