@@ -1,4 +1,4 @@
-﻿using Reverie.Core.Interfaces;
+﻿using Reverie.Core.Graphics.Interfaces;
 
 namespace Reverie.Core.Graphics;
 

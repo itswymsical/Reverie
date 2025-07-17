@@ -1,5 +1,4 @@
-﻿using Reverie.Content.Items.Tiles.Farming;
-using Reverie.Content.Tiles.Canopy;
+﻿using Reverie.Content.Tiles.Canopy;
 using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.GameContent.Metadata;

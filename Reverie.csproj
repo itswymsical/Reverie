@@ -36,7 +36,7 @@
 	  </Reference>
 	</ItemGroup>
 	<ItemGroup>
-	  <Folder Include="Core\Animation\" />
+	  <Folder Include="Content\NPCs\Special\WorldNPCs\" />
 	</ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 ﻿using ReLogic.Utilities;
 using Reverie.Core.Graphics;
-using Reverie.Core.Interfaces;
+using Reverie.Core.Graphics.Interfaces;
 using Reverie.Core.Loaders;
 using Reverie.Utilities;
 using System.Collections.Generic;

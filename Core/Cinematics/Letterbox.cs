@@ -1,5 +1,4 @@
-﻿using Reverie.Core.Animation;
-using Terraria.GameContent;
+﻿using Terraria.GameContent;
 
 namespace Reverie.Core.Cinematics;
 

@@ -1,5 +1,4 @@
 ﻿using Reverie.Common.Tiles;
-using Reverie.Content.Items.Tiles.Canopy;
 using System.Collections.Generic;
 using Terraria.DataStructures;
 

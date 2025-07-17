@@ -1162,7 +1162,7 @@ public class KingSlimeGlobal : GlobalNPC
     {
         if (npc.type != NPCID.KingSlime) return base.PreDraw(npc, spriteBatch, screenPos, drawColor);
 
-        Texture2D texture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/NPCs/KingSlime/KingSlime").Value;
+        Texture2D texture = ModContent.Request<Texture2D>($"{TEXTURE_DIRECTORY}NPCs/Bosses/KingSlime/KingSlime").Value;
         Rectangle sourceRectangle = new(0, frame * FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT);
         Vector2 drawPos = npc.Center - Main.screenPosition;
         SpriteEffects spriteEffects = npc.spriteDirection == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;

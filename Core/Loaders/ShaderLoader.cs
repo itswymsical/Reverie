@@ -1,5 +1,5 @@
 ﻿using ReLogic.Content;
-using Reverie.Core.Interfaces;
+using Reverie.Core.Graphics.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;

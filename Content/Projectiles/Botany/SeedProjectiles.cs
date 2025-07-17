@@ -3,9 +3,9 @@ using Terraria.Audio;
 using Terraria.GameContent;
 using Reverie.Content.Buffs;
 using Reverie.Core.Graphics;
-using Reverie.Core.Interfaces;
 using Reverie.Core.Loaders;
 using Reverie.Utilities;
+using Reverie.Core.Graphics.Interfaces;
 
 namespace Reverie.Content.Projectiles.Botany;
 

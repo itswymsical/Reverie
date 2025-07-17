@@ -1,4 +1,4 @@
-﻿using Reverie.Core.Interfaces;
+﻿using Reverie.Core.Graphics.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria.UI;

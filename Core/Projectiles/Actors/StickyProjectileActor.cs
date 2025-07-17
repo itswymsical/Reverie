@@ -1,5 +1,5 @@
 ﻿using Reverie.Core.Graphics;
-using Reverie.Core.Interfaces;
+using Reverie.Core.Graphics.Interfaces;
 using System;
 using System.Collections.Generic;
 

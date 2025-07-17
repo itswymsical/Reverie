@@ -1,6 +1,6 @@
 ﻿using ReLogic.Content;
 using Reverie.Content.Dusts;
-using Reverie.Content.Items.Tiles.TemperateForest;
+using Reverie.Content.Tiles.TemperateForest.Furniture;
 using Terraria.Enums;
 using Terraria.GameContent;
 

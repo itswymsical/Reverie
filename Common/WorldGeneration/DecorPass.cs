@@ -1,5 +1,4 @@
-﻿using Reverie.Content.Tiles;
-using Reverie.Content.Tiles.Misc;
+﻿using Reverie.Content.Tiles.Misc;
 using Reverie.Content.Tiles.TemperateForest;
 using Terraria.IO;
 using Terraria.WorldBuilding;

@@ -1,5 +1,4 @@
 ﻿using Terraria.GameContent;
-using Reverie.Core.Animation;
 using Reverie.Common.Systems;
 using System.Linq;
 using Reverie.Core.Cinematics.Music;

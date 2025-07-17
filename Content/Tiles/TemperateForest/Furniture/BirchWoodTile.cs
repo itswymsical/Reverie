@@ -1,6 +1,4 @@
-﻿using Reverie.Content.Items.Tiles.TemperateForest;
-
-namespace Reverie.Content.Tiles.TemperateForest.Furniture;
+﻿namespace Reverie.Content.Tiles.TemperateForest.Furniture;
 
 public class BirchWoodTile : ModTile
 {

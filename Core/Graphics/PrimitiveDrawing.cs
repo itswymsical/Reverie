@@ -15,7 +15,7 @@
     * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using System.Collections.Generic;
-using Reverie.Core.Interfaces;
+using Reverie.Core.Graphics.Interfaces;
 using Reverie.Utilities;
 
 namespace Reverie.Core.Graphics;

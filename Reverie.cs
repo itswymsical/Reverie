@@ -1,7 +1,7 @@
 ﻿
 using Reverie.Common.Players;
 using Reverie.Common.Systems;
-using Reverie.Core.Interfaces;
+using Reverie.Core.Graphics.Interfaces;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -28,7 +28,7 @@ public sealed partial class Reverie : Mod
     /// </summary>
     public const string UI_ASSET_DIRECTORY = nameof(Reverie) + "/Assets/Textures/UI/";
     public const string PLACEHOLDER = nameof(Reverie) + "/Assets/Textures/PLACEHOLDER";
-
+    public const string TEXTURE_DIRECTORY = nameof(Reverie) + "/Assets/Textures/";
     /// <summary>
     ///     Directory invisile texture.
     /// </summary>

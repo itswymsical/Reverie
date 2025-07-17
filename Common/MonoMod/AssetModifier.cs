@@ -8,7 +8,7 @@ public class AssetModifier : ModSystem
     {
         Main.QueueMainThreadAction(() =>
         {
-            var kingSlimeAsset = ModContent.Request<Texture2D>("Reverie/Assets/Textures/NPCs/KingSlime/KingSlime");
+            var kingSlimeAsset = ModContent.Request<Texture2D>($"{TEXTURE_DIRECTORY}NPCs/Bosses/KingSlime/KingSlime");
             TextureAssets.Npc[NPCID.KingSlime] = kingSlimeAsset;
         });
     }

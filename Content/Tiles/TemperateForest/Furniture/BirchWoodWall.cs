@@ -1,5 +1,4 @@
 ﻿using Reverie.Content.Dusts;
-using Reverie.Content.Items.Tiles.TemperateForest;
 
 namespace Reverie.Content.Tiles.TemperateForest.Furniture;
 

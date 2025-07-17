@@ -1,4 +1,4 @@
-﻿using Reverie.Content.NPCs.Warden;
+﻿using Reverie.Content.NPCs.Bosses.Warden;
 using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.ObjectData;

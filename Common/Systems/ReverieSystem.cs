@@ -1,5 +1,5 @@
 ﻿using Reverie.Content.Items.Accessories;
-using Reverie.Content.Items.Tiles.Taiga;
+using Reverie.Content.Tiles.Taiga;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Utilities;
