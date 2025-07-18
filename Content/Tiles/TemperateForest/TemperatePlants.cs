@@ -31,8 +31,8 @@ public class TemperatePlants : ModTile
 
         TileObjectData.newTile.StyleHorizontal = true;
 
-        TileObjectData.newTile.CoordinateHeights = [18];
-
+        TileObjectData.newTile.CoordinateHeights = [36];
+        TileObjectData.newTile.DrawYOffset = -14;
         TileObjectData.addTile(Type);
 
         DustType = DustID.GrassBlades;
@@ -60,8 +60,9 @@ public class TemperateRockTile : ModTile
 {
     public override void SetStaticDefaults()
     {
+        const int height = 34;
+
         Main.tileSolid[Type] = false;
-        Main.tileMergeDirt[Type] = false;
         Main.tileBlockLight[Type] = false;
         Main.tileFrameImportant[Type] = true;
         Main.tileNoFail[Type] = true;
@@ -69,14 +70,24 @@ public class TemperateRockTile : ModTile
         TileID.Sets.BreakableWhenPlacing[Type] = true;
 
         TileObjectData.newTile.CopyFrom(TileObjectData.Style3x2);
-        TileObjectData.newTile.CoordinateHeights = [16, 18];
-        TileObjectData.newTile.Origin = new(2, 1);
-        TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile, 3, 0);
-        TileObjectData.newTile.AnchorValidTiles = [TileID.Stone];
-        TileObjectData.newTile.StyleHorizontal = true;
-        TileObjectData.newTile.RandomStyleRange = 3;
-        TileObjectData.addTile(Type);
 
+        TileObjectData.newTile.CoordinateWidth = 48;
+        TileObjectData.newTile.CoordinateHeights = [height, 0];
+
+        TileObjectData.newTile.DrawYOffset = -2;
+        TileObjectData.newTile.Origin = new(1, 1);
+
+        TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile, 1, 0);
+        TileObjectData.newTile.AnchorValidTiles =
+        [
+            ModContent.TileType<TemperateGrassTile>(),
+            TileID.Stone
+        ];
+
+        TileObjectData.newTile.StyleHorizontal = true;
+
+        TileObjectData.addTile(Type);
+        
         AddMapEntry(new Color(100, 92, 80));
         DustType = DustID.Stone;
     }

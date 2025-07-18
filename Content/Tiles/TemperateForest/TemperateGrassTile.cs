@@ -20,6 +20,6 @@ public class TemperateGrassTile : GrassTile
         HitSound = SoundID.Dig;
         VanillaFallbackOnModDeletion = TileID.Grass;
 
-        AddMapEntry(new Color(34, 170, 94));
+        AddMapEntry(new Color(30, 161, 115));
     }
 }

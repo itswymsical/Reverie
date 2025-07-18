@@ -8,8 +8,13 @@ public class BirchWoodTile : ModTile
 
         Main.tileMergeDirt[Type] = true;
 
-        Main.tileMerge[TileID.WoodBlock][Type] = true;
-        Main.tileMerge[Type][TileID.WoodBlock] = true;
+        Merge(TileID.WoodBlock, Type,
+            TileID.Shadewood, TileID.Ebonwood,
+            TileID.BorealWood, TileID.AshWood,
+            TileID.SpookyWood, TileID.DynastyWood,
+            TileID.PalmWood, TileID.Pearlwood,
+            TileID.LivingWood, TileID.RichMahogany, TileID.LivingMahogany, 
+            TileID.BambooBlock, TileID.LargeBambooBlock);
 
         Main.tileBlockLight[Type] = true;
 
@@ -18,5 +23,13 @@ public class BirchWoodTile : ModTile
 
         AddMapEntry(new Color(137, 119, 104));
         RegisterItemDrop(ModContent.ItemType<BirchWoodItem>());
+    }
+    public void Merge(params int[] otherIds)
+    {
+        foreach (int id in otherIds)
+        {
+            Main.tileMerge[Type][id] = true;
+            Main.tileMerge[id][Type] = true;
+        }
     }
 }

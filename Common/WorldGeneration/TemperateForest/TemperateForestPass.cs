@@ -79,7 +79,7 @@ public class TemperateForestPass : GenPass
     {
         int spawnX = Main.spawnTileX;
         int forestWidth = (int)(Main.maxTilesX * 0.05f);
-        int minDistance = (int)(Main.maxTilesX * 0.00065f);
+        int minDistance = (int)(Main.maxTilesX * 0.0065f);
         int maxDistance = (int)(Main.maxTilesX * 0.02f);
 
         // Try placing on both sides of spawn
