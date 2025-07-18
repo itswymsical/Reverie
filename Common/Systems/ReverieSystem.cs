@@ -71,8 +71,8 @@ public class ReverieSystem : ModSystem
         DialogueManager.Instance.Draw(spriteBatch, bottomAnchorPosition);
 
         string dateString = DateTime.Now.ToString("MM.dd.yyyy");
-        string title = $"Reverie Demonstation (pre-release build v{dateString})";
-        string subtitle = "(-- ALL CURRENT CONTENT IS SUBJECT TO CHANGE OR REMOVAL --)";
+        string title = $"Reverie Developer Build (dated v{dateString})";
+        string subtitle = "(-- Everything implemented is subject to removal or refactor --)";
 
         var font = FontAssets.MouseText.Value;
         Vector2 titleSize = font.MeasureString(title) * 0.3f;

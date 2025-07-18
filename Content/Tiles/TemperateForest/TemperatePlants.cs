@@ -38,7 +38,7 @@ public class TemperatePlants : ModTile
         DustType = DustID.GrassBlades;
         HitSound = SoundID.Grass;
 
-        AddMapEntry(Color.DarkGreen);
+        AddMapEntry(new Color(20, 141, 105));
     }
 
     public override void NumDust(int i, int j, bool fail, ref int num)

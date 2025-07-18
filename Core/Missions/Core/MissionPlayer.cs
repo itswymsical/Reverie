@@ -539,11 +539,7 @@ public partial class MissionPlayer : ModPlayer
             SyncMissionState(mission);
 
             mission.OnMissionStart();
-
-            if (!mission.IsMainline)
-            {
-                InGameNotificationsTracker.AddNotification(new MissionAcceptNotification(mission));
-            }
+            InGameNotificationsTracker.AddNotification(new MissionAcceptNotification(mission));         
         }
     }
 
@@ -653,15 +649,6 @@ public partial class MissionPlayer : ModPlayer
     {
         ProcessDeferredLoad();
         notifiedMissions.Clear();
-
-        //var fallingStar = GetMission(MissionID.AFallingStar);
-
-        //if (fallingStar != null && fallingStar.Availability != MissionAvailability.Completed 
-        //    && fallingStar.Progress != MissionProgress.Active)
-        //{
-        //    UnlockMission(MissionID.AFallingStar);
-        //    StartMission(MissionID.AFallingStar);
-        //}
     }
 
     public override void PostUpdate()

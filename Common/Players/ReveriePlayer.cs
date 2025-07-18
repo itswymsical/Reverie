@@ -71,10 +71,8 @@ public class ReveriePlayer : ModPlayer
     public override void OnEnterWorld()
     {
         base.OnEnterWorld();
-        if (Main.netMode == NetmodeID.Server)
-            return;
 
-        if (!DownedSystem.initialCutscene)
+        if (!DownedSystem.initialCutscene && Main.netMode != NetmodeID.MultiplayerClient)
             CutsceneSystem.PlayCutscene<IntroCutscene>();
     }
 

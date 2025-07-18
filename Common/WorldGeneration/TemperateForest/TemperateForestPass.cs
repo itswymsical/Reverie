@@ -70,6 +70,10 @@ public class TemperateForestPass : GenPass
                     {
                         tile.TileType = (ushort)ModContent.TileType<TemperatePlants>();
                     }
+                    else if (tile.TileType == TileID.Saplings)
+                    {
+                        tile.TileType = (ushort)ModContent.TileType<BirchSapling>();
+                    }
                 }
             }
         }
@@ -79,8 +83,8 @@ public class TemperateForestPass : GenPass
     {
         int spawnX = Main.spawnTileX;
         int forestWidth = (int)(Main.maxTilesX * 0.05f);
-        int minDistance = (int)(Main.maxTilesX * 0.0065f);
-        int maxDistance = (int)(Main.maxTilesX * 0.02f);
+        int minDistance = (int)(Main.maxTilesX * 0.009f);
+        int maxDistance = (int)(Main.maxTilesX * 0.045f);
 
         // Try placing on both sides of spawn
         bool leftSideClear = CheckSideForPlacement(spawnX - maxDistance, spawnX - minDistance, forestWidth);

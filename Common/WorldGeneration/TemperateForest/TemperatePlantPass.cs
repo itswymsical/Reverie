@@ -18,14 +18,14 @@ public class TemperatePlantPass : GenPass
         {
             for (var y = (int)Main.worldSurface - 300; y < (int)Main.worldSurface; y++)
             {
-                if (WorldGen.genRand.NextBool(90))
+                if (WorldGen.genRand.NextBool(30))
                 {
                     AddWoodLog(x, y);
                 }
-                if (WorldGen.genRand.NextBool(30))
-                {
-                    AddGrassBlades(x, y);
-                }
+                //if (WorldGen.genRand.NextBool(30))
+                //{
+                //    AddGrassBlades(x, y);
+                //}
             }
         }
     }

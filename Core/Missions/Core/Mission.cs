@@ -124,7 +124,7 @@ public abstract class Mission
     /// </summary>
     protected virtual void OnObjectiveComplete(int objectiveIndexWithinCurrentSet) { }
 
-    private void HandleObjectiveCompletion(int objectiveIndex)
+    public void HandleObjectiveCompletion(int objectiveIndex)
     {
         try
         {

@@ -31,7 +31,7 @@ public class WorldGenSystem : ModSystem
             tasks.Insert(biomeIndex + 3, new TaigaPlantPass());
         }
 
-        var spawnIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Guide"));
+        var spawnIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Flowers"));
         if (spawnIndex != 1)
         {
             tasks.Insert(spawnIndex + 1, new TemperateForestPass());
