@@ -218,7 +218,7 @@ public class ObjectiveEventPlayer : ModPlayer
         var p = Player.GetModPlayer<MissionPlayer>();
         var merchantPresent = NPC.AnyNPCs(NPCID.Merchant);
         var copperStandard = p.GetMission(MissionID.CopperStandard);
-        if (copperStandard.Availability == MissionAvailability.Locked && copperStandard.Progress == MissionProgress.Inactive
+        if (copperStandard.Status == MissionStatus.Locked && copperStandard.Progress == MissionProgress.Inactive
             && merchantPresent && Player.HasItemInAnyInventory(ItemID.CopperBar))
         {
             p.UnlockMission(MissionID.CopperStandard, true);
@@ -226,7 +226,7 @@ public class ObjectiveEventPlayer : ModPlayer
 
         var demoPresent = NPC.AnyNPCs(NPCID.Demolitionist);
         var lightEmUp = p.GetMission(MissionID.LightEmUp);
-        if (lightEmUp.Availability == MissionAvailability.Locked && lightEmUp.Progress == MissionProgress.Inactive
+        if (lightEmUp.Status == MissionStatus.Locked && lightEmUp.Progress == MissionProgress.Inactive
             && demoPresent && Player.HasItemInAnyInventory(ItemID.Torch) && Player.statLifeMax >= 140)
         {
             p.UnlockMission(MissionID.LightEmUp, true);

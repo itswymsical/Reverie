@@ -40,7 +40,7 @@ public class CopperTippedArrowItem : ModItem
         .AddTile(TileID.Anvils)
         .AddCondition(new Condition(Instance.GetLocalization("Conditions.CopperStandardActive"),
         () => Main.LocalPlayer.GetModPlayer<MissionPlayer>()
-        .GetMission(MissionID.CopperStandard)?.Progress == MissionProgress.Active))
+        .GetMission(MissionID.CopperStandard)?.Progress == MissionProgress.Ongoing))
         .Register();
     }
 }

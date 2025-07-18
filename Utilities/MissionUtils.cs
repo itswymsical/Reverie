@@ -29,7 +29,7 @@ public static class MissionUtils
 
         foreach (var mission in missionPlayer.ActiveMissions())
         {
-            if (mission.Progress != MissionProgress.Active)
+            if (mission.Progress != MissionProgress.Ongoing)
                 continue;
 
             var currentSet = mission.Objective[mission.CurrentIndex];
@@ -75,7 +75,7 @@ public static class MissionUtils
         {
             ID = mission.ID,
             Progress = mission.Progress,
-            Availability = mission.Availability,
+            Availability = mission.Status,
             Unlocked = mission.Unlocked,
             CurObjectiveIndex = mission.CurrentIndex,
             ObjectiveIndex = mission.Objective
@@ -103,7 +103,7 @@ public static class MissionUtils
         }
 
         mission.Progress = state.Progress;
-        mission.Availability = state.Availability;
+        mission.Status = state.Availability;
         mission.Unlocked = state.Unlocked;
 
         // Validate current index is within bounds
@@ -162,11 +162,11 @@ public static class MissionUtils
         }
 
         // Ensure mission index is valid if mission is active
-        if (mission.Progress == MissionProgress.Active &&
+        if (mission.Progress == MissionProgress.Ongoing &&
             (mission.CurrentIndex < 0 || mission.CurrentIndex >= mission.Objective.Count))
         {
             ModContent.GetInstance<Reverie>().Logger.Warn(
-                $"Active mission {mission.ID} has invalid current index {mission.CurrentIndex}, resetting to 0");
+                $"Ongoing mission {mission.ID} has invalid current index {mission.CurrentIndex}, resetting to 0");
             mission.CurrentIndex = 0;
         }
     }

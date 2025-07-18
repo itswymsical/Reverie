@@ -1,4 +1,5 @@
-﻿using Reverie.Common.UI.Missions;
+﻿using Reverie.Common.Players;
+using Reverie.Common.UI.Missions;
 using Reverie.Utilities;
 
 using System.Collections.Generic;
@@ -14,11 +15,11 @@ namespace Reverie.Core.Missions.Core;
 public enum MissionProgress
 {
     Inactive,
-    Active,
+    Ongoing,
     Completed
 }
 
-public enum MissionAvailability
+public enum MissionStatus
 {
     Locked,
     Unlocked,
@@ -26,20 +27,22 @@ public enum MissionAvailability
 }
 
 /// <summary>
-/// Represents a mission, managing mission definition, state, and objective event handling.
-/// A mission consists of a series of objectives organized into sets that the player must complete,
-/// along with associated rewards, progression logic, and completion tracking.
+/// Represents a mission with objectives, rewards, and progression tracking.
+/// Objectives are grouped into sets and must be completed in order.
 /// </summary>
 /// <remarks>
-/// Mission progression occurs through objective indexes, where each index must be completed
-/// in sequence. When all objective indexes are completed, the mission is marked as complete
-/// and rewards are distributed to the player.
+/// When all objective sets are complete, the mission finishes and rewards are given.
 /// </remarks>
 public abstract class Mission
 {
 
     #region Fields
     protected Player player = Main.LocalPlayer;
+
+    /// <summary>
+    /// A "dirty" mission has changed state and needs to be saved, updated, or synced.
+    /// The dirty flag helps track when mission data is out of date.
+    /// </summary>
     protected bool isDirty = false;
     protected bool eventsRegistered = false;
     #endregion
@@ -55,7 +58,7 @@ public abstract class Mission
     public int Experience { get; private set; }
     public int NextMissionID { get; private set; }
     public MissionProgress Progress { get; set; } = MissionProgress.Inactive;
-    public MissionAvailability Availability { get; set; } = MissionAvailability.Locked;
+    public MissionStatus Status { get; set; } = MissionStatus.Locked;
     public bool Unlocked { get; set; } = false;
     public int CurrentIndex { get; set; } = 0;
     public bool IsDirty => isDirty;
@@ -106,15 +109,22 @@ public abstract class Mission
     #endregion
 
     #region Virtual Event Handlers
-    public virtual void OnMissionStart()
-    {
-        RegisterEventHandlers();
-    }
+    /// <summary>
+    /// remember to call "base.OnMissionStart()" in derived classes; calls "RegisterEventHandlers()"
+    /// </summary>
+    public virtual void OnMissionStart() => RegisterEventHandlers();
 
+    /// <summary>
+    /// Called when an objective set within the current mission is completed.
+    /// </summary>
     protected virtual void OnObjectiveIndexComplete(int setIndex, ObjectiveSet completedSet) { }
+
+    /// <summary>
+    /// Called when an objective within the current set is completed.
+    /// </summary>
     protected virtual void OnObjectiveComplete(int objectiveIndexWithinCurrentSet) { }
 
-    public void HandleObjectiveCompletion(int objectiveIndex)
+    private void HandleObjectiveCompletion(int objectiveIndex)
     {
         try
         {
@@ -139,9 +149,15 @@ public abstract class Mission
     #endregion
 
     #region Core Mission Logic
+    /// <summary>
+    /// updates the progress of an objective, IN the current set.
+    /// </summary>
+    /// <param name="objective">the objective, dumy</param>
+    /// <param name="amount">glorp glerp</param>
+    /// <returns></returns>
     public bool UpdateProgress(int objective, int amount = 1)
     {
-        if (Progress != MissionProgress.Active)
+        if (Progress != MissionProgress.Ongoing)
             return false;
 
         var currentSet = Objective[CurrentIndex];
@@ -192,11 +208,11 @@ public abstract class Mission
 
     public void Complete()
     {
-        if (Progress == MissionProgress.Active && Objective.All(set => set.IsCompleted))
+        if (Progress == MissionProgress.Ongoing && Objective.All(set => set.IsCompleted))
         {
             UnregisterEventHandlers();
             Progress = MissionProgress.Completed;
-            Availability = MissionAvailability.Completed;
+            Status = MissionStatus.Completed;
             isDirty = true;
 
             OnMissionComplete();
@@ -204,7 +220,7 @@ public abstract class Mission
     }
 
     /// <summary>
-    /// Called after the mission is marked as complete, use to set new missions or trigger events.
+    /// use to set new missions or trigger events. by default, gives rewards and plays the mission complete notification.
     /// </summary>
     /// <param name="giveRewards"></param>
     public virtual void OnMissionComplete(bool giveRewards = true)
@@ -216,14 +232,14 @@ public abstract class Mission
     }
 
     /// <summary>
-    /// Called every game update tick while the mission is active.
-    /// Override this in derived classes to implement mission-specific behaviors.
+    /// Update things while the mission is active.
+    /// By default, registers event handlers if not already done.
     /// </summary>
     public virtual void Update()
     {
-        if (Progress != MissionProgress.Active && Availability != MissionAvailability.Unlocked) return;
+        if (Progress != MissionProgress.Ongoing && Status != MissionStatus.Unlocked) return;
 
-        if (Progress == MissionProgress.Active && !eventsRegistered)
+        if (Progress == MissionProgress.Ongoing && !eventsRegistered)
         {
             RegisterEventHandlers();
         }
@@ -239,7 +255,7 @@ public abstract class Mission
         }
         if (Experience > 0)
         {
-            //ExperiencePlayer.AddExperience(Main.LocalPlayer, Experience);
+            ExperiencePlayer.AddExperience(Main.LocalPlayer, Experience);
             Main.NewText($"{Main.LocalPlayer.name} " +
                 $"Gained [c/73d5ff:{Experience} Exp.] " +
                 $"from completing [c/73d5ff:{Name}]!", Color.White);
@@ -248,7 +264,9 @@ public abstract class Mission
 
     public void ClearDirtyFlag() => isDirty = false;
 
-    // Control visibility directly
+    /// <summary>
+    /// makes an objective visible on the indicator.
+    /// </summary>
     public void SetObjectiveVisibility(int setIndex, int objectiveIndex, bool isVisible)
     {
         if (setIndex >= 0 && setIndex < Objective.Count &&
@@ -258,7 +276,9 @@ public abstract class Mission
         }
     }
 
-    // Set custom visibility conditions
+    /// <summary>
+    /// makes an objective visible on the indicator, if a condition is met.
+    /// </summary>
     public void SetObjectiveVisibilityCondition(int setIndex, int objectiveIndex,
                                                Objective.VisibilityCondition condition)
     {
@@ -269,7 +289,9 @@ public abstract class Mission
         }
     }
 
-    // Common pattern: Show one objective after another is completed
+    /// <summary>
+    /// Shows an objective on the indicator after a specific objective is completed.
+    /// </summary>
     public void ShowObjectiveAfterCompletion(int setIndex, int objectiveToShow, int dependencyObjective)
     {
         SetObjectiveVisibilityCondition(setIndex, objectiveToShow, (mission) => {
@@ -283,15 +305,14 @@ public abstract class Mission
 }
 
 /// <summary>
-/// A serializable container class that stores mission state data for save/load operations.
-/// This container maintains the progress, completion status, and objective states of a mission
-/// without storing the full mission definition. Used as an intermediary between Mission objects
-/// and their TagCompound representation in save files.
+/// A container class that stores mission state data.
+/// Maintains progress, completion status, and objective states of a mission
+/// without storing the full definition.
 /// </summary>
 /// <remarks>
-/// The container stores:
-/// - Basic mission identification and state
-/// - Current objective progress and completion status
+/// container stores:
+/// - mission ID and state
+/// - Current obj progress and completion status
 /// - Mission availability and unlock status
 /// - Links to next missions in a sequence
 /// </remarks>
@@ -299,7 +320,7 @@ public class MissionDataContainer
 {
     public int ID { get; set; }
     public MissionProgress Progress { get; set; }
-    public MissionAvailability Availability { get; set; }
+    public MissionStatus Availability { get; set; }
     public bool Unlocked { get; set; }
     public int CurObjectiveIndex { get; set; }
     public List<ObjectiveIndexState> ObjectiveIndex { get; set; } = [];
@@ -311,7 +332,7 @@ public class MissionDataContainer
         {
             ["ID"] = ID,
             ["Progress"] = (int)Progress,
-            ["Availability"] = (int)Availability,
+            ["Status"] = (int)Availability,
             ["Unlocked"] = Unlocked,
             ["CurrentIndex"] = CurObjectiveIndex,
             ["Objective"] = ObjectiveIndex.Select(set => set.Serialize()).ToList(),
@@ -327,7 +348,7 @@ public class MissionDataContainer
             {
                 ID = tag.GetInt("ID"),
                 Progress = (MissionProgress)tag.GetInt("Progress"),
-                Availability = (MissionAvailability)tag.GetInt("Availability"),
+                Availability = (MissionStatus)tag.GetInt("Status"),
                 Unlocked = tag.GetBool("Unlocked"),
                 CurObjectiveIndex = tag.GetInt("CurrentIndex"),
                 ObjectiveIndex = tag.GetList<TagCompound>("Objective")
@@ -339,7 +360,7 @@ public class MissionDataContainer
         catch (Exception ex)
         {
             // Log error and return null to trigger fallback
-            ModContent.GetInstance<Reverie>().Logger.Error($"Failed to deserialize mission container: {ex.Message}");
+            Instance.Logger.Error($"Failed to deserialize mission container: {ex.Message}");
             return null;
         }
     }
