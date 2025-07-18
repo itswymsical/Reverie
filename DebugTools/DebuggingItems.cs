@@ -23,7 +23,7 @@ public class MissionCompleteIndicator : ModItem
         if (Main.myPlayer == player.whoAmI)
         {
             var mplayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-            var mission = mplayer.GetMission(MissionID.LightEmUp);
+            var mission = mplayer.GetMission(MissionID.SporeSplinter);
             InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(mission));
         }
         return true;
@@ -62,7 +62,7 @@ public class SpawnMissionIndicator : ModItem
     public override bool? UseItem(Player player)
     {
         var mplayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        var mission = mplayer.GetMission(MissionID.LightEmUp);
+        var mission = mplayer.GetMission(MissionID.SporeSplinter);
 
         if (player.altFunctionUse != 0)
         {

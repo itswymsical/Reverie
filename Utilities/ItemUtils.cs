@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Reverie.Content.Tiles.TemperateForest.Furniture;
+using System.Collections.Generic;
 
 namespace Reverie.Utilities;
 
@@ -96,7 +97,7 @@ public static class ItemUtils
             || item.type == ItemID.Ebonwood
             || item.type == ItemID.Shadewood
             || item.type == ItemID.AshWood
-            || item.type == ItemID.Pearlwood;
+            || item.type == ItemID.Pearlwood || item.type == ModContent.ItemType<BirchWoodItem>();
     }
 
     public static bool IsMadeFromMetal(this Item item, params int[] metalTypes)

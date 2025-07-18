@@ -112,7 +112,7 @@ public class ReverieMenu : ModMenu
 
     public override void OnSelected()
     {
-        SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ReverieBell"));
+        SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ReverieBell") with { Volume = 0.5f});
     }
 
     private void InitializeStars()

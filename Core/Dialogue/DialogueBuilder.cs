@@ -176,6 +176,7 @@ public static class DialogueBuilder
             "guide" => new Color(64, 109, 164),
             "player" => new Color(100, 150, 200),
             "you" => new Color(100, 150, 200),
+            "argie" => new Color(66, 85, 206),
             _ => new Color(180, 180, 180) // Default gray
         };
     }

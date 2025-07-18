@@ -1,4 +1,5 @@
 ﻿using Reverie.Content.Missions;
+using Reverie.Content.Missions.Argie;
 using Reverie.Core.Missions.Core;
 using Reverie.Utilities;
 using System.Collections.Generic;
@@ -12,6 +13,9 @@ public class MissionFactory : ModSystem
     private readonly Dictionary<int, Mission> missionCache = [];
     private static MissionFactory instance;
 
+    private static bool worldJustLoaded = false;
+    private static int worldLoadCounter = 0;
+    private const int LOAD_DELAY_FRAMES = 10;
     public static MissionFactory Instance
     {
         get
@@ -42,7 +46,15 @@ public class MissionFactory : ModSystem
     {
         // Clear cache when loading a world to ensure fresh mission instances
         missionCache.Clear();
+
         Reverie.Instance.Logger.Info("MissionFactory cache cleared for world load");
+
+        MissionManager.Instance.OnWorldLoad();
+
+        worldJustLoaded = true;
+        worldLoadCounter = 0;
+
+        ModContent.GetInstance<Reverie>().Logger.Info("MissionLoadingSystem: OnWorldLoad complete");
     }
 
     public override void Unload()
@@ -60,7 +72,7 @@ public class MissionFactory : ModSystem
 
             #region Missions
             missionTypes[MissionID.JourneysBegin] = typeof(Mission_JourneysBegin);
-            //missionTypes[MissionID.BloomcapHunt] = typeof(BloomcapHunt);
+            missionTypes[MissionID.SporeSplinter] = typeof(Mission_SporeSplinter);
             //missionTypes[MissionID.CopperStandard] = typeof(CopperStandard);
             //missionTypes[MissionID.LightEmUp] = typeof(LightEmUp);
             #endregion
@@ -119,8 +131,20 @@ public class MissionFactory : ModSystem
         }
     }
 
-    public void Reset()
+
+    public override void PostUpdateWorld()
     {
-        missionCache.Clear();
+        if (worldJustLoaded)
+        {
+            worldLoadCounter++;
+
+            if (worldLoadCounter >= LOAD_DELAY_FRAMES)
+            {
+                MissionManager.Instance.OnWorldFullyLoaded();
+                worldJustLoaded = false;
+
+                ModContent.GetInstance<Reverie>().Logger.Info("MissionLoadingSystem: Deferred world load complete");
+            }
+        }
     }
 }

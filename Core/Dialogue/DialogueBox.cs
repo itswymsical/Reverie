@@ -403,6 +403,7 @@ public class DialogueBox : IInGameNotification
             "demolitionist" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Demolitionist"),
             "goblin tinkerer" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/GoblinTinkerer"),
             "mechanic" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Mechanic"),
+            "argie" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Argie"),
             _ => null
         };
     }
@@ -418,6 +419,7 @@ public class DialogueBox : IInGameNotification
             "demolitionist" => 2,
             "goblin tinkerer" => 2,
             "mechanic" => 2,
+            "argie" => 1,
             _ => 1
         };
     }
@@ -439,7 +441,7 @@ public class DialogueBox : IInGameNotification
         var textHeight = FontAssets.ItemStack.Value.LineSpacing * lineCount;
 
         var panelHeight = textHeight + 40f;
-        return new Vector2(PANEL_WIDTH + 18, Math.Max(panelHeight, 100f) * 1.14f);
+        return new Vector2(PANEL_WIDTH + 48, Math.Max(panelHeight, 100f) * 1.2f);
     }
 
     private Vector2 CalculatePosition(Vector2 panelSize)

@@ -34,13 +34,13 @@ public class Argie : WorldNPCActor
     {
         base.OnSpawn(source);
         var player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        var bloomCap = player.GetMission(MissionID.BloomcapHunt);
+        var bloomCap = player.GetMission(MissionID.SporeSplinter);
 
         if (bloomCap != null &&
             bloomCap.Status != MissionStatus.Completed &&
             bloomCap.Progress != MissionProgress.Ongoing)
         {
-            player.UnlockMission(MissionID.BloomcapHunt);
+            player.UnlockMission(MissionID.SporeSplinter);
         }
     }
 
@@ -55,7 +55,5 @@ public class Argie : WorldNPCActor
     public override void SetChatButtons(ref string button, ref string button2)
     {
         button = "Chat";
-
-        button2 = "Missions";
     }
 }

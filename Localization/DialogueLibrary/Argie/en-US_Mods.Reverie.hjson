@@ -1,0 +1,75 @@
+﻿DialogueLibrary: {
+	Argie: {
+		Intro: {
+			Line1: {
+				Text: You there!!
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line2: {
+				Text: Yes,<pause:8> the ambulatory flesh-husk—<pause:5>I mean...
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line3: {
+				Text: <sine>charming local!</sine>
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line4: {
+				Text: I am Argie,<pause:11> the most esteemed mycologist.
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line5: {
+				Text: And I have a proposition for you!
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line6: {
+				Text: You see, I am in need of a <sine>reliable assistant</sine>.
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line7: {
+				Text: I am studying the local flora and fauna, particularly the mushrooms.
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line8: {
+				Text: But before I can continue, I need you to gather some materials for housing.
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line9: {
+				Text: This will allow me to set up a proper laboratory for my research.
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line10: {
+				Text: Handsome rewards for your efforts, they will be!
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.5"
+			}
+		}
+	}
+}

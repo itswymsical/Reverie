@@ -1,15 +1,6 @@
-﻿using Reverie.Common.Systems;
-using Reverie.Content.Items;
-using Reverie.Core.Cinematics;
-using Reverie.Core.Dialogue;
-using Reverie.Core.Missions;
+﻿using Reverie.Core.Missions;
 using Reverie.Core.Missions.Core;
-using Reverie.Utilities;
-using Terraria.Net;
-using static Reverie.Core.Missions.Core.ObjectiveEventItem;
 using static Reverie.Core.Missions.Core.ObjectiveEventNPC;
-using static Reverie.Core.Missions.Core.ObjectiveEventPlayer;
-using static Reverie.Core.Missions.Core.ObjectiveEventTile;
 
 namespace Reverie.Content.Missions;
 
