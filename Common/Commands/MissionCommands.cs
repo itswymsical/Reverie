@@ -104,7 +104,7 @@ public class StartMissionCommand : ModCommand
             return;
         }
 
-        if (mission.Availability != MissionAvailability.Unlocked)
+        if (mission.Status != MissionStatus.Unlocked)
         {
             caller.Reply($"Mission '{mission.Name}' is not unlocked yet. Use /unlockmission first.", Color.Yellow);
             return;
@@ -268,10 +268,10 @@ public class ListSideMissionsCommand : ModCommand
         switch (filter)
         {
             case "available":
-                ListSideMissionsByState(caller, missionPlayer, MissionProgress.Inactive, MissionAvailability.Unlocked);
+                ListSideMissionsByState(caller, missionPlayer, MissionProgress.Inactive, MissionStatus.Unlocked);
                 break;
             case "active":
-                ListSideMissionsByState(caller, missionPlayer, MissionProgress.Active, null);
+                ListSideMissionsByState(caller, missionPlayer, MissionProgress.Ongoing, null);
                 break;
             case "completed":
                 ListSideMissionsByState(caller, missionPlayer, MissionProgress.Completed, null);
@@ -279,19 +279,19 @@ public class ListSideMissionsCommand : ModCommand
             case "all":
             default:
                 caller.Reply("=== All Side Missions ===", Color.LightGreen);
-                ListSideMissionsByState(caller, missionPlayer, MissionProgress.Inactive, MissionAvailability.Unlocked);
-                ListSideMissionsByState(caller, missionPlayer, MissionProgress.Active, null);
+                ListSideMissionsByState(caller, missionPlayer, MissionProgress.Inactive, MissionStatus.Unlocked);
+                ListSideMissionsByState(caller, missionPlayer, MissionProgress.Ongoing, null);
                 ListSideMissionsByState(caller, missionPlayer, MissionProgress.Completed, null);
                 break;
         }
     }
 
     private void ListSideMissionsByState(CommandCaller caller, MissionPlayer missionPlayer,
-        MissionProgress progress, MissionAvailability? availability)
+        MissionProgress progress, MissionStatus? availability)
     {
         var missions = missionPlayer.missionDict.Values
             .Where(m => !m.IsMainline && m.Progress == progress &&
-                       (availability == null || m.Availability == availability))
+                       (availability == null || m.Status == availability))
             .ToList();
 
         if (missions.Count > 0)
@@ -299,7 +299,7 @@ public class ListSideMissionsCommand : ModCommand
             string title = progress switch
             {
                 MissionProgress.Inactive => "=== Available Side Missions ===",
-                MissionProgress.Active => "=== Active Side Missions ===",
+                MissionProgress.Ongoing => "=== Ongoing Side Missions ===",
                 MissionProgress.Completed => "=== Completed Side Missions ===",
                 _ => "=== Side Missions ==="
             };
@@ -307,7 +307,7 @@ public class ListSideMissionsCommand : ModCommand
             Color titleColor = progress switch
             {
                 MissionProgress.Inactive => Color.LightBlue,
-                MissionProgress.Active => Color.Yellow,
+                MissionProgress.Ongoing => Color.Yellow,
                 MissionProgress.Completed => Color.Green,
                 _ => Color.White
             };
@@ -316,7 +316,7 @@ public class ListSideMissionsCommand : ModCommand
 
             foreach (var mission in missions)
             {
-                if (progress == MissionProgress.Active)
+                if (progress == MissionProgress.Ongoing)
                 {
                     var currentSet = mission.Objective[mission.CurrentIndex];
                     int completedObjectives = currentSet.Objectives.Count(o => o.IsCompleted);
@@ -334,7 +334,7 @@ public class ListSideMissionsCommand : ModCommand
         {
             caller.Reply("No available side missions.", Color.Gray);
         }
-        else if (progress == MissionProgress.Active)
+        else if (progress == MissionProgress.Ongoing)
         {
             caller.Reply("No active side missions.", Color.Gray);
         }

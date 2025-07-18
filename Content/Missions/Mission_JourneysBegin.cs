@@ -22,21 +22,20 @@ public class Mission_JourneysBegin : Mission
     }
 
     public Mission_JourneysBegin() : base(MissionID.JourneysBegin,
-        "Journey's Begin",
+        name: "Journey's Begin",
 
-         @"""Well, that's one way to make an appearance...""",
+        description: @"""Well, that's one way to make an appearance...""",
 
-         [
-           [("Talk to Guide", 1)],
-         ],
+        objectiveList: 
+        [ 
+            [("Talk to Guide", 1)],
+        ],
 
-         [new Item(ItemID.RegenerationPotion),
-             new Item(ItemID.IronskinPotion),
-             new Item(ItemID.GoldCoin, Main.rand.Next(4, 6))],
+        rewards: [new Item(ItemID.RegenerationPotion), new Item(ItemID.IronskinPotion), new Item(ItemID.GoldCoin, Main.rand.Next(4, 6))],
 
-         isMainline: true, NPCID.Guide, xpReward: 100)
+        isMainline: true, NPCID.Guide, xpReward: 100)
     {
-        Instance.Logger.Info("Mission [Journey's Begin] constructed");
+        Instance.Logger.Info($"[{Name} - {ID}] constructed");
     }
 
     public override void OnMissionStart()
@@ -88,7 +87,7 @@ public class Mission_JourneysBegin : Mission
 
     private void OnNPCChatHandler(NPC npc, ref string chat)
     {
-        if (Progress != MissionProgress.Active) return;
+        if (Progress != MissionProgress.Ongoing) return;
 
         var objective = (Objectives)CurrentIndex;
         switch (objective)

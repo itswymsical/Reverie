@@ -45,7 +45,7 @@ public partial class MissionManager
     {
         try
         {
-            Reverie.Instance.Logger.Debug($"Active mission count before registration: {activeMissions.Count}");
+            Reverie.Instance.Logger.Debug($"Ongoing mission count before registration: {activeMissions.Count}");
 
             if (activeMissions.ContainsKey(mission.ID))
             {
@@ -55,7 +55,7 @@ public partial class MissionManager
 
             activeMissions[mission.ID] = mission;
             Reverie.Instance.Logger.Info($"Registered mission: {mission.Name}");
-            Reverie.Instance.Logger.Debug($"Active mission count after registration: {activeMissions.Count}");
+            Reverie.Instance.Logger.Debug($"Ongoing mission count after registration: {activeMissions.Count}");
             Reverie.Instance.Logger.Debug($"Current active missions: {string.Join(", ", activeMissions.Keys)}");
         }
         catch (Exception ex)

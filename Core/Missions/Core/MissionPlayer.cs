@@ -20,6 +20,13 @@ public partial class MissionPlayer : ModPlayer
 
     private readonly HashSet<int> notifiedMissions = [];
 
+    /// <summary>
+    /// IDs of missions that changed and may need syncing or state updates.
+    /// </summary>
+    /// /// <remarks>
+    /// A "dirty" mission has changed state and needs to be saved, updated, or synced.
+    /// The dirty flag helps track when mission data is out of date.
+    /// </remarks>
     private readonly HashSet<int> dirtyMissions = [];
 
     private TagCompound savedMissionData = null;
@@ -69,7 +76,6 @@ public partial class MissionPlayer : ModPlayer
             var updated = mission.UpdateProgress(objectiveIndex, amount);
             if (updated)
             {
-                // Sync the updated state
                 SyncMissionState(mission);
             }
             return updated;
@@ -89,7 +95,7 @@ public partial class MissionPlayer : ModPlayer
         foreach (var mission in missionDict.Values)
         {
             Main.NewText($"Mission: {mission.Name}");
-            Main.NewText($"  State: {mission.Availability}");
+            Main.NewText($"  State: {mission.Status}");
             Main.NewText($"  Progress: {mission.Progress}");
             Main.NewText($"  NextMissionID: {mission.NextMissionID}");
         }
@@ -118,7 +124,7 @@ public partial class MissionPlayer : ModPlayer
                     ["State"] = new TagCompound
                     {
                         ["Progress"] = (int)mission.Progress,
-                        ["Availability"] = (int)mission.Availability,
+                        ["Status"] = (int)mission.Status,
                         ["Unlocked"] = mission.Unlocked,
                         ["CurrentIndex"] = mission.CurrentIndex,
                         ["Objective"] = SerializeObjectives(mission.Objective)
@@ -394,7 +400,7 @@ public partial class MissionPlayer : ModPlayer
 
             // Gather state data
             var progress = (MissionProgress)stateTag.GetInt("Progress");
-            var availability = (MissionAvailability)stateTag.GetInt("Availability");
+            var availability = (MissionStatus)stateTag.GetInt("Status");
             var unlocked = stateTag.GetBool("Unlocked");
             var currentIndex = stateTag.GetInt("CurrentIndex");
 
@@ -405,10 +411,10 @@ public partial class MissionPlayer : ModPlayer
                 progress = MissionProgress.Inactive;
             }
 
-            if (!Enum.IsDefined(typeof(MissionAvailability), availability))
+            if (!Enum.IsDefined(typeof(MissionStatus), availability))
             {
                 ModContent.GetInstance<Reverie>().Logger.Warn($"Invalid mission availability value {(int)availability} for mission {missionId}, defaulting to Locked");
-                availability = MissionAvailability.Locked;
+                availability = MissionStatus.Locked;
             }
 
             if (currentIndex < 0 || currentIndex >= mission.Objective.Count)
@@ -480,7 +486,7 @@ public partial class MissionPlayer : ModPlayer
         if (mission != null)
         {
             mission.Progress = MissionProgress.Completed;
-            mission.Availability = MissionAvailability.Completed;
+            mission.Status = MissionStatus.Completed;
             missionDict[missionId] = mission;
         }
     }
@@ -509,7 +515,7 @@ public partial class MissionPlayer : ModPlayer
         if (missionDict.TryGetValue(missionId, out var mission))
         {
             mission.Reset();
-            mission.Availability = MissionAvailability.Unlocked;
+            mission.Status = MissionStatus.Unlocked;
         }
     }
 
@@ -528,7 +534,7 @@ public partial class MissionPlayer : ModPlayer
         var mission = GetMission(missionId);
         if (mission != null)
         {
-            mission.Progress = MissionProgress.Active;
+            mission.Progress = MissionProgress.Ongoing;
             MissionManager.Instance.RegisterMission(mission);
             SyncMissionState(mission);
 
@@ -546,7 +552,7 @@ public partial class MissionPlayer : ModPlayer
         var mission = GetMission(missionId);
         if (mission != null)
         {
-            mission.Availability = MissionAvailability.Unlocked;
+            mission.Status = MissionStatus.Unlocked;
             mission.Progress = MissionProgress.Inactive;
             mission.Unlocked = true;
             SyncMissionState(mission);
@@ -562,11 +568,11 @@ public partial class MissionPlayer : ModPlayer
 
     public IEnumerable<Mission> AvailableMissions()
         => missionDict.Values.Where
-        (m => m.Availability == MissionAvailability.Unlocked && m.Progress == MissionProgress.Inactive);
+        (m => m.Status == MissionStatus.Unlocked && m.Progress == MissionProgress.Inactive);
 
     public IEnumerable<Mission> ActiveMissions()
     {
-        foreach (var mission in missionDict.Values.Where(m => m.Progress == MissionProgress.Active))
+        foreach (var mission in missionDict.Values.Where(m => m.Progress == MissionProgress.Ongoing))
         {
             if (dirtyMissions.Contains(mission.ID))
             {
@@ -609,7 +615,7 @@ public partial class MissionPlayer : ModPlayer
     public void CheckAndBroadcastAllAvailableMissions()
     {
         var npcTypesWithMissions = missionDict.Values
-            .Where(m => m.ProviderNPC > 0 && m.Availability == MissionAvailability.Unlocked)
+            .Where(m => m.ProviderNPC > 0 && m.Status == MissionStatus.Unlocked)
             .Select(m => m.ProviderNPC)
             .Distinct();
 
@@ -625,7 +631,7 @@ public partial class MissionPlayer : ModPlayer
 
         foreach (var mission in missionDict.Values.Where(m =>
             m.ProviderNPC == npcType &&
-            m.Availability == MissionAvailability.Unlocked)) // Only show for inactive missions
+            m.Status == MissionStatus.Unlocked)) // Only show for inactive missions
         {
             hasAvailableMission = true;
 
