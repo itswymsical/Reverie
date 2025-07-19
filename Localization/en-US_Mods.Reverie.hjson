@@ -397,12 +397,30 @@ Items: {
 
 	ClusterclotCapItem: {
 		DisplayName: Clusterclot Cap
-		Tooltip: ""
+		Tooltip: "'A coagulant mushroom, brimming with blood'"
 	}
 
 	IndigoCapItem: {
 		DisplayName: Indigo Cap
-		Tooltip: ""
+		Tooltip: "'Filled with a lactate-like fluid'"
+	}
+
+	ClusterclotCapSporesItem: {
+		DisplayName: Clusterclot Cap Spore Vial
+		Tooltip: 
+        '''
+        Used for alchemy
+        Toss to grow Clusterclot Caps
+        '''
+	}
+
+	IndigoCapSporesItem: {
+		DisplayName: Indigo Cap Spore Vial
+		Tooltip:
+        '''
+        Used for alchemy
+        Toss to grow Indigo Caps
+        '''
 	}
 }
 

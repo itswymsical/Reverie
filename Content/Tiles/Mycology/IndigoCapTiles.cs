@@ -92,11 +92,4 @@ public class IndigoCapTile_Large : ModTile
 
         num = fail ? 1 : 3;
     }
-
-    public override void SetSpriteEffects(int i, int j, ref SpriteEffects spriteEffects)
-    {
-        base.SetSpriteEffects(i, j, ref spriteEffects);
-
-        spriteEffects = i % 2 == 1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-    }
 }

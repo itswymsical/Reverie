@@ -64,7 +64,7 @@ public class ClusterclotCapTile_Small : ModTile
     {
         base.NumDust(i, j, fail, ref num);
 
-        num = fail ? 1 : 3;
+        num = fail ? 1 : 6;
     }
 }
 
@@ -90,6 +90,6 @@ public class ClusterclotCapTile_Large : ModTile
     {
         base.NumDust(i, j, fail, ref num);
 
-        num = fail ? 1 : 3;
+        num = fail ? 1 : 7;
     }
 }

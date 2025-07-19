@@ -28,3 +28,13 @@ public class ClusterclotCapItem : ModItem
     //    }
     //}
 }
+public class ClusterclotCapSporesItem : ModItem
+{
+    public override void SetDefaults()
+    {
+        base.SetDefaults();
+        Item.width = Item.height = 24;
+        Item.rare = ItemRarityID.Blue;
+        Item.maxStack = Item.CommonMaxStack;
+    }
+}
