@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -392,6 +392,11 @@ Items: {
 
 	MagnoliaSeedsItem: {
 		DisplayName: Magnolia Seeds
+		Tooltip: ""
+	}
+
+	ClusterclotCapItem: {
+		DisplayName: Clusterclot Cap Item
 		Tooltip: ""
 	}
 }

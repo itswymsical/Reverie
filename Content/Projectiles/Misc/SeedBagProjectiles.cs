@@ -235,9 +235,9 @@ namespace Reverie.Content.Projectiles.Misc
         {
             var texture = textureIndex switch
             {
-                0 => ModContent.Request<Texture2D>($"{NAME}/Assets/Textures/Projectiles/BirdProj").Value,
-                1 => ModContent.Request<Texture2D>($"{NAME}/Assets/Textures/Projectiles/BirdProj2").Value,
-                _ => ModContent.Request<Texture2D>($"{NAME}/Assets/Textures/Projectiles/BirdProj3").Value
+                0 => ModContent.Request<Texture2D>($"{NAME}/Assets/Textures/Projectiles/Misc/BirdProj").Value,
+                1 => ModContent.Request<Texture2D>($"{NAME}/Assets/Textures/Projectiles/Misc/BirdProj2").Value,
+                _ => ModContent.Request<Texture2D>($"{NAME}/Assets/Textures/Projectiles/Misc/BirdProj3").Value
             };
 
             var frameHeight = texture.Height / Main.projFrames[Projectile.type];

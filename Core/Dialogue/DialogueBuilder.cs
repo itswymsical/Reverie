@@ -257,6 +257,11 @@ public static class DialogueBuilder
                 Volume = 0.5f,
                 MaxInstances = 0
             },
+            "argie" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Argie/ArgieSpeech_{Main.rand.Next(3)}")
+            {
+                Volume = 0.5f,
+                MaxInstances = 0
+            },
             _ => SoundID.MenuTick with
             {
                 Volume = 0.5f,

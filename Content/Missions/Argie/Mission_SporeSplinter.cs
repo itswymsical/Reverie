@@ -38,7 +38,7 @@ public class Mission_SporeSplinter : Mission
     {
         base.OnMissionStart();
 
-        DialogueManager.Instance.StartDialogue("Argie.Intro", 10, letterbox: true, 
+        DialogueManager.Instance.StartDialogue("Argie.Intro", 9, letterbox: true, 
             music: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}ArgiesTheme"));
     }
 

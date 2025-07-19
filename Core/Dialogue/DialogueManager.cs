@@ -53,8 +53,8 @@ public sealed class DialogueManager
         if (music.HasValue)
         {
             previousMusic = Main.musicBox2;
-            currentMusic = music.Value - 1; // dont edit
-            Main.musicBox2 = music.Value - 1; // dont edit
+            currentMusic = music.Value;
+            Main.musicBox2 = music.Value;
         }
 
         return true;

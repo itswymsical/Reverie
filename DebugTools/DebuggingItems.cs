@@ -104,7 +104,7 @@ public class SpawnDialogueIndicator : ModItem
             if (Main.myPlayer == player.whoAmI)
             {
                 ScreenIndicatorManager.Instance.CreateDialogueIndicator(Main.MouseWorld,
-                    "JourneysBegin.Crash", 3);
+                    "Argie.Intro", 9);
 
                 Main.NewText($"Placed at position [X:{Main.MouseWorld.X} Y:{Main.MouseWorld.Y}]");
             }
@@ -112,7 +112,8 @@ public class SpawnDialogueIndicator : ModItem
         }
         else
         {
-            DialogueManager.Instance.StartDialogue("JourneysBegin.Crash", 4, letterbox: true, music: MusicID.AltOverworldDay);
+            DialogueManager.Instance.StartDialogue("Argie.Intro", 9, letterbox: true,
+                music: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}ArgiesTheme"));
 
             Main.NewText($"[Cleared All Indicators] | Right-click to place an Indicator.");
             ScreenIndicatorManager.Instance.ClearAllIndicators();

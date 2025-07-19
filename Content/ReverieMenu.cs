@@ -103,7 +103,7 @@ public class ReverieMenu : ModMenu
 
     public override string DisplayName => "Reverie";
 
-    public override Asset<Texture2D> Logo => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}Logo");
+    public override Asset<Texture2D> Logo => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}Logo_Outline");
 
     public override Asset<Texture2D> SunTexture => null;
 
@@ -288,7 +288,7 @@ public class ReverieMenu : ModMenu
         spriteBatch.Draw(
             ModContent.Request<Texture2D>($"{VFX_DIRECTORY}SpaceOverlay").Value,
             new Rectangle(0, 0, Main.screenWidth, Main.screenHeight),
-            drawColor
+            new(199, 199, 199)
         );
 
         Texture2D glowTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Glow").Value;
@@ -559,19 +559,49 @@ public class ReverieMenu : ModMenu
             CreateNewStar();
         }
 
+        // Calculate logo center position
+        Vector2 logoPosition = new Vector2(logoDrawCenter.X / 1.35f, logoDrawCenter.Y * -0.25f);
+
+        // Draw the logo normally first
+        spriteBatch.Draw(Logo.Value, new Vector2(logoDrawCenter.X / 1.35f, logoDrawCenter.Y * -0.25f),
+                         null, Color.White, logoRotation, Vector2.Zero, logoScale, SpriteEffects.None, 0f);
+
         spriteBatch.End();
 
-        Effect effect = ShaderLoader.GetShader("ShineShader").Value;
-
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointWrap,
+        // Now draw the galaxy shader over the entire screen
+        Effect effect = ShaderLoader.GetShader("GalaxyShader").Value;
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp,
                           DepthStencilState.None, Main.Rasterizer, effect, Main.UIScaleMatrix);
 
         if (effect != null)
         {
+            // Time for animation - controls spiral rotation speed
             effect.Parameters["uTime"]?.SetValue((float)Main.time * 0.0005f);
-            effect.Parameters["uOpacity"]?.SetValue(1.2f);
+
+            // Screen resolution - helps shader calculate proper coordinates
+            effect.Parameters["uScreenResolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
+
+            // Source rectangle - defines what part of texture to use (full screen)
+            effect.Parameters["uSourceRect"]?.SetValue(new Vector4(0, 0, Main.screenWidth, Main.screenHeight));
+
+            // Intensity - controls how bright/visible the galaxy effect is
+            effect.Parameters["uIntensity"]?.SetValue(3.3f);
+
+            // Set your textures - these will now actually be used by the shader
+            effect.Parameters["uImage0"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Star09").Value);
+            effect.Parameters["uImage1"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}LiquidTrailAlt").Value);
         }
-        spriteBatch.Draw(Logo.Value, new Vector2(logoDrawCenter.X / 1.35f, logoDrawCenter.Y * -0.25f), null, drawColor, logoRotation, Vector2.Zero, logoScale, SpriteEffects.None, 0f);
+
+        // Draw a full-screen rectangle for the galaxy effect
+        // Use a simple white pixel texture or create a 1x1 white texture
+
+        //Texture2D perlinSpiral = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin").Value;
+        //spriteBatch.Draw(perlinSpiral, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight),
+        //                 Color.White);
+
+        Texture2D pixelTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail").Value;
+        spriteBatch.Draw(pixelTexture, new(logoPosition.X * 1.367f, logoPosition.Y), new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White, 0, Vector2.Zero, scale: 0.95f, SpriteEffects.None, 0f);
+
         spriteBatch.End();
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
         return false;
