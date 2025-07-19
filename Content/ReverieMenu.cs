@@ -260,6 +260,22 @@ public class ReverieMenu : ModMenu
         }
     }
 
+    private RenderTarget2D pixelTarget;
+    private int pixelScale = 4; // Higher = more pixelated
+
+    // In your initialization method (maybe in your constructor or PostSetupContent)
+    private void InitializePixelTarget()
+    {
+        int pixelWidth = Main.screenWidth / pixelScale;
+        int pixelHeight = Main.screenHeight / pixelScale;
+
+        if (pixelTarget?.IsDisposed != false || pixelTarget.Width != pixelWidth || pixelTarget.Height != pixelHeight)
+        {
+            pixelTarget?.Dispose();
+            pixelTarget = new RenderTarget2D(Main.graphics.GraphicsDevice, pixelWidth, pixelHeight);
+        }
+    }
+
     public override bool PreDrawLogo(SpriteBatch spriteBatch, ref Vector2 logoDrawCenter, ref float logoRotation, ref float logoScale, ref Color drawColor)
     {
         drawColor = Color.White;
@@ -559,48 +575,41 @@ public class ReverieMenu : ModMenu
             CreateNewStar();
         }
 
-        // Calculate logo center position
         Vector2 logoPosition = new Vector2(logoDrawCenter.X / 1.35f, logoDrawCenter.Y * -0.25f);
 
-        // Draw the logo normally first
         spriteBatch.Draw(Logo.Value, new Vector2(logoDrawCenter.X / 1.35f, logoDrawCenter.Y * -0.25f),
                          null, Color.White, logoRotation, Vector2.Zero, logoScale, SpriteEffects.None, 0f);
 
         spriteBatch.End();
 
-        // Now draw the galaxy shader over the entire screen
         Effect effect = ShaderLoader.GetShader("GalaxyShader").Value;
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp,
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp,
                           DepthStencilState.None, Main.Rasterizer, effect, Main.UIScaleMatrix);
 
         if (effect != null)
         {
-            // Time for animation - controls spiral rotation speed
-            effect.Parameters["uTime"]?.SetValue((float)Main.time * 0.0005f);
+            effect.Parameters["uTime"]?.SetValue((float)Main.time * 0.0002f);
 
-            // Screen resolution - helps shader calculate proper coordinates
             effect.Parameters["uScreenResolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
 
-            // Source rectangle - defines what part of texture to use (full screen)
             effect.Parameters["uSourceRect"]?.SetValue(new Vector4(0, 0, Main.screenWidth, Main.screenHeight));
 
-            // Intensity - controls how bright/visible the galaxy effect is
-            effect.Parameters["uIntensity"]?.SetValue(3.3f);
+            effect.Parameters["uIntensity"]?.SetValue(2f);
 
-            // Set your textures - these will now actually be used by the shader
-            effect.Parameters["uImage0"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Star09").Value);
-            effect.Parameters["uImage1"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}LiquidTrailAlt").Value);
+            effect.Parameters["uImage0"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin", AssetRequestMode.ImmediateLoad).Value);
+            effect.Parameters["uImage1"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail", AssetRequestMode.ImmediateLoad).Value);
+
+            effect.Parameters["uCenter"].SetValue(new Vector2(0.139f, -0.82f));
+            effect.Parameters["uScale"].SetValue(5.5f);
         }
 
-        // Draw a full-screen rectangle for the galaxy effect
-        // Use a simple white pixel texture or create a 1x1 white texture
 
-        //Texture2D perlinSpiral = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin").Value;
-        //spriteBatch.Draw(perlinSpiral, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight),
-        //                 Color.White);
+        Texture2D perlinSpiral = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin").Value;
+        spriteBatch.Draw(perlinSpiral, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight),
+                         Color.White);
 
         Texture2D pixelTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail").Value;
-        spriteBatch.Draw(pixelTexture, new(logoPosition.X * 1.367f, logoPosition.Y), new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White, 0, Vector2.Zero, scale: 0.95f, SpriteEffects.None, 0f);
+        spriteBatch.Draw(pixelTexture, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White);
 
         spriteBatch.End();
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
