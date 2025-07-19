@@ -1,4 +1,4 @@
-UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -396,7 +396,12 @@ Items: {
 	}
 
 	ClusterclotCapItem: {
-		DisplayName: Clusterclot Cap Item
+		DisplayName: Clusterclot Cap
+		Tooltip: ""
+	}
+
+	IndigoCapItem: {
+		DisplayName: Indigo Cap
 		Tooltip: ""
 	}
 }

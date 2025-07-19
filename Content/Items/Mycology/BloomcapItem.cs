@@ -11,6 +11,5 @@ public class BloomcapItem : ModItem
         Item.width = Item.height = 24;
         Item.rare = ItemRarityID.Quest;
         Item.maxStack = Item.CommonMaxStack;
-        Item.questItem = true;
     }
 }

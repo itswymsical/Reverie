@@ -1,10 +1,6 @@
-﻿using Reverie.Core.Missions.Core;
-using Reverie.Core.Missions;
-using System.Collections.Generic;
+﻿namespace Reverie.Content.Items.Mycology;
 
-namespace Reverie.Content.Items.Mycology;
-
-public class ClusterclotCapItem : ModItem
+public class IndigoCapItem : ModItem
 {
     public override void SetDefaults()
     {
@@ -18,7 +14,7 @@ public class ClusterclotCapItem : ModItem
     //{
     //    var player = ModContent.GetInstance<MissionPlayer>();
     //    var mission = player.GetMission(MissionID.SporeSplinter);
-        
+
     //    if (mission?.Progress == MissionProgress.Ongoing)
     //    {
     //        tooltips.Add(new TooltipLine(Mod, "MissionItem", $"[i:{Type}] Required for active Mission.")
