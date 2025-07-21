@@ -27,8 +27,9 @@ public class TaigaPlants : ModTile
 
         TileObjectData.newTile.StyleHorizontal = true;
 
-        TileObjectData.newTile.CoordinateHeights = [18];
 
+        TileObjectData.newTile.CoordinateHeights = [36];
+        TileObjectData.newTile.DrawYOffset = -14;
         TileObjectData.addTile(Type);
 
         DustType = DustID.GrassBlades;
@@ -77,8 +78,9 @@ public class SnowTaigaPlants : ModTile
 
         TileObjectData.newTile.StyleHorizontal = true;
 
-        TileObjectData.newTile.CoordinateHeights = [18];
 
+        TileObjectData.newTile.CoordinateHeights = [36];
+        TileObjectData.newTile.DrawYOffset = -14;
         TileObjectData.addTile(Type);
 
         DustType = DustID.SnowBlock;
@@ -127,8 +129,9 @@ public class CorruptTaigaPlants : ModTile
 
         TileObjectData.newTile.StyleHorizontal = true;
 
-        TileObjectData.newTile.CoordinateHeights = [18];
 
+        TileObjectData.newTile.CoordinateHeights = [36];
+        TileObjectData.newTile.DrawYOffset = -14;
         TileObjectData.addTile(Type);
 
         DustType = DustID.CorruptPlants;
@@ -177,8 +180,9 @@ public class CrimsonTaigaPlants : ModTile
 
         TileObjectData.newTile.StyleHorizontal = true;
 
-        TileObjectData.newTile.CoordinateHeights = [18];
 
+        TileObjectData.newTile.CoordinateHeights = [36];
+        TileObjectData.newTile.DrawYOffset = -14;
         TileObjectData.addTile(Type);
 
         DustType = DustID.CrimsonPlants;
@@ -227,8 +231,9 @@ public class HallowTaigaPlants : ModTile
 
         TileObjectData.newTile.StyleHorizontal = true;
 
-        TileObjectData.newTile.CoordinateHeights = [18];
 
+        TileObjectData.newTile.CoordinateHeights = [36];
+        TileObjectData.newTile.DrawYOffset = -14;
         TileObjectData.addTile(Type);
 
         DustType = DustID.HallowedPlants;

@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -407,20 +407,20 @@ Items: {
 
 	ClusterclotCapSporesItem: {
 		DisplayName: Clusterclot Cap Spore Vial
-		Tooltip: 
-        '''
-        Used for alchemy
-        Toss to grow Clusterclot Caps
-        '''
+		Tooltip:
+			'''
+			Used for alchemy
+			Toss to grow Clusterclot Caps
+			'''
 	}
 
 	IndigoCapSporesItem: {
 		DisplayName: Indigo Cap Spore Vial
 		Tooltip:
-        '''
-        Used for alchemy
-        Toss to grow Indigo Caps
-        '''
+			'''
+			Used for alchemy
+			Toss to grow Indigo Caps
+			'''
 	}
 }
 
