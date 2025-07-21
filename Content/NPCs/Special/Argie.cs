@@ -1,17 +1,21 @@
-﻿using Reverie.Core.Missions;
-using Reverie.Core.Missions.Core;
+﻿using Reverie.Common.Systems;
+using Reverie.Content.Cutscenes;
+using Reverie.Core.Cinematics;
 using Reverie.Core.NPCs.Actors;
 using Terraria.DataStructures;
+using Terraria.ModLoader.Utilities;
 
 namespace Reverie.Content.NPCs.Special;
 
 [AutoloadHead]
 public class Argie : WorldNPCActor
 {
+    private const float APPROACH_DISTANCE = 200f;
+    private bool hasTriggeredCutscene = false;
+
     public override void SetStaticDefaults()
     {
         base.SetStaticDefaults();
-
         Main.npcFrameCount[Type] = 1;
     }
 
@@ -30,30 +34,49 @@ public class Argie : WorldNPCActor
         NPC.DeathSound = SoundID.NPCDeath1;
         NPC.knockBackResist = 0f;
     }
+
     public override void OnSpawn(IEntitySource source)
     {
         base.OnSpawn(source);
-        var player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        var bloomCap = player.GetMission(MissionID.SporeSplinter);
+        hasTriggeredCutscene = DownedSystem.argieCutscene;
+    }
 
-        if (bloomCap != null &&
-            bloomCap.Status != MissionStatus.Completed &&
-            bloomCap.Progress != MissionProgress.Ongoing)
+    public override float SpawnChance(NPCSpawnInfo spawnInfo)
+    {
+        return NPC.AnyNPCs(Type) ? 0 : SpawnCondition.UndergroundMushroom.Chance * 0.5f;
+    }
+
+    public override void AI()
+    {
+        base.AI();
+
+        if (!hasTriggeredCutscene && !DownedSystem.argieCutscene)
         {
-            player.UnlockMission(MissionID.SporeSplinter);
+            Player closestPlayer = Main.player[Player.FindClosest(NPC.position, NPC.width, NPC.height)];
+
+            if (closestPlayer.active && Vector2.Distance(NPC.Center, closestPlayer.Center) <= APPROACH_DISTANCE)
+            {
+                TriggerIntroCutscene();
+            }
         }
+    }
+
+    private void TriggerIntroCutscene()
+    {
+        hasTriggeredCutscene = true;
+        CutsceneSystem.PlayCutscene<ArgieIntroCutscene>();
     }
 
     public override string GetChat()
     {
+        if (!DownedSystem.argieCutscene)
+        {
+            return "...";
+        }
+
         return Main.rand.Next() switch
         {
-            _ => "Hi!!! I'm Argie.",
+            _ => "Mycelia is my brand! Could you lend me a hand? Perhaps two...?",
         };
-    }
-
-    public override void SetChatButtons(ref string button, ref string button2)
-    {
-        button = "Chat";
     }
 }

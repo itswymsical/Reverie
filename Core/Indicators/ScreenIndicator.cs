@@ -107,6 +107,13 @@ public class ScreenIndicator
     {
         AnimationTimer += 0.1f;
 
+        // Check if tracking entity is still valid
+        if (trackingEntity != null && !trackingEntity.active)
+        {
+            IsVisible = false; // This will trigger removal in PostUpdateEverything
+            return;
+        }
+
         if (isTracking)
         {
             UpdateTrackingPosition();
@@ -482,22 +489,36 @@ public class ScreenIndicatorManager : ModSystem
     {
         for (var i = indicators.Count - 1; i >= 0; i--)
         {
-            indicators[i].Update();
+            var indicator = indicators[i];
 
-            if (!indicators[i].IsVisible)
+            // Clean up indicators tracking inactive entities
+            if (indicator.trackingEntity != null && !indicator.trackingEntity.active)
             {
-                // Clean up NPC tracking
-                var npcEntry = npcIndicators.FirstOrDefault(kvp => kvp.Value == indicators[i]);
-                if (npcEntry.Key != 0)
-                {
-                    npcIndicators.Remove(npcEntry.Key);
-                    npcTracking.Remove(npcEntry.Key);
-                }
+                RemoveIndicatorFromCollections(indicator);
+                continue;
+            }
 
-                indicators.RemoveAt(i);
+            indicator.Update();
+
+            if (!indicator.IsVisible)
+            {
+                RemoveIndicatorFromCollections(indicator);
             }
         }
     }
+
+    private void RemoveIndicatorFromCollections(ScreenIndicator indicator)
+{
+    indicators.Remove(indicator);
+    
+    // Find and remove from NPC tracking
+    var npcEntry = npcIndicators.FirstOrDefault(kvp => kvp.Value == indicator);
+    if (npcEntry.Value != null) // Proper null check
+    {
+        npcIndicators.Remove(npcEntry.Key);
+        npcTracking.Remove(npcEntry.Key);
+    }
+}
 
     public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
     {

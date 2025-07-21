@@ -257,7 +257,7 @@ public abstract class Cutscene
     {
         try
         {
-            EnablePlayerMovement();
+            ControlsOn();
             IsPlaying = false;
 
             if (EnableLetterbox)
@@ -281,14 +281,14 @@ public abstract class Cutscene
 
     protected virtual void OnCutsceneEnd() { }
 
-    protected static void DisableFallDamage() => NoFallDamage = true;
-    protected static void EnableFallDamage() => NoFallDamage = false;
+    protected static void Player_FallDamageOff() => NoFallDamage = true;
+    protected static void Player_FallDamageOn() => NoFallDamage = false;
 
-    protected static void DisableInvisibility() => IsPlayerVisible = true;
-    protected static void EnableInvisibility() => IsPlayerVisible = false;
+    protected static void Player_InvisiblityOff() => IsPlayerVisible = true;
+    protected static void Player_InvisiblityOn() => IsPlayerVisible = false;
 
-    protected static void DisablePlayerMovement() => DisableInputs = true;
-    protected static void EnablePlayerMovement() => DisableInputs = false;
+    protected static void Player_ControlsOff() => DisableInputs = true;
+    protected static void ControlsOn() => DisableInputs = false;
 
     protected void DrawFade(SpriteBatch spriteBatch)
     {

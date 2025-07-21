@@ -46,9 +46,9 @@ public class IntroCutscene : Cutscene
 
         var startPos = originalPlayerPosition - new Vector2(0, panDistance);
         CameraSystem.MoveCameraOut(1, startPos);
-        DisablePlayerMovement();
+        Player_ControlsOff();
 
-        EnableInvisibility();
+        Player_InvisiblityOn();
     }
 
     protected override void OnCutsceneUpdate(GameTime gameTime)
@@ -93,9 +93,9 @@ public class IntroCutscene : Cutscene
         Main.LocalPlayer.position = fallStartPosition - new Vector2(Main.LocalPlayer.width / 2f, Main.LocalPlayer.height);
         Main.LocalPlayer.velocity = Vector2.Zero;
 
-        DisableInvisibility();
+        Player_InvisiblityOff();
 
-        DisableFallDamage();
+        Player_FallDamageOff();
 
         playerFalling = true;
     }
@@ -118,7 +118,7 @@ public class IntroCutscene : Cutscene
             Main.LocalPlayer.fullRotationOrigin = Vector2.Zero;
 
             impactOccurred = true;
-            DisableFallDamage();
+            Player_FallDamageOff();
             CameraSystem.shake = 35;
             SoundEngine.PlaySound(SoundID.Item14);
             playerFalling = false;
@@ -161,10 +161,10 @@ public class IntroCutscene : Cutscene
         CameraSystem.ReturnCamera(1);
         DownedSystem.initialCutscene = true;
 
-        EnablePlayerMovement();
+        ControlsOn();
 
-        DisableInvisibility();
-        EnableFallDamage();
+        Player_InvisiblityOff();
+        Player_FallDamageOn();
 
         if (!impactOccurred)
         {
