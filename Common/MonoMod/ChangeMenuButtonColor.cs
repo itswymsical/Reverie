@@ -40,7 +40,7 @@ public class ModifyMenuButtonsSystem : ModSystem
         {
             if (!ReverieMenu.InMenu)
                 return;
-            color = Color.LightSkyBlue * 1.1f;
+            color = Color.White * 1.1f;
         });
     }
 }

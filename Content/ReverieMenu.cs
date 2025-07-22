@@ -112,7 +112,7 @@ public class ReverieMenu : ModMenu
 
     public override void OnSelected()
     {
-        SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ReverieBell") with { Volume = 0.5f});
+        SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ReverieMenu") with { Volume = 0.65f});
     }
 
     private void InitializeStars()
@@ -221,6 +221,7 @@ public class ReverieMenu : ModMenu
             dust.noLight = false;
         }
     }
+    private float galaxyTime = 0f;
 
     public override void Update(bool isOnTitleScreen)
     {
@@ -240,6 +241,11 @@ public class ReverieMenu : ModMenu
             }
             return;
         }
+        if (InMenu)
+        {
+            galaxyTime += 1f / 60f; // Smooth increment only when in menu
+            if (galaxyTime > 1000f) galaxyTime -= 1000f; // Keep it bounded
+        }
 
         if (Main.mouseLeft && Main.mouseLeftRelease)
         {
@@ -257,22 +263,6 @@ public class ReverieMenu : ModMenu
                 clickTimes.RemoveAt(i);
                 clickPositions.RemoveAt(i);
             }
-        }
-    }
-
-    private RenderTarget2D pixelTarget;
-    private int pixelScale = 4; // Higher = more pixelated
-
-    // In your initialization method (maybe in your constructor or PostSetupContent)
-    private void InitializePixelTarget()
-    {
-        int pixelWidth = Main.screenWidth / pixelScale;
-        int pixelHeight = Main.screenHeight / pixelScale;
-
-        if (pixelTarget?.IsDisposed != false || pixelTarget.Width != pixelWidth || pixelTarget.Height != pixelHeight)
-        {
-            pixelTarget?.Dispose();
-            pixelTarget = new RenderTarget2D(Main.graphics.GraphicsDevice, pixelWidth, pixelHeight);
         }
     }
 
@@ -575,7 +565,26 @@ public class ReverieMenu : ModMenu
             CreateNewStar();
         }
 
-        Vector2 logoPosition = new Vector2(logoDrawCenter.X / 1.35f, logoDrawCenter.Y * -0.25f);
+        Vector2 logoRenderPos = new Vector2(logoDrawCenter.X / 1.35f, logoDrawCenter.Y * -0.25f);
+
+        // Calculate offset to the "i" dot based on logo scale and dimensions
+        // These values should be based on the actual logo texture dimensions
+        float logoWidth = Logo.Width() * logoScale;
+        float logoHeight = Logo.Height() * logoScale;
+
+        // Offset from logo origin to the "i" dot (adjust these ratios as needed)
+        Vector2 dotOffset = new Vector2(
+            logoWidth * 0.82f,    // Approximately 85% across the logo width
+            logoHeight * 0.39f   // Slightly above the logo center
+        );
+
+        Vector2 galaxyWorldPos = logoRenderPos + dotOffset;
+
+        // Convert to shader coordinate system (-1 to 1, where 0,0 is screen center)
+        Vector2 galaxyShaderPos = new Vector2(
+            (galaxyWorldPos.X - Main.screenWidth * 0.5f) / (Main.screenWidth * 0.5f),
+            (galaxyWorldPos.Y - Main.screenHeight * 0.5f) / (Main.screenHeight * 0.5f)
+        );
 
         spriteBatch.Draw(Logo.Value, new Vector2(logoDrawCenter.X / 1.35f, logoDrawCenter.Y * -0.25f),
                          null, Color.White, logoRotation, Vector2.Zero, logoScale, SpriteEffects.None, 0f);
@@ -588,7 +597,7 @@ public class ReverieMenu : ModMenu
 
         if (effect != null)
         {
-            effect.Parameters["uTime"]?.SetValue((float)Main.time * 0.0002f);
+            effect.Parameters["uTime"]?.SetValue(galaxyTime * 0.19f);
 
             effect.Parameters["uScreenResolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
 
@@ -599,7 +608,7 @@ public class ReverieMenu : ModMenu
             effect.Parameters["uImage0"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin", AssetRequestMode.ImmediateLoad).Value);
             effect.Parameters["uImage1"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail", AssetRequestMode.ImmediateLoad).Value);
 
-            effect.Parameters["uCenter"].SetValue(new Vector2(0.139f, -0.82f));
+            effect.Parameters["uCenter"].SetValue(galaxyShaderPos);
             effect.Parameters["uScale"].SetValue(5.5f);
         }
 
