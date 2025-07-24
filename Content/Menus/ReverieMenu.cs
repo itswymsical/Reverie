@@ -1,12 +1,12 @@
 ﻿using ReLogic.Content;
+using Reverie.Content.Biomes.Canopy;
 using Reverie.Core.Loaders;
 using System.Collections.Generic;
 using Terraria.Audio;
-using Terraria.GameContent;
 
-namespace Reverie.Content;
+namespace Reverie.Content.Menus;
 
-public class ReverieMenu : ModMenu
+public partial class ReverieMenu : ModMenu
 {
     private List<Star> menuStars;
     private List<EasterEggObject> easterEggObjects;
@@ -26,59 +26,6 @@ public class ReverieMenu : ModMenu
     private const float EASTER_EGG_CHANCE = 0.05f;
     private const float EASTER_EGG_ROTATION_SPEED = 0.005f;
     private const float EASTER_EGG_DRIFT_SPEED = 0.2f;
-
-    private class EasterEggObject
-    {
-        public Vector2 Position;
-        public Vector2 Velocity;
-        public float Rotation;
-        public float Scale;
-        public float Alpha;
-        public int Type;
-
-        public EasterEggObject(Vector2 position, Vector2 velocity, float scale)
-        {
-            Position = position;
-            Velocity = velocity;
-            Rotation = Main.rand.NextFloat(0, MathHelper.TwoPi);
-            Scale = scale;
-
-            Alpha = 0f;
-            Type = Main.rand.Next(7);
-            if (Type == 6)
-            {
-                Scale = 0.2f;
-            }
-        }
-
-        public void Update()
-        {
-            Position += Velocity;
-
-            Rotation += EASTER_EGG_ROTATION_SPEED;
-            if (Rotation > MathHelper.TwoPi)
-                Rotation -= MathHelper.TwoPi;
-
-            if (Alpha < 1f)
-                Alpha += 0.01f;
-        }
-
-        public Texture2D GetTexture()
-        {
-            return Type switch
-            {
-                0 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostMartian").Value,
-                1 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostMeteorHead").Value,
-                2 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}SpaceDolphin").Value,
-                3 => TextureAssets.Item[ItemID.FirstFractal].Value,
-                4 => TextureAssets.Item[ItemID.SDMG].Value,
-                5 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostTree").Value,
-                6 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}DeadEye").Value,
-
-                _ => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostMartian").Value
-            };
-        }
-    }
 
     public override void Load()
     {
@@ -120,8 +67,8 @@ public class ReverieMenu : ModMenu
         menuStars.Clear();
         easterEggObjects.Clear();
 
-        int starCount = Main.rand.Next(130, 200);
-        for (int i = 0; i < starCount; i++)
+        var starCount = Main.rand.Next(130, 200);
+        for (var i = 0; i < starCount; i++)
         {
             CreateNewStar(true);
         }
@@ -139,12 +86,12 @@ public class ReverieMenu : ModMenu
         if (Main.rand.NextFloat() > EASTER_EGG_CHANCE && position.X < 0)
             return false;
 
-        Vector2 velocity = new Vector2(
+        var velocity = new Vector2(
             -EASTER_EGG_DRIFT_SPEED * Main.rand.NextFloat(0.9f, 1.3f),
             Main.rand.NextFloat(-0.01f, 0.01f)
         );
 
-        float scale = Main.rand.NextFloat(0.3f, 0.7f);
+        var scale = Main.rand.NextFloat(0.3f, 0.7f);
 
         easterEggObjects.Add(new EasterEggObject(position, velocity, scale));
         return true;
@@ -159,7 +106,7 @@ public class ReverieMenu : ModMenu
                 return;
         }
 
-        Star star = new Star();
+        var star = new Star();
 
         star.position = new Vector2(
             Main.rand.Next(0, Main.screenWidth),
@@ -199,15 +146,15 @@ public class ReverieMenu : ModMenu
     private void CreateStardustBurst(Vector2 position, float scale, Color color)
     {
         // Create a burst of dust particles at the collision point
-        int dustCount = Main.rand.Next(8, 16);
-        for (int i = 0; i < dustCount; i++)
+        var dustCount = Main.rand.Next(8, 16);
+        for (var i = 0; i < dustCount; i++)
         {
-            Vector2 dustVelocity = new Vector2(
+            var dustVelocity = new Vector2(
                 Main.rand.NextFloat(-2f, 2f),
                 Main.rand.NextFloat(-2f, 2f)
             );
 
-            Dust dust = Dust.NewDustPerfect(
+            var dust = Dust.NewDustPerfect(
                 position,
                 DustID.AncientLight,
                 dustVelocity,
@@ -221,6 +168,7 @@ public class ReverieMenu : ModMenu
             dust.noLight = false;
         }
     }
+
     private float galaxyTime = 0f;
 
     public override void Update(bool isOnTitleScreen)
@@ -249,13 +197,13 @@ public class ReverieMenu : ModMenu
 
         if (Main.mouseLeft && Main.mouseLeftRelease)
         {
-            Vector2 clickPosition = new Vector2(Main.mouseX, Main.mouseY);
+            var clickPosition = new Vector2(Main.mouseX, Main.mouseY);
             clickPositions.Add(clickPosition);
             clickTimes.Add(0f);
         }
 
         // Update click lifetimes and remove old clicks
-        for (int i = clickTimes.Count - 1; i >= 0; i--)
+        for (var i = clickTimes.Count - 1; i >= 0; i--)
         {
             clickTimes[i]++;
             if (clickTimes[i] >= CLICK_LIFETIME)
@@ -268,6 +216,7 @@ public class ReverieMenu : ModMenu
 
     public override bool PreDrawLogo(SpriteBatch spriteBatch, ref Vector2 logoDrawCenter, ref float logoRotation, ref float logoScale, ref Color drawColor)
     {
+
         drawColor = Color.White;
         logoScale = 1.4f;
         logoRotation = 0f;
@@ -292,13 +241,13 @@ public class ReverieMenu : ModMenu
             InitializeStars();
 
         spriteBatch.Draw(
-            ModContent.Request<Texture2D>($"{VFX_DIRECTORY}SpaceOverlay").Value,
+            ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Space").Value,
             new Rectangle(0, 0, Main.screenWidth, Main.screenHeight),
-            new(199, 199, 199)
+            drawColor
         );
 
-        Texture2D glowTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Glow").Value;
-        Texture2D starTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Star").Value;
+        var glowTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Glow").Value;
+        var starTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Star").Value;
 
         // scren glow
         spriteBatch.Draw(
@@ -312,20 +261,19 @@ public class ReverieMenu : ModMenu
             SpriteEffects.None,
             0f
         );
-
         spriteBatch.End();
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearWrap, DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
 
-        Color colorStart = new Color(143, 244, 255);
-        Color colorEnd = Color.White;
+        var colorStart = new Color(143, 244, 255);
+        var colorEnd = Color.White;
 
-        for (int i = easterEggObjects.Count - 1; i >= 0; i--)
+        for (var i = easterEggObjects.Count - 1; i >= 0; i--)
         {
-            EasterEggObject easterEgg = easterEggObjects[i];
+            var easterEgg = easterEggObjects[i];
 
             easterEgg.Update();
 
-            Texture2D texture = easterEgg.GetTexture();
+            var texture = easterEgg.GetTexture();
 
             spriteBatch.Draw(
                 glowTexture,
@@ -361,13 +309,13 @@ public class ReverieMenu : ModMenu
         }
 
         // Process any click bursts
-        for (int i = 0; i < clickPositions.Count; i++)
+        for (var i = 0; i < clickPositions.Count; i++)
         {
-            Vector2 clickPos = clickPositions[i];
-            float clickAge = clickTimes[i];
+            var clickPos = clickPositions[i];
+            var clickAge = clickTimes[i];
 
-            float burstScale = (clickAge / 15f) * 3f;
-            float alpha = 1f - (clickAge / CLICK_LIFETIME);
+            var burstScale = clickAge / 15f * 3f;
+            var alpha = 1f - clickAge / CLICK_LIFETIME;
             spriteBatch.Draw(
                 glowTexture,
                 clickPos,
@@ -382,24 +330,24 @@ public class ReverieMenu : ModMenu
 
             if (clickAge < 2f)
             {
-                foreach (Star star in menuStars)
+                foreach (var star in menuStars)
                 {
                     if (star.falling)
                         continue;
 
                     // Calculate distance to star
-                    float distance = Vector2.Distance(clickPos, star.position);
+                    var distance = Vector2.Distance(clickPos, star.position);
 
                     // Apply force if within burst radius
                     if (distance < BURST_RADIUS)
                     {
                         // Direction from click to star
-                        Vector2 direction = star.position - clickPos;
+                        var direction = star.position - clickPos;
                         if (direction != Vector2.Zero)
                             direction.Normalize();
 
                         // Force diminishes with distance
-                        float force = BURST_FORCE * (1f - (distance / BURST_RADIUS));
+                        var force = BURST_FORCE * (1f - distance / BURST_RADIUS);
 
                         // Apply burst force to star's velocity
                         starVelocities[star] += direction * force;
@@ -410,42 +358,42 @@ public class ReverieMenu : ModMenu
 
         // Check for star collisions
         // We need to use traditional for loops (not foreach) because we might modify the collection
-        for (int i = 0; i < menuStars.Count; i++)
+        for (var i = 0; i < menuStars.Count; i++)
         {
-            Star star1 = menuStars[i];
+            var star1 = menuStars[i];
 
             // Skip falling stars for collision
             if (star1.falling)
                 continue;
 
             // Compare with other stars
-            for (int j = i + 1; j < menuStars.Count; j++)
+            for (var j = i + 1; j < menuStars.Count; j++)
             {
-                Star star2 = menuStars[j];
+                var star2 = menuStars[j];
 
                 // Skip falling stars for collision
                 if (star2.falling)
                     continue;
 
                 // Calculate distance between stars
-                float distance = Vector2.Distance(star1.position, star2.position);
-                float collisionSize = (star1.scale + star2.scale) * COLLISION_THRESHOLD;
+                var distance = Vector2.Distance(star1.position, star2.position);
+                var collisionSize = (star1.scale + star2.scale) * COLLISION_THRESHOLD;
 
                 // If stars are close enough, create collision effect
                 if (distance < collisionSize)
                 {
                     // Calculate collision point (midpoint between stars)
-                    Vector2 collisionPoint = (star1.position + star2.position) * 0.5f;
+                    var collisionPoint = (star1.position + star2.position) * 0.5f;
 
                     // Calculate average color for the dust burst
-                    float colorLerp1 = (star1.type / 4f) + (((int)star1.position.X * (int)star1.position.Y) % 10) / 10f;
-                    float colorLerp2 = (star2.type / 4f) + (((int)star2.position.X * (int)star2.position.Y) % 10) / 10f;
+                    var colorLerp1 = star1.type / 4f + (int)star1.position.X * (int)star1.position.Y % 10 / 10f;
+                    var colorLerp2 = star2.type / 4f + (int)star2.position.X * (int)star2.position.Y % 10 / 10f;
                     colorLerp1 = colorLerp1 % 1f;
                     colorLerp2 = colorLerp2 % 1f;
 
-                    Color starColor1 = Color.Lerp(colorStart, colorEnd, colorLerp1 * (Main.GameUpdateCount / 60f));
-                    Color starColor2 = Color.Lerp(colorStart, colorEnd, colorLerp2 * (Main.GameUpdateCount / 60f));
-                    Color burstColor = Color.Lerp(starColor1, starColor2, 0.5f * (Main.GameUpdateCount / 60f));
+                    var starColor1 = Color.Lerp(colorStart, colorEnd, colorLerp1 * (Main.GameUpdateCount / 60f));
+                    var starColor2 = Color.Lerp(colorStart, colorEnd, colorLerp2 * (Main.GameUpdateCount / 60f));
+                    var burstColor = Color.Lerp(starColor1, starColor2, 0.5f * (Main.GameUpdateCount / 60f));
 
                     // Create stardust burst
                     CreateStardustBurst(collisionPoint, (star1.scale + star2.scale) * 0.5f, burstColor);
@@ -453,11 +401,11 @@ public class ReverieMenu : ModMenu
                     // Push stars apart
                     if (starVelocities.ContainsKey(star1) && starVelocities.ContainsKey(star2))
                     {
-                        Vector2 pushDir1 = star1.position - star2.position;
+                        var pushDir1 = star1.position - star2.position;
                         if (pushDir1 != Vector2.Zero)
                             pushDir1.Normalize();
 
-                        Vector2 pushDir2 = -pushDir1;
+                        var pushDir2 = -pushDir1;
 
                         starVelocities[star1] += pushDir1 * 1.1f;
                         starVelocities[star2] += pushDir2 * 1.1f;
@@ -467,9 +415,9 @@ public class ReverieMenu : ModMenu
         }
 
         // Move and draw all stars
-        for (int i = menuStars.Count - 1; i >= 0; i--)
+        for (var i = menuStars.Count - 1; i >= 0; i--)
         {
-            Star star = menuStars[i];
+            var star = menuStars[i];
 
             // Update star properties
             star.Update();
@@ -489,17 +437,17 @@ public class ReverieMenu : ModMenu
             }
 
             // Calculate and apply color/alpha
-            float brightness = 0.5f + (star.twinkle * 0.5f);
-            float colorLerp = (star.type / 4f) + (((int)star.position.X * (int)star.position.Y) % 10) / 10f;
+            var brightness = 0.5f + star.twinkle * 0.5f;
+            var colorLerp = star.type / 4f + (int)star.position.X * (int)star.position.Y % 10 / 10f;
             colorLerp = colorLerp % 1f;
-            Color baseColor = Color.Lerp(colorStart, colorEnd, colorLerp);
+            var baseColor = Color.Lerp(colorStart, colorEnd, colorLerp);
 
-            float alpha = 1f;
+            var alpha = 1f;
             if (star.fadeIn > 0f)
                 alpha = 1f - star.fadeIn;
 
-            Color starColor = baseColor * brightness * alpha;
-            float bloomScale = star.scale * (0.8f + (star.twinkle * 0.4f));
+            var starColor = baseColor * brightness * alpha;
+            var bloomScale = star.scale * (0.8f + star.twinkle * 0.4f);
 
             // Draw glow
             spriteBatch.Draw(
@@ -546,18 +494,18 @@ public class ReverieMenu : ModMenu
         // Create shooting stars occasionally
         if (Main.rand.NextBool(50))
         {
-            int starIndex = Main.rand.Next(menuStars.Count);
+            var starIndex = Main.rand.Next(menuStars.Count);
             menuStars[starIndex].Fall();
 
             // Remove from velocity dictionary when a star starts falling
             if (starVelocities.ContainsKey(menuStars[starIndex]))
                 starVelocities.Remove(menuStars[starIndex]);
 
-            Star star = menuStars[starIndex];
+            var star = menuStars[starIndex];
             star.rotationSpeed = 0.1f;
             star.rotation = 0.01f;
-            star.fallSpeed.Y = (float)Main.rand.Next(100, 201) * 0.001f;
-            star.fallSpeed.X = (float)Main.rand.Next(-100, 101) * 0.001f;
+            star.fallSpeed.Y = Main.rand.Next(100, 201) * 0.001f;
+            star.fallSpeed.X = Main.rand.Next(-100, 101) * 0.001f;
         }
 
         if (Main.rand.NextBool(160))
@@ -565,23 +513,19 @@ public class ReverieMenu : ModMenu
             CreateNewStar();
         }
 
-        Vector2 logoRenderPos = new Vector2(logoDrawCenter.X / 1.35f, logoDrawCenter.Y * -0.25f);
+        var logoRenderPos = new Vector2(logoDrawCenter.X / 1.35f, logoDrawCenter.Y * -0.25f);
 
-        // Calculate offset to the "i" dot based on logo scale and dimensions
-        // These values should be based on the actual logo texture dimensions
-        float logoWidth = Logo.Width() * logoScale;
-        float logoHeight = Logo.Height() * logoScale;
+        var logoWidth = Logo.Width() * logoScale;
+        var logoHeight = Logo.Height() * logoScale;
 
-        // Offset from logo origin to the "i" dot (adjust these ratios as needed)
-        Vector2 dotOffset = new Vector2(
-            logoWidth * 0.82f,    // Approximately 85% across the logo width
-            logoHeight * 0.39f   // Slightly above the logo center
+        var dotOffset = new Vector2(
+            logoWidth * 0.82f,
+            logoHeight * 0.39f
         );
 
-        Vector2 galaxyWorldPos = logoRenderPos + dotOffset;
+        var galaxyWorldPos = logoRenderPos + dotOffset;
 
-        // Convert to shader coordinate system (-1 to 1, where 0,0 is screen center)
-        Vector2 galaxyShaderPos = new Vector2(
+        var galaxyShaderPos = new Vector2(
             (galaxyWorldPos.X - Main.screenWidth * 0.5f) / (Main.screenWidth * 0.5f),
             (galaxyWorldPos.Y - Main.screenHeight * 0.5f) / (Main.screenHeight * 0.5f)
         );
@@ -591,7 +535,7 @@ public class ReverieMenu : ModMenu
 
         spriteBatch.End();
 
-        Effect effect = ShaderLoader.GetShader("GalaxyShader").Value;
+        var effect = ShaderLoader.GetShader("GalaxyShader").Value;
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp,
                           DepthStencilState.None, Main.Rasterizer, effect, Main.UIScaleMatrix);
 
@@ -613,15 +557,15 @@ public class ReverieMenu : ModMenu
         }
 
 
-        Texture2D perlinSpiral = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin").Value;
+        var perlinSpiral = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin").Value;
         spriteBatch.Draw(perlinSpiral, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight),
                          Color.White);
 
-        Texture2D pixelTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail").Value;
+        var pixelTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail").Value;
         spriteBatch.Draw(pixelTexture, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White);
 
         spriteBatch.End();
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
         return false;
     }
 }

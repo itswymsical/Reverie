@@ -1,7 +1,7 @@
 ﻿// Credits: https://github.com/ZenTheMod/WizenkleBoss/blob/main/Common/MenuStyles/InkPondMenu.cs#L27
 // By ZenTheMod
 using MonoMod.Cil;
-using Reverie.Content;
+using Reverie.Content.Menus;
 
 namespace Reverie.Common.MonoMod;
 
@@ -40,7 +40,7 @@ public class ModifyMenuButtonsSystem : ModSystem
         {
             if (!ReverieMenu.InMenu)
                 return;
-            color = Color.White * 1.1f;
+            color = new Color(77, 216, 203) * 1.1f;
         });
     }
 }

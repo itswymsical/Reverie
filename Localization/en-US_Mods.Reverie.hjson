@@ -1,4 +1,4 @@
-UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -296,7 +296,7 @@ Items: {
 		Tooltip:
 			'''
 			Used to plant food, herbs, and flowers
-			Grows plants 8 TIMES faster than normal soil and planter boxes!
+			Grows plants x5 faster than normal soil and planter boxes!
 			'''
 	}
 

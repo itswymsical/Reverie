@@ -68,7 +68,13 @@ public class TemperateForestPass : GenPass
                     }
                     else if (tile.TileType == TileID.Plants2 || tile.TileType == TileID.Plants)
                     {
+                        bool hasVariantFrame = tile.TileFrameX > 17;
                         tile.TileType = (ushort)ModContent.TileType<TemperatePlants>();
+
+                        if (hasVariantFrame)
+                        {
+                            tile.TileFrameX = (short)(WorldGen.genRand.Next(18) * 18);
+                        }
                     }
                     else if (tile.TileType == TileID.Saplings)
                     {

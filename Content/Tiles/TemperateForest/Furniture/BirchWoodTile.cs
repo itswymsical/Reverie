@@ -8,14 +8,14 @@ public class BirchWoodTile : ModTile
 
         Main.tileMergeDirt[Type] = true;
 
-        //Merge(TileID.WoodBlock, Type,
-        //    TileID.Shadewood, TileID.Ebonwood,
-        //    TileID.BorealWood, TileID.AshWood,
-        //    TileID.SpookyWood, TileID.DynastyWood,
-        //    TileID.PalmWood, TileID.Pearlwood,
-        //    TileID.LivingWood, TileID.RichMahogany, TileID.LivingMahogany, 
-        //    TileID.BambooBlock, TileID.LargeBambooBlock);
-        TileID.Sets.BlockMergesWithMergeAllBlock[Type] = true;
+        Merge(TileID.WoodBlock, Type,
+            TileID.Shadewood, TileID.Ebonwood,
+            TileID.BorealWood, TileID.AshWood,
+            TileID.SpookyWood, TileID.DynastyWood,
+            TileID.PalmWood, TileID.Pearlwood,
+            TileID.LivingWood, TileID.RichMahogany, TileID.LivingMahogany,
+            TileID.BambooBlock, TileID.LargeBambooBlock);
+        TileID.Sets.BlockMergesWithMergeAllBlockOverride[Type] = true;
         Main.tileBlockLight[Type] = true;
 
         DustType = DustID.WoodFurniture;

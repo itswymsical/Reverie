@@ -1,4 +1,6 @@
-﻿using Reverie.Core.Missions.Core;
+﻿using ReLogic.Content;
+using Reverie.Core.Loaders;
+using Reverie.Core.Missions.Core;
 using System.Linq;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -8,9 +10,9 @@ namespace Reverie.Common.UI.Missions;
 
 public class MissionCompleteNotification(Mission mission) : IInGameNotification
 {
-    private const float DISPLAY_TIME = 8f * 60f;
-    private const float ANIMATION_TIME = 90f;
-    private const float FADEOUT_TIME = 60f;
+    private const float DISPLAY_TIME = 5.5f * 60f;
+    private const float ANIMATION_TIME = 60f;
+    private const float FADEOUT_TIME = 30f;
 
     public bool ShouldBeRemoved => timeLeft <= 0;
     private float timeLeft = DISPLAY_TIME;
@@ -27,155 +29,136 @@ public class MissionCompleteNotification(Mission mission) : IInGameNotification
         }
     }
 
-    private float TextScale
-    {
-        get
-        {
-            // Scale up during animation phase
-            var introScale = MathHelper.SmoothStep(0.1f, 1f, AnimationProgress);
-            // Scale down during fadeout
-            return introScale * MathHelper.Lerp(0.5f, 1f, FadeoutProgress);
-        }
-    }
+    // Unified scale for all elements - starts small, hits normal size
+    private float UnifiedScale => MathHelper.SmoothStep(0.15f, 1f, AnimationProgress);
 
-    private float TextOpacity
-    {
-        get
-        {
-            // Match opacity to the scaling animation (fade in + fade out)
-            return AnimationProgress * FadeoutProgress;
-        }
-    }
-
-    private float SunburstScale
-    {
-        get
-        {
-            var introScale = MathHelper.SmoothStep(0.1f, 0.6f, AnimationProgress);
-            return introScale * MathHelper.Lerp(0.3f, 1f, FadeoutProgress);
-        }
-    }
-
-    private float SunburstRotation => timeLeft * 0.01f;
+    private float ElementOpacity => FadeoutProgress; // Simple fadeout at the end
 
     private Color TextColor
     {
         get
         {
-            var baseColor = Color.Gold;
-            var glowColor = Color.White;
-            var currentColor = Color.Lerp(glowColor, baseColor, AnimationProgress);
-            return currentColor * TextOpacity;
+            var targetColor = new Color(255, 252, 114);
+            var whiteColor = Color.White;
+            // Start white, transition to gold during animation
+            var currentColor = Color.Lerp(whiteColor, targetColor, AnimationProgress);
+            return currentColor * ElementOpacity;
         }
     }
+
+    private float SunburstRotation => timeLeft * 0.005f;
 
     public void DrawInGame(SpriteBatch spriteBatch, Vector2 bottomAnchorPosition)
     {
         if (timeLeft <= 0) return;
 
         var fadeoutOffset = MathHelper.Lerp(30f, 0f, FadeoutProgress);
-        Vector2 screenCenter = new(Main.screenWidth / 2f, Main.screenHeight / 3f - fadeoutOffset);
+        Vector2 screenCenter = new(Main.screenWidth / 2f, Main.screenHeight / 4.5f - fadeoutOffset);
 
-        // Draw sunburst
-        var sunburstTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Sunburst").Value;
-        var rotation = SunburstRotation;
-        Vector2 origin = new(sunburstTexture.Width / 2f);
-        spriteBatch.Draw(
-            sunburstTexture,
-            screenCenter,
-            null,
-            TextColor * 0.2f,
-            rotation,
-            origin,
-            SunburstScale,
-            SpriteEffects.None,
-            0f
-        );
 
-        // Draw title and measure for positioning other elements
+
         var title = $"{completedMission.Name}";
-        var titleScale = TextScale * 0.75f;
+        var titleScale = UnifiedScale * 0.75f; // Use unified scale
         var titleSize = FontAssets.DeathText.Value.MeasureString(title) * titleScale;
-        var titlePos = screenCenter - titleSize / 2f; // Center alignment
+        var titlePos = screenCenter - titleSize / 2f;
 
-        // Draw accent texture
         var accentTexture = ModContent.Request<Texture2D>($"Reverie/Assets/Textures/UI/Missions/Accent").Value;
-        Vector2 accentOrigin = new(accentTexture.Width / 2f, 0); // Origin at top-center
-        Vector2 accentPosition = new(screenCenter.X, titlePos.Y - 20); // Under the title
-        float accentScale = (titleSize.X / accentTexture.Width) * 1f; // Scale to match title width
+        Vector2 accentOrigin = new(accentTexture.Width / 2f, 0);
+        Vector2 accentPosition = new(screenCenter.X, titlePos.Y);
 
         spriteBatch.Draw(
             accentTexture,
             accentPosition,
             null,
             TextColor * 0.8f,
-            0f, // No rotation
+            0f,
             accentOrigin,
-            1f, // Different X and Y scaling
+            UnifiedScale, // Use unified scale
             SpriteEffects.None,
             0f
         );
 
-        // Draw title text
         Utils.DrawBorderStringFourWay(
             spriteBatch,
             FontAssets.DeathText.Value,
             title,
-            titlePos.X,
-            titlePos.Y - 10,
+            titlePos.X + 4,
+            titlePos.Y - 30,
             TextColor,
-            Color.Black * TextOpacity,
+            Color.Black * ElementOpacity,
             Vector2.Zero,
             titleScale
         );
 
-        // Draw reward items
         DrawRewardItems(spriteBatch, screenCenter, titlePos.Y + titleSize.Y + 20);
+        spriteBatch.End();
+
+        var effect = ShaderLoader.GetShader("SunburstShader").Value;
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp,
+                          DepthStencilState.None, Main.Rasterizer, effect, Main.UIScaleMatrix);
+
+        if (effect != null)
+        {
+            effect.Parameters["uTime"]?.SetValue(SunburstRotation);
+            effect.Parameters["uScreenResolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
+            effect.Parameters["uSourceRect"]?.SetValue(new Vector4(0, 0, Main.screenWidth, Main.screenHeight));
+            effect.Parameters["uIntensity"]?.SetValue((TextColor.R / 255f) * 0.35f);
+            //effect.Parameters["uImage0"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin").Value);
+
+            Vector2 shaderCenter = new(
+                (screenCenter.X / Main.screenWidth) * 2f - 1f,
+                (screenCenter.Y / Main.screenHeight) * 2f - 1f
+            );
+            effect.Parameters["uCenter"]?.SetValue(shaderCenter);
+            effect.Parameters["uScale"]?.SetValue(UnifiedScale * 0.8f);
+            effect.Parameters["uRayCount"]?.SetValue(18f);
+        }
+
+        var noiseTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin").Value;
+        spriteBatch.Draw(noiseTexture, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White);
+        spriteBatch.End();
+
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
+                          DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
     }
 
     private void DrawRewardItems(SpriteBatch spriteBatch, Vector2 screenCenter, float yPosition)
     {
-        // Get rewards from mission
         var rewards = completedMission.Rewards;
         if (rewards == null || rewards.Count == 0) return;
 
-        // Calculate total width needed for all items
         const float ITEM_SPACING = 10f;
         const float ITEM_SIZE = 16f;
         float totalWidth = (rewards.Count * ITEM_SIZE) + ((rewards.Count - 1) * ITEM_SPACING);
 
-        // Start position (centered)
         Vector2 currentPos = new(screenCenter.X - totalWidth / 2f, yPosition);
 
-        // Draw each item
         foreach (var reward in rewards)
         {
-            // Get item texture
             Main.instance.LoadItem(reward.type);
             var itemTexture = TextureAssets.Item[reward.type].Value;
             Rectangle? sourceRect = null;
 
-            // If using item animation frames, get the correct frame
             if (Main.itemAnimations[reward.type] != null)
             {
                 Main.itemAnimations[reward.type].Update();
                 sourceRect = Main.itemAnimations[reward.type].GetFrame(itemTexture);
             }
 
-            // Calculate scale to fit in ITEM_SIZE
-            float scale = ITEM_SIZE / Math.Max(itemTexture.Width, itemTexture.Height) * 1.25f;
+            float scale = (ITEM_SIZE / Math.Max(itemTexture.Width, itemTexture.Height) * 1.25f) * UnifiedScale; // Apply unified scale
 
-            // Calculate origin (center of texture)
             Vector2 origin = sourceRect.HasValue
                 ? new Vector2(sourceRect.Value.Width / 2f, sourceRect.Value.Height / 2f)
                 : new Vector2(itemTexture.Width / 2f, itemTexture.Height / 2f);
 
-            // Draw item with centered origin
+            // Items start white and fade to normal color like text
+            var itemColor = Color.Lerp(Color.White, Color.White, AnimationProgress) * ElementOpacity;
+
             spriteBatch.Draw(
                 itemTexture,
                 currentPos + new Vector2(ITEM_SIZE / 2f),
                 sourceRect,
-                Color.White * TextOpacity,
+                itemColor,
                 0f,
                 origin,
                 scale,
@@ -183,11 +166,10 @@ public class MissionCompleteNotification(Mission mission) : IInGameNotification
                 0f
             );
 
-            // Draw stack count if more than 1
             if (reward.stack > 1)
             {
                 var stackText = reward.stack.ToString();
-                var stackScale = 0.8f;
+                var stackScale = 0.8f * UnifiedScale; // Apply unified scale
                 var stackSize = FontAssets.ItemStack.Value.MeasureString(stackText) * stackScale;
                 var stackPos = currentPos + new Vector2(ITEM_SIZE - stackSize.X / 2f, ITEM_SIZE - stackSize.Y / 2f);
 
@@ -197,14 +179,13 @@ public class MissionCompleteNotification(Mission mission) : IInGameNotification
                     stackText,
                     stackPos.X,
                     stackPos.Y,
-                    Color.White * TextOpacity,
-                    Color.Black * TextOpacity,
+                    TextColor, // Use same color logic as main text
+                    Color.Black * ElementOpacity,
                     Vector2.Zero,
                     stackScale
                 );
             }
 
-            // Move to next position
             currentPos.X += ITEM_SIZE + ITEM_SPACING;
         }
     }

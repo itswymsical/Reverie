@@ -35,7 +35,6 @@ public class WorldGenSystem : ModSystem
         if (spawnIndex != 1)
         {
             tasks.Insert(spawnIndex + 1, new TemperateForestPass());
-            tasks.Insert(spawnIndex + 2, new TemperatePlantPass());
         }
 
         var decorIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Spreading Grass"));
