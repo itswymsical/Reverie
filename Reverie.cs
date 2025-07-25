@@ -102,15 +102,10 @@ public sealed partial class Reverie : Mod
         int iconWidth = (int)size.X;
         int iconHeight = (int)size.Y;
 
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.DepthRead, Main.Rasterizer);
-        spriteBatch.Draw(border, new Rectangle(0, 0, iconWidth, iconHeight), Color.White);
-        spriteBatch.End();
-
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.None, Main.Rasterizer);
 
-        float panSpeed = .009f;
-        float offsetX = (float)(Main.time * panSpeed) % background.Width;
-        float offsetY = (float)(Main.time * panSpeed * 0.3f) % background.Height;
+        float panSpeed = .3f;
+        float offsetX = (float)(Main.timeForVisualEffects * panSpeed) % background.Width;
 
         Rectangle sourceRect = new Rectangle(
             (int)offsetX,
@@ -129,7 +124,7 @@ public sealed partial class Reverie : Mod
 
         if (starEffect != null)
         {
-            starEffect.Parameters["uTime"]?.SetValue((float)(Main.time * 0.0003f));
+            starEffect.Parameters["uTime"]?.SetValue((float)(Main.timeForVisualEffects * 0.009f));
 
             starEffect.Parameters["uScreenResolution"]?.SetValue(size);
             starEffect.Parameters["uSourceRect"]?.SetValue(new Vector4(0, 0, size.X, size.Y));
@@ -150,6 +145,10 @@ public sealed partial class Reverie : Mod
         Rectangle fullRect = new Rectangle(0, 0, iconWidth, iconHeight);
         spriteBatch.Draw(berlin, fullRect, Color.White);
         spriteBatch.Draw(benis, fullRect, Color.White);
+        spriteBatch.End();
+
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.DepthRead, Main.Rasterizer);
+        spriteBatch.Draw(border, new Rectangle(0, 0, iconWidth, iconHeight), Color.White);
         spriteBatch.End();
     }
 

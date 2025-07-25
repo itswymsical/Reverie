@@ -541,7 +541,7 @@ public partial class ReverieMenu : ModMenu
 
         if (effect != null)
         {
-            effect.Parameters["uTime"]?.SetValue(galaxyTime * 0.19f);
+            effect.Parameters["uTime"]?.SetValue((float)(Main.timeForVisualEffects * 0.005f));
 
             effect.Parameters["uScreenResolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
 
