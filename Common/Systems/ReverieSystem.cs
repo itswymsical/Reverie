@@ -13,6 +13,7 @@ public class ReverieSystem : ModSystem
     public static ReverieSystem Instance => ModContent.GetInstance<ReverieSystem>();
     public static ModKeybind FFDialogueKeybind { get; private set; }
     public static ModKeybind SkipCutsceneKeybind { get; private set; }
+
     public override void Load()
     {
         FFDialogueKeybind = KeybindLoader.RegisterKeybind(Mod, "Fast-Forward Dialogue", "V");
@@ -38,7 +39,22 @@ public class ReverieSystem : ModSystem
         }
         HarvestNotificationManager.UpdateNotifications();
     }
+    public override void AddRecipes()
+    {
+        Recipe iceBlade = Recipe.Create(ItemID.IceBlade);
+        iceBlade.AddIngredient(ItemID.IceBlock, 30)
+            .AddIngredient(ItemID.FallenStar, 4)
+            .AddCondition(Condition.InSnow)
+            .AddTile(TileID.IceMachine)
+            .Register();
 
+        Recipe fertilizer = Recipe.Create(ItemID.Fertilizer);
+        fertilizer.AddIngredient(ItemID.PoopBlock, 3)
+            .AddRecipeGroup(nameof(ItemID.Bass))
+            .AddRecipeGroup(nameof(ItemID.DirtBlock), 3)
+            .AddTile(TileID.WorkBenches)
+            .Register();
+    }
     public override void AddRecipeGroups()
     {
         RecipeGroup CopperBarRecipeGroup = new(() => $"{Language.GetTextValue("LegacyMisc.37")} {Lang.GetItemNameValue(ItemID.CopperBar)}",

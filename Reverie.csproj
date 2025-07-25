@@ -28,6 +28,9 @@
 
 	<!-- References -->
 	<ItemGroup>
+	  <Reference Include="AnimatedModIconLib">
+	    <HintPath>..\TrelamiumII\lib\AnimatedModIconLib.dll</HintPath>
+	  </Reference>
 	  <Reference Include="StructureHelper">
 	    <HintPath>lib\StructureHelper2.dll</HintPath>
 	  </Reference>

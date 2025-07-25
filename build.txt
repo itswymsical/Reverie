@@ -1,4 +1,5 @@
 ﻿displayName = Reverie
 author = wymsical
 version = 0.1
-modReferences =  StructureHelper, SubworldLibrary
+modReferences = SubworldLibrary
+dllReferences = AnimatedModIconLib, StructureHelper

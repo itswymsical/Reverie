@@ -1,7 +1,10 @@
 ﻿
+using AnimatedModIconLib.Core;
+using ReLogic.Content;
 using Reverie.Common.Players;
 using Reverie.Common.Systems;
 using Reverie.Core.Graphics.Interfaces;
+using Reverie.Core.Loaders;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -67,14 +70,8 @@ public sealed partial class Reverie : Mod
 
     private List<IOrderedLoadable> loadCache;
     public Reverie() => Instance = this;
-
     public override void Load()
     {
-        if (!Main.dedServ)
-        {
-            Filters.Scene["ScreenRipple"] = new Filter(new ScreenShaderData("FilterMiniTower").UseImage("Images/Misc/Perlin").UseImage("Images/Misc/noise").UseImage("Images/Misc/Perlin").UseImage("Images/Misc/noise"), EffectPriority.VeryHigh);
-            Filters.Scene["ScreenRipple"].Load();
-        }
 
         loadCache = [];
 
@@ -94,10 +91,71 @@ public sealed partial class Reverie : Mod
             loadCache[k].Load();
 
         }
+        this.RegisterAnimatedModIcon(DrawModIcon);
+    }
+
+    public void DrawModIcon(SpriteBatch spriteBatch, Vector2 size)
+    {
+        Texture2D background = ModContent.Request<Texture2D>(LOGO_DIRECTORY + "nebula").Value;
+        Texture2D border = ModContent.Request<Texture2D>(LOGO_DIRECTORY + "icon").Value;
+
+        int iconWidth = (int)size.X;
+        int iconHeight = (int)size.Y;
+
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.DepthRead, Main.Rasterizer);
+        spriteBatch.Draw(border, new Rectangle(0, 0, iconWidth, iconHeight), Color.White);
+        spriteBatch.End();
+
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.None, Main.Rasterizer);
+
+        float panSpeed = .009f;
+        float offsetX = (float)(Main.time * panSpeed) % background.Width;
+        float offsetY = (float)(Main.time * panSpeed * 0.3f) % background.Height;
+
+        Rectangle sourceRect = new Rectangle(
+            (int)offsetX,
+            0,
+            iconWidth,
+            iconHeight
+        );
+
+        Rectangle destRect = new Rectangle(0, 0, iconWidth, iconHeight);
+        spriteBatch.Draw(background, destRect, sourceRect, Color.White);
+        spriteBatch.End();
+
+        var starEffect = ShaderLoader.GetShader("SunburstShader").Value;
+
+        spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, starEffect, Main.UIScaleMatrix);
+
+        if (starEffect != null)
+        {
+            starEffect.Parameters["uTime"]?.SetValue((float)(Main.time * 0.0003f));
+
+            starEffect.Parameters["uScreenResolution"]?.SetValue(size);
+            starEffect.Parameters["uSourceRect"]?.SetValue(new Vector4(0, 0, size.X, size.Y));
+
+            starEffect.Parameters["uIntensity"]?.SetValue(2.5f);
+            starEffect.Parameters["uRayCount"]?.SetValue(5f);
+
+            starEffect.Parameters["uCenter"]?.SetValue(Vector2.Zero);
+            starEffect.Parameters["uScale"]?.SetValue(1f);
+
+            starEffect.Parameters["uImage0"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin").Value);
+
+            starEffect.CurrentTechnique.Passes[0].Apply();
+        }
+
+        var berlin = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin").Value;
+        var benis = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail").Value;
+        Rectangle fullRect = new Rectangle(0, 0, iconWidth, iconHeight);
+        spriteBatch.Draw(berlin, fullRect, Color.White);
+        spriteBatch.Draw(benis, fullRect, Color.White);
+        spriteBatch.End();
     }
 
     public override void Unload()
     {
+
         if (loadCache != null)
         {
             foreach (IOrderedLoadable loadable in loadCache)
@@ -116,26 +174,10 @@ public sealed partial class Reverie : Mod
         {
             Instance ??= null;
         }
+
+        AnimatedModIconHelper.UnloadAnimatedModIcon();
     }
 
-    [Obsolete]
-    public override void AddRecipes()/* tModPorter Note: Removed. Use ModSystem.AddRecipes */
-    {
-
-        Recipe iceBlade = Recipe.Create(ItemID.IceBlade);
-        iceBlade.AddIngredient(ItemID.IceBlock, 30)
-            .AddIngredient(ItemID.FallenStar, 4)
-            .AddCondition(Condition.InSnow)
-            .AddTile(TileID.IceMachine)
-            .Register();
-
-        Recipe fertilizer = Recipe.Create(ItemID.Fertilizer);
-        fertilizer.AddIngredient(ItemID.PoopBlock, 3)
-            .AddRecipeGroup(nameof(ItemID.Bass))
-            .AddRecipeGroup(nameof(ItemID.DirtBlock), 3)
-            .AddTile(TileID.WorkBenches)
-            .Register();
-    }
     public enum MessageType : byte
     {
         AddExperience,

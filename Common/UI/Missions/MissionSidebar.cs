@@ -32,7 +32,7 @@ public class MissionSidebar
     private const float ICON_SCALE = 0.67f;
     private const float HOVER_AMPLITUDE = 1f;
     private const float HOVER_FREQUENCY = 0.07f;
-    private const int OBJECTIVE_Y_SPACING = 13;
+    private const int OBJECTIVE_Y_SPACING = 12;
     private const int AVAILABLE_MISSION_Y_SPACING = 22;
     #endregion
 
