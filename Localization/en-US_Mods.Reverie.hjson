@@ -422,6 +422,26 @@ Items: {
 			Toss to grow Indigo Caps
 			'''
 	}
+
+	BirchBathtubItem: {
+		DisplayName: Birch Bathtub
+		Tooltip: ""
+	}
+
+	BirchCandelabraItem: {
+		DisplayName: Birch Candelabra
+		Tooltip: ""
+	}
+
+	BirchChestItem: {
+		DisplayName: Birch Chest
+		Tooltip: ""
+	}
+
+	BirchPianoItem: {
+		DisplayName: Birch Piano
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
@@ -687,7 +707,10 @@ Keybinds: {
 	"Skip Cutscene.DisplayName": Skip Cutscene
 }
 
-Tiles.MagnoliaTile.MapEntry: Magnolia Tile
+Tiles: {
+	MagnoliaTile.MapEntry: Magnolia
+	BirchChestTile.MapEntry: Birch Wood Chest
+}
 
 Buffs: {
 	BarkskinPotionBuff: {
@@ -697,6 +720,6 @@ Buffs: {
 
 	WaterleafSlowness: {
 		DisplayName: Waterleaf Slowness
-		Description: Mods.Reverie.Buffs.WaterleafSlowness.Description
+		Description: You are drenched in water, slowing your movement
 	}
 }

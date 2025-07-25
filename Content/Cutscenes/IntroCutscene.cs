@@ -36,6 +36,7 @@ public class IntroCutscene : Cutscene
 
         base.Start();
         SetMusic(MusicLoader.GetMusicSlot($"{CUTSCENE_MUSIC_DIRECTORY}DawnofReverie"), MusicFadeMode.Instant);
+        UsesLetterbox();
     }
 
     protected override void OnCutsceneStart()
@@ -47,7 +48,7 @@ public class IntroCutscene : Cutscene
         var startPos = originalPlayerPosition - new Vector2(0, panDistance);
         CameraSystem.MoveCameraOut(1, startPos);
         ControlsOFF();
-
+        EnableLetterbox = true;
         InvisON();
     }
 
@@ -172,7 +173,7 @@ public class IntroCutscene : Cutscene
             Main.LocalPlayer.velocity = Vector2.Zero;
         }
 
-        DialogueManager.Instance.StartDialogue("JourneysBegin.Crash", 4, zoomIn: true, letterbox: true, music: MusicID.AltOverworldDay);
+        DialogueManager.Instance.StartDialogue("JourneysBegin.Crash", 4, zoomIn: true, letterbox: false, music: MusicID.AltOverworldDay - 1);
         MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
         player.UnlockMission(MissionID.JourneysBegin);
     }

@@ -1,7 +1,12 @@
-﻿using Reverie.Content.Dusts;
+﻿/// <summary>
+/// Some code structure adapted from Spirit Reforged: https://github.com/GabeHasWon/SpiritReforged/tree/master/Common/TileCommon/PresetTiles/Furniture
+/// </summary>
+using Reverie.Content.Dusts;
+using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.GameContent;
+using Terraria.GameContent.Drawing;
 using Terraria.GameContent.ObjectInteractions;
 using Terraria.Localization;
 using Terraria.ObjectData;
@@ -322,33 +327,30 @@ public class BirchSinkTile : ModTile
 
 public class BirchSofaTile : ModTile
 {
+    private static bool WithinRange(int i, int j, Player player) => player.IsWithinSnappngRangeToTile(i, j, PlayerSittingHelper.ChairSittingMaxDistance);
+
     public override void SetStaticDefaults()
     {
-        Main.tileSolidTop[Type] = false;
+        Main.tileFrameImportant[Type] = true;
         Main.tileNoAttach[Type] = true;
         Main.tileLavaDeath[Type] = true;
-        Main.tileFrameImportant[Type] = true;
-        TileID.Sets.DisableSmartCursor[Type] = true;
-        TileID.Sets.IgnoredByNpcStepUp[Type] = true;
 
-        DustType = ModContent.DustType<BirchDust>();
-        AdjTiles = [TileID.Benches];
-
-        TileObjectData.newTile.CopyFrom(TileObjectData.Style3x2);
-        TileObjectData.newTile.StyleHorizontal = true;
+        TileObjectData.newTile.CopyFrom(TileObjectData.Style2x2);
+        TileObjectData.newTile.Origin = new Point16(1, 1);
+        TileObjectData.newTile.Width = 3;
+        TileObjectData.newTile.Height = 2;
         TileObjectData.newTile.CoordinateHeights = [16, 18];
         TileObjectData.addTile(Type);
+        TileID.Sets.CanBeSatOnForNPCs[Type] = true;
+        TileID.Sets.CanBeSatOnForPlayers[Type] = true;
+        TileID.Sets.DisableSmartCursor[Type] = true;
+        TileID.Sets.HasOutlines[Type] = true;
 
         AddToArray(ref TileID.Sets.RoomNeeds.CountsAsChair);
-
-        AddMapEntry(new Color(200, 200, 200), Language.GetText("ItemName.Bench"));
+        AddMapEntry(new Color(100, 100, 60), Language.GetText("ItemName.Bench"));
+        AdjTiles = [TileID.Benches];
+        DustType = -1;
     }
-
-    public override void NumDust(int x, int y, bool fail, ref int num)
-    {
-        num = fail ? 1 : 3;
-    }
-    private static bool WithinRange(int i, int j, Player player) => player.IsWithinSnappngRangeToTile(i, j, PlayerSittingHelper.ChairSittingMaxDistance);
 
     public override bool HasSmartInteract(int i, int j, SmartInteractScanSettings settings) => WithinRange(i, j, settings.player);
 
@@ -558,3 +560,375 @@ public class BirchBedTile : ModTile
     }
 }
 
+public class BirchBookcaseTile : ModTile
+{
+    public override void SetStaticDefaults()
+    {
+        Main.tileFrameImportant[Type] = true;
+        Main.tileNoAttach[Type] = true;
+        Main.tileLavaDeath[Type] = true;
+
+        TileObjectData.newTile.CopyFrom(TileObjectData.Style3x4);
+        TileObjectData.newTile.Origin = new Point16(2, 3);
+        TileObjectData.newTile.CoordinateHeights = [16, 16, 16, 18];
+        TileObjectData.addTile(Type);
+
+        AddToArray(ref TileID.Sets.RoomNeeds.CountsAsTable);
+        AddMapEntry(new Color(100, 100, 60), Language.GetText("ItemName.Bookcase"));
+        AdjTiles = [TileID.Bookcases];
+
+        DustType = ModContent.DustType<BirchDust>();
+    }
+}
+
+public class BirchBathtubTile : ModTile
+{
+    public override void SetStaticDefaults()
+    {
+        Main.tileSolid[Type] = false;
+        Main.tileNoAttach[Type] = true;
+        Main.tileLavaDeath[Type] = false;
+        Main.tileFrameImportant[Type] = true;
+        Main.tileLighted[Type] = true;
+
+        TileObjectData.newTile.CopyFrom(TileObjectData.Style4x2);
+        TileObjectData.newTile.StyleHorizontal = true;
+        TileObjectData.newTile.Origin = new Point16(1, 1);
+        TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidWithTop | AnchorType.SolidTile | AnchorType.Table, TileObjectData.newTile.Width, 0);
+        TileObjectData.newTile.CoordinateHeights = [16, 18];
+        TileObjectData.newTile.Direction = TileObjectDirection.PlaceLeft;
+        TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
+        TileObjectData.newAlternate.Direction = TileObjectDirection.PlaceRight;
+        TileObjectData.addAlternate(1);
+        TileObjectData.addTile(Type);
+
+        AddToArray(ref TileID.Sets.RoomNeeds.CountsAsTable);
+        AddMapEntry(new Color(100, 100, 60), Language.GetText("ItemName.Bathtub"));
+        AdjTiles = [TileID.Bathtubs];
+
+        DustType = ModContent.DustType<BirchDust>();
+    }
+}
+
+public class BirchPianoTile : ModTile
+{
+    public override void SetStaticDefaults()
+    {
+        Main.tileFrameImportant[Type] = true;
+        Main.tileNoAttach[Type] = true;
+        Main.tileLavaDeath[Type] = true;
+
+        TileObjectData.newTile.CopyFrom(TileObjectData.Style3x2);
+        TileObjectData.newTile.Origin = new Point16(2, 1);
+        TileObjectData.newTile.CoordinateHeights = [16, 16];
+        TileObjectData.addTile(Type);
+
+        AddToArray(ref TileID.Sets.RoomNeeds.CountsAsTable);
+        AddMapEntry(new Color(100, 100, 60), Language.GetText("ItemName.Piano"));
+        AdjTiles = [TileID.Pianos];
+
+        DustType = ModContent.DustType<BirchDust>();
+    }
+}
+
+public class BirchCandelabraTile : ModTile
+{
+    public override void SetStaticDefaults()
+    {
+        Main.tileFrameImportant[Type] = true;
+        Main.tileNoAttach[Type] = true;
+        Main.tileLighted[Type] = true;
+        Main.tileLavaDeath[Type] = true;
+
+        TileObjectData.newTile.CopyFrom(TileObjectData.Style2x2);
+        TileObjectData.newTile.Origin = new Point16(1, 1);
+        TileObjectData.newTile.CoordinateHeights = [16, 18];
+        TileObjectData.addTile(Type);
+
+        AddToArray(ref TileID.Sets.RoomNeeds.CountsAsTorch);
+        AddMapEntry(new Color(100, 100, 60), Language.GetText("ItemName.Candelabra"));
+        AdjTiles = [TileID.Candelabras];
+        DustType = -1;
+    }
+
+    public override void HitWire(int i, int j)
+    {
+        var data = TileObjectData.GetTileData(Type, 0);
+        int width = data.CoordinateFullWidth;
+
+        //Move to the multitile's top left
+        (i, j) = (i - Framing.GetTileSafely(i, j).TileFrameY / 18, j - Framing.GetTileSafely(i, j).TileFrameX % width / 18);
+
+        for (int y = 0; y < 2; y++)
+        {
+            for (int x = 0; x < 2; x++)
+            {
+                var tile = Framing.GetTileSafely(i + x, j + y);
+                tile.TileFrameX += (short)((tile.TileFrameX < width) ? width : -width);
+
+                Wiring.SkipWire(i + x, j + y);
+            }
+        }
+
+        NetMessage.SendTileSquare(-1, i, j, data.Width, data.Height);
+    }
+
+    public override void ModifyLight(int i, int j, ref float r, ref float g, ref float b)
+    {
+        var tile = Framing.GetTileSafely(i, j);
+        var color = Color.Orange;
+
+        if (tile.TileFrameX == 18 && tile.TileFrameY == 0)
+            (r, g, b) = (color.R / 255f, color.G / 255f, color.B / 255f);
+    }
+
+    //public virtual bool BlurGlowmask => true;
+
+    //public override void PostDraw(int i, int j, SpriteBatch spriteBatch)
+    //{
+    //    var tile = Framing.GetTileSafely(i, j);
+    //    if (!TileDrawing.IsVisible(tile))
+    //        return;
+
+    //    var texture = GlowmaskTile.TileIdToGlowmask[Type].Glowmask.Value;
+    //    var data = TileObjectData.GetTileData(tile);
+    //    int height = data.CoordinateHeights[tile.TileFrameY / data.CoordinateFullHeight];
+    //    var source = new Rectangle(tile.TileFrameX, tile.TileFrameY, 16, height);
+
+    //    if (BlurGlowmask)
+    //    {
+    //        ulong randSeed = Main.TileFrameSeed ^ (ulong)((long)j << 32 | (uint)i);
+    //        for (int c = 0; c < 7; c++) //Draw our glowmask with a randomized position
+    //        {
+    //            float shakeX = Utils.RandomInt(ref randSeed, -10, 11) * 0.15f;
+    //            float shakeY = Utils.RandomInt(ref randSeed, -10, 1) * 0.35f;
+    //            var offset = new Vector2(shakeX, shakeY);
+
+    //            var position = new Vector2(i, j) * 16 - Main.screenPosition + offset + TileExtensions.TileOffset;
+    //            spriteBatch.Draw(texture, position, source, new Color(100, 100, 100, 0), 0, Vector2.Zero, 1, SpriteEffects.None, 0f);
+    //        }
+    //    }
+    //    else
+    //    {
+    //        var position = new Vector2(i, j) * 16 - Main.screenPosition + TileExtensions.TileOffset;
+    //        spriteBatch.Draw(texture, position, source, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
+    //    }
+    //}
+}
+
+public class BirchChestTile : ModTile
+{
+    public override void SetStaticDefaults()
+    {
+        Main.tileContainer[Type] = true;
+        Main.tileFrameImportant[Type] = true;
+        Main.tileNoAttach[Type] = true;
+        TileID.Sets.HasOutlines[Type] = true;
+        TileID.Sets.BasicChest[Type] = true;
+        TileID.Sets.DisableSmartCursor[Type] = true;
+        TileID.Sets.AvoidedByNPCs[Type] = true;
+        TileID.Sets.InteractibleByNPCs[Type] = true;
+        TileID.Sets.IsAContainer[Type] = true;
+        //TileID.Sets.FriendlyFairyCanLureTo[Type] = true;
+        TileID.Sets.GeneralPlacementTiles[Type] = false;
+
+        DustType = ModContent.DustType<BirchDust>();
+        AdjTiles = [TileID.Containers];
+
+        AddMapEntry(new Color(200, 200, 200), this.GetLocalization("MapEntry"), MapChestName);
+
+        RegisterItemDrop(ModContent.ItemType<BirchChestItem>());
+        RegisterItemDrop(ItemID.Chest);
+
+        TileObjectData.newTile.CopyFrom(TileObjectData.Style2x2);
+        TileObjectData.newTile.Origin = new Point16(0, 1);
+        TileObjectData.newTile.CoordinateHeights = new[] { 16, 18 };
+        TileObjectData.newTile.HookCheckIfCanPlace = new PlacementHook(Chest.FindEmptyChest, -1, 0, true);
+        TileObjectData.newTile.HookPostPlaceMyPlayer = new PlacementHook(Chest.AfterPlacement_Hook, -1, 0, false);
+        TileObjectData.newTile.AnchorInvalidTiles = new int[] {
+            TileID.MagicalIceBlock,
+            TileID.Boulder,
+            TileID.BouncyBoulder,
+            TileID.LifeCrystalBoulder,
+            TileID.RollingCactus
+        };
+        TileObjectData.newTile.StyleHorizontal = true;
+        TileObjectData.newTile.LavaDeath = false;
+        TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile | AnchorType.SolidWithTop | AnchorType.SolidSide, TileObjectData.newTile.Width, 0);
+        TileObjectData.addTile(Type);
+    }
+
+    public override ushort GetMapOption(int i, int j)
+    {
+        return 0;
+    }
+
+    public override LocalizedText DefaultContainerName(int frameX, int frameY)
+    {
+        return this.GetLocalization("MapEntry");
+    }
+
+    public override bool HasSmartInteract(int i, int j, SmartInteractScanSettings settings)
+    {
+        return true;
+    }
+
+    public static string MapChestName(string name, int i, int j)
+    {
+        int left = i;
+        int top = j;
+        Tile tile = Main.tile[i, j];
+        if (tile.TileFrameX % 36 != 0)
+        {
+            left--;
+        }
+
+        if (tile.TileFrameY != 0)
+        {
+            top--;
+        }
+
+        int chest = Chest.FindChest(left, top);
+        if (chest < 0)
+        {
+            return Language.GetTextValue("LegacyChestType.0");
+        }
+
+        if (Main.chest[chest].name == "")
+        {
+            return name;
+        }
+
+        return name + ": " + Main.chest[chest].name;
+    }
+
+    public override void NumDust(int i, int j, bool fail, ref int num)
+    {
+        num = 1;
+    }
+
+    public override void KillMultiTile(int i, int j, int frameX, int frameY)
+    {
+        Chest.DestroyChest(i, j);
+    }
+
+    public override bool RightClick(int i, int j)
+    {
+        Player player = Main.LocalPlayer;
+        Tile tile = Main.tile[i, j];
+        Main.mouseRightRelease = false;
+        int left = i;
+        int top = j;
+        if (tile.TileFrameX % 36 != 0)
+        {
+            left--;
+        }
+
+        if (tile.TileFrameY != 0)
+        {
+            top--;
+        }
+
+        player.CloseSign();
+        player.SetTalkNPC(-1);
+        Main.npcChatCornerItem = 0;
+        Main.npcChatText = "";
+        if (Main.editChest)
+        {
+            SoundEngine.PlaySound(SoundID.MenuTick);
+            Main.editChest = false;
+            Main.npcChatText = string.Empty;
+        }
+
+        if (player.editedChestName)
+        {
+            NetMessage.SendData(MessageID.SyncPlayerChest, -1, -1, NetworkText.FromLiteral(Main.chest[player.chest].name), player.chest, 1f);
+            player.editedChestName = false;
+        }
+
+        if (Main.netMode == NetmodeID.MultiplayerClient)
+        {
+            if (left == player.chestX && top == player.chestY && player.chest != -1)
+            {
+                player.chest = -1;
+                Recipe.FindRecipes();
+                SoundEngine.PlaySound(SoundID.MenuClose);
+            }
+            else
+            {
+                NetMessage.SendData(MessageID.RequestChestOpen, -1, -1, null, left, top);
+                Main.stackSplit = 600;
+            }
+        }
+        else
+        {
+            int chest = Chest.FindChest(left, top);
+            if (chest != -1)
+            {
+                Main.stackSplit = 600;
+                if (chest == player.chest)
+                {
+                    player.chest = -1;
+                    SoundEngine.PlaySound(SoundID.MenuClose);
+                }
+                else
+                {
+                    SoundEngine.PlaySound(player.chest < 0 ? SoundID.MenuOpen : SoundID.MenuTick);
+                    player.OpenChest(left, top, chest);
+                }
+
+                Recipe.FindRecipes();
+            }
+        }
+
+        return true;
+    }
+
+    public override void MouseOver(int i, int j)
+    {
+        Player player = Main.LocalPlayer;
+        Tile tile = Main.tile[i, j];
+        int left = i;
+        int top = j;
+        if (tile.TileFrameX % 36 != 0)
+        {
+            left--;
+        }
+
+        if (tile.TileFrameY != 0)
+        {
+            top--;
+        }
+
+        int chest = Chest.FindChest(left, top);
+        player.cursorItemIconID = -1;
+        if (chest < 0)
+        {
+            player.cursorItemIconText = Language.GetTextValue("LegacyChestType.0");
+        }
+        else
+        {
+            string defaultName = TileLoader.DefaultContainerName(tile.TileType, tile.TileFrameX, tile.TileFrameY);
+            player.cursorItemIconText = Main.chest[chest].name.Length > 0 ? Main.chest[chest].name : defaultName;
+            if (player.cursorItemIconText == defaultName)
+            {
+                player.cursorItemIconID = ModContent.ItemType<BirchChestItem>();
+                player.cursorItemIconText = "";
+            }
+        }
+
+        player.noThrow = 2;
+        player.cursorItemIconEnabled = true;
+    }
+
+    public override void MouseOverFar(int i, int j)
+    {
+        MouseOver(i, j);
+        Player player = Main.LocalPlayer;
+        if (player.cursorItemIconText == "")
+        {
+            player.cursorItemIconEnabled = false;
+            player.cursorItemIconID = 0;
+        }
+    }
+}

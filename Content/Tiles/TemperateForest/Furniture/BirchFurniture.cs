@@ -139,19 +139,73 @@ public class BirchCandleItem : ModItem
     }
 }
 
+public class BirchCandelabraItem : ModItem
+{
+    public override void SetDefaults()
+    {
+        base.SetDefaults();
+        Item.value = Item.sellPrice(silver: 3);
+        Item.DefaultToPlaceableTile(ModContent.TileType<BirchCandelabraTile>());
+    }
+    public override void AddRecipes()
+    {
+        CreateRecipe()
+            .AddIngredient<BirchWoodItem>(5)
+            .AddIngredient(ItemID.Torch, 5)
+            .AddTile(TileID.WorkBenches)
+            .Register();
+    }
+}
+
 public class BirchBookcaseItem : ModItem
 {
     public override void SetDefaults()
     {
         base.SetDefaults();
         Item.value = 150;
-        //Item.DefaultToPlaceableTile(ModContent.TileType<BirchTableTile>());
+        Item.DefaultToPlaceableTile(ModContent.TileType<BirchBookcaseTile>());
     }
     public override void AddRecipes()
     {
         CreateRecipe()
             .AddIngredient<BirchWoodItem>(20)
             .AddIngredient(ItemID.Book, 10)
+            .AddTile(TileID.Sawmill)
+            .Register();
+    }
+}
+
+public class BirchBathtubItem : ModItem
+{
+    public override void SetDefaults()
+    {
+        base.SetDefaults();
+        Item.value = 150;
+        Item.DefaultToPlaceableTile(ModContent.TileType<BirchBathtubTile>());
+    }
+    public override void AddRecipes()
+    {
+        CreateRecipe()
+            .AddIngredient<BirchWoodItem>(14)
+            .AddTile(TileID.Sawmill)
+            .Register();
+    }
+}
+
+public class BirchPianoItem : ModItem
+{
+    public override void SetDefaults()
+    {
+        base.SetDefaults();
+        Item.value = 150;
+        Item.DefaultToPlaceableTile(ModContent.TileType<BirchPianoTile>());
+    }
+    public override void AddRecipes()
+    {
+        CreateRecipe()
+            .AddIngredient(ItemID.Bone, 4)
+            .AddIngredient<BirchWoodItem>(15)
+            .AddIngredient(ItemID.Book)
             .AddTile(TileID.Sawmill)
             .Register();
     }
@@ -172,6 +226,24 @@ public class BirchClockItem : ModItem
             .AddIngredient(ItemID.Glass, 6)
             .AddRecipeGroup(RecipeGroupID.IronBar, 3)
             .AddTile(TileID.Sawmill)
+            .Register();
+    }
+}
+
+public class BirchChestItem : ModItem
+{
+    public override void SetDefaults()
+    {
+        base.SetDefaults();
+        Item.value = Item.sellPrice(silver: 1);
+        Item.DefaultToPlaceableTile(ModContent.TileType<BirchChestTile>());
+    }
+    public override void AddRecipes()
+    {
+        CreateRecipe()
+            .AddIngredient<BirchWoodItem>(8)
+            .AddRecipeGroup(RecipeGroupID.IronBar, 2)
+            .AddTile(TileID.WorkBenches)
             .Register();
     }
 }

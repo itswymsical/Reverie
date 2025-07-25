@@ -13,6 +13,7 @@ public class SandHazeDust : ModDust
         dust.frame = new((Main.rand.Next(0, 1) == 0) ? 0 : 250, 0, 250, 115);
         dust.alpha = 255;
         dust.fadeIn = 0f;
+        //dust.color = new Color(238, 213, 128);
     }
 
     public override bool Update(Dust dust)
