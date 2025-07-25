@@ -9,11 +9,11 @@ using Terraria.UI;
 
 namespace Reverie.Common.UI.Missions;
 
-public class MissionNotification : IInGameNotification
+public class MissionSidebar
 {
     #region Constants
-    private const float FADE_IN_SPEED = 0.03f;
-    private const float FADE_OUT_SPEED = 0.02f;
+    private const float FADE_IN_SPEED = 0.015f;
+    private const float FADE_OUT_SPEED = 0.015f;
     private const float HOVER_FADE_SPEED = 0.1f;
 
     private const string EMPTY_CHECKBOX = "☐";
@@ -73,7 +73,7 @@ public class MissionNotification : IInGameNotification
     #endregion
 
     #region Constructor
-    public MissionNotification(Mission mission)
+    public MissionSidebar(Mission mission)
     {
         currentMission = mission;
         LoadTextures();
@@ -811,4 +811,52 @@ public class MissionNotification : IInGameNotification
         public int PosY;
     }
     #endregion
+}
+
+public class MissionSidebarManager : ModSystem
+{
+    public static MissionSidebarManager Instance { get; set; }
+    public MissionSidebarManager() => Instance = this;
+
+    private MissionSidebar currentNotification;
+
+    public override void Unload()
+    {
+        if (!Main.dedServ)
+        {
+            Instance = null;
+        }
+        currentNotification = null;
+    }
+
+    public void SetNotification(MissionSidebar notification)
+    {
+        currentNotification = notification;
+    }
+
+    public void ClearNotification()
+    {
+        currentNotification = null;
+    }
+
+    public override void PostUpdateEverything()
+    {
+        currentNotification?.Update();
+    }
+
+    public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
+    {
+        int mapIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Map / Minimap"));
+        if (mapIndex != -1)
+        {
+            layers.Insert(mapIndex + 1, new LegacyGameInterfaceLayer(
+                "Reverie: Mission Notification",
+                delegate {
+                    currentNotification?.DrawInGame(Main.spriteBatch, Vector2.Zero);
+                    return true;
+                },
+                InterfaceScaleType.UI)
+            );
+        }
+    }
 }

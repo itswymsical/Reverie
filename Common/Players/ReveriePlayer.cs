@@ -43,12 +43,13 @@ public class ReveriePlayer : ModPlayer
 
             if (currentMission != null)
             {
-                InGameNotificationsTracker.AddNotification(new MissionNotification(currentMission));
+                MissionSidebarManager.Instance.SetNotification(new MissionSidebar(currentMission));
                 notificationExists = true;
             }
         }
         else if (!hasMissions)
         {
+            MissionSidebarManager.Instance.ClearNotification();
             notificationExists = false;
         }
 
