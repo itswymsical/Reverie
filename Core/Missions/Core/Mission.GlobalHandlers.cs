@@ -14,11 +14,13 @@ public class ObjectiveEventItem : GlobalItem
     public delegate void ItemPickupHandler(Item item, Player player);
     public delegate void ItemUpdateHandler(Item item, Player player);
     public delegate void ItemConsumeHandler(Item item, Player player);
+    public delegate void ItemUseHandler(Item item, Player player);
 
     public static event ItemCreatedHandler OnItemCreated;
     public static event ItemPickupHandler OnItemPickup;
     public static event ItemUpdateHandler OnItemUpdate;
     public static event ItemConsumeHandler OnItemConsume;
+    public static event ItemUseHandler OnItemUse;
 
     public override void OnCreated(Item item, ItemCreationContext context)
     {
@@ -38,6 +40,11 @@ public class ObjectiveEventItem : GlobalItem
         return base.OnPickup(item, player);
     }
 
+    public override bool? UseItem(Item item, Player player)
+    {
+        OnItemUse?.Invoke(item, player);
+        return base.UseItem(item, player);
+    }
     public override void UpdateEquip(Item item, Player player)
     {
         base.UpdateEquip(item, player);

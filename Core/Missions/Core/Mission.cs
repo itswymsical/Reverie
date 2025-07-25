@@ -45,6 +45,8 @@ public abstract class Mission
     /// </summary>
     protected bool isDirty = false;
     protected bool eventsRegistered = false;
+    protected HashSet<Point> interactedTiles = new HashSet<Point>();
+
     #endregion
 
     #region Properties
@@ -146,6 +148,10 @@ public abstract class Mission
         }
     }
 
+    public void ClearInteractedTiles() => interactedTiles.Clear();
+
+    public bool WasTileInteracted(int i, int j) => interactedTiles.Contains(new Point(i, j));
+
     #endregion
 
     #region Core Mission Logic
@@ -200,6 +206,7 @@ public abstract class Mission
         UnregisterEventHandlers();
         Progress = MissionProgress.Inactive;
         CurrentIndex = 0;
+        interactedTiles.Clear(); // Clear tracked tiles on reset
         foreach (var set in Objective)
         {
             set.Reset();

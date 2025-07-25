@@ -38,6 +38,9 @@ public class DialogueBox : IInGameNotification
 
     private static Texture2D ArrowTexture => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/ArrowForward", AssetRequestMode.ImmediateLoad).Value;
     private static Texture2D PortraitFrameTexture => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortraitFrame", AssetRequestMode.ImmediateLoad).Value;
+
+    public string DialogueKey { get; private set; }
+
     #endregion
 
     #region Properties
@@ -66,6 +69,7 @@ public class DialogueBox : IInGameNotification
     private DialogueBox(string dialogueKey)
     {
         this.dialogueKey = dialogueKey;
+        this.DialogueKey = dialogueKey;
     }
 
     public void Update()
@@ -100,9 +104,13 @@ public class DialogueBox : IInGameNotification
 
     public void Close()
     {
-        isRemoved = true;
-        animationProgress = 0f;
+        if (!isRemoved)
+        {
+            isRemoved = true;
+            animationProgress = 0f;
+        }
     }
+
     #endregion
 
     #region Core Logic
@@ -219,6 +227,8 @@ public class DialogueBox : IInGameNotification
 
     private void HandleInput()
     {
+        if (isRemoved) return;
+
         if (ReverieSystem.FFDialogueKeybind.JustPressed)
         {
             if (currentDialogue != null && charIndex < currentDialogue.PlainText.Length)
@@ -233,6 +243,32 @@ public class DialogueBox : IInGameNotification
             {
                 Close();
             }
+        }
+    }
+
+    private void OnMouseOver()
+    {
+        if (PlayerInput.IgnoreMouseInterface) return;
+
+        Main.LocalPlayer.mouseInterface = true;
+
+        if (!Main.mouseLeft || !Main.mouseLeftRelease || isLastDialogue && isRemoved) return;
+
+        Main.mouseLeftRelease = false;
+
+        if (isRemoved) return;
+
+        if (currentDialogue != null && charIndex < currentDialogue.PlainText.Length)
+        {
+            ForceComplete();
+        }
+        else if (lineKeys.Count > 0)
+        {
+            NextLine();
+        }
+        else
+        {
+            Close();
         }
     }
     #endregion
@@ -367,29 +403,6 @@ public class DialogueBox : IInGameNotification
         spriteBatch.Draw(ArrowTexture, arrowPosition, null, Color.White * Opacity, 0f, Vector2.Zero, arrowScale, SpriteEffects.None, 0f);
     }
 
-    private void OnMouseOver()
-    {
-        if (PlayerInput.IgnoreMouseInterface) return;
-
-        Main.LocalPlayer.mouseInterface = true;
-
-        if (!Main.mouseLeft || !Main.mouseLeftRelease || isLastDialogue && isRemoved) return;
-
-        Main.mouseLeftRelease = false;
-
-        if (currentDialogue != null && charIndex < currentDialogue.PlainText.Length)
-        {
-            ForceComplete();
-        }
-        else if (lineKeys.Count > 0)
-        {
-            NextLine();
-        }
-        else
-        {
-            Close();
-        }
-    }
     #endregion
 
     #region Helper Methods

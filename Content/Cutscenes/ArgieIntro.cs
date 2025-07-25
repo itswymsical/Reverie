@@ -78,7 +78,7 @@ public class ArgieIntroCutscene : Cutscene
         DownedSystem.argieCutscene = true;
 
         CameraSystem.ReturnCamera(60);
-        ControlsOn();
+        ControlsON();
 
         DialogueManager.Instance.StartDialogue("Argie.Intro", 9, letterbox: true, music: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}ArgiesTheme"));
         MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();

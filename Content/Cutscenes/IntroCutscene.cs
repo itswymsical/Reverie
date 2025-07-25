@@ -46,9 +46,9 @@ public class IntroCutscene : Cutscene
 
         var startPos = originalPlayerPosition - new Vector2(0, panDistance);
         CameraSystem.MoveCameraOut(1, startPos);
-        Player_ControlsOff();
+        ControlsOFF();
 
-        Player_InvisiblityOn();
+        InvisON();
     }
 
     protected override void OnCutsceneUpdate(GameTime gameTime)
@@ -93,9 +93,9 @@ public class IntroCutscene : Cutscene
         Main.LocalPlayer.position = fallStartPosition - new Vector2(Main.LocalPlayer.width / 2f, Main.LocalPlayer.height);
         Main.LocalPlayer.velocity = Vector2.Zero;
 
-        Player_InvisiblityOff();
+        InvisOFF();
 
-        Player_FallDamageOff();
+        FallDamageOFF();
 
         playerFalling = true;
     }
@@ -118,7 +118,7 @@ public class IntroCutscene : Cutscene
             Main.LocalPlayer.fullRotationOrigin = Vector2.Zero;
 
             impactOccurred = true;
-            Player_FallDamageOff();
+            FallDamageOFF();
             CameraSystem.shake = 35;
             SoundEngine.PlaySound(SoundID.Item14);
             playerFalling = false;
@@ -161,10 +161,10 @@ public class IntroCutscene : Cutscene
         CameraSystem.ReturnCamera(1);
         DownedSystem.initialCutscene = true;
 
-        ControlsOn();
+        ControlsON();
 
-        Player_InvisiblityOff();
-        Player_FallDamageOn();
+        InvisOFF();
+        FallDamageON();
 
         if (!impactOccurred)
         {
@@ -172,7 +172,7 @@ public class IntroCutscene : Cutscene
             Main.LocalPlayer.velocity = Vector2.Zero;
         }
 
-        DialogueManager.Instance.StartDialogue("JourneysBegin.Crash", 4, letterbox: true, music: MusicID.AltOverworldDay);
+        DialogueManager.Instance.StartDialogue("JourneysBegin.Crash", 4, zoomIn: true, letterbox: true, music: MusicID.AltOverworldDay);
         MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
         player.UnlockMission(MissionID.JourneysBegin);
     }
