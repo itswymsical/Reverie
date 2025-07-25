@@ -17,7 +17,7 @@ namespace Reverie.Common.Players;
 
 public class ReveriePlayer : ModPlayer
 {
-    private bool inventoryInit = false;
+    private bool notificationExists = false;
     private Mission currentMission;
     public bool magnetizedFall;
     public bool lodestoneKB;
@@ -33,12 +33,23 @@ public class ReveriePlayer : ModPlayer
         if (Cutscene.NoFallDamage)
             Player.noFallDmg = true;
 
-        if (Main.playerInventory && !inventoryInit)
-        {
-            currentMission = Main.LocalPlayer.GetModPlayer<MissionPlayer>().ActiveMissions().FirstOrDefault();
+        var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+        bool hasMissions = missionPlayer.ActiveMissions().Any() || missionPlayer.AvailableMissions().Any();
 
-            InGameNotificationsTracker.AddNotification(new MissionNotification(currentMission));
-            inventoryInit = true;
+        if (hasMissions && !notificationExists)
+        {
+            var currentMission = missionPlayer.ActiveMissions().FirstOrDefault() ??
+                               missionPlayer.AvailableMissions().FirstOrDefault();
+
+            if (currentMission != null)
+            {
+                InGameNotificationsTracker.AddNotification(new MissionNotification(currentMission));
+                notificationExists = true;
+            }
+        }
+        else if (!hasMissions)
+        {
+            notificationExists = false;
         }
 
         DialogueManager.Instance.Update();
@@ -74,6 +85,8 @@ public class ReveriePlayer : ModPlayer
 
         if (!DownedSystem.initialCutscene && Main.netMode != NetmodeID.MultiplayerClient)
             CutsceneSystem.PlayCutscene<IntroCutscene>();
+
+        notificationExists = false;
     }
 
     private bool IsSandTile(Tile tile) => tile.HasTile && (

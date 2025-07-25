@@ -1,5 +1,6 @@
 ﻿using Reverie.Core.Missions;
 using Reverie.Core.Missions.Core;
+using Reverie.Utilities;
 using System.Collections.Generic;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -10,156 +11,231 @@ namespace Reverie.Common.UI.Missions;
 
 public class MissionNotification : IInGameNotification
 {
-    private bool isFadingOut = false;
-    private float fadeoutProgress = 0f;
-    private float fadeInProgress = 0f;
-    private float alpha = 0f;
+    #region Constants
     private const float FADE_IN_SPEED = 0.03f;
     private const float FADE_OUT_SPEED = 0.02f;
-
-    private Mission currentMission;
-    private List<Objective> activeObjectives;
-
-    private readonly Texture2D iconTexture;
-    private readonly Texture2D nextTexture;
-    private readonly Texture2D prevTexture;
-    private readonly Texture2D toggleTexture;
+    private const float HOVER_FADE_SPEED = 0.1f;
 
     private const string EMPTY_CHECKBOX = "☐";
     private const string CHECKED_CHECKBOX = "☑";
 
-    private const int TITLE_PANEL_WIDTH = 180;
+    private const int PANEL_WIDTH = 180;
     private const int PANEL_HEIGHT = 34;
     private const int TEXT_PADDING = 10;
-    private const int BUTTON_SIZE = 16;
-    private const int MISSIONS_PER_PAGE = 5; // Maximum missions to display per page
+    private const int MISSIONS_PER_PAGE = 5;
 
+    private const float PANEL_X_OFFSET = 2.65f;
+    private const float ICON_Y_DIVISOR = 1.6f;
+    private const float TITLE_Y_DIVISOR = (float)Math.PI;
+    private const float BUTTON_Y_MULTIPLIER = (float)Math.PI;
+    private const float COUNTER_Y_MULTIPLIER = 4.2f;
+    private const float ICON_SCALE = 0.67f;
+    private const float HOVER_AMPLITUDE = 1f;
+    private const float HOVER_FREQUENCY = 0.07f;
+    private const int OBJECTIVE_Y_SPACING = 13;
+    private const int AVAILABLE_MISSION_Y_SPACING = 22;
+    #endregion
+
+    #region Fields
+    private bool isFadingOut;
+    private float fadeoutProgress;
+    private float fadeInProgress;
+    private float alpha;
+    private float hoverFadeIn;
+
+    private Mission currentMission;
+    private List<Objective> activeObjectives;
     private List<Mission> activeMissions;
     private List<Mission> availableMissions;
-    private int currentMissionIndex = 0;
-    private int currentAvailablePage = 0; // Track the current page of available missions
-    private bool showingAvailableMissions = false;
-    private bool wasInventoryOpen = false;
 
-    private bool isHoveringMission = false;
-    private bool isHoveringToggleButton = false;
-    private bool isHoveringPrevButton = false;
-    private bool isHoveringNextButton = false;
-    private float hoverFadeIn = 0f;
-    private const float HOVER_FADE_SPEED = 0.1f;
-    private Vector2 iconPos;
+    private int currentMissionIndex;
+    private int currentAvailablePage;
+    private bool showingAvailableMissions;
+    private bool wasInventoryOpen;
 
     private readonly Dictionary<string, float> objFadeFinish = [];
-    public bool ShouldBeRemoved => false;
 
+    private bool isHoveringMission;
+    private bool isHoveringToggleButton;
+    private bool isHoveringPrevButton;
+    private bool isHoveringNextButton;
+
+    private Vector2 iconPos;
+
+    private Texture2D iconTexture;
+    private Texture2D nextTexture;
+    private Texture2D prevTexture;
+    private Texture2D toggleTexture;
+    #endregion
+
+    #region Properties
+    public bool ShouldBeRemoved => false;
+    #endregion
+
+    #region Constructor
     public MissionNotification(Mission mission)
     {
         currentMission = mission;
+        LoadTextures();
+        LoadMissions();
+        UpdateActiveObjectives();
+        ResetFadeStates();
+        SoundEngine.PlaySound(SoundID.MenuTick);
+    }
 
+    private void LoadTextures()
+    {
         iconTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/MissionAvailable", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
         nextTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/Next", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
         prevTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/Prev", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
         toggleTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/CycleMenu", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
+    }
 
-        LoadMissions();
-        UpdateActiveObjectives();
-
+    private void ResetFadeStates()
+    {
         fadeInProgress = 0f;
         fadeoutProgress = 0f;
         isFadingOut = false;
-
-        SoundEngine.PlaySound(SoundID.MenuTick);
     }
+    #endregion
 
+    #region Mission Management
     private void LoadMissions()
     {
         var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        activeMissions = new List<Mission>(missionPlayer.ActiveMissions());
-        availableMissions = new List<Mission>(missionPlayer.AvailableMissions());
+        activeMissions = [.. missionPlayer.ActiveMissions()];
+        availableMissions = [.. missionPlayer.AvailableMissions()];
 
-        if ((showingAvailableMissions && availableMissions.Count == 0 && activeMissions.Count > 0) ||
-            (!showingAvailableMissions && activeMissions.Count == 0 && availableMissions.Count > 0))
-        {
-            showingAvailableMissions = !showingAvailableMissions;
-        }
+        HandleMissionListToggling();
 
         if (!showingAvailableMissions)
+            SetupActiveMissionIndex();
+        else
+            SetupAvailableMissionPage();
+    }
+
+    private void HandleMissionListToggling()
+    {
+        bool shouldToggleToAvailable = showingAvailableMissions && availableMissions.Count == 0 && activeMissions.Count > 0;
+        bool shouldToggleToActive = !showingAvailableMissions && activeMissions.Count == 0 && availableMissions.Count > 0;
+
+        if (shouldToggleToAvailable || shouldToggleToActive)
+            showingAvailableMissions = !showingAvailableMissions;
+    }
+
+    private void SetupActiveMissionIndex()
+    {
+        if (activeMissions.Count == 0) return;
+
+        if (currentMission == null || !activeMissions.Contains(currentMission))
         {
-            var currentList = activeMissions;
-
-            if (currentList.Count == 0)
-                return;
-
-            if (currentMission == null || !currentList.Contains(currentMission))
-            {
-                currentMission = currentList[0];
-                currentMissionIndex = 0;
-            }
-            else
-            {
-                currentMissionIndex = currentList.FindIndex(m => m.ID == currentMission.ID);
-                if (currentMissionIndex < 0 && currentList.Count > 0)
-                    currentMissionIndex = 0;
-            }
+            currentMission = activeMissions[0];
+            currentMissionIndex = 0;
         }
         else
         {
-            // For available missions, we just need to ensure the page is valid
-            int maxPages = (int)Math.Ceiling(availableMissions.Count / (float)MISSIONS_PER_PAGE);
-            if (maxPages == 0)
-                maxPages = 1;
-
-            currentAvailablePage = Math.Clamp(currentAvailablePage, 0, maxPages - 1);
-
-            // If we have available missions and currentMission isn't set, set it to the first mission
-            if (availableMissions.Count > 0 && (currentMission == null || !availableMissions.Contains(currentMission)))
-            {
-                currentMission = availableMissions[0];
-            }
+            currentMissionIndex = activeMissions.FindIndex(m => m.ID == currentMission.ID);
+            if (currentMissionIndex < 0 && activeMissions.Count > 0)
+                currentMissionIndex = 0;
         }
+    }
+
+    private void SetupAvailableMissionPage()
+    {
+        int maxPages = CalculateMaxPages(availableMissions.Count);
+        currentAvailablePage = Math.Clamp(currentAvailablePage, 0, maxPages - 1);
+
+        if (availableMissions.Count > 0 && (currentMission == null || !availableMissions.Contains(currentMission)))
+            currentMission = availableMissions[0];
     }
 
     private void UpdateActiveObjectives()
     {
         activeObjectives = new List<Objective>();
-        if (currentMission != null && currentMission.Objective.Count > 0 && !showingAvailableMissions)
+
+        if (currentMission == null || currentMission.Objective.Count == 0 || showingAvailableMissions)
+            return;
+
+        HandleObjectiveProgression();
+        PopulateVisibleObjectives();
+    }
+
+    private void HandleObjectiveProgression()
+    {
+        bool isCurrentSetCompleted = currentMission.CurrentIndex < currentMission.Objective.Count &&
+                                   currentMission.Objective[currentMission.CurrentIndex].IsCompleted;
+
+        if (isCurrentSetCompleted && currentMission.CurrentIndex < currentMission.Objective.Count - 1)
         {
-            bool isCurrentSetCompleted = currentMission.CurrentIndex < currentMission.Objective.Count &&
-                                        currentMission.Objective[currentMission.CurrentIndex].IsCompleted;
-
-            if (isCurrentSetCompleted && currentMission.CurrentIndex < currentMission.Objective.Count - 1)
-            {
-                currentMission.CurrentIndex++;
-
-                Main.LocalPlayer.GetModPlayer<MissionPlayer>().NotifyMissionUpdate(currentMission);
-            }
-
-            if (currentMission.CurrentIndex < currentMission.Objective.Count)
-            {
-                var currentSet = currentMission.Objective[currentMission.CurrentIndex];
-
-                foreach (var objective in currentSet.Objectives)
-                {
-                    if (objective.ShouldBeVisible(currentMission))
-                        activeObjectives.Add(objective);
-                }
-            }
+            currentMission.CurrentIndex++;
+            Main.LocalPlayer.GetModPlayer<MissionPlayer>().NotifyMissionUpdate(currentMission);
         }
     }
 
+    private void PopulateVisibleObjectives()
+    {
+        if (currentMission.CurrentIndex >= currentMission.Objective.Count) return;
+
+        var currentSet = currentMission.Objective[currentMission.CurrentIndex];
+        foreach (var objective in currentSet.Objectives)
+        {
+            if (objective.ShouldBeVisible(currentMission))
+                activeObjectives.Add(objective);
+        }
+    }
+    #endregion
+
+    #region Navigation
+    private void CycleToNextMission()
+    {
+        if (activeMissions.Count <= 1) return;
+
+        currentMissionIndex = (currentMissionIndex + 1) % activeMissions.Count;
+        currentMission = activeMissions[currentMissionIndex];
+        ResetHoverState();
+        UpdateActiveObjectives();
+    }
+
+    private void CycleToPreviousMission()
+    {
+        if (activeMissions.Count <= 1) return;
+
+        currentMissionIndex = (currentMissionIndex - 1 + activeMissions.Count) % activeMissions.Count;
+        currentMission = activeMissions[currentMissionIndex];
+        ResetHoverState();
+        objFadeFinish.Clear();
+        UpdateActiveObjectives();
+    }
+
+    private void NavigateToNextPage()
+    {
+        int maxPages = CalculateMaxPages(availableMissions.Count);
+        currentAvailablePage = (currentAvailablePage + 1) % maxPages;
+    }
+
+    private void NavigateToPreviousPage()
+    {
+        int maxPages = CalculateMaxPages(availableMissions.Count);
+        currentAvailablePage = (currentAvailablePage - 1 + maxPages) % maxPages;
+    }
+
+    private int CalculateMaxPages(int itemCount) => Math.Max(1, (int)Math.Ceiling(itemCount / (float)MISSIONS_PER_PAGE));
+
+    private void ResetHoverState()
+    {
+        hoverFadeIn = 0f;
+        isHoveringMission = false;
+        isHoveringToggleButton = false;
+        isHoveringPrevButton = false;
+        isHoveringNextButton = false;
+    }
+    #endregion
+
+    #region Drawing
     public void DrawInGame(SpriteBatch spriteBatch, Vector2 bottomAnchorPosition)
     {
-        if (isFadingOut)
-        {
-            alpha = 1.0f - fadeoutProgress;
-        }
-        else
-        {
-            alpha = fadeInProgress;
-        }
-
+        alpha = isFadingOut ? 1.0f - fadeoutProgress : fadeInProgress;
         alpha = MathHelper.Clamp(alpha, 0f, 1f);
-
         DrawObjectiveList(spriteBatch, bottomAnchorPosition);
     }
 
@@ -167,37 +243,53 @@ public class MissionNotification : IInGameNotification
     {
         var currentList = showingAvailableMissions ? availableMissions : activeMissions;
 
-        if (iconTexture == null || currentList.Count == 0)
-            return;
+        if (!ShouldDrawPanel(currentList)) return;
 
-        if (!showingAvailableMissions && (activeObjectives == null || activeObjectives.Count == 0))
-            return;
+        var layout = CalculateLayout(currentList);
+        DrawMainIcon(spriteBatch, layout);
+        DrawTitle(spriteBatch, layout);
+        DrawToggleButton(spriteBatch, layout);
+        DrawNavigationButtons(spriteBatch, layout, currentList);
+        DrawContent(spriteBatch, layout, currentList);
+        DrawHoverTooltips(spriteBatch);
+    }
 
-        int panelObjectCount;
-        int totalHeight;
+    private bool ShouldDrawPanel(List<Mission> currentList)
+    {
+        if (iconTexture == null || currentList.Count == 0) return false;
+        if (!showingAvailableMissions && (activeObjectives == null || activeObjectives.Count == 0)) return false;
+        return true;
+    }
 
-        if (showingAvailableMissions)
+    private PanelLayout CalculateLayout(List<Mission> currentList)
+    {
+        int panelObjectCount = showingAvailableMissions
+            ? CalculateVisibleMissions()
+            : activeObjectives.Count;
+
+        int totalHeight = PANEL_HEIGHT + (PANEL_HEIGHT * panelObjectCount);
+        int posX = Main.screenWidth - (int)(PANEL_WIDTH * PANEL_X_OFFSET);
+        int posY = Main.screenHeight / 3 - PANEL_HEIGHT;
+
+        return new PanelLayout
         {
-            // Calculate missions to show on current page
-            int startIndex = currentAvailablePage * MISSIONS_PER_PAGE;
-            int endIndex = Math.Min(startIndex + MISSIONS_PER_PAGE, availableMissions.Count) - 1;
-            panelObjectCount = endIndex - startIndex + 1;
-            totalHeight = PANEL_HEIGHT + (PANEL_HEIGHT * panelObjectCount);
-        }
-        else
-        {
-            panelObjectCount = activeObjectives.Count;
-            totalHeight = PANEL_HEIGHT + (PANEL_HEIGHT * panelObjectCount);
-        }
+            PanelRect = new Rectangle(posX, posY, PANEL_WIDTH, totalHeight),
+            PosX = posX,
+            PosY = posY
+        };
+    }
 
-        int posX = Main.screenWidth - TITLE_PANEL_WIDTH - 240;
-        int posY = 356;
+    private int CalculateVisibleMissions()
+    {
+        int startIndex = currentAvailablePage * MISSIONS_PER_PAGE;
+        return Math.Min(startIndex + MISSIONS_PER_PAGE, availableMissions.Count) - startIndex;
+    }
 
-        Rectangle panelRect = new Rectangle(posX, posY, TITLE_PANEL_WIDTH, totalHeight);
+    private void DrawMainIcon(SpriteBatch spriteBatch, PanelLayout layout)
+    {
+        var hoverOffset = (float)Math.Sin(Main.GameUpdateCount * HOVER_FREQUENCY) * HOVER_AMPLITUDE;
+        iconPos = new Vector2(layout.PosX, layout.PosY + PANEL_HEIGHT / ICON_Y_DIVISOR - hoverOffset);
 
-        Vector2 titlePos = new Vector2(posX, posY + PANEL_HEIGHT / (float)Math.PI);
-        var hoverOffset = (float)Math.Sin(Main.GameUpdateCount * 0.7f * 0.1f) * 1f;
-        iconPos = new Vector2(posX + 16, posY + PANEL_HEIGHT / 1.6f - hoverOffset);
         spriteBatch.Draw(
             iconTexture,
             iconPos,
@@ -205,25 +297,21 @@ public class MissionNotification : IInGameNotification
             Color.White * alpha,
             0f,
             new Vector2(iconTexture.Width / 2, iconTexture.Height / 2),
-            0.67f,
+            ICON_SCALE,
             SpriteEffects.None,
             0f
         );
+    }
 
-        string missionTitle;
-        if (showingAvailableMissions)
-        {
-            missionTitle = "Available Missions";
-        }
-        else
-        {
-            missionTitle = currentMission.Name;
-        }
+    private void DrawTitle(SpriteBatch spriteBatch, PanelLayout layout)
+    {
+        string title = showingAvailableMissions ? "Available Missions" : currentMission.Name;
+        Vector2 titlePos = new Vector2(layout.PosX - 16, layout.PosY + PANEL_HEIGHT / TITLE_Y_DIVISOR);
 
         Utils.DrawBorderStringFourWay(
             spriteBatch,
             FontAssets.MouseText.Value,
-            missionTitle,
+            title,
             titlePos.X + 26,
             titlePos.Y + 3,
             Color.White * alpha,
@@ -231,333 +319,352 @@ public class MissionNotification : IInGameNotification
             Vector2.Zero,
             0.9f
         );
+    }
 
+    private void DrawToggleButton(SpriteBatch spriteBatch, PanelLayout layout)
+    {
         bool hasOtherMissionType = (showingAvailableMissions && activeMissions.Count > 0) ||
                                  (!showingAvailableMissions && availableMissions.Count > 0);
 
-        if (hasOtherMissionType)
+        if (!hasOtherMissionType) return;
+
+        string title = showingAvailableMissions ? "Available Missions" : currentMission.Name;
+        Vector2 titleSize = FontAssets.MouseText.Value.MeasureString(title) * 0.9f;
+
+        Vector2 togglePos = new Vector2(
+            layout.PosX + 26 + titleSize.X + 8,
+            layout.PosY + PANEL_HEIGHT / TITLE_Y_DIVISOR + 10.5f
+        );
+
+        Rectangle toggleRect = new Rectangle(
+            (int)togglePos.X - toggleTexture.Width / 2,
+            (int)togglePos.Y - toggleTexture.Height / 2,
+            toggleTexture.Width,
+            toggleTexture.Height
+        );
+
+        isHoveringToggleButton = toggleRect.Contains(Main.MouseScreen.ToPoint()) && PlayerInput.IgnoreMouseInterface == false;
+
+        spriteBatch.Draw(
+            toggleTexture,
+            togglePos,
+            null,
+            isHoveringToggleButton ? Color.White * alpha : Color.White * alpha * 0.8f,
+            0f,
+            new Vector2(toggleTexture.Width / 2, toggleTexture.Height / 2),
+            isHoveringToggleButton ? 0.85f : 0.8f,
+            SpriteEffects.None,
+            0f
+        );
+
+        if (isHoveringToggleButton && Main.mouseLeft && Main.mouseLeftRelease && alpha > 0.9f)
         {
-            Vector2 toggleButtonPos = new Vector2(posX + TITLE_PANEL_WIDTH + 16, posY + PANEL_HEIGHT / (float)Math.PI + 10.5f);
-            Rectangle toggleButtonRect = new Rectangle(
-                (int)toggleButtonPos.X - toggleTexture.Width / 2,
-                (int)toggleButtonPos.Y - toggleTexture.Height / 2,
-                toggleTexture.Width,
-                toggleTexture.Height
-            );
+            Main.mouseLeftRelease = false;
+            showingAvailableMissions = !showingAvailableMissions;
+            LoadMissions();
+            UpdateActiveObjectives();
+            SoundEngine.PlaySound(SoundID.MenuTick);
 
-            isHoveringToggleButton = toggleButtonRect.Contains(Main.MouseScreen.ToPoint()) && PlayerInput.IgnoreMouseInterface == false;
-
-            spriteBatch.Draw(
-                toggleTexture,
-                toggleButtonPos,
-                null,
-                isHoveringToggleButton ? Color.White * alpha : Color.White * alpha * 0.8f,
-                0f,
-                new Vector2(toggleTexture.Width / 2, toggleTexture.Height / 2),
-                isHoveringToggleButton ? 0.85f : 0.8f,
-                SpriteEffects.None,
-                0f
-            );
-
-            if (isHoveringToggleButton && Main.mouseLeft && Main.mouseLeftRelease && alpha > 0.9f)
-            {
-                Main.mouseLeftRelease = false;
-                showingAvailableMissions = !showingAvailableMissions;
-                LoadMissions();
-                UpdateActiveObjectives();
-                SoundEngine.PlaySound(SoundID.MenuTick);
-
-                isHoveringToggleButton = false;
-                isHoveringPrevButton = false;
-                isHoveringNextButton = false;
-                isHoveringMission = false;
-            }
-
-            if (isHoveringToggleButton)
-            {
-                Main.LocalPlayer.mouseInterface = true;
-            }
+            isHoveringToggleButton = false;
+            isHoveringPrevButton = false;
+            isHoveringNextButton = false;
+            isHoveringMission = false;
         }
 
-        // Navigation buttons
+        if (isHoveringToggleButton)
+        {
+            Main.LocalPlayer.mouseInterface = true;
+        }
+    }
+
+    private bool ShouldProcessClick(bool isHovering)
+    {
+        return isHovering && Main.mouseLeft && Main.mouseLeftRelease && alpha > 0.9f;
+    }
+
+    private void DrawNavigationButtons(SpriteBatch spriteBatch, PanelLayout layout, List<Mission> currentList)
+    {
+        bool shouldShowNavigation = showingAvailableMissions
+            ? CalculateMaxPages(availableMissions.Count) > 1
+            : activeMissions.Count > 1;
+
+        if (!shouldShowNavigation) return;
+
+        var (prevPos, nextPos) = CalculateNavigationPositions(layout);
+        var prevRect = CreateButtonRect(prevPos, prevTexture);
+        var nextRect = CreateButtonRect(nextPos, nextTexture);
+
+        isHoveringPrevButton = IsHoveringButton(prevRect);
+        isHoveringNextButton = IsHoveringButton(nextRect);
+
+        DrawButton(spriteBatch, prevTexture, prevPos, isHoveringPrevButton);
+        DrawButton(spriteBatch, nextTexture, nextPos, isHoveringNextButton);
+
+        HandleNavigationClicks();
+        DrawCounter(spriteBatch, layout, currentList);
+    }
+
+    private (Vector2 prev, Vector2 next) CalculateNavigationPositions(PanelLayout layout)
+    {
+        Vector2 prevPos = new Vector2(
+            layout.PosX + PANEL_WIDTH / 1.01f,
+            layout.PosY + PANEL_HEIGHT * BUTTON_Y_MULTIPLIER + 20
+        );
+        Vector2 nextPos = new Vector2(
+            layout.PosX + PANEL_WIDTH / 0.92f,
+            layout.PosY + PANEL_HEIGHT * BUTTON_Y_MULTIPLIER + 20
+        );
+
+        return (prevPos, nextPos);
+    }
+
+    private void DrawButton(SpriteBatch spriteBatch, Texture2D texture, Vector2 position, bool isHovering)
+    {
+        float scale = isHovering ? 0.65f : 0.6f;
+        Color color = isHovering ? Color.White * alpha : Color.White * alpha * 0.8f;
+
+        spriteBatch.Draw(
+            texture,
+            position,
+            null,
+            color,
+            0f,
+            new Vector2(texture.Width / 2, texture.Height / 2),
+            scale,
+            SpriteEffects.None,
+            0f
+        );
+    }
+
+    private Rectangle CreateButtonRect(Vector2 position, Texture2D texture)
+    {
+        return new Rectangle(
+            (int)position.X - texture.Width / 2,
+            (int)position.Y - texture.Height / 2,
+            texture.Width,
+            texture.Height
+        );
+    }
+
+    private bool IsHoveringButton(Rectangle buttonRect)
+    {
+        return buttonRect.Contains(Main.MouseScreen.ToPoint()) && PlayerInput.IgnoreMouseInterface == false;
+    }
+
+    private void DrawCounter(SpriteBatch spriteBatch, PanelLayout layout, List<Mission> currentList)
+    {
+        string counterText = showingAvailableMissions
+            ? $"Page {currentAvailablePage + 1}/{CalculateMaxPages(availableMissions.Count)}"
+            : $"{currentMissionIndex + 1}/{activeMissions.Count}";
+
+        Vector2 counterPos = new Vector2(
+            layout.PosX + (showingAvailableMissions ? PANEL_WIDTH / 2 : PANEL_WIDTH),
+            layout.PosY + PANEL_HEIGHT * COUNTER_Y_MULTIPLIER
+        );
+
+        Vector2 origin = showingAvailableMissions ? Vector2.UnitX * 0.5f : Vector2.Zero;
+
+        Utils.DrawBorderStringFourWay(
+            spriteBatch,
+            FontAssets.MouseText.Value,
+            counterText,
+            counterPos.X,
+            counterPos.Y,
+            Color.White * alpha,
+            Color.Black * alpha,
+            origin,
+            0.7f
+        );
+    }
+
+    private void DrawContent(SpriteBatch spriteBatch, PanelLayout layout, List<Mission> currentList)
+    {
         if (showingAvailableMissions)
+            DrawAvailableMissions(spriteBatch, layout);
+        else
+            DrawActiveObjectives(spriteBatch, layout);
+    }
+
+    private void DrawAvailableMissions(SpriteBatch spriteBatch, PanelLayout layout)
+    {
+        int startIndex = currentAvailablePage * MISSIONS_PER_PAGE;
+        int endIndex = Math.Min(startIndex + MISSIONS_PER_PAGE, availableMissions.Count);
+        int yOffset = PANEL_HEIGHT;
+
+        for (int i = startIndex; i < endIndex; i++)
         {
-            // Pagination for available missions
-            int maxPages = (int)Math.Ceiling(availableMissions.Count / (float)MISSIONS_PER_PAGE);
-            if (maxPages > 1)
-            {
-                // Draw pagination buttons
-                Vector2 prevButtonPos = new Vector2(posX + TITLE_PANEL_WIDTH / 1.01f, posY + PANEL_HEIGHT * (float)Math.PI + 20);
-                Rectangle prevButtonRect = new Rectangle((int)prevButtonPos.X - 8, (int)prevButtonPos.Y - 6, BUTTON_SIZE, 16);
-
-                Vector2 nextButtonPos = new Vector2(posX + TITLE_PANEL_WIDTH / 0.92f, posY + PANEL_HEIGHT * (float)Math.PI + 20);
-                Rectangle nextButtonRect = new Rectangle((int)nextButtonPos.X - 8, (int)nextButtonPos.Y - 6, BUTTON_SIZE, 16);
-
-                isHoveringNextButton = nextButtonRect.Contains(Main.MouseScreen.ToPoint()) && PlayerInput.IgnoreMouseInterface == false;
-                isHoveringPrevButton = prevButtonRect.Contains(Main.MouseScreen.ToPoint()) && PlayerInput.IgnoreMouseInterface == false;
-
-                spriteBatch.Draw(
-                    prevTexture,
-                    prevButtonPos,
-                    null,
-                    isHoveringPrevButton ? Color.White * alpha : Color.White * alpha * 0.8f,
-                    0f,
-                    new Vector2(prevTexture.Width / 2, prevTexture.Height / 2),
-                    isHoveringPrevButton ? 0.65f : 0.6f,
-                    SpriteEffects.None,
-                    0f
-                );
-
-                spriteBatch.Draw(
-                    nextTexture,
-                    nextButtonPos,
-                    null,
-                    isHoveringNextButton ? Color.White * alpha : Color.White * alpha * 0.8f,
-                    0f,
-                    new Vector2(nextTexture.Width / 2, nextTexture.Height / 2),
-                    isHoveringNextButton ? 0.65f : 0.6f,
-                    SpriteEffects.None,
-                    0f
-                );
-
-                if (Main.mouseLeft && Main.mouseLeftRelease && alpha > 0.9f)
-                {
-                    if (isHoveringPrevButton)
-                    {
-                        Main.mouseLeftRelease = false;
-                        NavigateToPreviousPage();
-                        SoundEngine.PlaySound(SoundID.MenuTick);
-                    }
-                    else if (isHoveringNextButton)
-                    {
-                        Main.mouseLeftRelease = false;
-                        NavigateToNextPage();
-                        SoundEngine.PlaySound(SoundID.MenuTick);
-                    }
-                }
-
-                if (isHoveringPrevButton || isHoveringNextButton)
-                {
-                    Main.LocalPlayer.mouseInterface = true;
-                }
-
-                // Draw page counter
-                string pageCounter = $"Page {currentAvailablePage + 1}/{maxPages}";
-                Vector2 counterPos = new Vector2(posX + TITLE_PANEL_WIDTH / 2, posY + PANEL_HEIGHT * 4.2f);
-
-                Utils.DrawBorderStringFourWay(
-                    spriteBatch,
-                    FontAssets.MouseText.Value,
-                    pageCounter,
-                    counterPos.X,
-                    counterPos.Y,
-                    Color.White * alpha,
-                    Color.Black * alpha,
-                    Vector2.UnitX * 0.5f, // Center the text
-                    0.7f
-                );
-            }
-        }
-        else if (activeMissions.Count > 1)
-        {
-            // Existing mission cycling buttons for active missions
-            Vector2 prevButtonPos = new Vector2(posX + TITLE_PANEL_WIDTH / 1.01f, posY + PANEL_HEIGHT * (float)Math.PI + 20);
-            Rectangle prevButtonRect = new Rectangle((int)prevButtonPos.X - 8, (int)prevButtonPos.Y - 6, BUTTON_SIZE, 16);
-
-            Vector2 nextButtonPos = new Vector2(posX + TITLE_PANEL_WIDTH / 0.92f, posY + PANEL_HEIGHT * (float)Math.PI + 20);
-            Rectangle nextButtonRect = new Rectangle((int)nextButtonPos.X - 8, (int)nextButtonPos.Y - 6, BUTTON_SIZE, 16);
-
-            isHoveringNextButton = nextButtonRect.Contains(Main.MouseScreen.ToPoint()) && PlayerInput.IgnoreMouseInterface == false;
-            isHoveringPrevButton = prevButtonRect.Contains(Main.MouseScreen.ToPoint()) && PlayerInput.IgnoreMouseInterface == false;
-
-            spriteBatch.Draw(
-                prevTexture,
-                prevButtonPos,
-                null,
-                isHoveringPrevButton ? Color.White * alpha : Color.White * alpha * 0.8f,
-                0f,
-                new Vector2(prevTexture.Width / 2, prevTexture.Height / 2),
-                isHoveringPrevButton ? 0.65f : 0.6f,
-                SpriteEffects.None,
-                0f
-            );
-
-            spriteBatch.Draw(
-                nextTexture,
-                nextButtonPos,
-                null,
-                isHoveringNextButton ? Color.White * alpha : Color.White * alpha * 0.8f,
-                0f,
-                new Vector2(nextTexture.Width / 2, nextTexture.Height / 2),
-                isHoveringNextButton ? 0.65f : 0.6f,
-                SpriteEffects.None,
-                0f
-            );
-
-            if (Main.mouseLeft && Main.mouseLeftRelease && alpha > 0.9f)
-            {
-                if (isHoveringPrevButton)
-                {
-                    Main.mouseLeftRelease = false;
-                    CycleToPreviousMission();
-                    SoundEngine.PlaySound(SoundID.MenuTick);
-                }
-                else if (isHoveringNextButton)
-                {
-                    Main.mouseLeftRelease = false;
-                    CycleToNextMission();
-                    SoundEngine.PlaySound(SoundID.MenuTick);
-                }
-            }
-
-            if (isHoveringPrevButton || isHoveringNextButton)
-            {
-                Main.LocalPlayer.mouseInterface = true;
-            }
-
-            // Draw mission counter
-            string missionCounter = $"{currentMissionIndex + 1}/{activeMissions.Count}";
-            Vector2 counterPos = new Vector2(posX + TITLE_PANEL_WIDTH, posY + PANEL_HEIGHT * 4.2f);
+            var mission = availableMissions[i];
+            string employer = GetMissionDisplayText(mission);
+            Vector2 textPos = new Vector2(layout.PosX + TEXT_PADDING, layout.PosY + yOffset + PANEL_HEIGHT / TITLE_Y_DIVISOR);
 
             Utils.DrawBorderStringFourWay(
                 spriteBatch,
                 FontAssets.MouseText.Value,
-                missionCounter,
-                counterPos.X,
-                counterPos.Y,
-                Color.White * alpha,
+                employer,
+                textPos.X,
+                textPos.Y,
+                Color.Gold * alpha,
                 Color.Black * alpha,
                 Vector2.Zero,
-                0.7f
+                0.8f
             );
-        }
 
+            yOffset += AVAILABLE_MISSION_Y_SPACING;
+        }
+    }
+
+    private string GetMissionDisplayText(Mission mission)
+    {
+        if (mission.ProviderNPC <= 0) return "Unknown";
+
+        var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
+        return $"{mission.Name} - {npcName}";
+    }
+
+    private void DrawActiveObjectives(SpriteBatch spriteBatch, PanelLayout layout)
+    {
         int yOffset = PANEL_HEIGHT;
 
-        if (showingAvailableMissions)
+        foreach (var objective in activeObjectives)
         {
-            // Calculate missions to show on current page
-            int startIndex = currentAvailablePage * MISSIONS_PER_PAGE;
-            int endIndex = Math.Min(startIndex + MISSIONS_PER_PAGE, availableMissions.Count);
+            string objectiveText = FormatObjectiveText(objective);
+            Vector2 textPos = new Vector2(layout.PosX + TEXT_PADDING, layout.PosY + yOffset + PANEL_HEIGHT / TITLE_Y_DIVISOR);
+            Color textColor = objective.IsCompleted ? new Color(150, 255, 150) * alpha : Color.White * alpha;
 
-            // Draw each available mission as a list
-            for (int i = startIndex; i < endIndex; i++)
-            {
-                var mission = availableMissions[i];
+            Utils.DrawBorderStringFourWay(
+                spriteBatch,
+                FontAssets.ItemStack.Value,
+                objectiveText,
+                textPos.X,
+                textPos.Y,
+                textColor,
+                Color.Black * alpha,
+                Vector2.Zero,
+                0.75f
+            );
 
-                string employer = "Unknown";
-                var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
-                if (mission.ProviderNPC > 0)
-                {
-                    employer = $"{mission.Name} - {npcName}";
-                }
-
-                Vector2 textPos = new Vector2(posX + TEXT_PADDING, posY + yOffset + PANEL_HEIGHT / (float)Math.PI);
-
-                Rectangle missionEntryRect = new Rectangle(
-                    posX,
-                    posY + yOffset,
-                    TITLE_PANEL_WIDTH,
-                    PANEL_HEIGHT
-                );
-
-                Utils.DrawBorderStringFourWay(
-                    spriteBatch,
-                    FontAssets.MouseText.Value,
-                    employer,
-                    textPos.X,
-                    textPos.Y,
-                    Color.Gold * alpha,
-                    Color.Black * alpha,
-                    Vector2.Zero,
-                    0.8f
-                );
-
-                yOffset += 22;
-            }
-        }
-        else
-        {
-            // Original code for showing active mission objectives
-            for (int i = 0; i < activeObjectives.Count; i++)
-            {
-                var objective = activeObjectives[i];
-
-                string status = objective.IsCompleted ? CHECKED_CHECKBOX : EMPTY_CHECKBOX;
-                string objectiveText;
-
-                if (objective.RequiredCount > 1)
-                {
-                    objectiveText = $"{status} {objective.Description} [{objective.CurrentCount}/{objective.RequiredCount}]";
-                }
-                else
-                {
-                    objectiveText = $"{status} {objective.Description}";
-                }
-
-                Vector2 textPos = new Vector2(posX + TEXT_PADDING, posY + yOffset + PANEL_HEIGHT / (float)Math.PI);
-
-                Utils.DrawBorderStringFourWay(
-                    spriteBatch,
-                    FontAssets.ItemStack.Value,
-                    objectiveText,
-                    textPos.X,
-                    textPos.Y,
-                    objective.IsCompleted ? new Color(150, 255, 150) * alpha : Color.White * alpha,
-                    Color.Black * alpha,
-                    Vector2.Zero,
-                    0.75f
-                );
-
-                yOffset += PANEL_HEIGHT - 13;
-            }
+            yOffset += PANEL_HEIGHT - OBJECTIVE_Y_SPACING;
         }
     }
 
-    private void CycleToNextMission()
+    private string FormatObjectiveText(Objective objective)
     {
-        var currentList = activeMissions;
-        if (currentList.Count <= 1)
-            return;
+        string status = objective.IsCompleted ? CHECKED_CHECKBOX : EMPTY_CHECKBOX;
 
-        currentMissionIndex = (currentMissionIndex + 1) % currentList.Count;
-        currentMission = currentList[currentMissionIndex];
+        if (objective.RequiredCount > 1)
+            return $"{status} {objective.Description} [{objective.CurrentCount}/{objective.RequiredCount}]";
 
-        hoverFadeIn = 0f;
+        return $"{status} {objective.Description}";
+    }
 
+    private void DrawHoverTooltips(SpriteBatch spriteBatch)
+    {
+        if (alpha == 0) return;
+
+        string hoverText = GetHoverText();
+        if (!string.IsNullOrEmpty(hoverText))
+            DrawHoverText(spriteBatch, hoverText);
+    }
+
+    private string GetHoverText()
+    {
+        bool hasOtherMissionType = (showingAvailableMissions && activeMissions.Count > 0) ||
+                                 (!showingAvailableMissions && availableMissions.Count > 0);
+
+        if (isHoveringToggleButton && hasOtherMissionType)
+            return showingAvailableMissions ? "See Active Missions" : "See Available Missions";
+
+        if (isHoveringPrevButton)
+            return showingAvailableMissions ? "Previous Page" : "Previous Mission";
+
+        if (isHoveringNextButton)
+            return showingAvailableMissions ? "Next Page" : "Next Mission";
+
+        return string.Empty;
+    }
+
+    private void DrawHoverText(SpriteBatch spriteBatch, string text)
+    {
+        Vector2 mousePos = Main.MouseScreen;
+        Vector2 textSize = FontAssets.MouseText.Value.MeasureString(text);
+
+        Vector2 textPos = new Vector2(
+            mousePos.X - textSize.X / 2,
+            mousePos.Y - textSize.Y - 10
+        );
+
+        textPos.X = MathHelper.Clamp(textPos.X, 10, Main.screenWidth - textSize.X - 10);
+        textPos.Y = MathHelper.Clamp(textPos.Y, 10, Main.screenHeight - textSize.Y - 10);
+
+        Rectangle hoverBg = new Rectangle(
+            (int)textPos.X - 16,
+            (int)textPos.Y - 10,
+            (int)textSize.X + 8,
+            (int)textSize.Y + 8
+        );
+
+        DrawUtils.DrawPanel(spriteBatch, hoverBg, new Color(63, 65, 161) * 0.8f * alpha);
+
+        Utils.DrawBorderStringFourWay(
+            spriteBatch,
+            FontAssets.MouseText.Value,
+            text,
+            textPos.X,
+            textPos.Y,
+            Color.White * alpha,
+            Color.Black * alpha,
+            Vector2.Zero,
+            0.8f
+        );
+    }
+    #endregion
+
+    #region Input Handling
+    private void HandleToggleClick()
+    {
+        if (!ShouldProcessClick(isHoveringToggleButton)) return;
+
+        Main.mouseLeftRelease = false;
+        Main.LocalPlayer.mouseInterface = true;
+
+        showingAvailableMissions = !showingAvailableMissions;
+        LoadMissions();
         UpdateActiveObjectives();
+        SoundEngine.PlaySound(SoundID.MenuTick);
+        ResetHoverState();
     }
 
-    private void CycleToPreviousMission()
+    private void HandleNavigationClicks()
     {
-        var currentList = activeMissions;
-        if (currentList.Count <= 1)
-            return;
+        if (ShouldProcessClick(isHoveringPrevButton))
+        {
+            Main.mouseLeftRelease = false;
+            Main.LocalPlayer.mouseInterface = true;
 
-        currentMissionIndex = (currentMissionIndex - 1 + currentList.Count) % currentList.Count;
-        currentMission = currentList[currentMissionIndex];
+            if (showingAvailableMissions) NavigateToPreviousPage();
+            else CycleToPreviousMission();
+            SoundEngine.PlaySound(SoundID.MenuTick);
+        }
+        else if (ShouldProcessClick(isHoveringNextButton))
+        {
+            Main.mouseLeftRelease = false;
+            Main.LocalPlayer.mouseInterface = true;
 
-        // Reset hover and click state when changing missions
-        hoverFadeIn = 0f;
-        // Clear objective fade data when switching missions
-        objFadeFinish.Clear();
-        UpdateActiveObjectives();
+            if (showingAvailableMissions) NavigateToNextPage();
+            else CycleToNextMission();
+            SoundEngine.PlaySound(SoundID.MenuTick);
+        }
     }
-
-    private void NavigateToNextPage()
+    private void HandleInput()
     {
-        int maxPages = (int)Math.Ceiling(availableMissions.Count / (float)MISSIONS_PER_PAGE);
-        currentAvailablePage = (currentAvailablePage + 1) % maxPages;
+        if (alpha <= 0.9f || PlayerInput.IgnoreMouseInterface) return;
+
+        HandleToggleClick();
+        HandleNavigationClicks();
     }
+    #endregion
 
-    private void NavigateToPreviousPage()
-    {
-        int maxPages = (int)Math.Ceiling(availableMissions.Count / (float)MISSIONS_PER_PAGE);
-        currentAvailablePage = (currentAvailablePage - 1 + maxPages) % maxPages;
-    }
-
-    public void PushAnchor(ref Vector2 positionAnchorBottom) { }
-
+    #region Update Logic
     public void Update()
     {
         bool isInventoryOpen = Main.playerInventory;
@@ -567,6 +674,7 @@ public class MissionNotification : IInGameNotification
             if (isInventoryOpen)
             {
                 isFadingOut = false;
+                fadeInProgress = 0f; // Reset fade-in to start from beginning
 
                 LoadMissions();
                 UpdateActiveObjectives();
@@ -591,9 +699,8 @@ public class MissionNotification : IInGameNotification
             wasInventoryOpen = isInventoryOpen;
         }
 
-        if (isInventoryOpen)
+        if (isInventoryOpen && !isFadingOut)
         {
-            isFadingOut = false;
             fadeInProgress += FADE_IN_SPEED;
             fadeInProgress = Math.Min(fadeInProgress, 1.0f);
 
@@ -623,9 +730,85 @@ public class MissionNotification : IInGameNotification
         }
     }
 
+    private void HandleInventoryToggle()
+    {
+        bool isInventoryOpen = Main.playerInventory;
+
+        if (isInventoryOpen == wasInventoryOpen) return;
+
+        if (isInventoryOpen)
+        {
+            isFadingOut = false;
+            LoadMissions();
+            UpdateActiveObjectives();
+
+            if (HasMissionsToShow())
+                SoundEngine.PlaySound(SoundID.MenuTick);
+        }
+        else
+        {
+            isFadingOut = true;
+            fadeoutProgress = 0f;
+            ResetHoverState();
+        }
+
+        wasInventoryOpen = isInventoryOpen;
+    }
+
+    private bool HasMissionsToShow()
+    {
+        return (showingAvailableMissions && availableMissions.Count > 0) ||
+               (!showingAvailableMissions && activeMissions.Count > 0);
+    }
+
+    private void UpdateFadeStates()
+    {
+        bool isInventoryOpen = Main.playerInventory;
+
+        if (isInventoryOpen)
+        {
+            isFadingOut = false;
+            fadeInProgress = Math.Min(fadeInProgress + FADE_IN_SPEED, 1.0f);
+            LoadMissions();
+            UpdateActiveObjectives();
+        }
+
+        if (isFadingOut)
+        {
+            fadeoutProgress = Math.Min(fadeoutProgress + FADE_OUT_SPEED, 1.0f);
+            hoverFadeIn = 0f;
+        }
+
+        if (!isHoveringMission && hoverFadeIn > 0)
+            hoverFadeIn = MathHelper.Lerp(hoverFadeIn, 0f, HOVER_FADE_SPEED);
+    }
+
+    private void UpdateObjectiveProgression()
+    {
+        if (showingAvailableMissions || currentMission == null) return;
+
+        if (currentMission.CurrentIndex < currentMission.Objective.Count &&
+            currentMission.Objective[currentMission.CurrentIndex].IsCompleted)
+        {
+            UpdateActiveObjectives();
+        }
+    }
+
     public void StartFadeOut()
     {
         isFadingOut = true;
         fadeoutProgress = 0f;
     }
+
+    public void PushAnchor(ref Vector2 positionAnchorBottom) { }
+    #endregion
+
+    #region Helper Structures
+    private struct PanelLayout
+    {
+        public Rectangle PanelRect;
+        public int PosX;
+        public int PosY;
+    }
+    #endregion
 }

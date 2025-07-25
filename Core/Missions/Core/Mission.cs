@@ -176,7 +176,6 @@ public abstract class Mission
 
                 var player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
                 player.NotifyMissionUpdate(this);
-
                 if (wasCompleted && amount > 0)
                 {
                     HandleObjectiveCompletion(objective);

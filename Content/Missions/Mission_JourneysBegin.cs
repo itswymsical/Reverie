@@ -29,7 +29,7 @@ public class Mission_JourneysBegin : Mission
         [ 
             [("Talk to Guide", 1)],
             [("Use Magic Mirror", 1)],
-            [("Break pots", 10), ("Loot chests", 5)],
+            [("Break pots", 20), ("Loot chests", 5)],
             [("Return to Guide", 1)]
         ],
 
@@ -137,26 +137,13 @@ public class Mission_JourneysBegin : Mission
 
     private void OnItemPickupHandler(Item item, Player player)
     {
-        if (Progress != MissionProgress.Ongoing) return;
-        var objective = (Objectives)CurrentIndex;
-        switch (objective)
-        {
+        //if (Progress != MissionProgress.Ongoing) return;
+        //var objective = (Objectives)CurrentIndex;
+        //switch (objective)
+        //{
 
-            case Objectives.ExploreUnderground:
-                if (item.type == ItemID.CopperCoin)
-                {
-                    UpdateProgress(0, item.stack);
-                }
-                else if (item.type == ItemID.SilverCoin)
-                {
-                    UpdateProgress(0, item.stack * 10);
-                }
-                else if (item.type == ItemID.GoldCoin)
-                {
-                    UpdateProgress(0, 500);
-                }
-                break;
-        }
+
+        //}
     }
 
     private void OnItemUseHandler(Item item, Player player)
@@ -210,8 +197,6 @@ public class Mission_JourneysBegin : Mission
         }
     }
 
-    private int potTileBreakCounter = 0;
-
     private void OnTileBreakHandler(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
     {
         if (Progress != MissionProgress.Ongoing) return;
@@ -224,12 +209,20 @@ public class Mission_JourneysBegin : Mission
             case Objectives.ExploreUnderground:
                 if (type == TileID.Pots)
                 {
-                    potTileBreakCounter++;
-                    if (potTileBreakCounter >= 4)
-                    {
-                        UpdateProgress(0);
-                        potTileBreakCounter = 0;
-                    }
+                    // Find the top-left origin of the 2x2 pot
+                    Tile tile = Main.tile[i, j];
+                    int originX = i - (tile.TileFrameX / 18);
+                    int originY = j - (tile.TileFrameY / 18);
+
+                    var originPos = new Point(originX, originY);
+
+                    // Skip if this pot was already counted
+                    if (interactedTiles.Contains(originPos)) return;
+
+                    // Mark this pot as counted (prevents 4x counting from 2x2 break)
+                    interactedTiles.Add(originPos);
+
+                    UpdateProgress(0); // First objective in the set (Break pots)
                 }
                 break;
         }
