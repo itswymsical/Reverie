@@ -1,4 +1,4 @@
-DialogueLibrary: {
+﻿DialogueLibrary: {
 	JourneysBegin: {
 		Crash: {
 			Line1: {
@@ -120,10 +120,33 @@ DialogueLibrary: {
 			}
 
 			Line6: {
-				Text: You gain a feeling,<pause:12> that Guide may actually be useful for once...
+				Text: You gain a feeling,<pause:12> that the Guide may actually be useful for once...
 				Speaker: You
 				Emote: "0"
 				Speed: "1.5"
+			}
+		}
+
+		ChronicleFound: {
+			Line1: {
+				Text: <shake:1>...</shake>
+				Speaker: You
+				Emote: "0"
+				Speed: "0.5"
+			}
+
+			Line2: {
+				Text: <shake:1>...</shake>
+				Speaker: You
+				Emote: "0"
+				Speed: "0.5"
+			}
+
+			Line3: {
+				Text: <sine>Something about this book seems eerily familiar...</sine>
+				Speaker: You
+				Emote: "0"
+				Speed: "1"
 			}
 		}
 	}

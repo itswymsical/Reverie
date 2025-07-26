@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -473,6 +473,7 @@ Projectiles: {
 	MagnoliaPheromonesProj.DisplayName: Magnolia Pheromones
 	SharpnutDaggerProj.DisplayName: Sharpnut Dagger
 	LodestoneMagnetizerProj.DisplayName: Lodestone Magnetizer
+	ArchiverChronicleProjectile.DisplayName: Archiver Chronicle Projectile
 }
 
 Configs: {

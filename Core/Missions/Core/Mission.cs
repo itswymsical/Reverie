@@ -46,7 +46,7 @@ public abstract class Mission
     protected bool isDirty = false;
     protected bool eventsRegistered = false;
     protected HashSet<Point> interactedTiles = new HashSet<Point>();
-
+    protected HashSet<int> interactedItems = new HashSet<int>();
     #endregion
 
     #region Properties
@@ -149,9 +149,11 @@ public abstract class Mission
     }
 
     public void ClearInteractedTiles() => interactedTiles.Clear();
+    public void ClearInteractedItems() => interactedItems.Clear();
 
     public bool WasTileInteracted(int i, int j) => interactedTiles.Contains(new Point(i, j));
-
+    public bool WasItemInteracted(int type) => interactedItems.Contains(type);
+    public void MarkItemInteracted(int type) => interactedItems.Add(type);
     #endregion
 
     #region Core Mission Logic
@@ -206,6 +208,7 @@ public abstract class Mission
         Progress = MissionProgress.Inactive;
         CurrentIndex = 0;
         interactedTiles.Clear(); // Clear tracked tiles on reset
+        interactedItems.Clear();
         foreach (var set in Objective)
         {
             set.Reset();
@@ -223,6 +226,8 @@ public abstract class Mission
 
             OnMissionComplete();
         }
+        interactedTiles.Clear();
+        interactedItems.Clear();
     }
 
     /// <summary>

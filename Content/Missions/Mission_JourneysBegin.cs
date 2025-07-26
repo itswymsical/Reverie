@@ -1,4 +1,6 @@
-﻿using Reverie.Core.Dialogue;
+﻿using Reverie.Content.Items.Misc;
+using Reverie.Content.Projectiles.Misc;
+using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Core.Missions.Core;
 using Terraria;
@@ -25,11 +27,11 @@ public class Mission_JourneysBegin : Mission
 
         description: @"""Well, that's one way to make an appearance...""",
 
-        objectiveList: 
-        [ 
+        objectiveList:
+        [
             [("Talk to Guide", 1)],
             [("Use Magic Mirror", 1)],
-            [("Break pots", 20), ("Loot chests", 5)],
+            [("Loot chests", 5), ("Mine ore", 20), ("Break pots", 30)],
             [("Return to Guide", 1)]
         ],
 
@@ -114,7 +116,7 @@ public class Mission_JourneysBegin : Mission
                     player.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.MagicMirror, 1);
                     DialogueManager.Instance.StartDialogue("JourneysBegin.MirrorGiven", 1, zoomIn: false, letterbox: false);
                 }
-            break;
+                break;
         }
     }
 
@@ -137,13 +139,14 @@ public class Mission_JourneysBegin : Mission
 
     private void OnItemPickupHandler(Item item, Player player)
     {
-        //if (Progress != MissionProgress.Ongoing) return;
-        //var objective = (Objectives)CurrentIndex;
-        //switch (objective)
-        //{
-
-
-        //}
+        if (item.type == ModContent.ItemType<ArchiverChronicleI>())
+        {
+            if (!WasItemInteracted(item.type))
+            {
+                MarkItemInteracted(item.type);
+                DialogueManager.Instance.StartDialogue("JourneysBegin.ChronicleFound", 3, zoomIn: false, letterbox: false);
+            }
+        }
     }
 
     private void OnItemUseHandler(Item item, Player player)
@@ -191,7 +194,7 @@ public class Mission_JourneysBegin : Mission
                         }
                     }
 
-                    UpdateProgress(1);
+                    UpdateProgress(objective: 0);
                 }
                 break;
         }
@@ -209,20 +212,26 @@ public class Mission_JourneysBegin : Mission
             case Objectives.ExploreUnderground:
                 if (type == TileID.Pots)
                 {
-                    // Find the top-left origin of the 2x2 pot
                     Tile tile = Main.tile[i, j];
                     int originX = i - (tile.TileFrameX / 18);
                     int originY = j - (tile.TileFrameY / 18);
 
                     var originPos = new Point(originX, originY);
 
-                    // Skip if this pot was already counted
                     if (interactedTiles.Contains(originPos)) return;
 
-                    // Mark this pot as counted (prevents 4x counting from 2x2 break)
                     interactedTiles.Add(originPos);
 
-                    UpdateProgress(0); // First objective in the set (Break pots)
+                    UpdateProgress(objective: 2);
+
+                    if (Objective[CurrentIndex].Objectives[2].CurrentCount == 25)
+                    {
+                        Projectile.NewProjectile(new EntitySource_Misc("Mission"), new Vector2(i * 16, j * 16), Vector2.Zero, ModContent.ProjectileType<ArchiverChronicleProjectile>(), 0, 0);
+                    }
+                }
+                if (TileID.Sets.Ore[type])
+                {
+                    UpdateProgress(objective: 1);
                 }
                 break;
         }
