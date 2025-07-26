@@ -99,7 +99,7 @@
 			}
 
 			Line3: {
-				Text: If you look to the right side of the screen,<pause:8> you'll see a list of tasks.
+				Text: If you look to your map while in inventory,<pause:8> you'll see a list of tasks.
 				Speaker: Guide
 				Emote: "0"
 				Speed: "1.5"
@@ -139,7 +139,7 @@
 				Text: You have found a strange book, titled "Chronicles of Reverie".
 				Speaker: You
 				Emote: "0"
-				Speed: "0.5"
+				Speed: "1"
 			}
 
 			Line3: {
@@ -148,16 +148,62 @@
 				Emote: "0"
 				Speed: "1"
 			}
-            Line4: {
+
+			Line4: {
 				Text: You contact the Guide<pause:8>, and ask if they know anything about it.
 				Speaker: You
 				Emote: "0"
 				Speed: "1"
 			}
-            Line5: {
-				Text: Chronicle of Reverie? <pause:8>I've never heard of it.<pause:15>Bring it to me, and I'll take a look.
+
+			Line5: {
+				Text: Chronicle of Reverie? <pause:8>I've never heard of it.<pause:15> Bring it to me, and I'll take a look.
 				Speaker: Guide
 				Emote: "0"
+				Speed: "1.5"
+			}
+		}
+
+		ChronicleReading: {
+			Line1: {
+				Text: Where did you find this? <pause:8>This looks like a chronicle from the Order!
+				Speaker: Guide
+				Emote: "2"
+				Speed: "1"
+			}
+
+			Line2: {
+				Text: Oh, yeah,<pause:10> The Order of the Guide,<pause:8> also known as the Archivers.
+				Speaker: Guide
+				Emote: "0"
+				Speed: "1"
+			}
+
+			Line3: {
+				Text: They were a group of Guides who dedicated themselves to recording the history of Terraria.
+				Speaker: Guide
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line4: {
+				Text: They were active during the early days of Terraria, but they disappeared long ago.
+				Speaker: Guide
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line5: {
+				Text: Unfortunately, I don't know much more than that.<pause:10> All of the Archivers were lost in the Great Cataclysm.
+				Speaker: Guide
+				Emote: "2"
+				Speed: "1.5"
+			}
+
+			Line6: {
+				Text: If you want to learn more,<pause:8> you should try to find more of these chronicles.
+				Speaker: Guide
+				Emote: "2"
 				Speed: "1.5"
 			}
 		}

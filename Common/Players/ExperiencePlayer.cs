@@ -60,8 +60,17 @@ public class ExperiencePlayer : ModPlayer
 
     public static int GetNextExperienceThreshold(int level)
     {
-        if (level <= 1) return Main.masterMode ? 325 : Main.expertMode ? 300 : 280;
-        
-        return Main.masterMode ? (int)377.37753541f * level : Main.expertMode ? (int)327.37753541f * level : (int)302.37753541f * level;
+        // Borderlands-inspired system
+        int baseXP = Main.masterMode ? 120 : Main.expertMode ? 100 : 80;
+
+        // Early game boost (levels 1-15 are faster)
+        float earlyGameMultiplier = level <= 15 ? 0.7f : 1f;
+
+        // Polynomial growth with level-based scaling
+        float levelFactor = (float)Math.Pow(level, 2.15f);
+
+        float variance = 1f + (level % 3) * 0.05f; // Small 0-10% variance
+
+        return (int)(baseXP * levelFactor * earlyGameMultiplier * variance);
     }
 }

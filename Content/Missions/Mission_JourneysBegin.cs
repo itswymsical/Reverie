@@ -3,7 +3,7 @@ using Reverie.Content.Projectiles.Misc;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Core.Missions.Core;
-using Terraria;
+using Reverie.Utilities;
 using Terraria.DataStructures;
 using static Reverie.Core.Dialogue.DialogueManager;
 using static Reverie.Core.Missions.Core.ObjectiveEventItem;
@@ -19,7 +19,7 @@ public class Mission_JourneysBegin : Mission
         TalkToGuide = 0,
         UseMirror = 1,
         ExploreUnderground = 2,
-        ReturnToGuide = 3
+        ChronicleSegment = 3
     }
 
     public Mission_JourneysBegin() : base(MissionID.JourneysBegin,
@@ -32,7 +32,7 @@ public class Mission_JourneysBegin : Mission
             [("Talk to Guide", 1)],
             [("Use Magic Mirror", 1)],
             [("Loot chests", 5), ("Mine ore", 20), ("Break pots", 30)],
-            [("Return to Guide", 1)]
+            [("Give Guide Mysterious Book", 1), ("Listen to Guide", 1)]
         ],
 
         rewards: [new Item(ItemID.RegenerationPotion), new Item(ItemID.IronskinPotion), new Item(ItemID.GoldCoin, Main.rand.Next(4, 6))],
@@ -64,6 +64,18 @@ public class Mission_JourneysBegin : Mission
         Main.slimeRain = false;
         Main.slimeRainTime = 0;
         Main.bloodMoon = false;
+
+        if (WasItemInteracted(ModContent.ItemType<ArchiverChronicleI>()))
+        {
+            for (int i = 0; i < player.inventory.Length; i++)
+            {
+                Item item = player.inventory[i];
+                if (item.type == ModContent.ItemType<ArchiverChronicleI>() && !item.IsAir)
+                {
+                    item.favorited = true;
+                }
+            }
+        }
     }
 
     #region Event Registration
@@ -112,9 +124,16 @@ public class Mission_JourneysBegin : Mission
             case Objectives.TalkToGuide:
                 if (dialogueKey == "JourneysBegin.Tutorial")
                 {
-                    UpdateProgress(0);
+                    UpdateProgress(objective: 0);
                     player.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.MagicMirror, 1);
                     DialogueManager.Instance.StartDialogue("JourneysBegin.MirrorGiven", 1, zoomIn: false, letterbox: false);
+                }
+                break;
+            case Objectives.ChronicleSegment:
+                if (dialogueKey == "JourneysBegin.ChronicleReading")
+                {
+                    UpdateProgress(objective: 1);
+                    player.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ModContent.ItemType<ArchiverChronicleI>(), 1);
                 }
                 break;
         }
@@ -127,11 +146,12 @@ public class Mission_JourneysBegin : Mission
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
-            case Objectives.ReturnToGuide:
+            case Objectives.ChronicleSegment:
                 if (npc.type == NPCID.Guide)
                 {
                     UpdateProgress(0);
-                    //DialogueManager.Instance.StartDialogue("JourneysBegin.Tutorial", 7, zoomIn: true);
+                    MissionUtils.RetrieveItemsFromPlayer(player, ModContent.ItemType<ArchiverChronicleI>(), 1);
+                    DialogueManager.Instance.StartDialogue("JourneysBegin.ChronicleReading", 6, zoomIn: true);
                 }
                 break;
         }
@@ -224,9 +244,14 @@ public class Mission_JourneysBegin : Mission
 
                     UpdateProgress(objective: 2);
 
-                    if (Objective[CurrentIndex].Objectives[2].CurrentCount == 25)
+                    // Only check in the Objectives.ExploreUnderground
+                    if (CurrentIndex == (int)Objectives.ExploreUnderground)
                     {
-                        Projectile.NewProjectile(new EntitySource_Misc("Mission"), new Vector2(i * 16, j * 16), Vector2.Zero, ModContent.ProjectileType<ArchiverChronicleProjectile>(), 0, 0);
+                        var currentSet = Objective[CurrentIndex];
+                        if (currentSet.Objectives[2].CurrentCount == 25)
+                        {
+                            Projectile.NewProjectile(new EntitySource_Misc("Mission"), new Vector2(i * 16, j * 16), Vector2.Zero, ModContent.ProjectileType<ArchiverChronicleProjectile>(), 0, 0);
+                        }
                     }
                 }
                 if (TileID.Sets.Ore[type])
