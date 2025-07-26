@@ -35,9 +35,9 @@ public class Mission_JourneysBegin : Mission
             [("Give Guide Mysterious Book", 1), ("Listen to Guide", 1)]
         ],
 
-        rewards: [new Item(ItemID.RegenerationPotion), new Item(ItemID.IronskinPotion), new Item(ItemID.GoldCoin, Main.rand.Next(4, 6))],
+        rewards: [new Item(ItemID.RegenerationPotion), new Item(ItemID.LesserHealingPotion, Main.rand.Next(5, 10)), new Item(ItemID.GoldCoin, Main.rand.Next(1, 2))],
 
-        isMainline: true, NPCID.Guide, xpReward: 100)
+        isMainline: true, NPCID.Guide, xpReward: 50)
     {
         Reverie.Instance.Logger.Info($"[{Name} - {ID}] constructed");
     }
@@ -53,8 +53,9 @@ public class Mission_JourneysBegin : Mission
     {
         base.OnMissionComplete(giveRewards);
 
-        //MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        //player.StartNextMission(...);
+
+        MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+        player.UnlockMission(MissionID.JourneysBegin_Part2);
     }
 
     public override void Update()

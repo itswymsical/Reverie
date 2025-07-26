@@ -104,38 +104,32 @@ public class ExperienceGlobalNPC : GlobalNPC
 
     private int CalculateBaseXP(NPC npc)
     {
-        // Get normalized health (what the enemy would have in Classic mode)
         int normalizedHealth = GetNormalizedHealth(npc);
 
-        // Base XP calculation
-        int baseXP = normalizedHealth / 6; // Adjusted from /8 for better scaling
+        int baseXP = normalizedHealth / 6;
 
-        // Apply enemy tier multipliers
         float tierMultiplier = GetEnemyTierMultiplier(npc);
         baseXP = (int)(baseXP * tierMultiplier);
 
-        // Apply difficulty mode bonuses (smaller than health scaling)
         float difficultyMultiplier = Main.masterMode ? 1.4f : Main.expertMode ? 1.2f : 1f;
         baseXP = (int)(baseXP * difficultyMultiplier);
 
-        // Special boss scaling
         if (npc.boss)
         {
             baseXP *= GetBossMultiplier(npc);
         }
 
-        return Math.Max(baseXP, 1); // Minimum 1 XP
+        return Math.Max(baseXP, 1);
     }
 
     private int GetNormalizedHealth(NPC npc)
     {
-        // Reverse the difficulty scaling to get base health
         if (Main.masterMode)
-            return (int)(npc.lifeMax / 3f); // Master mode has ~3x health
+            return (int)(npc.lifeMax / 3f);
         else if (Main.expertMode)
-            return (int)(npc.lifeMax / 2f); // Expert mode has ~2x health
+            return (int)(npc.lifeMax / 2f);
         else
-            return npc.lifeMax; // Classic mode
+            return npc.lifeMax;
     }
 
     private float GetEnemyTierMultiplier(NPC npc)
@@ -144,19 +138,14 @@ public class ExperienceGlobalNPC : GlobalNPC
         if (!Main.hardMode)
         {
             // Early game (surface/underground)
-            if (npc.type == NPCID.BlueSlime || npc.type == NPCID.GreenSlime ||
+            if (npc.aiStyle == NPCAIStyleID.Slime ||
                 npc.type == NPCID.Zombie || npc.type == NPCID.DemonEye)
-                return 0.8f;
+                return 1.05f;
 
-            // Mid pre-hardmode (cavern/corruption)
-            if (npc.type == NPCID.Skeleton || npc.type == NPCID.EaterofSouls)
+            if (npc.type == NPCID.ManEater || npc.type == NPCID.EaterofSouls)
                 return 1.2f;
 
-            // Late pre-hardmode (dungeon/jungle)
-            if (npc.type == NPCID.SkeletonArcher || npc.type == NPCID.Hornet)
-                return 1.5f;
-
-            return 1f; // Default pre-hardmode
+            return 1f;
         }
         else
         {
@@ -219,7 +208,6 @@ public class ExperienceGlobalNPC : GlobalNPC
     {
         if (!Main.hardMode)
         {
-            // Pre-hardmode: levels 1-20
             if (npc.boss) return Math.Min(20, npc.type switch
             {
                 NPCID.KingSlime => 5,
@@ -231,11 +219,10 @@ public class ExperienceGlobalNPC : GlobalNPC
                 _ => 10
             });
 
-            return 1 + (int)(npc.lifeMax / 50f); // Rough estimate for regular enemies
+            return 1 + (int)(npc.lifeMax / 50f);
         }
         else
         {
-            // Hardmode: levels 20-60
             if (npc.boss) return npc.type switch
             {
                 NPCID.QueenSlimeBoss => 25,
