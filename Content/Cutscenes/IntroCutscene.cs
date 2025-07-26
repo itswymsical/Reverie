@@ -36,7 +36,6 @@ public class IntroCutscene : Cutscene
 
         base.Start();
         SetMusic(MusicLoader.GetMusicSlot($"{CUTSCENE_MUSIC_DIRECTORY}DawnofReverie"), MusicFadeMode.Instant);
-        UsesLetterbox();
     }
 
     protected override void OnCutsceneStart()
@@ -48,6 +47,7 @@ public class IntroCutscene : Cutscene
         var startPos = originalPlayerPosition - new Vector2(0, panDistance);
         CameraSystem.MoveCameraOut(1, startPos);
         ControlsOFF();
+        UsesLetterbox();
         EnableLetterbox = true;
         InvisON();
     }

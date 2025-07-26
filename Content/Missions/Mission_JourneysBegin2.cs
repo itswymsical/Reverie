@@ -1,5 +1,7 @@
-﻿using Reverie.Core.Missions;
+﻿using Reverie.Core.Dialogue;
+using Reverie.Core.Missions;
 using Reverie.Core.Missions.Core;
+using Terraria.DataStructures;
 using static Reverie.Core.Dialogue.DialogueManager;
 using static Reverie.Core.Missions.Core.ObjectiveEventItem;
 using static Reverie.Core.Missions.Core.ObjectiveEventNPC;
@@ -41,7 +43,7 @@ public class Mission_JourneysBegin2 : Mission
     {
         base.OnMissionStart();
 
-        //DialogueManager.Instance.StartDialogue("JourneysBegin2.FindChronicles", 6, zoomIn: true, false);
+        DialogueManager.Instance.StartDialogue("JourneysBegin2.FindChronicles", 1, zoomIn: true, false);
     }
 
     public override void OnMissionComplete(bool giveRewards = true)
@@ -105,7 +107,12 @@ public class Mission_JourneysBegin2 : Mission
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
-
+            case Objectives.TalkToGuide:
+                if (dialogueKey == "JourneysBegin2.FindChronicles")
+                {
+                    UpdateProgress(objective: 0);
+                }
+                break;
         }
     }
 
