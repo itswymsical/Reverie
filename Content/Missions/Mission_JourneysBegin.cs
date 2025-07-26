@@ -144,7 +144,7 @@ public class Mission_JourneysBegin : Mission
             if (!WasItemInteracted(item.type))
             {
                 MarkItemInteracted(item.type);
-                DialogueManager.Instance.StartDialogue("JourneysBegin.ChronicleFound", 3, zoomIn: false, letterbox: false);
+                DialogueManager.Instance.StartDialogue("JourneysBegin.ChronicleFound", 5, zoomIn: false, letterbox: false);
             }
         }
     }
