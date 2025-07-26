@@ -46,8 +46,9 @@ public abstract class TanglewoodTree : ModTile
     /// Valid anchor tiles for tree placement
     /// </summary>
     public virtual int[] ValidAnchorTiles => [
-        ModContent.TileType<CanopyGrassTile>(),
+        ModContent.TileType<RainforestGrassTile>(),
         ModContent.TileType<WoodgrassTile>(),
+        ModContent.TileType<ClayLoamTile>(),
     ];
 
     #endregion

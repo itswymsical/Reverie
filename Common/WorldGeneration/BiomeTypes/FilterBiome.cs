@@ -1,0 +1,53 @@
+﻿using Terraria.WorldBuilding;
+
+namespace Reverie.Common.WorldGeneration.BiomeTypes;
+
+/// <summary>
+/// Example implementation for simple spawn-proximity biomes
+/// </summary>
+public abstract class FilterBiome : SurfaceBiomeBase
+{
+    protected FilterBiome(string name, float weight, BiomeConfiguration config = null)
+        : base(name, weight, config) { }
+
+    protected override bool TryCalculateBiomeBounds(out BiomeBounds bounds)
+    {
+        bounds = default;
+
+        int width = WorldGen.genRand.Next(_config.MinWidth, _config.MaxWidth);
+        int minDistance = (int)(Main.maxTilesX * 0.009f);
+        int maxDistance = (int)(Main.maxTilesX * 0.045f);
+
+        Rectangle spawnBounds = CalculateSpawnProximityBounds(minDistance, maxDistance, width);
+        if (spawnBounds.IsEmpty) return false;
+
+        bounds = new BiomeBounds
+        {
+            Left = spawnBounds.Left,
+            Right = spawnBounds.Right,
+            Top = (int)Main.worldSurface - 50,
+            Bottom = (int)Main.worldSurface + _config.SurfaceDepth
+        };
+
+        return bounds.IsValid;
+    }
+
+    protected override void PopulateBiome(GenerationProgress progress)
+    {
+        int depth = (int)Main.worldSurface + 100;
+
+        for (int currentDepth = 0; currentDepth <= depth; currentDepth++)
+        {
+            progress.Set((double)currentDepth / depth);
+
+            for (int x = _biomeBounds.Left; x < _biomeBounds.Right; x++)
+            {
+                if (!WorldGen.InWorld(x, currentDepth)) continue;
+
+                ConvertTilesInColumn(x, currentDepth);
+            }
+        }
+    }
+
+    protected abstract void ConvertTilesInColumn(int x, int y);
+}
