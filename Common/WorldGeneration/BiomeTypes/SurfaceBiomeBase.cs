@@ -14,6 +14,8 @@ public abstract class SurfaceBiomeBase : GenPass
     protected BiomeBounds _biomeBounds;
     protected int[] _terrainHeights;
 
+    protected const ushort PRESERVE_AIR = ushort.MaxValue;
+
     public SurfaceBiomeBase(string name, float weight, BiomeConfiguration config = null) : base(name, weight)
     {
         _config = config ?? new BiomeConfiguration();
@@ -24,14 +26,9 @@ public abstract class SurfaceBiomeBase : GenPass
         var soilTiles = new List<Point>();
         var soilType = GetSoilTileType();
 
-        // Look around actual terrain surface heights, not entire biome bounds
-        for (int i = 0; i < _biomeBounds.Width; i++)
+        for (int x = _biomeBounds.Left; x < _biomeBounds.Right; x++)
         {
-            int x = _biomeBounds.Left + i;
-            int surfaceY = _terrainHeights[i];
-
-            // Check a small range around the surface
-            for (int y = surfaceY - 5; y < surfaceY + 20; y++)
+            for (int y = _biomeBounds.Top - 10; y < _biomeBounds.Top + _config.SurfaceDepth + 30; y++)
             {
                 if (!WorldGen.InWorld(x, y)) continue;
 
@@ -43,12 +40,11 @@ public abstract class SurfaceBiomeBase : GenPass
             }
         }
 
-        // Convert exposed soil tiles to grass
         int processed = 0;
         foreach (var soilPos in soilTiles)
         {
             processed++;
-            if (processed % 100 == 0)
+            if (processed % 50 == 0)
                 progress.Set((double)processed / soilTiles.Count);
 
             if (IsExposedToAir(soilPos.X, soilPos.Y))
@@ -64,8 +60,16 @@ public abstract class SurfaceBiomeBase : GenPass
             }
         }
     }
+
     private bool IsExposedToAir(int x, int y)
     {
+        if (WorldGen.InWorld(x, y - 1))
+        {
+            var aboveTile = Main.tile[x, y - 1];
+            if (!aboveTile.HasTile)
+                return true;
+        }
+
         for (int checkX = x - 1; checkX <= x + 1; checkX++)
         {
             for (int checkY = y - 1; checkY <= y + 1; checkY++)
@@ -78,6 +82,7 @@ public abstract class SurfaceBiomeBase : GenPass
                     return true;
             }
         }
+
         return false;
     }
 
@@ -87,7 +92,7 @@ public abstract class SurfaceBiomeBase : GenPass
 
         InitializeNoise();
 
-        if (!TryCalculateBiomeBounds(out _biomeBounds))
+        if (!GetBiomeBounds(out _biomeBounds))
         {
             progress.Message = $"Failed to find suitable location for {PassName} - skipping";
             return;
@@ -113,9 +118,9 @@ public abstract class SurfaceBiomeBase : GenPass
 
     #region Abstract Methods
     protected abstract string PassName { get; }
-    protected abstract bool TryCalculateBiomeBounds(out BiomeBounds bounds);
-    protected abstract ushort GetBaseTileType(int x, int y, int depthFromSurface, float noiseValue);
-    protected abstract ushort GetTerrainTileType(int x, int y, int depthFromSurface);
+    protected abstract bool GetBiomeBounds(out BiomeBounds bounds);
+    protected abstract ushort GetBaseTile(int x, int y, int depthFromSurface, float noiseValue);
+    protected abstract ushort GetTerrainTile(int x, int y, int depthFromSurface);
     protected abstract void PopulateBiome(GenerationProgress progress);
     #endregion
 
@@ -137,15 +142,21 @@ public abstract class SurfaceBiomeBase : GenPass
 
     protected virtual bool CanReplaceTile(int tileType)
     {
-        return tileType == TileID.Dirt || tileType == TileID.Grass ||
-               tileType == TileID.ClayBlock || tileType == TileID.CrimsonGrass ||
-               tileType == TileID.CorruptGrass || tileType == TileID.Stone;
+        if (tileType == TileID.Dirt || tileType == TileID.Grass ||
+            tileType == TileID.ClayBlock || tileType == TileID.Sand ||
+            tileType == TileID.Silt || tileType == TileID.Slush)
+            return true;
+
+        if (tileType == TileID.CorruptGrass || tileType == TileID.CrimsonGrass)
+            return true;
+
+        return false;
     }
 
     protected virtual void PostGeneration(GenerationProgress progress) { }
 
-    protected virtual ushort GetSoilTileType() => 0; // Override to enable grass spreading
-    protected virtual ushort GetGrassTileType() => 0; // Override to enable grass spreading
+    protected virtual ushort GetSoilTileType() => 0;
+    protected virtual ushort GetGrassTileType() => 0;
 
     protected virtual bool ShouldSpreadGrass() => GetSoilTileType() != 0 && GetGrassTileType() != 0;
     #endregion
@@ -164,6 +175,8 @@ public abstract class SurfaceBiomeBase : GenPass
             {
                 if (!WorldGen.InWorld(x, y)) continue;
 
+                if (ShouldSkipTileGeneration(x, y)) continue;
+
                 Tile tile = Main.tile[x, y];
                 if (!tile.HasTile || !CanReplaceTile(tile.TileType)) continue;
 
@@ -173,8 +186,8 @@ public abstract class SurfaceBiomeBase : GenPass
                 float taperFactor = GetHorizontalTaper(x);
                 if (WorldGen.genRand.NextFloat() > taperFactor) continue;
 
-                ushort newTileType = GetBaseTileType(x, y, depthFromSurface, noiseValue);
-                if (newTileType != 0)
+                ushort newTileType = GetBaseTile(x, y, depthFromSurface, noiseValue);
+                if (newTileType != 0 && newTileType != PRESERVE_AIR)
                 {
                     tile.TileType = newTileType;
                 }
@@ -192,7 +205,7 @@ public abstract class SurfaceBiomeBase : GenPass
         int leftEdgeHeight = GetSurfaceHeight(_biomeBounds.Left - 1);
         int rightEdgeHeight = GetSurfaceHeight(_biomeBounds.Right + 1);
 
-        _terrainHeights = GenerateTerrainHeights(leftEdgeHeight, rightEdgeHeight);
+        _terrainHeights = GenerateContouredHeights(leftEdgeHeight, rightEdgeHeight);
 
         for (int i = 0; i < _biomeBounds.Width; i++)
         {
@@ -203,12 +216,21 @@ public abstract class SurfaceBiomeBase : GenPass
         }
     }
 
-    protected int[] GenerateTerrainHeights(int leftEdgeHeight, int rightEdgeHeight)
+    protected int[] GenerateContouredHeights(int leftEdgeHeight, int rightEdgeHeight)
     {
         int width = _biomeBounds.Width;
         int[] heights = new int[width];
-        int baseHeight = (leftEdgeHeight + rightEdgeHeight) / 2;
+        int[] existingHeights = new int[width];
 
+        // First, sample existing terrain heights
+        for (int i = 0; i < width; i++)
+        {
+            int x = _biomeBounds.Left + i;
+            existingHeights[i] = GetActualSurfaceHeight(x);
+        }
+
+        // Generate our desired contour
+        int baseHeight = (leftEdgeHeight + rightEdgeHeight) / 2;
         int targetSurfaceHeight = (int)Main.worldSurface + _config.BaseHeightOffset;
         baseHeight = Math.Min(baseHeight, targetSurfaceHeight);
         baseHeight = Math.Max(baseHeight, (int)Main.worldSurface - 180);
@@ -218,21 +240,28 @@ public abstract class SurfaceBiomeBase : GenPass
             int x = _biomeBounds.Left + i;
             float normalizedPosition = (float)i / (width - 1);
 
+            // Generate noise-based height variation
             float primaryNoise = _terrainNoise.GetNoise(x * 0.5f, 0f);
             float secondaryNoise = _terrainNoise.GetNoise(x * 1.2f, 100f) * 0.3f;
             float combinedNoise = primaryNoise + secondaryNoise;
 
-            int noiseHeight = (int)(combinedNoise * _config.TerrainHeightVariation * 1.5f);
+            int noiseHeight = (int)(combinedNoise * _config.TerrainHeightVariation * 0.5f); // Reduced intensity
 
             float taperFactor = GetTaperFactor(normalizedPosition, width);
             int taperedNoiseHeight = (int)(noiseHeight * taperFactor);
 
-            int contourHeight = GetContourHeight(normalizedPosition, baseHeight, leftEdgeHeight, rightEdgeHeight, taperFactor);
+            // Blend between existing terrain and our desired height
+            int desiredHeight = baseHeight + taperedNoiseHeight;
+            int existingHeight = existingHeights[i];
 
-            heights[i] = contourHeight + taperedNoiseHeight;
+            // Use a weighted blend - respect existing terrain more at edges
+            float blendFactor = taperFactor * 0.6f; // Max 60% influence in center
+            heights[i] = (int)(existingHeight * (1f - blendFactor) + desiredHeight * blendFactor);
+
+            // Ensure reasonable bounds
             heights[i] = Math.Clamp(heights[i],
-                Math.Min(leftEdgeHeight, rightEdgeHeight) - 100,
-                Math.Max(leftEdgeHeight, rightEdgeHeight) + 60);
+                Math.Min(leftEdgeHeight, rightEdgeHeight) - 50,
+                Math.Max(leftEdgeHeight, rightEdgeHeight) + 30);
         }
 
         return heights;
@@ -240,20 +269,29 @@ public abstract class SurfaceBiomeBase : GenPass
 
     private void FillTerrainColumn(int x, int surfaceY)
     {
-        int maxDepth = surfaceY + _config.SurfaceDepth;
+        int maxDepth = surfaceY + (_config.SurfaceDepth / 2); // Reduced depth for less intrusion
 
         for (int y = surfaceY; y < maxDepth && y < Main.maxTilesY; y++)
         {
-            if (!WorldGen.InWorld(x, y)) continue;
+            if (ShouldSkipTileGeneration(x, y)) continue;
 
             Tile tile = Main.tile[x, y];
-            tile.HasTile = true;
 
+            // Only fill air or easily replaceable terrain
+            if (tile.HasTile && !CanReplaceTile(tile.TileType))
+                continue;
+
+            // Only place tiles below the surface or in specific conditions
             int depthFromSurface = y - surfaceY;
-            ushort tileType = GetTerrainTileType(x, y, depthFromSurface);
+            if (depthFromSurface < 0 && tile.HasTile) continue; // Don't place above existing surface
 
-            if (tileType != 0)
+            ushort tileType = GetTerrainTile(x, y, depthFromSurface);
+
+            if (tileType != 0 && tileType != PRESERVE_AIR)
+            {
+                tile.HasTile = true;
                 tile.TileType = tileType;
+            }
         }
     }
 
@@ -265,6 +303,29 @@ public abstract class SurfaceBiomeBase : GenPass
         for (int y = (int)Main.worldSurface - 250; y < Main.maxTilesY - 300; y++)
         {
             if (WorldGen.InWorld(x, y) && Main.tile[x, y].HasTile && Main.tileSolid[Main.tile[x, y].TileType])
+                return y;
+        }
+
+        return (int)Main.worldSurface;
+    }
+
+    private int GetActualSurfaceHeight(int x)
+    {
+        if (!WorldGen.InWorld(x, 0)) return (int)Main.worldSurface;
+
+        // Start from a reasonable surface area
+        for (int y = (int)Main.worldSurface - 100; y < (int)Main.worldSurface + 100; y++)
+        {
+            if (!WorldGen.InWorld(x, y)) continue;
+
+            var tile = Main.tile[x, y];
+
+            // Skip evil biome air pockets
+            if (!tile.HasTile && IsEvilWall(tile.WallType))
+                continue;
+
+            // Found solid ground
+            if (tile.HasTile && Main.tileSolid[tile.TileType])
                 return y;
         }
 
@@ -368,5 +429,90 @@ public abstract class SurfaceBiomeBase : GenPass
 
         return new Rectangle(left, 0, right - left, 0);
     }
+
+    private bool IsEvilWall(ushort wallType)
+    {
+        // Corruption walls
+        if (wallType >= WallID.CorruptionUnsafe1 && wallType <= WallID.CorruptionUnsafe4)
+            return true;
+
+        // Crimson walls  
+        if (wallType >= WallID.CrimsonUnsafe1 && wallType <= WallID.CrimsonUnsafe4)
+            return true;
+
+        // Additional evil walls that might be missed
+        if (wallType == WallID.EbonstoneUnsafe || wallType == WallID.CorruptHardenedSand ||
+            wallType == WallID.CrimstoneUnsafe || wallType == WallID.CrimsonHardenedSand ||
+            wallType == WallID.CorruptGrassUnsafe || wallType == WallID.CrimsonGrassUnsafe)
+            return true;
+
+        return false;
+    }
+
+    private bool IsEvilBiomeTile(ushort tileType)
+    {
+        if (tileType == TileID.Ebonstone || tileType == TileID.Ebonsand ||
+            tileType == TileID.CorruptSandstone || tileType == TileID.CorruptHardenedSand)
+            return true;
+
+        if (tileType == TileID.Crimstone || tileType == TileID.Crimsand ||
+            tileType == TileID.CrimsonSandstone || tileType == TileID.CrimsonHardenedSand)
+            return true;
+
+        return false;
+    }
+
+    private bool ShouldSkipTileGeneration(int x, int y)
+    {
+        if (!WorldGen.InWorld(x, y)) return true;
+
+        var tile = Main.tile[x, y];
+
+        // Skip air with evil walls (preserve caverns)
+        if (!tile.HasTile && IsEvilWall(tile.WallType))
+            return true;
+
+        // Skip evil biome tiles
+        if (tile.HasTile && IsEvilBiomeTile(tile.TileType))
+            return true;
+
+        // Skip important structures
+        if (tile.HasTile && IsImportantStructure(tile.TileType))
+            return true;
+
+        // Check larger area for evil biome presence - be more aggressive
+        int evilCount = 0;
+        int totalChecked = 0;
+
+        for (int checkX = x - 3; checkX <= x + 3; checkX++)
+        {
+            for (int checkY = y - 3; checkY <= y + 3; checkY++)
+            {
+                if (!WorldGen.InWorld(checkX, checkY)) continue;
+
+                var checkTile = Main.tile[checkX, checkY];
+                totalChecked++;
+
+                // Count evil walls in air
+                if (!checkTile.HasTile && IsEvilWall(checkTile.WallType))
+                    evilCount++;
+
+                // Count evil tiles
+                if (checkTile.HasTile && IsEvilBiomeTile(checkTile.TileType))
+                    evilCount++;
+            }
+        }
+
+        // If 20% or more of surrounding area is evil, preserve this spot
+        return totalChecked > 0 && (float)evilCount / totalChecked > 0.2f;
+    }
+
+    private bool IsImportantStructure(ushort tileType)
+    {
+        return tileType == TileID.LivingWood || tileType == TileID.LeafBlock ||
+               tileType == TileID.WoodBlock || tileType == TileID.Platforms ||
+               tileType == TileID.Trees || tileType == TileID.BeeHive;
+    }
+
     #endregion
 }

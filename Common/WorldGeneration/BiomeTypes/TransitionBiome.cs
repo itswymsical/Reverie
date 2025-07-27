@@ -8,7 +8,7 @@ public abstract class TransitionBiome : SurfaceBiomeBase
     protected TransitionBiome(string name, float weight, BiomeConfiguration config = null)
         : base(name, weight, config) { }
 
-    protected override bool TryCalculateBiomeBounds(out BiomeBounds bounds)
+    protected override bool GetBiomeBounds(out BiomeBounds bounds)
     {
         bounds = default;
 

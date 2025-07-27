@@ -10,10 +10,10 @@ public abstract class FilterBiome : SurfaceBiomeBase
     protected FilterBiome(string name, float weight, BiomeConfiguration config = null)
         : base(name, weight, config) { }
 
-    protected override bool TryCalculateBiomeBounds(out BiomeBounds bounds)
+    protected override bool GetBiomeBounds(out BiomeBounds bounds)
     {
         bounds = default;
-
+        
         int width = WorldGen.genRand.Next(_config.MinWidth, _config.MaxWidth);
         int minDistance = (int)(Main.maxTilesX * 0.009f);
         int maxDistance = (int)(Main.maxTilesX * 0.045f);
@@ -25,7 +25,7 @@ public abstract class FilterBiome : SurfaceBiomeBase
         {
             Left = spawnBounds.Left,
             Right = spawnBounds.Right,
-            Top = (int)Main.worldSurface - 50,
+            Top = (int)Main.worldSurface,
             Bottom = (int)Main.worldSurface + _config.SurfaceDepth
         };
 
@@ -34,20 +34,7 @@ public abstract class FilterBiome : SurfaceBiomeBase
 
     protected override void PopulateBiome(GenerationProgress progress)
     {
-        int depth = (int)Main.worldSurface + 100;
+        int depth = (int)Main.worldSurface + 130;
 
-        for (int currentDepth = 0; currentDepth <= depth; currentDepth++)
-        {
-            progress.Set((double)currentDepth / depth);
-
-            for (int x = _biomeBounds.Left; x < _biomeBounds.Right; x++)
-            {
-                if (!WorldGen.InWorld(x, currentDepth)) continue;
-
-                ConvertTilesInColumn(x, currentDepth);
-            }
-        }
     }
-
-    protected abstract void ConvertTilesInColumn(int x, int y);
 }

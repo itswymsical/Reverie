@@ -34,7 +34,7 @@ public class RainforestBiome : TransitionBiome
         TileID.SnowBlock, TileID.IceBlock // Snow
     ];
 
-    protected override bool TryCalculateBiomeBounds(out BiomeBounds bounds)
+    protected override bool GetBiomeBounds(out BiomeBounds bounds)
     {
         bounds = default;
 
@@ -80,7 +80,7 @@ public class RainforestBiome : TransitionBiome
         return bounds.IsValid;
     }
 
-    protected override ushort GetBaseTileType(int x, int y, int depthFromSurface, float noiseValue)
+    protected override ushort GetBaseTile(int x, int y, int depthFromSurface, float noiseValue)
     {
         if (depthFromSurface <= _config.SurfaceDepth * 0.15f)
         {
@@ -98,7 +98,7 @@ public class RainforestBiome : TransitionBiome
         return 0;
     }
 
-    protected override ushort GetTerrainTileType(int x, int y, int depthFromSurface)
+    protected override ushort GetTerrainTile(int x, int y, int depthFromSurface)
     {
         if (depthFromSurface <= _config.SurfaceDepth * 0.15f)
         {
