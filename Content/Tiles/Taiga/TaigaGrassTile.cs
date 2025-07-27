@@ -18,40 +18,41 @@ public class TaigaGrassTile : GrassTile
 
         DustType = DustID.Mud;
         HitSound = SoundID.Dig;
-        TileID.Sets.SnowBiome[Type] = Type;
+        //TileID.Sets.SnowBiome[Type] = Type;
         VanillaFallbackOnModDeletion = TileID.Grass;
+        TileID.Sets.Conversion.Grass[Type] = true;
 
         AddMapEntry(new Color(88, 150, 112));
     }
-    public override void RandomUpdate(int i, int j)
-    {
-        if (!Main.rand.NextBool(6)) return;
+    //public override void RandomUpdate(int i, int j)
+    //{
+    //    if (!Main.rand.NextBool(6)) return;
 
-        int[] directions = { -1, 1 };
-        foreach (int xDir in directions)
-        {
-            int x = i + xDir;
-            if (x < 0 || x >= Main.maxTilesX) continue;
+    //    int[] directions = { -1, 1 };
+    //    foreach (int xDir in directions)
+    //    {
+    //        int x = i + xDir;
+    //        if (x < 0 || x >= Main.maxTilesX) continue;
 
-            foreach (int yDir in directions)
-            {
-                int y = j + yDir;
-                if (y < 0 || y >= Main.maxTilesY) continue;
+    //        foreach (int yDir in directions)
+    //        {
+    //            int y = j + yDir;
+    //            if (y < 0 || y >= Main.maxTilesY) continue;
 
-                Tile tile = Main.tile[x, y];
-                if (tile.HasTile && (tile.TileType == Type || tile.TileType == DirtType))
-                {
-                    if (!Main.tile[x, y - 1].HasTile || !Main.tileSolid[Main.tile[x, y - 1].TileType])
-                    {
-                        tile.TileType = (ushort)ModContent.TileType<SnowTaigaGrassTile>();
+    //            Tile tile = Main.tile[x, y];
+    //            if (tile.HasTile && (tile.TileType == Type || tile.TileType == DirtType))
+    //            {
+    //                if (!Main.tile[x, y - 1].HasTile || !Main.tileSolid[Main.tile[x, y - 1].TileType])
+    //                {
+    //                    tile.TileType = (ushort)ModContent.TileType<SnowTaigaGrassTile>();
 
-                        if (Main.netMode == NetmodeID.Server)
-                            NetMessage.SendTileSquare(-1, x, y, 1);
-                    }
-                }
-            }
-        }
-    }
+    //                    if (Main.netMode == NetmodeID.Server)
+    //                        NetMessage.SendTileSquare(-1, x, y, 1);
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
 }
 
 public class SnowTaigaGrassTile : GrassTile
@@ -66,6 +67,7 @@ public class SnowTaigaGrassTile : GrassTile
 
         Merge(TileID.IceBlock, TileID.SnowBlock, Type, ModContent.TileType<TaigaGrassTile>());
         Main.tileBlockLight[Type] = true;
+        TileID.Sets.Conversion.Grass[Type] = true;
 
         DustType = DustID.Mud;
         HitSound = SoundID.Dig;
@@ -108,13 +110,13 @@ public class CorruptTaigaGrassTile : GrassTile
 
         Merge(TileID.IceBlock, TileID.SnowBlock, Type, ModContent.TileType<TaigaGrassTile>());
         Main.tileBlockLight[Type] = true;
-
+        TileID.Sets.Conversion.Grass[Type] = true;
         DustType = DustID.CorruptPlants;
         HitSound = SoundID.Dig;
 
         VanillaFallbackOnModDeletion = TileID.CorruptGrass;
 
-        TileID.Sets.CorruptBiome[Type] = Type;
+        //TileID.Sets.CorruptBiome[Type] = Type;
         AddMapEntry(new Color(200, 199, 215));
     }
 
@@ -149,13 +151,14 @@ public class CrimsonTaigaGrassTile : GrassTile
 
         Merge(TileID.IceBlock, TileID.SnowBlock, Type, ModContent.TileType<TaigaGrassTile>());
         Main.tileBlockLight[Type] = true;
+        TileID.Sets.Conversion.Grass[Type] = true;
 
         DustType = DustID.CrimsonPlants;
         HitSound = SoundID.Dig;
 
         VanillaFallbackOnModDeletion = TileID.CrimsonGrass;
 
-        TileID.Sets.CrimsonBiome[Type] = Type;
+        //TileID.Sets.CrimsonBiome[Type] = Type;
         AddMapEntry(new Color(215, 199, 201));
     }
 
@@ -190,13 +193,14 @@ public class HallowTaigaGrassTile : GrassTile
 
         Merge(TileID.IceBlock, TileID.SnowBlock, Type, ModContent.TileType<TaigaGrassTile>());
         Main.tileBlockLight[Type] = true;
+        TileID.Sets.Conversion.Grass[Type] = true;
 
         DustType = DustID.HallowedPlants;
         HitSound = SoundID.Dig;
 
         VanillaFallbackOnModDeletion = TileID.HallowedGrass;
 
-        TileID.Sets.HallowBiome[Type] = Type;
+        //TileID.Sets.HallowBiome[Type] = Type;
         AddMapEntry(new Color(77, 153, 191));
     }
 

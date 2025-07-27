@@ -1,4 +1,5 @@
-﻿using Reverie.Common.WorldGeneration.Canopy;
+﻿using Reverie.Common.WorldGeneration.BiomeTypes;
+using Reverie.Common.WorldGeneration.Rainforest;
 using Reverie.Common.WorldGeneration.Taiga;
 using Reverie.Common.WorldGeneration.TemperateForest;
 using System.Collections.Generic;
@@ -23,13 +24,6 @@ public class WorldGenSystem : ModSystem
 
     public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
     {
-        var biomeIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Dungeon"));
-        if (biomeIndex != 1)
-        {
-            tasks.Insert(biomeIndex + 1, new TaigaPass());
-            tasks.Insert(biomeIndex + 2, new TaigaGrassPass());
-            tasks.Insert(biomeIndex + 3, new TaigaPlantPass());
-        }
 
         var spawnIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Flowers"));
         if (spawnIndex != 1)
@@ -43,12 +37,12 @@ public class WorldGenSystem : ModSystem
             tasks.Insert(decorIndex + 1, new DecorPass());
         }
 
-        var canopyIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Full Desert"));
-        //if (canopyIndex != 1)
-        //{
-        //    tasks.Insert(canopyIndex + 1, new CanopyBase());
-        //    //tasks.Insert(canopyIndex + 2, new UnderstoryPass());
-        //    tasks.Insert(canopyIndex + 2, new CanopyFoliagePass());
-        //}
+        var biomeIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Dungeon"));
+        if (biomeIndex != 1)
+        {
+           // tasks.Insert(biomeIndex + 1, new RainforestBiome());
+            tasks.Insert(biomeIndex + 2, new TaigaFilterBiome());
+            tasks.Insert(biomeIndex + 3, new TaigaDecorPass());
+        }
     }
 }
