@@ -1,9 +1,17 @@
-﻿using Reverie.Common.WorldGeneration.Canopy;
-using Terraria.WorldBuilding;
+﻿using Terraria.WorldBuilding;
 
 namespace Reverie.Utilities;
+public class JungleBounds
+{
+    public int MinX { get; set; }
+    public int MaxX { get; set; }
+    public int SurfaceY { get; set; }
+    public int Height { get; set; }
+    public bool IsValid => MaxX > MinX && MinX > 0;
 
-// Static utility class for shared jungle detection functionality
+    public Rectangle ToRectangle() => new Rectangle(MinX, SurfaceY, MaxX - MinX, Height);
+}
+
 public static class JungleDetection
 {
     public static JungleBounds DetectJungleBoundaries()

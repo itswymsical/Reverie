@@ -8,7 +8,7 @@ using Terraria.ObjectData;
 
 namespace Reverie.Common.Tiles;
 
-/// <summary> Applies the effects of fertilizer to <see cref="TanglewoodTree"/> saplings. </summary>
+/// <summary> Applies the effects of fertilizer to <see cref="CustomTree"/> saplings. </summary>
 internal class FertilizerGlobalProjectile : GlobalProjectile
 {
     public override bool AppliesToEntity(Projectile entity, bool lateInstantiation) => entity.type == ProjectileID.Fertilizer;

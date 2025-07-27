@@ -35,7 +35,7 @@ public class TaigaPlants : ModTile
         DustType = DustID.GrassBlades;
         HitSound = SoundID.Grass;
 
-        AddMapEntry(Color.DarkGreen);
+        AddMapEntry(new Color(108, 170, 122));
     }
 
     public override void NumDust(int i, int j, bool fail, ref int num)

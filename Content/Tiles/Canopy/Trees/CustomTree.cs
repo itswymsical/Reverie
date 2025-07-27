@@ -1,4 +1,5 @@
-﻿using Reverie.Content.Tiles.Canopy;
+﻿using Reverie.Common.Systems;
+using Reverie.Content.Tiles.Canopy;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria.DataStructures;
@@ -13,7 +14,7 @@ namespace Reverie.Content.Tiles.Canopy.Trees;
 /// <summary>
 /// Abstract base class for all custom trees in the mod
 /// </summary>
-public abstract class TanglewoodTree : ModTile
+public abstract class CustomTree : ModTile
 {
     #region Virtual Properties - Override these in derived classes
 
@@ -46,8 +47,9 @@ public abstract class TanglewoodTree : ModTile
     /// Valid anchor tiles for tree placement
     /// </summary>
     public virtual int[] ValidAnchorTiles => [
-        ModContent.TileType<CanopyGrassTile>(),
+        ModContent.TileType<RainforestGrassTile>(),
         ModContent.TileType<WoodgrassTile>(),
+        ModContent.TileType<ClayLoamTile>(),
     ];
 
     #endregion
@@ -100,12 +102,9 @@ public abstract class TanglewoodTree : ModTile
     public static float GetSway(int i, int j, double factor = 0)
     {
         if (factor == 0)
-        {
-            double timeComponent = (Main.GameUpdateCount * (Main.windSpeedCurrent * Main.windPhysicsStrength)) % (Math.PI * 2);
-            factor = timeComponent - 3;
-        }
+            factor = TileSwaySystem.Instance.TreeWindCounter;
 
-        return (float)Math.Sin(factor + i * 0.1f + j * 0.01f) * 0.1f;
+        return Main.instance.TilesRenderer.GetWindCycle(i, j, factor) * .4f;
     }
 
     /// <summary>

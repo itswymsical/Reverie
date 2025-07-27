@@ -5,7 +5,7 @@ using Terraria;
 
 namespace Reverie.Content.Tiles.Canopy.Trees;
 
-public class MediumTanglewoodTree : TanglewoodTree
+public class MediumTanglewoodTree : CustomTree
 {
     #region Tree Properties
 

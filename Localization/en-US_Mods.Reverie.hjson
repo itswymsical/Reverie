@@ -442,6 +442,11 @@ Items: {
 		DisplayName: Birch Piano
 		Tooltip: ""
 	}
+
+	PineTreeDebugWand: {
+		DisplayName: Pine Tree Debug Wand
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
@@ -700,6 +705,11 @@ Biomes: {
 	UndergroundCanopyBiome: {
 		DisplayName: Underground Canopy Biome
 		TownNPCDialogueName: the Underground Canopy Biome
+	}
+
+	TaigaBiome: {
+		DisplayName: Taiga Biome
+		TownNPCDialogueName: the Taiga Biome
 	}
 }
 
