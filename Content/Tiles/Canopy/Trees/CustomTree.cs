@@ -13,7 +13,7 @@ namespace Reverie.Content.Tiles.Canopy.Trees;
 /// <summary>
 /// Abstract base class for all custom trees in the mod
 /// </summary>
-public abstract class TanglewoodTree : ModTile
+public abstract class CustomTree : ModTile
 {
     #region Virtual Properties - Override these in derived classes
 

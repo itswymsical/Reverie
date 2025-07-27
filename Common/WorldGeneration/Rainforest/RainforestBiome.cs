@@ -172,7 +172,7 @@ public class RainforestBiome : TransitionBiome
             if (!WorldGen.InWorld(x, checkY)) continue;
 
             var tile = Main.tile[x, checkY];
-            if (tile.HasTile && (tile.TileType == ModContent.TileType<TanglewoodTree>() ||
+            if (tile.HasTile && (tile.TileType == ModContent.TileType<CustomTree>() ||
                                 tile.TileType == TileID.Trees || // Vanilla trees
                                 tile.TileType == TileID.PalmTree)) // Other tree types you want to check
             {

@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -440,6 +440,11 @@ Items: {
 
 	BirchPianoItem: {
 		DisplayName: Birch Piano
+		Tooltip: ""
+	}
+
+	PineTreeDebugWand: {
+		DisplayName: Pine Tree Debug Wand
 		Tooltip: ""
 	}
 }

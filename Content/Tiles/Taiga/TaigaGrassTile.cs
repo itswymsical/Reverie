@@ -18,7 +18,7 @@ public class TaigaGrassTile : GrassTile
 
         DustType = DustID.Mud;
         HitSound = SoundID.Dig;
-        TileID.Sets.SnowBiome[Type] = Type;
+        //TileID.Sets.SnowBiome[Type] = Type;
         VanillaFallbackOnModDeletion = TileID.Grass;
 
         AddMapEntry(new Color(88, 150, 112));
