@@ -1,48 +1,40 @@
-﻿using Reverie.Content.Tiles.Taiga;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Terraria.IO;
 using Terraria.WorldBuilding;
 
-namespace Reverie.Common.WorldGeneration.Taiga;
+namespace Reverie.Common.WorldGeneration;
 
-public class TaigaGrassPass : GenPass
+public abstract class GrassSpreadPass : GenPass
 {
-    public TaigaGrassPass() : base("[Reverie] Taiga Grass", 248f)
-    {
-    }
+    protected GrassSpreadPass(string name, float weight) : base(name, weight) { }
 
     protected override void ApplyPass(GenerationProgress progress, GameConfiguration configuration)
     {
-        progress.Message = "Spreading taiga grass...";
-        SpreadTaigaGrass(progress);
+        progress.Message = GetProgressMessage();
+        SpreadGrass(progress);
     }
 
-    private void SpreadTaigaGrass(GenerationProgress progress)
+    private void SpreadGrass(GenerationProgress progress)
     {
-        var peatTiles = FindPeatTiles();
-
-        if (peatTiles.Count == 0)
-        {
-            progress.Message = "No peat tiles found - skipping grass spread";
+        var soilTiles = FindSoil();
+        if (soilTiles.Count == 0)
             return;
-        }
 
         var processed = 0;
-        foreach (var peatPos in peatTiles)
+        foreach (var soilPos in soilTiles)
         {
             processed++;
             if (processed % 100 == 0)
-            {
-                progress.Set((double)processed / peatTiles.Count);
-            }
+                progress.Set((double)processed / soilTiles.Count);
 
-            SpreadGrassAt(peatPos.X, peatPos.Y);
+            SpreadGrassAt(soilPos.X, soilPos.Y);
         }
     }
 
-    private List<Point> FindPeatTiles()
+    private List<Point> FindSoil()
     {
-        var peatTiles = new List<Point>();
+        var soilTiles = new List<Point>();
+        var soilType = GetSoilTileType();
 
         for (var x = 100; x < Main.maxTilesX - 100; x++)
         {
@@ -51,30 +43,29 @@ public class TaigaGrassPass : GenPass
                 if (!WorldGen.InWorld(x, y)) continue;
 
                 var tile = Main.tile[x, y];
-                if (tile.HasTile && tile.TileType == (ushort)ModContent.TileType<PeatTile>())
+                if (tile.HasTile && tile.TileType == soilType)
                 {
-                    peatTiles.Add(new Point(x, y));
+                    soilTiles.Add(new Point(x, y));
                 }
             }
         }
 
-        return peatTiles;
+        return soilTiles;
     }
 
     private void SpreadGrassAt(int x, int y)
     {
         var tile = Framing.GetTileSafely(x, y);
-
-        if (!tile.HasTile || tile.TileType != (ushort)ModContent.TileType<PeatTile>())
+        if (!tile.HasTile || tile.TileType != GetSoilTileType())
             return;
 
-        if (IsExposedToAir(x, y))
+        if (IsExposedToAir(x, y) && CanSpreadAt(x, y))
         {
             ConvertToGrass(x, y);
         }
     }
 
-    private bool IsExposedToAir(int x, int y)
+    protected virtual bool IsExposedToAir(int x, int y)
     {
         for (var checkX = x - 1; checkX <= x + 1; checkX++)
         {
@@ -85,27 +76,36 @@ public class TaigaGrassPass : GenPass
 
                 var neighborTile = Framing.GetTileSafely(checkX, checkY);
                 if (!neighborTile.HasTile)
-                {
                     return true;
-                }
             }
         }
-
         return false;
     }
 
     private void ConvertToGrass(int x, int y)
     {
         var tile = Framing.GetTileSafely(x, y);
-
         if (!tile.HasTile) return;
 
-        tile.TileType = (ushort)ModContent.TileType<TaigaGrassTile>();
+        tile.TileType = GetGrassTileType();
         WorldGen.SquareTileFrame(x, y, true);
 
         if (Main.netMode == NetmodeID.Server)
         {
             NetMessage.SendTileSquare(-1, x, y, 1, TileChangeType.None);
         }
+
+        OnGrassConverted(x, y);
     }
+
+    #region Abstract Methods
+    protected abstract string GetProgressMessage();
+    protected abstract ushort GetSoilTileType(); // Soil tile that gets converted to grass
+    protected abstract ushort GetGrassTileType(); // Grass tile result
+    #endregion
+
+    #region Virtual Methods
+    protected virtual bool CanSpreadAt(int x, int y) => true;
+    protected virtual void OnGrassConverted(int x, int y) { }
+    #endregion
 }

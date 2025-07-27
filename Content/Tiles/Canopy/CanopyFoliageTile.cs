@@ -1,4 +1,5 @@
 ﻿using Reverie.Content.Items.Botany;
+using Reverie.Content.Tiles.TemperateForest;
 using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.ObjectData;
@@ -23,7 +24,8 @@ public class CanopyFoliageTile : ModTile
 
         TileObjectData.newTile.AnchorValidTiles =
         [
-            ModContent.TileType<CanopyGrassTile>(),
+            ModContent.TileType<RainforestGrassTile>(),
+            Type
         ];
 
         TileObjectData.newTile.LavaDeath = true;
@@ -31,8 +33,8 @@ public class CanopyFoliageTile : ModTile
 
         TileObjectData.newTile.StyleHorizontal = true;
 
-        TileObjectData.newTile.CoordinateHeights = [18];
-
+        TileObjectData.newTile.CoordinateHeights = [36];
+        TileObjectData.newTile.DrawYOffset = -14;
         TileObjectData.addTile(Type);
 
         DustType = DustID.JungleGrass;
@@ -81,7 +83,7 @@ public class CanopyFernTile : ModTile
 
         TileObjectData.newTile.AnchorValidTiles =
         [
-            ModContent.TileType<CanopyGrassTile>(),
+            ModContent.TileType<RainforestGrassTile>(),
         ];
 
         TileObjectData.newTile.StyleHorizontal = true;

@@ -1,11 +1,12 @@
 ﻿using Reverie.Common.Tiles;
+using System.Collections.Generic;
 
 namespace Reverie.Content.Tiles.Canopy;
 
-public class CanopyGrassTile : GrassTile
+public class RainforestGrassTile : GrassTile
 {
     protected override int DirtType => ModContent.TileType<ClayLoamTile>();
-    //public override List<int> PlantTypes => [ModContent.TileType<SnowTaigaPlants>()];
+    public override List<int> PlantTypes => [ModContent.TileType<CanopyFoliageTile>()];
     public override void SetStaticDefaults()
     {
         base.SetStaticDefaults();
