@@ -28,8 +28,8 @@ public class ClayLoamTile : ModTile
         Main.tileMerge[TileID.Silt][Type] = true;
         Main.tileMerge[Type][TileID.Silt] = true;
 
-        Main.tileMerge[ModContent.TileType<CanopyGrassTile>()][Type] = true;
-        Main.tileMerge[Type][ModContent.TileType<CanopyGrassTile>()] = true;
+        Main.tileMerge[ModContent.TileType<RainforestGrassTile>()][Type] = true;
+        Main.tileMerge[Type][ModContent.TileType<RainforestGrassTile>()] = true;
         Main.tileBlockLight[Type] = true;
 
         MineResist = 0.5f;

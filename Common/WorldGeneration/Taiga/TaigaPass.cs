@@ -26,15 +26,12 @@ public class TaigaPass : GenPass
         }
         else
         {
-            // Distance too large, find suitable terrain elsewhere
             if (!FindSuitableTerrainLocation(out taigaLeft, out taigaRight))
             {
-                // Final fallback: place on opposite side of world from dungeon
                 PlaceOppositeFromDungeon(out taigaLeft, out taigaRight);
             }
         }
 
-        // Rest of generation code stays the same...
         for (int currentDepth = 0; currentDepth <= depth; currentDepth++)
         {
             progress.Set((double)currentDepth / depth);
