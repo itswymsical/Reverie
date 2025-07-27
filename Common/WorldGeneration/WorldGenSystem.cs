@@ -40,7 +40,7 @@ public class WorldGenSystem : ModSystem
         var biomeIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Dungeon"));
         if (biomeIndex != 1)
         {
-            tasks.Insert(biomeIndex + 1, new RainforestBiome());
+           // tasks.Insert(biomeIndex + 1, new RainforestBiome());
             tasks.Insert(biomeIndex + 2, new TaigaFilterBiome());
             tasks.Insert(biomeIndex + 3, new TaigaDecorPass());
         }
