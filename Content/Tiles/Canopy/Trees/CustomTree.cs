@@ -1,4 +1,5 @@
-﻿using Reverie.Content.Tiles.Canopy;
+﻿using Reverie.Common.Systems;
+using Reverie.Content.Tiles.Canopy;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria.DataStructures;
@@ -101,12 +102,9 @@ public abstract class CustomTree : ModTile
     public static float GetSway(int i, int j, double factor = 0)
     {
         if (factor == 0)
-        {
-            double timeComponent = (Main.GameUpdateCount * (Main.windSpeedCurrent * Main.windPhysicsStrength)) % (Math.PI * 2);
-            factor = timeComponent - 3;
-        }
+            factor = TileSwaySystem.Instance.TreeWindCounter;
 
-        return (float)Math.Sin(factor + i * 0.1f + j * 0.01f) * 0.1f;
+        return Main.instance.TilesRenderer.GetWindCycle(i, j, factor) * .4f;
     }
 
     /// <summary>

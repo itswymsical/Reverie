@@ -42,7 +42,7 @@ public class WorldGenSystem : ModSystem
         {
             tasks.Insert(biomeIndex + 1, new RainforestBiome());
             tasks.Insert(biomeIndex + 2, new TaigaFilterBiome());
-            tasks.Insert(biomeIndex + 3, new TaigaGrassPass());
+            tasks.Insert(biomeIndex + 3, new TaigaDecorPass());
         }
     }
 }

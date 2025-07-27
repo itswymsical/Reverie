@@ -36,7 +36,7 @@ public abstract class TransitionBiome : SurfaceBiomeBase
 
         for (int startX = 200; startX < Main.maxTilesX - width - 200; startX += 50)
         {
-            if (IsNearExistingBiome(startX, width, conflictBiomes))
+            if (IsNearBiome(startX, width, conflictBiomes))
                 continue;
 
             if (IsSuitableForPlacement(startX, width))

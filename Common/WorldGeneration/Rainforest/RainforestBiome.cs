@@ -11,9 +11,6 @@ namespace Reverie.Common.WorldGeneration.Rainforest;
 
 public class RainforestBiome : TransitionBiome
 {
-    protected override ushort GetSoilTileType() => (ushort)ModContent.TileType<ClayLoamTile>();
-    protected override ushort GetGrassTileType() => (ushort)ModContent.TileType<RainforestGrassTile>();
-
     public RainforestBiome() : base("[Reverie] Rainforest", 80f, new BiomeConfiguration
     {
         TerrainNoiseFreq = 0.00925f,
@@ -115,8 +112,6 @@ public class RainforestBiome : TransitionBiome
 
         return 0;
     }
-
-    protected override bool ShouldSpreadGrass() => true;
 
     protected override void PopulateBiome(GenerationProgress progress)
     {

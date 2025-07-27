@@ -1,25 +1,29 @@
-﻿using Reverie.Content.Tiles.Taiga;
+﻿using Reverie.Content.Tiles.Canopy.Trees;
+using Reverie.Content.Tiles.Taiga;
+using Reverie.Content.Tiles.Taiga.Trees;
 using System.Collections.Generic;
 using Terraria.IO;
 using Terraria.WorldBuilding;
 
 namespace Reverie.Common.WorldGeneration.Taiga;
 
-public class TaigaGrassPass : GenPass
+public class TaigaDecorPass : GenPass
 {
-    public TaigaGrassPass() : base("[Reverie] Taiga Grass", 248f)
+    public TaigaDecorPass() : base("[Reverie] Taiga Grass", 248f)
     {
     }
 
     protected override void ApplyPass(GenerationProgress progress, GameConfiguration configuration)
     {
-        progress.Message = "Spreading taiga grass...";
-        SpreadTaigaGrass(progress);
+        progress.Message = "Decorating cold biomes...";
+        SpreadGrass(progress);
     }
 
-    private void SpreadTaigaGrass(GenerationProgress progress)
+
+    #region Core Methods
+    private void SpreadGrass(GenerationProgress progress)
     {
-        var peatTiles = FindPeatTiles();
+        var peatTiles = FindSoilTiles();
         if (peatTiles.Count == 0)
         {
             return;
@@ -37,7 +41,7 @@ public class TaigaGrassPass : GenPass
         }
     }
 
-    private List<Point> FindPeatTiles()
+    private List<Point> FindSoilTiles()
     {
         var peatTiles = new List<Point>();
         for (var x = 100; x < Main.maxTilesX - 100; x++)
@@ -63,7 +67,7 @@ public class TaigaGrassPass : GenPass
 
         if (IsExposedToAir(x, y))
         {
-            ConvertToGrass(x, y);
+            PopulateBiome(x, y);
         }
     }
 
@@ -85,17 +89,32 @@ public class TaigaGrassPass : GenPass
         return false;
     }
 
-    private void ConvertToGrass(int x, int y)
+    private void PopulateBiome(int x, int y)
     {
         var tile = Framing.GetTileSafely(x, y);
         if (!tile.HasTile) return;
 
-        var grassType = GetAppropriateGrassType(x, y);
+        var grassType = GetGrassType(x, y);
         tile.TileType = grassType;
+
+        if (Main.rand.NextBool(10) && HasSpacing(x, y, 3))
+        {
+            PineTree.GrowPineTree(x, y - 1);
+        }
+
         if (Main.rand.NextBool(2))
         {
-            WorldGen.PlaceTile(x, y - 1, GetPlantTypeForGrass(grassType), style: Main.rand.Next(18));
+            WorldGen.PlaceTile(x, y - 1, GetPlantType(grassType), style: Main.rand.Next(18));
         }
+
+        if (Main.rand.NextBool(16) && HasSpacing(x, y, 1))
+        {
+            var styleRange = WinterberryStyles(grassType);
+            var style = Main.rand.Next(styleRange.start, styleRange.end + 1);
+            WorldGen.PlaceTile(x, y - 1, ModContent.TileType<WinterberryBushTile>(), style: style);
+        }
+
+
 
         WorldGen.SquareTileFrame(x, y, true);
         if (Main.netMode == NetmodeID.Server)
@@ -103,7 +122,17 @@ public class TaigaGrassPass : GenPass
             NetMessage.SendTileSquare(-1, x, y, 1, TileChangeType.None);
         }
     }
-    private static ushort GetPlantTypeForGrass(ushort grassType)
+    #endregion
+
+    private (int start, int end) WinterberryStyles(ushort grassType)
+    {
+        if (grassType == (ushort)ModContent.TileType<SnowTaigaGrassTile>())
+            return (6, 11);
+
+        return (0, 5);
+    }
+
+    private static ushort GetPlantType(ushort grassType)
     {
         if (grassType == (ushort)ModContent.TileType<SnowTaigaGrassTile>())
             return (ushort)ModContent.TileType<SnowTaigaPlants>();
@@ -116,19 +145,53 @@ public class TaigaGrassPass : GenPass
 
         return (ushort)ModContent.TileType<TaigaPlants>();
     }
-    private ushort GetAppropriateGrassType(int x, int y)
+
+    private bool HasSpacing(int x, int surfaceY, int minSpacing)
+    {
+        for (int checkX = x - minSpacing; checkX <= x + minSpacing; checkX++)
+        {
+            if (checkX == x) continue;
+            if (!WorldGen.InWorld(checkX, surfaceY)) continue;
+
+            if (IsTreeAt(checkX, surfaceY))
+                return false;
+        }
+
+        return true;
+    }
+
+    private bool IsTreeAt(int x, int y)
+    {
+        for (int checkY = y - 10; checkY < y; checkY++)
+        {
+            if (!WorldGen.InWorld(x, checkY)) continue;
+
+            var tile = Main.tile[x, checkY];
+            if (tile.HasTile && (tile.TileType == ModContent.TileType<PineTree>() ||
+                                tile.TileType == TileID.Trees))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    #region Helper Methods
+    private ushort GetGrassType(int x, int y)
     {
         // Check for evil biomes first since they take priority
         if (HasNearbyEvil(x, y))
         {
-            if (HasNearbyCorruption(x, y))
+            if (NearbyCorruption(x, y))
                 return (ushort)ModContent.TileType<CorruptTaigaGrassTile>();
-            if (HasNearbyCrimson(x, y))
+            if (NearbyCrimson(x, y))
                 return (ushort)ModContent.TileType<CrimsonTaigaGrassTile>();
         }
 
         // Check for snow proximity
-        if (IsNearSnowBiome(x, y))
+        if (NearSnow(x, y))
         {
             return (ushort)ModContent.TileType<SnowTaigaGrassTile>();
         }
@@ -139,10 +202,10 @@ public class TaigaGrassPass : GenPass
 
     private bool HasNearbyEvil(int x, int y)
     {
-        return HasNearbyCorruption(x, y) || HasNearbyCrimson(x, y);
+        return NearbyCorruption(x, y) || NearbyCrimson(x, y);
     }
 
-    private bool HasNearbyCorruption(int x, int y)
+    private bool NearbyCorruption(int x, int y)
     {
         for (var checkX = x - 30; checkX <= x + 30; checkX++)
         {
@@ -157,12 +220,13 @@ public class TaigaGrassPass : GenPass
 
                 if (!tile.HasTile && IsCorruptionWall(tile.WallType))
                     return true;
+
             }
         }
         return false;
     }
 
-    private bool HasNearbyCrimson(int x, int y)
+    private bool NearbyCrimson(int x, int y)
     {
         for (var checkX = x - 30; checkX <= x + 30; checkX++)
         {
@@ -182,7 +246,7 @@ public class TaigaGrassPass : GenPass
         return false;
     }
 
-    private bool IsNearSnowBiome(int x, int y)
+    private bool NearSnow(int x, int y)
     {
         var distanceToSnowLeft = Math.Abs(x - GenVars.snowOriginLeft);
         var distanceToSnowRight = Math.Abs(x - GenVars.snowOriginRight);
@@ -238,4 +302,5 @@ public class TaigaGrassPass : GenPass
                wallType == WallID.CrimstoneUnsafe || wallType == WallID.CrimsonHardenedSand ||
                wallType == WallID.CrimsonGrassUnsafe;
     }
+    #endregion
 }

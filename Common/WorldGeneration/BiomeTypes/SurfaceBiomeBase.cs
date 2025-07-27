@@ -21,71 +21,6 @@ public abstract class SurfaceBiomeBase : GenPass
         _config = config ?? new BiomeConfiguration();
     }
 
-    private void SpreadGrass(GenerationProgress progress)
-    {
-        var soilTiles = new List<Point>();
-        var soilType = GetSoilTileType();
-
-        for (int x = _biomeBounds.Left; x < _biomeBounds.Right; x++)
-        {
-            for (int y = _biomeBounds.Top - 10; y < _biomeBounds.Top + _config.SurfaceDepth + 30; y++)
-            {
-                if (!WorldGen.InWorld(x, y)) continue;
-
-                var tile = Main.tile[x, y];
-                if (tile.HasTile && tile.TileType == soilType)
-                {
-                    soilTiles.Add(new Point(x, y));
-                }
-            }
-        }
-
-        int processed = 0;
-        foreach (var soilPos in soilTiles)
-        {
-            processed++;
-            if (processed % 50 == 0)
-                progress.Set((double)processed / soilTiles.Count);
-
-            if (IsExposedToAir(soilPos.X, soilPos.Y))
-            {
-                var tile = Main.tile[soilPos.X, soilPos.Y];
-                tile.TileType = GetGrassTileType();
-                WorldGen.SquareTileFrame(soilPos.X, soilPos.Y, true);
-
-                if (Main.netMode == NetmodeID.Server)
-                {
-                    NetMessage.SendTileSquare(-1, soilPos.X, soilPos.Y, 1, TileChangeType.None);
-                }
-            }
-        }
-    }
-
-    private bool IsExposedToAir(int x, int y)
-    {
-        if (WorldGen.InWorld(x, y - 1))
-        {
-            var aboveTile = Main.tile[x, y - 1];
-            if (!aboveTile.HasTile)
-                return true;
-        }
-
-        for (int checkX = x - 1; checkX <= x + 1; checkX++)
-        {
-            for (int checkY = y - 1; checkY <= y + 1; checkY++)
-            {
-                if (checkX == x && checkY == y) continue;
-                if (!WorldGen.InWorld(checkX, checkY)) continue;
-
-                var neighborTile = Main.tile[checkX, checkY];
-                if (!neighborTile.HasTile)
-                    return true;
-            }
-        }
-
-        return false;
-    }
-
     protected override void ApplyPass(GenerationProgress progress, GameConfiguration configuration)
     {
         progress.Message = $"Locating {PassName} biome...";
@@ -104,16 +39,8 @@ public abstract class SurfaceBiomeBase : GenPass
         progress.Message = $"Shaping {PassName} terrain...";
         GenerateTerrain(progress);
 
-        if (ShouldSpreadGrass())
-        {
-            progress.Message = $"Spreading {PassName} grass...";
-            SpreadGrass(progress);
-        }
-
         progress.Message = $"Populating {PassName}...";
         PopulateBiome(progress);
-
-        PostGeneration(progress);
     }
 
     #region Abstract Methods
@@ -152,13 +79,6 @@ public abstract class SurfaceBiomeBase : GenPass
 
         return false;
     }
-
-    protected virtual void PostGeneration(GenerationProgress progress) { }
-
-    protected virtual ushort GetSoilTileType() => 0;
-    protected virtual ushort GetGrassTileType() => 0;
-
-    protected virtual bool ShouldSpreadGrass() => GetSoilTileType() != 0 && GetGrassTileType() != 0;
     #endregion
 
     private void GenerateBasePatch(GenerationProgress progress)
@@ -269,7 +189,7 @@ public abstract class SurfaceBiomeBase : GenPass
 
     private void FillTerrainColumn(int x, int surfaceY)
     {
-        int maxDepth = surfaceY + (_config.SurfaceDepth / 2); // Reduced depth for less intrusion
+        int maxDepth = surfaceY + (int)(_config.SurfaceDepth / 1.5f); // Reduced depth for less intrusion
 
         for (int y = surfaceY; y < maxDepth && y < Main.maxTilesY; y++)
         {
@@ -372,7 +292,7 @@ public abstract class SurfaceBiomeBase : GenPass
         }
     }
 
-    protected bool IsNearExistingBiome(int startX, int width, params int[] biomeTypes)
+    protected bool IsNearBiome(int startX, int width, params int[] biomeTypes)
     {
         int surfaceY = (int)Main.worldSurface;
         int samplePoints = Math.Min(10, width / 10);
@@ -390,11 +310,11 @@ public abstract class SurfaceBiomeBase : GenPass
         return false;
     }
 
-    protected Rectangle CalculateSpawnProximityBounds(int minDistance, int maxDistance, int width)
+    protected Rectangle GetSpawnBounds(int minDistance, int maxDistance, int width)
     {
         int spawnX = Main.spawnTileX;
-        bool leftSideClear = !IsNearExistingBiome(spawnX - maxDistance, width);
-        bool rightSideClear = !IsNearExistingBiome(spawnX + minDistance, width);
+        bool leftSideClear = !IsNearBiome(spawnX - maxDistance, width);
+        bool rightSideClear = !IsNearBiome(spawnX + minDistance, width);
 
         if (!leftSideClear && !rightSideClear)
             return Rectangle.Empty;
@@ -449,13 +369,13 @@ public abstract class SurfaceBiomeBase : GenPass
         return false;
     }
 
-    private bool IsEvilBiomeTile(ushort tileType)
+    private bool IsEvilTile(ushort tileType)
     {
-        if (tileType == TileID.Ebonstone || tileType == TileID.Ebonsand ||
+        if (tileType == TileID.Ebonstone ||
             tileType == TileID.CorruptSandstone || tileType == TileID.CorruptHardenedSand)
             return true;
 
-        if (tileType == TileID.Crimstone || tileType == TileID.Crimsand ||
+        if (tileType == TileID.Crimstone ||
             tileType == TileID.CrimsonSandstone || tileType == TileID.CrimsonHardenedSand)
             return true;
 
@@ -468,19 +388,15 @@ public abstract class SurfaceBiomeBase : GenPass
 
         var tile = Main.tile[x, y];
 
-        // Skip air with evil walls (preserve caverns)
         if (!tile.HasTile && IsEvilWall(tile.WallType))
             return true;
 
-        // Skip evil biome tiles
-        if (tile.HasTile && IsEvilBiomeTile(tile.TileType))
+        if (tile.HasTile && IsEvilTile(tile.TileType))
             return true;
 
-        // Skip important structures
         if (tile.HasTile && IsImportantStructure(tile.TileType))
             return true;
 
-        // Check larger area for evil biome presence - be more aggressive
         int evilCount = 0;
         int totalChecked = 0;
 
@@ -493,18 +409,15 @@ public abstract class SurfaceBiomeBase : GenPass
                 var checkTile = Main.tile[checkX, checkY];
                 totalChecked++;
 
-                // Count evil walls in air
                 if (!checkTile.HasTile && IsEvilWall(checkTile.WallType))
                     evilCount++;
 
-                // Count evil tiles
-                if (checkTile.HasTile && IsEvilBiomeTile(checkTile.TileType))
+                if (checkTile.HasTile && IsEvilTile(checkTile.TileType))
                     evilCount++;
             }
         }
 
-        // If 20% or more of surrounding area is evil, preserve this spot
-        return totalChecked > 0 && (float)evilCount / totalChecked > 0.2f;
+        return totalChecked > 0 && (float)evilCount / totalChecked > 0.333f;
     }
 
     private bool IsImportantStructure(ushort tileType)

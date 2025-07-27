@@ -705,6 +705,11 @@ Biomes: {
 		DisplayName: Underground Canopy Biome
 		TownNPCDialogueName: the Underground Canopy Biome
 	}
+
+	TaigaBiome: {
+		DisplayName: Taiga Biome
+		TownNPCDialogueName: the Taiga Biome
+	}
 }
 
 Keybinds: {

@@ -13,9 +13,9 @@ public class TaigaFilterBiome : FilterBiome
     {
         MinWidth = 100,
         MaxWidth = 300,
-        SurfaceDepth = 64,
-        BiomeSeparation = 30,
-        TerrainNoiseFreq = 0.0095f,
+        SurfaceDepth = (int)(Main.maxTilesY * 0.08f),
+        BiomeSeparation = 20,
+        TerrainNoiseFreq = 0.00125f,
         TerrainHeightVariation = 30,
         BaseNoiseFreq = 0.015f
     })
@@ -75,14 +75,14 @@ public class TaigaFilterBiome : FilterBiome
 
         for (int x = _biomeBounds.Left; x < _biomeBounds.Right; x++)
         {
-            for (int y = _biomeBounds.Top - 10; y < _biomeBounds.Top + _config.SurfaceDepth + 30; y++)
+            for (int y = _biomeBounds.Top; y < _biomeBounds.Top + _config.SurfaceDepth + 30; y++)
             {
                 if (!WorldGen.InWorld(x, y)) continue;
 
                 var tile = Main.tile[x, y];
                 if (tile.HasTile && tile.TileType == (ushort)ModContent.TileType<PeatTile>())
                 {
-                    tile.WallType = WallID.DirtUnsafe2;
+                    tile.WallType = WallID.DirtUnsafe;
                 }
             }
         }
@@ -203,7 +203,7 @@ public class TaigaFilterBiome : FilterBiome
 
     private bool IsSuitableTerrain(int startX, int width)
     {
-        var surfaceY = (int)Main.worldSurface;
+        var surfaceY = (int)Main.worldSurface + _config.SurfaceDepth;
         var suitableCount = 0;
         var totalSamples = 20;
 
@@ -214,7 +214,7 @@ public class TaigaFilterBiome : FilterBiome
 
             var tile = Main.tile[x, surfaceY];
 
-            if (tile.TileType == TileID.Dirt || tile.TileType == TileID.Grass ||
+            if (tile.TileType == TileID.Dirt ||
                 tile.TileType == TileID.Stone || tile.TileType == TileID.ClayBlock ||
                 tile.TileType == TileID.Ebonsand || tile.TileType == TileID.Ebonstone ||
                 tile.TileType == TileID.CorruptGrass || tile.TileType == TileID.Crimsand ||

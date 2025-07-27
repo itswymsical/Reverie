@@ -18,14 +18,14 @@ public abstract class FilterBiome : SurfaceBiomeBase
         int minDistance = (int)(Main.maxTilesX * 0.009f);
         int maxDistance = (int)(Main.maxTilesX * 0.045f);
 
-        Rectangle spawnBounds = CalculateSpawnProximityBounds(minDistance, maxDistance, width);
+        Rectangle spawnBounds = GetSpawnBounds(minDistance, maxDistance, width);
         if (spawnBounds.IsEmpty) return false;
 
         bounds = new BiomeBounds
         {
             Left = spawnBounds.Left,
             Right = spawnBounds.Right,
-            Top = (int)Main.worldSurface,
+            Top = (int)Main.worldSurface - (_config.SurfaceDepth / 3),
             Bottom = (int)Main.worldSurface + _config.SurfaceDepth
         };
 
@@ -35,6 +35,5 @@ public abstract class FilterBiome : SurfaceBiomeBase
     protected override void PopulateBiome(GenerationProgress progress)
     {
         int depth = (int)Main.worldSurface + 130;
-
     }
 }
