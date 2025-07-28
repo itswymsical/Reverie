@@ -21,7 +21,7 @@ public class LodestoneLeggings : ModItem
     public override void AddRecipes()
     {
         var recipe = CreateRecipe();
-        recipe.AddIngredient(ModContent.ItemType<LodestoneItem>(), 8);
+        recipe.AddIngredient(ModContent.ItemType<LodestoneItem>(), 10);
         recipe.AddIngredient(ModContent.ItemType<MagnetizedCoil>(), 2);
         recipe.AddTile(TileID.Anvils);
         recipe.Register();
@@ -44,11 +44,12 @@ public class LodestoneChestplate : ModItem
     }
     public override void AddRecipes()
     {
-        var recipe = CreateRecipe();
-        recipe.AddIngredient(ModContent.ItemType<LodestoneItem>(), 12);
-        recipe.AddIngredient(ModContent.ItemType<MagnetizedCoil>(), 4);
-        recipe.AddTile(TileID.Anvils);
-        recipe.Register();
+        CreateRecipe()
+       .AddIngredient(ModContent.ItemType<LodestoneItem>(), 12)
+       .AddIngredient(ModContent.ItemType<MagnetizedCoil>(), 1)
+       .AddIngredient(ItemID.Silk, 6)
+       .AddTile(TileID.Anvils)
+       .Register();
     }
 }
 
@@ -100,10 +101,11 @@ public class LodestoneHelmet : ModItem
     }
     public override void AddRecipes()
     {
-        var recipe = CreateRecipe();
-        recipe.AddIngredient(ModContent.ItemType<LodestoneItem>(), 8);
-        recipe.AddIngredient(ModContent.ItemType<MagnetizedCoil>(), 3);
-        recipe.AddTile(TileID.Anvils);
-        recipe.Register();
+        CreateRecipe()
+        .AddIngredient(ModContent.ItemType<LodestoneItem>(), 8)
+        .AddIngredient(ModContent.ItemType<MagnetizedCoil>(), 2)
+        .AddIngredient(ItemID.CopperBar, 2)
+        .AddTile(TileID.Anvils)
+        .Register();
     }
 }
