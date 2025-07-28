@@ -126,7 +126,7 @@ public class PineTreeDebugWand : ModItem
             var tryX = tileX + Main.rand.Next(-1, 2);
             var tryY = tileY + attempts; // Try lower positions
 
-            success = PineTree.GrowPineTree(tryX, tryY);
+            success = SpruceTree.GrowSpruceTree(tryX, tryY);
 
             if (success)
             {

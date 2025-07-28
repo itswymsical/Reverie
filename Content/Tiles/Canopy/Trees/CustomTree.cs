@@ -70,14 +70,19 @@ public abstract class CustomTree : ModTile
         TileObjectData.newTile.AnchorValidTiles = ValidAnchorTiles;
         TileObjectData.newTile.AnchorAlternateTiles = [Type];
 
+        TileID.Sets.PreventsTileRemovalIfOnTopOfIt[Type] = true;
+        TileID.Sets.PreventsTileReplaceIfOnTopOfIt[Type] = true;
+        TileID.Sets.PreventsTileHammeringIfOnTopOfIt[Type] = true;
+
         TileID.Sets.IsATreeTrunk[Type] = true;
         TileID.Sets.IsShakeable[Type] = true;
+
         TileID.Sets.GetsDestroyedForMeteors[Type] = true;
         TileID.Sets.GetsCheckedForLeaves[Type] = true;
         TileMaterials.SetForTileId(Type, TileMaterials._materialsByName["Plant"]);
 
         AddMapEntry(new Color(151, 107, 75), Language.GetText("MapObject.Tree"));
-        DustType = DustID.t_LivingWood;
+        DustType = DustID.BorealWood_Small;
         HitSound = SoundID.Dig;
 
         TileObjectData.addTile(Type);

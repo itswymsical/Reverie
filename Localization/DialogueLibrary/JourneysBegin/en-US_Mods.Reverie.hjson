@@ -1,4 +1,4 @@
-﻿DialogueLibrary: {
+DialogueLibrary: {
 	JourneysBegin: {
 		Crash: {
 			Line1: {
@@ -148,13 +148,15 @@
 				Emote: "0"
 				Speed: "1"
 			}
-            Line4: {
+
+			Line4: {
 				Text: You contact the Guide<pause:8>, and ask if they know anything about it.
 				Speaker: You
 				Emote: "0"
 				Speed: "1"
 			}
-            Line5: {
+
+			Line5: {
 				Text: Chronicle of Reverie? <pause:8>I've never heard of it.<pause:15>Bring it to me, and I'll take a look.
 				Speaker: Guide
 				Emote: "0"

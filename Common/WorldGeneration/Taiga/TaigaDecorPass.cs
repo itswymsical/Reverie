@@ -99,7 +99,7 @@ public class TaigaDecorPass : GenPass
 
         if (Main.rand.NextBool(10) && HasSpacing(x, y, 3))
         {
-            PineTree.GrowPineTree(x, y - 1);
+            SpruceTree.GrowSpruceTree(x, y - 1);
         }
 
         if (Main.rand.NextBool(2))
@@ -167,7 +167,7 @@ public class TaigaDecorPass : GenPass
             if (!WorldGen.InWorld(x, checkY)) continue;
 
             var tile = Main.tile[x, checkY];
-            if (tile.HasTile && (tile.TileType == ModContent.TileType<PineTree>() ||
+            if (tile.HasTile && (tile.TileType == ModContent.TileType<SpruceTree>() ||
                                 tile.TileType == TileID.Trees))
             {
                 return true;

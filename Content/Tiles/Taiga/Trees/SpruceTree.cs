@@ -10,7 +10,7 @@ using Terraria.GameContent;
 
 namespace Reverie.Content.Tiles.Taiga.Trees;
 
-public class PineTree : CustomTree
+public class SpruceTree : CustomTree
 {
     #region Properties
     public override int FrameWidth => 22;
@@ -190,59 +190,60 @@ public class PineTree : CustomTree
             DepthStencilState.None, Main.Rasterizer, null);
     }
 
+    private static readonly HashSet<Point> ValidatingTiles = new();
+
     public override bool TileFrame(int i, int j, ref bool resetFrame, ref bool noBreak)
     {
         var tile = Framing.GetTileSafely(i, j);
         if (!tile.HasTile || tile.TileType != Type)
             return false;
 
-        // Check if this tile needs to break due to missing anchor
-        if (!ValidateAnchor(i, j))
-        {
-            WorldGen.KillTile(i, j);
-            return false;
-        }
+        var pos = new Point(i, j);
 
-        // Update frame for soft-cut if needed
-        UpdateFrameForSoftCut(i, j);
+        // Prevent recursive validation
+        if (ValidatingTiles.Contains(pos))
+            return false;
+
+        ValidatingTiles.Add(pos);
+
+        try
+        {
+            // Check if tile needs to break
+            if (!ValidateAnchor(i, j))
+            {
+                WorldGen.KillTile(i, j);
+                return false;
+            }
+
+            // Update frame for soft-cut
+            UpdateFrameForSoftCut(i, j);
+        }
+        finally
+        {
+            ValidatingTiles.Remove(pos);
+        }
 
         return false;
     }
 
-    private bool ValidateAnchor(int i, int j)
+    private void UpdateNeighborFrames(int i, int j)
     {
-        var tile = Framing.GetTileSafely(i, j);
-
-        // Check if this is a root stump (left or right)
-        bool isLeftStump = tile.TileFrameY == 5 * FrameHeight && tile.TileFrameX < 3 * FrameWidth;
-        bool isRightStump = tile.TileFrameY == 6 * FrameHeight && tile.TileFrameX < 3 * FrameWidth;
-
-        if (isLeftStump || isRightStump)
+        // Update tiles above and below, but skip if already validating
+        for (int dy = -1; dy <= 1; dy += 2)
         {
-            // Root stumps must have center stump adjacent
-            int centerX = isLeftStump ? i + 1 : i - 1;
-            var centerTile = Framing.GetTileSafely(centerX, j);
+            if (WorldGen.InWorld(i, j + dy))
+            {
+                var pos = new Point(i, j + dy);
+                if (ValidatingTiles.Contains(pos))
+                    continue;
 
-            if (!centerTile.HasTile || centerTile.TileType != Type)
-                return false;
-
-            // Verify it's actually a center stump
-            bool isCenterStump = centerTile.TileFrameY >= 2 * FrameHeight &&
-                               centerTile.TileFrameY <= 5 * FrameHeight &&
-                               centerTile.TileFrameX >= 3 * FrameWidth;
-
-            return isCenterStump;
+                var neighbor = Framing.GetTileSafely(i, j + dy);
+                if (neighbor.HasTile && neighbor.TileType == Type)
+                {
+                    WorldGen.TileFrame(i, j + dy, resetFrame: false, noBreak: false);
+                }
+            }
         }
-
-        // Regular trunk tiles must have valid anchor below
-        var below = Framing.GetTileSafely(i, j + 1);
-
-        // Can anchor to same tree type
-        if (below.HasTile && below.TileType == Type)
-            return true;
-
-        // Or to valid ground tiles
-        return below.HasTile && ValidAnchorTiles.Contains(below.TileType);
     }
 
     private void UpdateFrameForSoftCut(int i, int j)
@@ -428,6 +429,113 @@ public class PineTree : CustomTree
         }
     }
 
+    public override bool CanKillTile(int i, int j, ref bool blockDamaged)
+    {
+        var above = Framing.GetTileSafely(i, j - 1);
+        if (above.HasTile && above.TileType == Type)
+        {
+            bool isLeftRoot = above.TileFrameY == 5 * FrameHeight && above.TileFrameX < 3 * FrameWidth;
+            bool isRightRoot = above.TileFrameY == 6 * FrameHeight && above.TileFrameX < 3 * FrameWidth;
+            bool isCenterStump = above.TileFrameY >= 2 * FrameHeight &&
+                               above.TileFrameY <= 5 * FrameHeight &&
+                               above.TileFrameX >= 3 * FrameWidth;
+
+            if (isLeftRoot || isRightRoot || isCenterStump)
+                return false;
+        }
+
+        return base.CanKillTile(i, j, ref blockDamaged);
+    }
+
+    public override bool CanExplode(int i, int j)
+    {
+        var above = Framing.GetTileSafely(i, j - 1);
+        if (above.HasTile && above.TileType == Type)
+        {
+            bool isLeftRoot = above.TileFrameY == 5 * FrameHeight && above.TileFrameX < 3 * FrameWidth;
+            bool isRightRoot = above.TileFrameY == 6 * FrameHeight && above.TileFrameX < 3 * FrameWidth;
+            bool isCenterStump = above.TileFrameY >= 2 * FrameHeight &&
+                               above.TileFrameY <= 5 * FrameHeight &&
+                               above.TileFrameX >= 3 * FrameWidth;
+
+            if (isLeftRoot || isRightRoot || isCenterStump)
+                return false;
+        }
+
+        return base.CanExplode(i, j);
+    }
+
+    private bool IsRootStump(int i, int j)
+    {
+        var tile = Framing.GetTileSafely(i, j);
+        if (!tile.HasTile || tile.TileType != Type)
+            return false;
+
+        bool isLeftRoot = tile.TileFrameY == 5 * FrameHeight && tile.TileFrameX < 3 * FrameWidth;
+        bool isRightRoot = tile.TileFrameY == 6 * FrameHeight && tile.TileFrameX < 3 * FrameWidth;
+        bool isCenterStump = tile.TileFrameY >= 2 * FrameHeight &&
+                            tile.TileFrameY <= 5 * FrameHeight &&
+                            tile.TileFrameX >= 3 * FrameWidth;
+
+        return isLeftRoot || isRightRoot || isCenterStump;
+    }
+
+    private bool ValidateAnchor(int i, int j)
+    {
+        var tile = Framing.GetTileSafely(i, j);
+        if (!tile.HasTile || tile.TileType != Type)
+            return false;
+
+        bool isLeftStump = tile.TileFrameY == 5 * FrameHeight && tile.TileFrameX < 3 * FrameWidth;
+        bool isRightStump = tile.TileFrameY == 6 * FrameHeight && tile.TileFrameX < 3 * FrameWidth;
+
+        if (isLeftStump || isRightStump)
+        {
+            int centerX = isLeftStump ? i + 1 : i - 1;
+
+            if (!WorldGen.InWorld(centerX, j))
+                return false;
+
+            var centerTile = Framing.GetTileSafely(centerX, j);
+            if (!centerTile.HasTile || centerTile.TileType != Type)
+                return false;
+
+            bool isCenterStump = centerTile.TileFrameY >= 2 * FrameHeight &&
+                               centerTile.TileFrameY <= 5 * FrameHeight &&
+                               centerTile.TileFrameX >= 3 * FrameWidth;
+
+            return isCenterStump;
+        }
+
+        bool isCenterStump2 = tile.TileFrameY >= 2 * FrameHeight &&
+                            tile.TileFrameY <= 5 * FrameHeight &&
+                            tile.TileFrameX >= 3 * FrameWidth;
+
+        if (isCenterStump2)
+        {
+            var below = Framing.GetTileSafely(i, j + 1);
+            return below.HasTile && (below.TileType == Type || ValidAnchorTiles.Contains(below.TileType));
+        }
+
+        var belowTile = Framing.GetTileSafely(i, j + 1);
+
+        if (belowTile.HasTile && belowTile.TileType == Type)
+            return true;
+
+        return belowTile.HasTile && ValidAnchorTiles.Contains(belowTile.TileType);
+    }
+
+    public override void SetStaticDefaults()
+    {
+        base.SetStaticDefaults();
+
+        TileID.Sets.PreventsTileRemovalIfOnTopOfIt[Type] = true;
+        TileID.Sets.PreventsTileReplaceIfOnTopOfIt[Type] = true;
+        TileID.Sets.PreventsTileHammeringIfOnTopOfIt[Type] = true;
+
+        TileID.Sets.IsATreeTrunk[Type] = true;
+    }
+
     private void KillAdjacentRoots(int i, int j)
     {
         // Check left
@@ -444,22 +552,6 @@ public class PineTree : CustomTree
             rightTile.TileFrameY == 6 * FrameHeight && rightTile.TileFrameX < 3 * FrameWidth)
         {
             WorldGen.KillTile(i + 1, j);
-        }
-    }
-
-    private void UpdateNeighborFrames(int i, int j)
-    {
-        // Update tiles above and below
-        for (int dy = -1; dy <= 1; dy += 2)
-        {
-            if (WorldGen.InWorld(i, j + dy))
-            {
-                var neighbor = Framing.GetTileSafely(i, j + dy);
-                if (neighbor.HasTile && neighbor.TileType == Type)
-                {
-                    WorldGen.TileFrame(i, j + dy, resetFrame: false, noBreak: false);
-                }
-            }
         }
     }
 
@@ -591,9 +683,9 @@ public class PineTree : CustomTree
         }
     }
 
-    public static bool GrowPineTree(int i, int j)
+    public static bool GrowSpruceTree(int i, int j)
     {
-        var instance = ModContent.GetInstance<PineTree>();
+        var instance = ModContent.GetInstance<SpruceTree>();
         return instance.GrowTree(i, j);
     }
 }
