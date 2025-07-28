@@ -65,9 +65,9 @@ public class CutsceneSystem : ModSystem
         if (CurrentCutscene != null)
         {
             CurrentCutscene.Update(gameTime);
-            if (CurrentCutscene.IsFinished())
+
+            if (!CurrentCutscene.IsPlaying)
             {
-                CurrentCutscene.End();
                 CurrentCutscene = null;
             }
         }
