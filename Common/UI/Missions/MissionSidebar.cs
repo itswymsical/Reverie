@@ -246,12 +246,12 @@ public class MissionSidebar
         if (!ShouldDrawPanel(currentList)) return;
 
         var layout = CalculateLayout(currentList);
-        DrawMainIcon(spriteBatch, layout);
+        DrawIcon(spriteBatch, layout);
         DrawTitle(spriteBatch, layout);
-        DrawToggleButton(spriteBatch, layout);
-        DrawNavigationButtons(spriteBatch, layout, currentList);
+        DrawToggle(spriteBatch, layout);
+        DrawNavigationArrows(spriteBatch, layout, currentList);
         DrawContent(spriteBatch, layout, currentList);
-        DrawHoverTooltips(spriteBatch);
+        DrawTooltips(spriteBatch);
     }
 
     private bool ShouldDrawPanel(List<Mission> currentList)
@@ -285,7 +285,7 @@ public class MissionSidebar
         return Math.Min(startIndex + MISSIONS_PER_PAGE, availableMissions.Count) - startIndex;
     }
 
-    private void DrawMainIcon(SpriteBatch spriteBatch, PanelLayout layout)
+    private void DrawIcon(SpriteBatch spriteBatch, PanelLayout layout)
     {
         var hoverOffset = (float)Math.Sin(Main.GameUpdateCount * HOVER_FREQUENCY) * HOVER_AMPLITUDE;
         iconPos = new Vector2(layout.PosX, layout.PosY + PANEL_HEIGHT / ICON_Y_DIVISOR - hoverOffset);
@@ -321,7 +321,7 @@ public class MissionSidebar
         );
     }
 
-    private void DrawToggleButton(SpriteBatch spriteBatch, PanelLayout layout)
+    private void DrawToggle(SpriteBatch spriteBatch, PanelLayout layout)
     {
         bool hasOtherMissionType = (showingAvailableMissions && activeMissions.Count > 0) ||
                                  (!showingAvailableMissions && availableMissions.Count > 0);
@@ -382,7 +382,7 @@ public class MissionSidebar
         return isHovering && Main.mouseLeft && Main.mouseLeftRelease && alpha > 0.9f;
     }
 
-    private void DrawNavigationButtons(SpriteBatch spriteBatch, PanelLayout layout, List<Mission> currentList)
+    private void DrawNavigationArrows(SpriteBatch spriteBatch, PanelLayout layout, List<Mission> currentList)
     {
         bool shouldShowNavigation = showingAvailableMissions
             ? CalculateMaxPages(availableMissions.Count) > 1
@@ -400,6 +400,12 @@ public class MissionSidebar
         DrawButton(spriteBatch, prevTexture, prevPos, isHoveringPrevButton);
         DrawButton(spriteBatch, nextTexture, nextPos, isHoveringNextButton);
 
+        // Set mouse interface when hovering (this was missing!)
+        if (isHoveringPrevButton || isHoveringNextButton)
+        {
+            Main.LocalPlayer.mouseInterface = true;
+        }
+
         HandleNavigationClicks();
         DrawCounter(spriteBatch, layout, currentList);
     }
@@ -407,11 +413,11 @@ public class MissionSidebar
     private (Vector2 prev, Vector2 next) CalculateNavigationPositions(PanelLayout layout)
     {
         Vector2 prevPos = new Vector2(
-            layout.PosX + PANEL_WIDTH / 1.01f,
+            layout.PosX + PANEL_WIDTH / 1.25f,
             layout.PosY + PANEL_HEIGHT * BUTTON_Y_MULTIPLIER + 20
         );
         Vector2 nextPos = new Vector2(
-            layout.PosX + PANEL_WIDTH / 0.92f,
+            layout.PosX + PANEL_WIDTH / 1.1f,
             layout.PosY + PANEL_HEIGHT * BUTTON_Y_MULTIPLIER + 20
         );
 
@@ -458,8 +464,8 @@ public class MissionSidebar
             : $"{currentMissionIndex + 1}/{activeMissions.Count}";
 
         Vector2 counterPos = new Vector2(
-            layout.PosX + (showingAvailableMissions ? PANEL_WIDTH / 2 : PANEL_WIDTH),
-            layout.PosY + PANEL_HEIGHT * COUNTER_Y_MULTIPLIER
+            (layout.PosX / 1.05f) + (showingAvailableMissions ? PANEL_WIDTH / 2 : PANEL_WIDTH),
+            (layout.PosY / 1.095f) + PANEL_HEIGHT * COUNTER_Y_MULTIPLIER
         );
 
         Vector2 origin = showingAvailableMissions ? Vector2.UnitX * 0.5f : Vector2.Zero;
@@ -557,7 +563,7 @@ public class MissionSidebar
         return $"{status} {objective.Description}";
     }
 
-    private void DrawHoverTooltips(SpriteBatch spriteBatch)
+    private void DrawTooltips(SpriteBatch spriteBatch)
     {
         if (alpha == 0) return;
 
