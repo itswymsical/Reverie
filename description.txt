@@ -1,13 +1,16 @@
-﻿[c/73d5ff:Reverie] provides a brand spankin' new way to enjoy Terraria; It's an [c/f5c542:open-world] with [c/f5c542:environmental storytelling] & worldbuilding! 
+﻿[c/73d5ff:Reverie] provides a brand spankin' new way to enjoy Terraria!
+It's an [c/f5c542:open-world] with [c/86ff14:environmental storytelling] & worldbuilding! 
 
 Otherworlds contain distinct culture, tone, and detail that offer their own unique events & story.
 
-Reverie introduces a layered mission system, with dynamic tasks, rewarding rewards, and engaging NPC interactions--, Town NPCs will no longer feel like two-dimensional;  you might actually care when they [c/ff3b14:(REDACTED)]!
+Reverie introduces a layered mission system, with dynamic tasks, rewarding rewards, and engaging NPC interactions. Town NPCs will no longer feel two-dimensional; you might actually care when they [c/ff3b14:(REDACTED)]!
 
-Traverse Terraria and Otherworlds, let your curiosity lead!
+Traverse [c/86ff14:Terraria] and [c/73d5ff:Otherworlds], let your curiosity lead!
 
 DEVELOPER TEAM
 --------------------------------
-Composer(s): wymsical, Agent_Delta4
-Artist(s): viejosabrason, ElectroManiac, swamon3, RAWTHORN, Dominick, pil
-Contributing Members: HugeKraken, naka, grae, .sweetberries, Crystal_zone, Loving Zemmie (zenovia)
+Composers: wymsical, Agent_Delta4
+Lead Artists: Viejosabroson, ElectroManiac
+Artists: Swamon3, Crystal_zone, pil
+Contributing Artists: Dominick, RAWTHORN, naka
+Contributing Members: HugeKraken, naka, grae, .sweetberries, Loving Zemmie

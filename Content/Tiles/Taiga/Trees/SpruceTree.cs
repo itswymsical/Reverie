@@ -18,7 +18,7 @@ public class SpruceTree : CustomTree
     public override int TreeWidth => 1;
     public override int MaxHeight => 30;
     public override int MinHeight => 12;
-
+    public override int WoodType => ItemID.BorealWood;
     #endregion
 
     public override int[] ValidAnchorTiles => [
@@ -189,6 +189,7 @@ public class SpruceTree : CustomTree
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, samplerState,
             DepthStencilState.None, Main.Rasterizer, null);
     }
+
 
     private static readonly HashSet<Point> ValidatingTiles = new();
 
@@ -663,9 +664,9 @@ public class SpruceTree : CustomTree
     protected override WeightedRandom<int> GetTreeDrops()
     {
         var drop = new WeightedRandom<int>();
-        drop.Add(ItemID.None, 0.6f);
-        drop.Add(ItemID.Acorn, 0.25f);
-        drop.Add(ItemID.Wood, 0.12f);
+        drop.Add(ItemID.Peach, 0.08f);
+        drop.Add(ItemID.Acorn, 0.125f);
+        drop.Add(ItemID.Cherry, 0.08f);
         return drop;
     }
 
