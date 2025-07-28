@@ -12,7 +12,7 @@ using static Reverie.Core.Missions.Core.ObjectiveEventTile;
 
 namespace Reverie.Content.Missions;
 
-public class Mission_JourneysBegin : Mission
+public class MissionJourneysBegin : Mission
 {
     private enum Objectives
     {
@@ -22,7 +22,7 @@ public class Mission_JourneysBegin : Mission
         ChronicleSegment = 3
     }
 
-    public Mission_JourneysBegin() : base(MissionID.JourneysBegin,
+    public MissionJourneysBegin() : base(MissionID.JourneysBegin,
         name: "Journey's Begin",
 
         description: @"""Well, that's one way to make an appearance...""",
@@ -47,7 +47,7 @@ public class Mission_JourneysBegin : Mission
     {
         base.OnMissionStart();
 
-        DialogueManager.Instance.StartDialogue("JourneysBegin.Tutorial", 6, zoomIn: true, false);
+        DialogueManager.Instance.StartDialogue("JourneysBegin.Tutorial", 6, zoomIn: false, true);
     }
 
     public override void OnMissionComplete(bool giveRewards = true)
@@ -56,7 +56,7 @@ public class Mission_JourneysBegin : Mission
 
 
         MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        player.UnlockMission(MissionID.JourneysBegin_Part2);
+        player.UnlockMission(MissionID.ForgottenAges);
     }
 
     public override void Update()
@@ -128,7 +128,7 @@ public class Mission_JourneysBegin : Mission
                 {
                     UpdateProgress(objective: 0);
                     player.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.MagicMirror, 1);
-                    DialogueManager.Instance.StartDialogue("JourneysBegin.MirrorGiven", 1, zoomIn: false, letterbox: false);
+                    DialogueManager.Instance.StartDialogue("JourneysBegin.MirrorGiven", 1, zoomIn: false, letterbox: true);
                 }
                 break;
 

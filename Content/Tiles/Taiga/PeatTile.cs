@@ -1,4 +1,6 @@
-﻿namespace Reverie.Content.Tiles.Taiga;
+﻿using Reverie.Common.Systems;
+
+namespace Reverie.Content.Tiles.Taiga;
 public class PeatTile : ModTile
 {
     public override void SetStaticDefaults()
@@ -7,31 +9,11 @@ public class PeatTile : ModTile
 
         Main.tileMergeDirt[Type] = true;
 
-        Main.tileMerge[TileID.SnowBlock][Type] = true;
-        Main.tileMerge[Type][TileID.SnowBlock] = true;
+        this.Merge(TileID.ClayBlock, TileID.Stone, TileID.Ebonstone, TileID.Crimstone, 
+            TileID.Slush, TileID.Grass, TileID.SnowBlock, ModContent.TileType<SnowTaigaGrassTile>());
 
-        Main.tileMerge[TileID.Stone][Type] = true;
-        Main.tileMerge[Type][TileID.Stone] = true;
-
-        Main.tileMerge[TileID.IceBlock][Type] = true;
-        Main.tileMerge[Type][TileID.IceBlock] = true;
-
-        Main.tileMerge[TileID.Ebonstone][Type] = true;
-        Main.tileMerge[Type][TileID.Ebonstone] = true;
-        Main.tileMerge[TileID.Crimstone][Type] = true;
-        Main.tileMerge[Type][TileID.Crimstone] = true;
-
-
-        Main.tileMerge[TileID.ClayBlock][Type] = true;
-        Main.tileMerge[Type][TileID.ClayBlock] = true;
-
-        Main.tileMerge[TileID.Slush][Type] = true;
-        Main.tileMerge[Type][TileID.Slush] = true;
-
-        Main.tileMerge[ModContent.TileType<SnowTaigaGrassTile>()][Type] = true;
-        Main.tileMerge[Type][ModContent.TileType<SnowTaigaGrassTile>()] = true;
         Main.tileBlockLight[Type] = true;
-        TileID.Sets.Dirt[Type] = true;
+
         MineResist = 0.5f;
         DustType = DustID.Mud;
         HitSound = SoundID.Dig;

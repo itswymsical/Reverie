@@ -9,7 +9,7 @@ using static Reverie.Core.Missions.Core.ObjectiveEventTile;
 
 namespace Reverie.Content.Missions;
 
-public class Mission_JourneysBegin2 : Mission
+public class MissionForgottenAges : Mission
 {
     private enum Objectives
     {
@@ -19,10 +19,10 @@ public class Mission_JourneysBegin2 : Mission
         ChronicleSegment = 3
     }
 
-    public Mission_JourneysBegin2() : base(MissionID.JourneysBegin_Part2,
-        name: "Journey's Begin - Continued",
+    public MissionForgottenAges() : base(MissionID.ForgottenAges,
+        name: "Forgotten Ages",
 
-        description: @"""There's bound to be more of these around...""",
+        description: @"""There's bound to be more of these chronicles around...""",
 
         objectiveList:
         [
@@ -43,7 +43,7 @@ public class Mission_JourneysBegin2 : Mission
     {
         base.OnMissionStart();
 
-        DialogueManager.Instance.StartDialogue("JourneysBegin2.FindChronicles", 1, zoomIn: true, false);
+        DialogueManager.Instance.StartDialogue("JourneysBegin2.FindChronicles", 1, zoomIn: false, true);
     }
 
     public override void OnMissionComplete(bool giveRewards = true)
