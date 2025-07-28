@@ -4,9 +4,6 @@ using Terraria.GameContent;
 
 namespace Reverie.Core.Indicators;
 
-/// <summary>
-/// An indicator/button for dialogue
-/// </summary>
 public class DialogueIndicator : ScreenIndicator
 {
     private readonly string dialogueKey;
@@ -46,7 +43,6 @@ public class DialogueIndicator : ScreenIndicator
     public static DialogueIndicator CreateForNPC(NPC npc, string dialogueKey, int lineCount,
         bool zoomIn = false, bool letterbox = true, AnimationType? animationType = null)
     {
-        // Use the NPC's given name if available, otherwise use type name
         string speakerName = (!string.IsNullOrEmpty(npc.GivenName) && npc.GivenName != npc.TypeName)
             ? npc.GivenName
             : npc.TypeName;
@@ -58,14 +54,13 @@ public class DialogueIndicator : ScreenIndicator
 
     protected override void PostUpdate()
     {
-        // Hide indicator if dialogue is already active
         if (DialogueManager.Instance.IsAnyActive())
         {
             IsVisible = false;
         }
     }
 
-    private void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPos, float opacity)
+    private void DrawIndicator(SpriteBatch spriteBatch, Vector2 screenPos, float opacity)
     {
         if (iconTexture == null)
             return;
@@ -76,7 +71,7 @@ public class DialogueIndicator : ScreenIndicator
 
         spriteBatch.Draw(
             iconTexture,
-            worldPos,
+            screenPos,
             null,
             glowColor * opacity,
             rotation,
@@ -88,14 +83,14 @@ public class DialogueIndicator : ScreenIndicator
 
         if (IsHovering)
         {
-            DrawPanel(spriteBatch, worldPos, opacity * GetHoverOpacity());
+            DrawPanel(spriteBatch, opacity * GetHoverOpacity());
         }
     }
 
-
-    private void DrawPanel(SpriteBatch spriteBatch, Vector2 screenPos, float opacity)
+    private void DrawPanel(SpriteBatch spriteBatch, float opacity)
     {
-        float zoom = Main.GameViewMatrix.Zoom.X;
+        // Get proper screen position for UI panel positioning
+        var screenPos = GetScreenPosition();
 
         int lineCount = 3;
         bool hasMusic = TryGetMusicId(out _);
@@ -103,12 +98,14 @@ public class DialogueIndicator : ScreenIndicator
 
         int panelHeight = 20 + (lineCount * 22) + PADDING * 2;
 
-        float panelX = screenPos.X + (Width * zoom / 2) + 15;
+        // Position panel to the right of the icon
+        float panelX = screenPos.X + (Width / 2) + 15;
         float panelY = screenPos.Y - (panelHeight / 2);
 
+        // Adjust if panel would go off screen
         if (panelX + PANEL_WIDTH > Main.screenWidth)
         {
-            panelX = screenPos.X - (Width * zoom / 2) - PANEL_WIDTH - 15;
+            panelX = screenPos.X - (Width / 2) - PANEL_WIDTH - 15;
         }
 
         if (panelY + panelHeight > Main.screenHeight)
@@ -129,7 +126,6 @@ public class DialogueIndicator : ScreenIndicator
         );
 
         var speakerColor = GetDisplayColor();
-
         int textY = panelRect.Y + PADDING;
 
         Utils.DrawBorderStringFourWay(

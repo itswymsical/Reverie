@@ -664,9 +664,9 @@ public class SpruceTree : CustomTree
     protected override WeightedRandom<int> GetTreeDrops()
     {
         var drop = new WeightedRandom<int>();
-        drop.Add(ItemID.Peach, 0.08f);
-        drop.Add(ItemID.Acorn, 0.125f);
-        drop.Add(ItemID.Cherry, 0.08f);
+        drop.Add(ItemID.Peach, 0.008f);
+        drop.Add(ItemID.Acorn, 0.025f);
+        drop.Add(ItemID.Cherry, 0.008f);
         return drop;
     }
 

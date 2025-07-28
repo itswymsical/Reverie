@@ -31,7 +31,7 @@ public class PeatTile : ModTile
         Main.tileMerge[ModContent.TileType<SnowTaigaGrassTile>()][Type] = true;
         Main.tileMerge[Type][ModContent.TileType<SnowTaigaGrassTile>()] = true;
         Main.tileBlockLight[Type] = true;
-
+        TileID.Sets.Dirt[Type] = true;
         MineResist = 0.5f;
         DustType = DustID.Mud;
         HitSound = SoundID.Dig;

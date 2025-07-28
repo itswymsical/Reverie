@@ -43,13 +43,27 @@ public class MissionIndicator : ScreenIndicator
     protected override void PostUpdate()
     {
         // Custom mission-specific update logic can go here
-        // Animation logic is now handled by the base class
     }
 
-    private void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPos, float opacity)
+    private void DrawIndicator(SpriteBatch spriteBatch, Vector2 screenPos, float opacity)
     {
+        // Debug visualization when needed
+        if (ShowDebugHitbox)
+        {
+            DrawDebugHitbox(spriteBatch, screenPos, opacity);
+        }
+
         if (iconTexture == null)
+        {
+            // Draw fallback rectangle if texture fails to load
+            var pixel = TextureAssets.MagicPixel.Value;
+            spriteBatch.Draw(
+                pixel,
+                new Rectangle((int)screenPos.X - Width / 2, (int)screenPos.Y - Height / 2, Width, Height),
+                Color.Yellow * opacity
+            );
             return;
+        }
 
         var scale = GetAnimationScale();
         var glowColor = IsHovering ? Color.White : Color.White * 0.8f;
@@ -57,7 +71,7 @@ public class MissionIndicator : ScreenIndicator
 
         spriteBatch.Draw(
             iconTexture,
-            worldPos,
+            screenPos,
             null,
             glowColor * opacity,
             rotation,
@@ -67,31 +81,26 @@ public class MissionIndicator : ScreenIndicator
             0f
         );
 
-        if (ShowDebugHitbox)
-        {
-            DrawDebugHitbox(spriteBatch, worldPos, opacity);
-        }
-
         if (IsHovering)
         {
-            DrawPanel(spriteBatch, worldPos, opacity * GetHoverOpacity());
+            DrawPanel(spriteBatch, opacity * GetHoverOpacity());
         }
     }
 
-    private void DrawDebugHitbox(SpriteBatch spriteBatch, Vector2 worldPos, float opacity)
+    private void DrawDebugHitbox(SpriteBatch spriteBatch, Vector2 screenPos, float opacity)
     {
-        var scaledWidth = Width;
-        var scaledHeight = Height;
+        var zoom = Main.GameViewMatrix.Zoom.X;
+        var scaledWidth = (int)(Width * zoom);
+        var scaledHeight = (int)(Height * zoom);
 
         var hitboxRect = new Rectangle(
-            (int)worldPos.X - scaledWidth / 2,
-            (int)worldPos.Y - scaledHeight / 2,
+            (int)screenPos.X - scaledWidth / 2,
+            (int)screenPos.Y - scaledHeight / 2,
             scaledWidth,
             scaledHeight
         );
 
         var pixel = TextureAssets.MagicPixel.Value;
-
         var borderColor = IsHovering ? Color.Lime : Color.Red;
         borderColor *= opacity * 0.8f;
 
@@ -106,12 +115,13 @@ public class MissionIndicator : ScreenIndicator
         spriteBatch.Draw(pixel, hitboxRect, fillColor);
     }
 
-    private void DrawPanel(SpriteBatch spriteBatch, Vector2 screenPos, float opacity)
+    private void DrawPanel(SpriteBatch spriteBatch, float opacity)
     {
         if (mission == null)
             return;
 
-        var zoom = Main.GameViewMatrix.Zoom.X;
+        // Get proper screen position for UI panel positioning
+        var screenPos = GetScreenPosition();
 
         var lineCount = 3;
         if (mission.Objective.Count > 0)
@@ -122,13 +132,13 @@ public class MissionIndicator : ScreenIndicator
         var panelHeight = 20 + lineCount * 20 + PADDING * 2;
 
         // Position panel to the right of the icon
-        var panelX = screenPos.X + Width * zoom / 2 + 10;
+        var panelX = screenPos.X + Width / 2 + 10;
         var panelY = screenPos.Y - panelHeight / 2;
 
         // Adjust if panel would go off screen
         if (panelX + PANEL_WIDTH > Main.screenWidth)
         {
-            panelX = screenPos.X - Width * zoom / 2 - PANEL_WIDTH - 10;
+            panelX = screenPos.X - Width / 2 - PANEL_WIDTH - 10;
         }
 
         if (panelY + panelHeight > Main.screenHeight)
