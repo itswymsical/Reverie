@@ -1,5 +1,5 @@
 ﻿displayName = Reverie
-author = wymsical
+author = wymsical, Reverie Team
 version = 0.1
 modReferences = SubworldLibrary
 dllReferences = AnimatedModIconLib, StructureHelper

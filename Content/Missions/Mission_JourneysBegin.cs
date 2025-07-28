@@ -32,6 +32,7 @@ public class Mission_JourneysBegin : Mission
             [("Talk to Guide", 1)],
             [("Use Magic Mirror", 1)],
             [("Loot chests", 5), ("Mine ore", 20), ("Break pots", 30)],
+
             [("Give Guide Mysterious Book", 1), ("Listen to Guide", 1)]
         ],
 
@@ -130,6 +131,7 @@ public class Mission_JourneysBegin : Mission
                     DialogueManager.Instance.StartDialogue("JourneysBegin.MirrorGiven", 1, zoomIn: false, letterbox: false);
                 }
                 break;
+
             case Objectives.ChronicleSegment:
                 if (dialogueKey == "JourneysBegin.ChronicleReading")
                 {
@@ -245,7 +247,6 @@ public class Mission_JourneysBegin : Mission
 
                     UpdateProgress(objective: 2);
 
-                    // Only check in the Objectives.ExploreUnderground
                     if (CurrentIndex == (int)Objectives.ExploreUnderground)
                     {
                         var currentSet = Objective[CurrentIndex];

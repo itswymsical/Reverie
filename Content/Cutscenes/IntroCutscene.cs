@@ -34,6 +34,7 @@ public class IntroCutscene : Cutscene
     {
         originalPlayerPosition = new Vector2(Main.spawnTileX * 16f + 8f, Main.spawnTileY * 16f + 8f);
 
+        EnableLetterbox = true; // Add this line
         base.Start();
         SetMusic(MusicLoader.GetMusicSlot($"{CUTSCENE_MUSIC_DIRECTORY}DawnofReverie"), MusicFadeMode.Instant);
     }
@@ -47,8 +48,6 @@ public class IntroCutscene : Cutscene
         var startPos = originalPlayerPosition - new Vector2(0, panDistance);
         CameraSystem.MoveCameraOut(1, startPos);
         ControlsOFF();
-        UsesLetterbox();
-        EnableLetterbox = true;
         InvisON();
     }
 
@@ -172,7 +171,6 @@ public class IntroCutscene : Cutscene
             Main.LocalPlayer.position = originalPlayerPosition - new Vector2(Main.LocalPlayer.width / 2f, Main.LocalPlayer.height);
             Main.LocalPlayer.velocity = Vector2.Zero;
         }
-
         MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
         player.UnlockMission(MissionID.JourneysBegin);
 

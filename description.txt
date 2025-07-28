@@ -1,13 +1,16 @@
-﻿[c/73d5ff:Reverie] provides a brand spankin' new take on Terraria: Open-World RPG storytelling. 
-Reverie introduces a layered mission system, with dynamic objectives, rewards, and character interactions. This means that town NPCs will no longer feel like NPCs, they will be characterized!
-Outside of the mainline story, there are side quests, which are more like mini-stories that can be completed at your own pace.
+﻿[c/73d5ff:Reverie] provides a brand spankin' new way to enjoy Terraria!
+It's an [c/f5c542:open-world] with [c/86ff14:environmental storytelling] & worldbuilding! 
 
-The story of Reverie revolves around the Avatar, an entity (the player) that crash-lands into Terraria. The Guide and townsfolk quickly realize that the Player's arrival is connected to an ancient power known as Reverie, something that which has been forgotten to history.
-As the Player sets out to explore, they encounter aggressive wildlife and ecosystems, alluded to be caused by the Avatar's presence. Ancient textbooks and inscriptions provide clues about an ancient evil that once threatened the world but was sealed away long ago. The emergence of Reverie and the Avatar's arrival might trigger this evil's return.
+Otherworlds contain distinct culture, tone, and detail that offer their own unique events & story.
 
+Reverie introduces a layered mission system, with dynamic tasks, rewarding rewards, and engaging NPC interactions. Town NPCs will no longer feel two-dimensional; you might actually care when they [c/ff3b14:(REDACTED)]!
+
+Traverse [c/86ff14:Terraria] and [c/73d5ff:Otherworlds], let your curiosity lead!
 
 DEVELOPER TEAM
 --------------------------------
-Composer(s): wymsical, Agent_Delta4, Homeboy
-Artist(s): ElectroManiac, RAWTHORN, Dominick, pil
-Contributing Members: HugeKraken, naka, grae, .sweetberries, Crystal_zone, Loving Zemmie (zenovia)
+Composers: wymsical, Agent_Delta4
+Lead Artists: Viejosabroson, ElectroManiac
+Artists: Swamon3, Crystal_zone, pil
+Contributing Artists: Dominick, RAWTHORN, naka
+Contributing Members: HugeKraken, naka, grae, .sweetberries, Loving Zemmie

@@ -67,7 +67,7 @@ public partial class ReverieMenu : ModMenu
         menuStars.Clear();
         easterEggObjects.Clear();
 
-        var starCount = Main.rand.Next(70, 150);
+        var starCount = Main.rand.Next(70, 100);
         for (var i = 0; i < starCount; i++)
         {
             CreateNewStar(true);

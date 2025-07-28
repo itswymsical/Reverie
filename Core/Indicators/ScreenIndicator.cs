@@ -6,6 +6,7 @@ using Terraria.Audio;
 using Terraria.UI;
 
 namespace Reverie.Core.Indicators;
+
 public enum AnimationType
 {
     Hover,
@@ -21,13 +22,7 @@ public class ScreenIndicator
     public int Width { get; set; }
     public int Height { get; set; }
 
-    /// <summary>
-    /// do not use this field outside of debugging purposes.
-    /// </summary>
     public Entity trackingEntity;
-    /// <summary>
-    /// do not use this field outside of debugging purposes.
-    /// </summary>
     public Vector2 trackingOffset;
     private bool isTracking => trackingEntity != null && trackingEntity.active;
 
@@ -58,7 +53,7 @@ public class ScreenIndicator
     private const float SHAKE_INTENSITY = 0.15f;
     #endregion
 
-    public delegate void DrawDelegate(SpriteBatch spriteBatch, Vector2 worldPos, float opacity);
+    public delegate void DrawDelegate(SpriteBatch spriteBatch, Vector2 screenPos, float opacity);
     public DrawDelegate OnDrawWorld;
 
     public ScreenIndicator(Vector2 worldPosition, int width, int height, AnimationType? animationType = null)
@@ -69,17 +64,11 @@ public class ScreenIndicator
         instanceAnimationType = animationType;
     }
 
-    /// <summary>
-    /// Sets the animation type for this specific instance
-    /// </summary>
     public void SetAnimationType(AnimationType animationType)
     {
         instanceAnimationType = animationType;
     }
 
-    /// <summary>
-    /// Sets this entity to track another entity's position
-    /// </summary>
     public void TrackEntity(Entity entity, Vector2 offset)
     {
         trackingEntity = entity;
@@ -107,10 +96,9 @@ public class ScreenIndicator
     {
         AnimationTimer += 0.1f;
 
-        // Check if tracking entity is still valid
         if (trackingEntity != null && !trackingEntity.active)
         {
-            IsVisible = false; // This will trigger removal in PostUpdateEverything
+            IsVisible = false;
             return;
         }
 
@@ -276,9 +264,6 @@ public class ScreenIndicator
 
     public virtual float GetHoverOpacity() => hoverFadeIn;
 
-    /// <summary>
-    /// extra update logic after the main update loop
-    /// </summary>
     protected virtual void PostUpdate() { }
 
     public bool CheckHovering()
@@ -286,8 +271,9 @@ public class ScreenIndicator
         if (!IsVisible)
             return false;
 
+        // Convert world position to screen position for collision
         var worldPosWithOffset = WorldPosition + Offset;
-        var screenPos = WorldToScreen(worldPosWithOffset);
+        var screenPos = worldPosWithOffset - Main.screenPosition;
 
         var zoom = Main.GameViewMatrix.Zoom.X;
         var scaledWidth = (int)(Width * zoom);
@@ -303,46 +289,26 @@ public class ScreenIndicator
         return hitboxRect.Contains(Main.MouseScreen.ToPoint());
     }
 
-    /// <summary>
-    /// Draws the entity in world space (called during world rendering)
-    /// </summary>
-    public virtual void DrawInWorld(SpriteBatch spriteBatch)
-    {
-        if (!IsVisible)
-            return;
-
-        // Use world position directly, no conversion needed since we're in world space
-        var worldPosWithOffset = WorldPosition + Offset;
-
-        OnDrawWorld?.Invoke(spriteBatch, worldPosWithOffset, 1f);
-    }
-
-    /// <summary>
-    /// Legacy screen-space draw method (kept for backwards compatibility)
-    /// </summary>
     public virtual void Draw(SpriteBatch spriteBatch)
     {
         if (!IsVisible)
             return;
 
-        var screenPos = WorldToScreen(WorldPosition + Offset);
+        // Convert world position to screen position for rendering
+        var worldPosWithOffset = WorldPosition + Offset;
+        var screenPos = worldPosWithOffset - Main.screenPosition;
+
         OnDrawWorld?.Invoke(spriteBatch, screenPos, 1f);
     }
 
-    public static Vector2 WorldToScreen(Vector2 worldPos)
+    // Helper method to convert world position to screen position for UI panels
+    protected Vector2 GetScreenPosition()
     {
-        return Vector2.Transform(worldPos - Main.screenPosition, Main.GameViewMatrix.TransformationMatrix);
-    }
-
-    public static Vector2 ScreenToWorld(Vector2 screenPos)
-    {
-        return Vector2.Transform(screenPos, Matrix.Invert(Main.GameViewMatrix.TransformationMatrix)) + Main.screenPosition;
+        var worldPosWithOffset = WorldPosition + Offset;
+        return Vector2.Transform(worldPosWithOffset - Main.screenPosition, Main.GameViewMatrix.EffectMatrix);
     }
 }
 
-/// <summary>
-/// Unified manager for all screen indicators in the world
-/// </summary>
 public class ScreenIndicatorManager : ModSystem
 {
     public static ScreenIndicatorManager Instance { get; set; }
@@ -382,7 +348,6 @@ public class ScreenIndicatorManager : ModSystem
     {
         int npcIndex = npc.whoAmI;
 
-        // Check if we need to replace existing indicator
         if (npcIndicators.ContainsKey(npcIndex))
         {
             if (npcTracking.ContainsKey(npcIndex) && !npcTracking[npcIndex].Equals(trackingKey))
@@ -491,7 +456,6 @@ public class ScreenIndicatorManager : ModSystem
         {
             var indicator = indicators[i];
 
-            // Clean up indicators tracking inactive entities
             if (indicator.trackingEntity != null && !indicator.trackingEntity.active)
             {
                 RemoveIndicatorFromCollections(indicator);
@@ -508,17 +472,16 @@ public class ScreenIndicatorManager : ModSystem
     }
 
     private void RemoveIndicatorFromCollections(ScreenIndicator indicator)
-{
-    indicators.Remove(indicator);
-    
-    // Find and remove from NPC tracking
-    var npcEntry = npcIndicators.FirstOrDefault(kvp => kvp.Value == indicator);
-    if (npcEntry.Value != null) // Proper null check
     {
-        npcIndicators.Remove(npcEntry.Key);
-        npcTracking.Remove(npcEntry.Key);
+        indicators.Remove(indicator);
+
+        var npcEntry = npcIndicators.FirstOrDefault(kvp => kvp.Value == indicator);
+        if (npcEntry.Value != null)
+        {
+            npcIndicators.Remove(npcEntry.Key);
+            npcTracking.Remove(npcEntry.Key);
+        }
     }
-}
 
     public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
     {
@@ -528,7 +491,7 @@ public class ScreenIndicatorManager : ModSystem
             layers.Insert(invasionIndex + 1, new LegacyGameInterfaceLayer(
                 "Reverie: Screen Indicators",
                 delegate {
-                    Instance.Draw(Main.spriteBatch);
+                    DrawIndicators(Main.spriteBatch);
                     return true;
                 },
                 InterfaceScaleType.Game)
@@ -536,7 +499,7 @@ public class ScreenIndicatorManager : ModSystem
         }
     }
 
-    public void Draw(SpriteBatch spriteBatch)
+    public void DrawIndicators(SpriteBatch spriteBatch)
     {
         foreach (var indicator in indicators)
         {
@@ -551,7 +514,6 @@ public class ScreenIndicatorManager : ModSystem
         npcTracking.Clear();
     }
 
-    // Convenience methods for specific indicator types
     public MissionIndicator CreateMissionIndicator(Vector2 worldPosition, Mission mission, AnimationType? animationType = null)
     {
         return CreateIndicator<MissionIndicator>(worldPosition, mission, animationType);

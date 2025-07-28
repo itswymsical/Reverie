@@ -31,12 +31,12 @@ public class TaigaBackgroundStyle : ModSurfaceBackgroundStyle
 
     public override int ChooseFarTexture()
     {
-        return 173;
+        return 277;
     }
 
     public override int ChooseMiddleTexture()
     {
-        return 282;
+        return 281;
     }
 
     public override int ChooseCloseTexture(ref float scale, ref double parallax, ref float a, ref float b)

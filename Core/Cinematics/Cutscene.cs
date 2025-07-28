@@ -7,7 +7,7 @@ namespace Reverie.Core.Cinematics;
 
 public abstract class Cutscene
 {
-    protected bool IsPlaying { get; set; }
+    public bool IsPlaying { get; set; }
     protected bool IsUIHidden { get; set; }
 
     public float FadeAlpha { get; set; }
