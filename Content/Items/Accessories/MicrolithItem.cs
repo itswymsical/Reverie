@@ -1,5 +1,7 @@
 ﻿using ReLogic.Graphics;
+using Reverie.Common.Items.Types;
 using Reverie.Common.Players;
+using Reverie.Common.UI.RelicUI;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria.Audio;
@@ -9,27 +11,33 @@ using Terraria.UI;
 
 namespace Reverie.Content.Items.Accessories;
 
-public class MicrolithItem : ModItem
+public class MicrolithItem : RelicItem
 {
+    public override int MaxLevel => 5;
+    public override int XPPerLevel => 60;
+    public override float XPAbsorptionRate => 0.55f;
+
     public override void SetDefaults()
     {
-        Item.accessory = true;
         Item.rare = ItemRarityID.Blue;
         Item.width = Item.height = 32;
         Item.value = Item.sellPrice(gold: 1, silver: 8);
     }
-    public override void UpdateAccessory(Player player, bool hideVisual)
+
+    public override void UpdateRelicEffects(Player player)
     {
         player.GetModPlayer<ReveriePlayer>().microlithEquipped = true;
     }
-    public override void AddRecipes()
+
+    public override void AddTooltips(List<TooltipLine> tooltips)
     {
-        CreateRecipe()
-        .AddIngredient(ItemID.SiltBlock, 45)
-        .AddIngredient(ItemID.StoneBlock, 30)
-        .AddIngredient(ItemID.AncientChisel)
-        .AddTile(TileID.Furnaces)
-        .Register();
+        float dropChance = 0.10f + (RelicLevel - 1) * 0.08f;
+        int minExtra = Math.Max(1, RelicLevel - 3);
+        int maxExtra = RelicLevel + 1;
+
+        tooltips.Add(new TooltipLine(Mod, "DropChance", $"{dropChance:P0} chance[i:{ItemID.AmethystStoneBlock}]"));
+
+        tooltips.Add(new TooltipLine(Mod, "DropAmount", $"+{minExtra}-{maxExtra} extra ore [i:{ItemID.CopperPickaxe}]"));
     }
 }
 
@@ -43,22 +51,37 @@ public class MicrolithGlobalTile : GlobalTile
 
         Player player = Main.player[Main.myPlayer];
         int itemType = TileLoader.GetItemDropFromTypeAndStyle(type);
-        bool shinyOre = Main.tileSpelunker[type] && (type != TileID.Pots || type != TileID.Containers 
+        bool shinyOre = Main.tileSpelunker[type] && Main.tileSolid[type] && (type != TileID.Pots || type != TileID.Containers
             || type != TileID.Heart || type != TileID.LifeCrystalBoulder || type != TileID.LifeFruit || !(type >= 63 && type <= 68));
 
         if (player.GetModPlayer<ReveriePlayer>().microlithEquipped)
         {
-            if ((TileID.Sets.Ore[type] || shinyOre) && Main.rand.NextFloat() < 0.15f)
+            if (TileID.Sets.Ore[type] || shinyOre)
             {
-                int extraItems = Main.rand.Next(1, 3);
-                harvestApplied = true;
+                var relicPlayer = player.GetModPlayer<RelicPlayer>();
+                if (relicPlayer.CurrentRelic is MicrolithItem microlith)
+                {
+                    // Scale drop chance: 10% base + 8% per level (10%, 18%, 26%, 34%, 42% at max)
+                    float dropChance = 0.10f + (microlith.RelicLevel - 1) * 0.08f;
 
-                player.QuickSpawnItem(new EntitySource_TileBreak(i, j), itemType, extraItems);
+                    if (Main.rand.NextFloat() < dropChance)
+                    {
+                        // Scale extra items: level 1 = 1-2, level 5 = 2-4 items
+                        int minExtra = Math.Max(1, microlith.RelicLevel - 3);
+                        int maxExtra = microlith.RelicLevel;
+                        int extraItems = Main.rand.Next(minExtra, maxExtra + 1);
 
-                HarvestNotificationManager.ShowHarvestNotification(itemType, extraItems);
+                        harvestApplied = true;
+
+                        player.QuickSpawnItem(new EntitySource_TileBreak(i, j), itemType, extraItems);
+                        HarvestNotificationManager.ShowHarvestNotification(itemType, extraItems);
+                    }
+                }
             }
             else
+            {
                 harvestApplied = false;
+            }
         }
     }
 

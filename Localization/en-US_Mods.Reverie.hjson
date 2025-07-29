@@ -1,4 +1,4 @@
-UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -278,7 +278,7 @@ Items: {
 
 	MicrolithItem: {
 		DisplayName: Microlith
-		Tooltip: When you break an ore chunk, it has a small chance to drop x1-x3 the ore value
+		Tooltip: When you break an ore chunk, it has a small chance to drop extra ore
 	}
 
 	DialogueTest: {
@@ -445,6 +445,16 @@ Items: {
 
 	PineTreeDebugWand: {
 		DisplayName: Pine Tree Debug Wand
+		Tooltip: ""
+	}
+
+	TestRelic: {
+		DisplayName: Test Relic
+		Tooltip: ""
+	}
+
+	VitalityRelic: {
+		DisplayName: Vitality Relic
 		Tooltip: ""
 	}
 }

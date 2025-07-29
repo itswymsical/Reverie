@@ -132,7 +132,6 @@ internal class FlowerSatchelUIState : UIState
 
             _lastSatchel = satchel.Item;
 
-            // Update effects text
             UpdateEffectsDisplay(modPlayer);
         }
         else
@@ -177,8 +176,8 @@ internal class FlowerSatchelUIState : UIState
         // Add title text
         _effectsTitle = new UIText("No active effects", 0.925f, false)
         {
-            Left = new StyleDimension(Main.screenWidth / 48, 0),
-            Top = new StyleDimension(Main.screenHeight / 2.7f, 0),
+            Left = new StyleDimension(Main.screenWidth / 5 - SLOTS_PER_ROW * 46 / 2, 0),
+            Top = new StyleDimension(Main.screenHeight / 2.9f, 0),
             TextColor = Color.LightGreen * 0.95f,
             ShadowColor = Color.Black
         };
@@ -187,16 +186,16 @@ internal class FlowerSatchelUIState : UIState
         // Add effects list below title
         _effectsList = new UIText("", 0.8f, false)
         {
-            Left = new StyleDimension(Main.screenWidth / 48, 0),
-            Top = new StyleDimension(Main.screenHeight / 2.7f + 25, 0),
+            Left = new StyleDimension(Main.screenWidth / 5 - SLOTS_PER_ROW * 46 / 2, 0),
+            Top = new StyleDimension(Main.screenHeight / 2.9f + 25, 0),
             TextColor = Color.White * 0.8f,
             ShadowColor = Color.Black
         };
         Append(_effectsList);
 
         // Add flower slots in a single row
-        float baseX = Main.screenWidth / 20 - SLOTS_PER_ROW * 47 / 2;
-        var baseY = Main.screenHeight / 3.23f;
+        float baseX = Main.screenWidth / 5 - SLOTS_PER_ROW * 52 / 2;
+        var baseY = Main.screenHeight / 3.5f;
 
         for (var i = 0; i < satchel.items.Length; i++)
         {
