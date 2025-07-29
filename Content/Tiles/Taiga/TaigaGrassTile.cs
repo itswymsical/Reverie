@@ -134,7 +134,7 @@ public class CorruptTaigaGrassTile : GrassTile
         if (!effectOnly)
         {
             fail = true;
-            Framing.GetTileSafely(i, j).TileType = (ushort)ModContent.TileType<TaigaGrassTile>();
+            Framing.GetTileSafely(i, j).TileType = (ushort)ModContent.TileType<PeatTile>();
         }
     }
 }
@@ -176,7 +176,7 @@ public class CrimsonTaigaGrassTile : GrassTile
         if (!effectOnly)
         {
             fail = true;
-            Framing.GetTileSafely(i, j).TileType = (ushort)ModContent.TileType<TaigaGrassTile>();
+            Framing.GetTileSafely(i, j).TileType = (ushort)ModContent.TileType<PeatTile>();
         }
     }
 }
@@ -218,7 +218,7 @@ public class HallowTaigaGrassTile : GrassTile
         if (!effectOnly)
         {
             fail = true;
-            Framing.GetTileSafely(i, j).TileType = (ushort)ModContent.TileType<TaigaGrassTile>();
+            Framing.GetTileSafely(i, j).TileType = (ushort)ModContent.TileType<PeatTile>();
         }
     }
 }

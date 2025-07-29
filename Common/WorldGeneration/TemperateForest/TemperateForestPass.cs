@@ -62,7 +62,7 @@ public class TemperateForestPass : GenPass
                 if (IsValidCoordinate(x, currentDepth))
                 {
                     Tile tile = Main.tile[x, currentDepth];
-                    if (tile.TileType == TileID.Grass || tile.TileType == TileID.CrimsonGrass || tile.TileType == TileID.CorruptGrass)
+                    if (tile.TileType == TileID.Grass)
                     {
                         tile.TileType = (ushort)ModContent.TileType<TemperateGrassTile>();
                     }
