@@ -1,4 +1,5 @@
-﻿using Reverie.Content.Tiles.Misc;
+﻿using Reverie.Content.Tiles.Desert;
+using Reverie.Content.Tiles.Misc;
 using Reverie.Content.Tiles.TemperateForest;
 using Terraria.IO;
 using Terraria.WorldBuilding;
@@ -122,7 +123,7 @@ public class DecorPass : GenPass
         {
             if (HasFlowerSpace(x, y))
             {
-                WorldGen.PlaceTile(x, y - 1, ModContent.TileType<DeadbushTile>(), mute: true, style: Main.rand.Next(2));
+                WorldGen.PlaceTile(x, y - 1, ModContent.TileType<DeadBushTile>(), mute: true, style: Main.rand.Next(2));
                 if (Main.netMode == NetmodeID.Server)
                 {
                     NetMessage.SendTileSquare(-1, x, y - 1, 1, TileChangeType.None);
