@@ -77,6 +77,18 @@ public class SandHazeConfig : ModConfig
     [DefaultValue(false)]
     public bool PerformanceMode { get; set; }
 
+    [Header("Debug")]
+
+    [Label("Show Debug Info")]
+    [Tooltip("Display particle count and performance metrics on screen")]
+    [DefaultValue(false)]
+    public bool ShowDebugInfo { get; set; }
+
+    [Label("Enable Collision Visualization")]
+    [Tooltip("Draw collision boundaries for debugging (performance impact)")]
+    [DefaultValue(false)]
+    public bool ShowCollisionBounds { get; set; }
+
     // Performance mode modifiers
     public int EffectiveHorizontalRange => GetEffectiveValue(nameof(HorizontalRange));
     public int EffectiveVerticalRange => GetEffectiveValue(nameof(VerticalRange));

@@ -40,7 +40,6 @@ public class ReveriePlayer : ModPlayer
     {
         if (Main.LocalPlayer.ZoneDesert || SubworldSystem.IsActive<ArchaeaSub>())
         {
-            DrawSandHaze();
             SpawnTumbleweed();
         }
 
@@ -92,38 +91,6 @@ public class ReveriePlayer : ModPlayer
     }
 
     #region Desert Visuals
-    private bool IsSandTile(Tile tile) =>
-    tile.HasTile && (tile.TileType == TileID.Sand || tile.TileType == ModContent.TileType<PrimordialSandTile>());
-
-    private bool HasAirAbove(int x, int y) => !Main.tile[x, y - 1].HasTile && !Main.tile[x, y - 2].HasTile;
-
-    private void DrawSandHaze()
-    {
-        var config = ModContent.GetInstance<SandHazeConfig>();
-
-        if (!config.EffectiveEnableSandHaze)
-            return;
-
-        int startX = (int)(Player.position.X / 16) - config.EffectiveHorizontalRange;
-        int endX = (int)(Player.position.X / 16) + config.EffectiveHorizontalRange;
-        int startY = (int)(Player.position.Y / 16) - config.EffectiveVerticalRange;
-        int endY = (int)(Player.position.Y / 16) + config.EffectiveVerticalRange;
-
-        for (int x = startX; x < endX; x++)
-        {
-            for (int y = startY; y < endY; y++)
-            {
-                if (x < 0 || x >= Main.maxTilesX || y < 2 || y >= Main.maxTilesY)
-                    continue;
-
-                if (IsSandTile(Main.tile[x, y]) && HasAirAbove(x, y) && Main.rand.NextBool(config.EffectiveDustSpawnChance))
-                {
-                    SpawnSandDust(x, y);
-                }
-            }
-        }
-    }
-
     private void SpawnTumbleweed()
     {
         if (!Main.rand.NextBool(1200))
@@ -161,18 +128,5 @@ public class ReveriePlayer : ModPlayer
             ModContent.ProjectileType<TumbleweedProjectile>(), 0, 0f, Player.whoAmI);
     }
 
-    private void SpawnSandDust(int tileX, int tileY)
-    {
-        var config = ModContent.GetInstance<SandHazeConfig>();
-
-        Vector2 dustPosition = new((tileX - 2) * 16, (tileY - 1) * 16);
-        int dustIndex = Dust.NewDust(dustPosition, config.EffectiveDustSize, config.EffectiveDustSize, ModContent.DustType<SandHazeDust>());
-        Main.dust[dustIndex].velocity.X -= Main.windSpeedCurrent * config.EffectiveWindVelocityFactor;
-
-        if (Player.ZoneSandstorm)
-        {
-            Main.dust[dustIndex].velocity.Y += config.EffectiveSandstormUpwardVelocity;
-        }
-    }
     #endregion
 }
