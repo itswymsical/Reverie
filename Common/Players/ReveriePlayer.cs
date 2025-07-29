@@ -126,7 +126,7 @@ public class ReveriePlayer : ModPlayer
 
     private void SpawnTumbleweed()
     {
-        if (!Main.rand.NextBool(360))
+        if (!Main.rand.NextBool(1200))
             return;
 
         int existingTumbleweeds = 0;
