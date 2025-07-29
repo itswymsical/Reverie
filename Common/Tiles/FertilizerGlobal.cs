@@ -1,5 +1,5 @@
 ﻿// Credits: Original code by Spirit Reforged (GabeHasWon)
-using Reverie.Content.Tiles.Canopy.Trees;
+using Reverie.Core.Tiles;
 using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.GameContent.Metadata;
