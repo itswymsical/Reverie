@@ -8,6 +8,7 @@ public abstract class WorldNPCActor : ModNPC
     {
         NPCID.Sets.ActsLikeTownNPC[Type] = true;
     }
+
     public override void SetDefaults()
     {
         NPC.aiStyle = 7;
