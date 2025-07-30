@@ -31,7 +31,7 @@ public class MissionForgottenAges : Mission
         [
             [("Talk to Guide", 1)],
             [("Explore the Jungle", 1)],
-            [("Locate next Chronicle", 1), ("Break pots", 20), ("Defeat Jungle Creatures", 10)],
+            [("Locate next Chronicle", 1), ("Check inside pots", 10), ("Defeat Jungle Creatures", 10)],
             [("Give Guide Chronicle", 1), ("Listen to Guide", 1)]
         ],
 

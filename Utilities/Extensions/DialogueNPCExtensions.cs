@@ -1,10 +1,10 @@
 ﻿using Reverie.Common.MonoMod;
 using Reverie.Core.Dialogue;
+using System.Linq;
 using Terraria.GameContent.UI;
 
 namespace Reverie.Utilities.Extensions;
 
-// Extension class for additional dialogue-related NPC behaviors
 public static partial class DialogueNPCExtensions
 {
     /// <summary>
@@ -25,7 +25,7 @@ public static partial class DialogueNPCExtensions
     }
 
     /// <summary>
-    /// Makes an NPC perform a specific emote
+    /// Makes an NPC use an emote bubble
     /// </summary>
     public static void ShowEmote(this NPC npc, int emoteType, int duration = 120)
     {
@@ -33,93 +33,39 @@ public static partial class DialogueNPCExtensions
     }
 
     /// <summary>
-    /// Makes the NPC hold out their hand/arm (like offering an item)
+    /// Makes the NPC hold an item (with a rendered texture)
     /// </summary>
-    public static void HoldOutItem(this NPC npc, int duration = 300)
+    public static void HoldItem(this NPC npc, int itemType)
     {
-        npc.ai[0] = 9f; // Hand remains out
-        npc.ai[1] = duration;
-        npc.ai[2] = 0f;
-        npc.localAI[3] = 0f;
-    }
-
-    /// <summary>
-    /// Makes the NPC talk while holding out their hand (like offering an item while speaking)
-    /// </summary>
-    public static void TalkWithItemOffer(this NPC npc, int duration = 300)
-    {
-        // Alternate between states 3 and 4 for talking + hand out combo
-        var state = Main.rand.NextBool() ? 3f : 4f;
-        npc.ai[0] = state;
-        npc.ai[1] = duration;
-        npc.ai[2] = 0f;
-        npc.localAI[3] = 0f;
-    }
-
-    /// <summary>
-    /// Makes the NPC use enhanced talking animation
-    /// </summary>
-    public static void StartTalking(this NPC npc, int duration = 300)
-    {
-        npc.ai[0] = 19f; // Enhanced talking state
-        npc.ai[1] = duration;
-        npc.ai[2] = 0f;
-        npc.localAI[3] = 0f;
-    }
-
-    /// <summary>
-    /// Makes the NPC blink/look thoughtful
-    /// </summary>
-    public static void Blink(this NPC npc, int duration = 120)
-    {
-        npc.ai[0] = 2f; // Blinking state
-        npc.ai[1] = duration;
-        npc.ai[2] = 0f;
-        npc.localAI[3] = 0f;
-    }
-
-    /// <summary>
-    /// Makes the NPC celebrate with confetti
-    /// </summary>
-    public static void Celebrate(this NPC npc, int duration = 180)
-    {
-        npc.ai[0] = 6f; // Confetti/celebration state
-        npc.ai[1] = duration;
-        npc.ai[2] = 0f;
-        npc.localAI[3] = 0f;
-    }
-
-    /// <summary>
-    /// Makes the NPC sit down (if there's a valid seat)
-    /// </summary>
-    public static void SitDown(this NPC npc, int duration = 600)
-    {
-        npc.ai[0] = 5f; // Sitting state
-        npc.ai[1] = duration;
-        npc.ai[2] = 0f;
-        npc.localAI[3] = 0f;
-    }
-
-    /// <summary>
-    /// Stops any current action and returns NPC to idle
-    /// </summary>
-    public static void StopAction(this NPC npc)
-    {
-        npc.ai[0] = 0f; // Idle state
-        npc.ai[1] = 60 + Main.rand.Next(60);
-        npc.ai[2] = 0f;
-        npc.localAI[3] = 30f;
-    }
-
-    /// <summary>
-    /// Makes the NPC perform a sequence of actions with timing
-    /// </summary>
-    public static void PerformActionSequence(this NPC npc, params (float action, int duration)[] sequence)
-    {
-        if (sequence.Length == 0) return;
-
         var globalNPC = npc.GetGlobalNPC<DialogueNPCBehavior>();
-        globalNPC.StartActionSequence(npc, sequence);
+        globalNPC?.StartHoldingItem(itemType);
+    }
+
+    /// <summary>
+    /// Makes the NPC stop holding the item in question
+    /// </summary>
+    public static void StopHoldingItem(this NPC npc)
+    {
+        var globalNPC = npc.GetGlobalNPC<DialogueNPCBehavior>();
+        globalNPC?.StopHoldingItem();
+    }
+
+    /// <summary>
+    /// Checks if an NPC is currently holding an item
+    /// </summary>
+    public static bool IsHoldingItem(this NPC npc)
+    {
+        var globalNPC = npc.GetGlobalNPC<DialogueNPCBehavior>();
+        return globalNPC != null && globalNPC.isHoldingItem;
+    }
+
+    /// <summary>
+    /// Gets the item type the NPC is currently holding (0 if none)
+    /// </summary>
+    public static int GetHeldItemType(this NPC npc)
+    {
+        var globalNPC = npc.GetGlobalNPC<DialogueNPCBehavior>();
+        return globalNPC?.heldItemType ?? 0;
     }
 
     /// <summary>
@@ -131,28 +77,214 @@ public static partial class DialogueNPCExtensions
     }
 
     /// <summary>
-    /// Checks if the NPC is currently performing a specific action
+    /// Checks if the NPC is currently using hand-out frames
     /// </summary>
-    public static bool IsPerformingAction(this NPC npc, float actionState)
+    public static bool IsUsingHandOutFrames(this NPC npc)
     {
-        return Math.Abs(npc.ai[0] - actionState) < 0.1f;
+        var globalNPC = npc.GetGlobalNPC<DialogueNPCBehavior>();
+        return globalNPC != null && globalNPC.useHandOutFrames;
     }
 
     /// <summary>
-    /// Gets the current action state of the NPC
+    /// Gets the current dialogue frame index in the frame array (not the actual frame number)
     /// </summary>
-    public static float GetCurrentAction(this NPC npc)
+    public static int GetCurrentDialogueFrameIndex(this NPC npc)
     {
-        return npc.ai[0];
+        var globalNPC = npc.GetGlobalNPC<DialogueNPCBehavior>();
+        return globalNPC?.currentDialogueFrameIndex ?? 0;
     }
 
     /// <summary>
-    /// Helper methods to check specific action states
+    /// Forces the NPC to use hand-out frames without holding an item
     /// </summary>
-    public static bool IsHoldingOutItem(this NPC npc) => Math.Abs(npc.ai[0] - 9f) < 0.1f;
-    public static bool IsTalking(this NPC npc) => Math.Abs(npc.ai[0] - 19f) < 0.1f || Math.Abs(npc.ai[0] - 7f) < 0.1f;
-    public static bool IsTalkingWithItemOffer(this NPC npc) => Math.Abs(npc.ai[0] - 3f) < 0.1f || Math.Abs(npc.ai[0] - 4f) < 0.1f;
-    public static bool IsBlinking(this NPC npc) => Math.Abs(npc.ai[0] - 2f) < 0.1f;
-    public static bool IsCelebrating(this NPC npc) => Math.Abs(npc.ai[0] - 6f) < 0.1f;
-    public static bool IsSitting(this NPC npc) => Math.Abs(npc.ai[0] - 5f) < 0.1f;
+    public static void UseHandOutFrames(this NPC npc, bool useHandOut = true)
+    {
+        var globalNPC = npc.GetGlobalNPC<DialogueNPCBehavior>();
+        globalNPC?.SetFrameMode(useHandOut);
+    }
+
+    /// <summary>
+    /// Forces the NPC to use talking frames
+    /// </summary>
+    public static void UseTalkingFrames(this NPC npc)
+    {
+        var globalNPC = npc.GetGlobalNPC<DialogueNPCBehavior>();
+        globalNPC?.SetFrameMode(handOut: false);
+    }
+
+    /// <summary>
+    /// Resets the frame animation to the beginning
+    /// </summary>
+    public static void ResetDialogueAnimation(this NPC npc)
+    {
+        var globalNPC = npc.GetGlobalNPC<DialogueNPCBehavior>();
+        globalNPC?.ResetFrameAnimation();
+    }
+
+    /// <summary>
+    /// Sets a specific frame index in the current animation array (useful for specific poses)
+    /// </summary>
+    public static void SetDialogueFrameIndex(this NPC npc, int frameIndex, bool pauseAnimation = false)
+    {
+        var globalNPC = npc.GetGlobalNPC<DialogueNPCBehavior>();
+        if (globalNPC != null)
+        {
+            var frameConfig = globalNPC.GetFrameConfig(npc.type);
+
+            // Clamp to valid range
+            int maxIndex = globalNPC.useHandOutFrames ?
+                frameConfig.HandOutFrames.Length - 1 :
+                frameConfig.TalkingFrames.Length - 1;
+
+            globalNPC.currentDialogueFrameIndex = Math.Clamp(frameIndex, 0, maxIndex);
+
+            if (pauseAnimation)
+            {
+                globalNPC.dialogueFrameCounter = -999; // Prevent frame updates
+            }
+        }
+    }
+
+    /// <summary>
+    /// Resumes frame animation if it was paused
+    /// </summary>
+    public static void ResumeDialogueAnimation(this NPC npc)
+    {
+        var globalNPC = npc.GetGlobalNPC<DialogueNPCBehavior>();
+        if (globalNPC != null)
+        {
+            globalNPC.dialogueFrameCounter = 0;
+        }
+    }
+
+    /// <summary>
+    /// Gets the current actual frame number being displayed
+    /// </summary>
+    public static int GetCurrentActualFrame(this NPC npc)
+    {
+        var globalNPC = npc.GetGlobalNPC<DialogueNPCBehavior>();
+        if (globalNPC != null)
+        {
+            var frameConfig = globalNPC.GetFrameConfig(npc.type);
+            int[] currentFrameArray = globalNPC.useHandOutFrames ?
+                frameConfig.HandOutFrames :
+                frameConfig.TalkingFrames;
+
+            return currentFrameArray[globalNPC.currentDialogueFrameIndex];
+        }
+        return 0;
+    }
+
+    /// <summary>
+    /// Forces a specific actual frame number (finds it in the current animation array)
+    /// </summary>
+    public static void SetActualDialogueFrame(this NPC npc, int actualFrame, bool pauseAnimation = false)
+    {
+        var globalNPC = npc.GetGlobalNPC<DialogueNPCBehavior>();
+        if (globalNPC != null)
+        {
+            var frameConfig = globalNPC.GetFrameConfig(npc.type);
+            int[] currentFrameArray = globalNPC.useHandOutFrames ?
+                frameConfig.HandOutFrames :
+                frameConfig.TalkingFrames;
+
+            // Find the index of the actual frame
+            for (int i = 0; i < currentFrameArray.Length; i++)
+            {
+                if (currentFrameArray[i] == actualFrame)
+                {
+                    globalNPC.currentDialogueFrameIndex = i;
+                    break;
+                }
+            }
+
+            if (pauseAnimation)
+            {
+                globalNPC.dialogueFrameCounter = -999;
+            }
+        }
+    }
+
+
+    /// <summary>
+    /// Legacy method - now sets specific frame index instead of AI state
+    /// </summary>
+    public static void Celebrate(this NPC npc, int duration = 180)
+    {
+        // Reset to first frame
+        npc.SetDialogueFrameIndex(0);
+    }
+
+    /// <summary>
+    /// Legacy method - resets to talking frames
+    /// </summary>
+    public static void StopAction(this NPC npc)
+    {
+        npc.UseTalkingFrames();
+        npc.StopHoldingItem();
+    }
+
+
+    /// <summary>
+    /// Checks if NPC is holding out their hand (using hand-out frames)
+    /// </summary>
+    public static bool IsHoldingOutItem(this NPC npc) => npc.IsUsingHandOutFrames();
+
+    /// <summary>
+    /// Checks if NPC is talking (using talking frames)
+    /// </summary>
+    public static bool IsTalking(this NPC npc) => npc.IsInDialogue() && !npc.IsUsingHandOutFrames();
+
+    /// <summary>
+    /// Checks if NPC is talking while offering an item (same as holding out hand)
+    /// </summary>
+    public static bool IsTalkingWithItemOffer(this NPC npc) => npc.IsUsingHandOutFrames();
+
+    // New helper methods for the configuration system
+
+    /// <summary>
+    /// Gets the available talking frames for this NPC type
+    /// </summary>
+    public static int[] GetAvailableTalkingFrames(this NPC npc)
+    {
+        var globalNPC = npc.GetGlobalNPC<DialogueNPCBehavior>();
+        if (globalNPC != null)
+        {
+            var frameConfig = globalNPC.GetFrameConfig(npc.type);
+            return frameConfig.TalkingFrames;
+        }
+        return [0];
+    }
+
+    /// <summary>
+    /// Gets the available hand-out frames for this NPC type
+    /// </summary>
+    public static int[] GetAvailableHandOutFrames(this NPC npc)
+    {
+        var globalNPC = npc.GetGlobalNPC<DialogueNPCBehavior>();
+        if (globalNPC != null)
+        {
+            var frameConfig = globalNPC.GetFrameConfig(npc.type);
+            return frameConfig.HandOutFrames;
+        }
+        return [0];
+    }
+
+    /// <summary>
+    /// Checks if a specific frame number is available in the current animation mode
+    /// </summary>
+    public static bool IsFrameAvailable(this NPC npc, int frameNumber)
+    {
+        var globalNPC = npc.GetGlobalNPC<DialogueNPCBehavior>();
+        if (globalNPC != null)
+        {
+            var frameConfig = globalNPC.GetFrameConfig(npc.type);
+            int[] currentFrameArray = globalNPC.useHandOutFrames ?
+                frameConfig.HandOutFrames :
+                frameConfig.TalkingFrames;
+
+            return currentFrameArray.Contains(frameNumber);
+        }
+        return false;
+    }
 }
