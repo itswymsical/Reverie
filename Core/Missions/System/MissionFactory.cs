@@ -71,7 +71,8 @@ public class MissionFactory : ModSystem
             Reverie.Instance.Logger.Info("Registering mission types...");
 
             #region Missions
-            missionTypes[MissionID.JourneysBegin] = typeof(Mission_JourneysBegin);
+            missionTypes[MissionID.JourneysBegin] = typeof(MissionJourneysBegin);
+            missionTypes[MissionID.ForgottenAges] = typeof(MissionForgottenAges);
             missionTypes[MissionID.SporeSplinter] = typeof(Mission_SporeSplinter);
             //missionTypes[MissionID.CopperStandard] = typeof(CopperStandard);
             //missionTypes[MissionID.LightEmUp] = typeof(LightEmUp);

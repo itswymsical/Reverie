@@ -1,4 +1,7 @@
-﻿using Terraria.GameContent;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Terraria.GameContent;
+using Terraria.UI;
 
 namespace Reverie.Core.Cinematics;
 
@@ -184,7 +187,6 @@ public static class Letterbox
         var alpha = LetterboxHeight / (Main.screenHeight * heightPercent) * targetOpacity;
         var color = LetterboxColor * alpha;
 
-        // Draw main letterbox bars
         // Top letterbox
         spriteBatch.Draw(
             textureToDraw,
@@ -199,7 +201,6 @@ public static class Letterbox
             color
         );
 
-        // Draw gradient borders if enabled
         if (BorderSize > 0)
         {
             DrawGradientBorders(spriteBatch, textureToDraw, alpha);
@@ -211,7 +212,6 @@ public static class Letterbox
     /// </summary>
     private static void DrawGradientBorders(SpriteBatch spriteBatch, Texture2D texture, float baseAlpha)
     {
-        // Top border gradient
         for (var i = 0; i < BorderSize; i++)
         {
             var gradientProgress = 1f - (float)i / BorderSize;
@@ -225,7 +225,6 @@ public static class Letterbox
             );
         }
 
-        // Bottom border gradient
         for (var i = 0; i < BorderSize; i++)
         {
             var gradientProgress = 1f - (float)i / BorderSize;
@@ -322,4 +321,48 @@ public static class Letterbox
     /// Get the progress of the animation (0.0 to 1.0)
     /// </summary>
     public static float AnimationProgress => isAnimating ? (float)currentFrame / AnimationDurationFrames : isShowing ? 1f : 0f;
+}
+
+public class LetterboxSystem : ModSystem
+{
+    private static readonly string[] UILayersToHide =
+    [
+        "Vanilla: Inventory",
+        "Vanilla: Hotbar",
+        "Vanilla: Resource Bars",
+        "Vanilla: Map / Minimap",
+        "Vanilla: Info Accessories Bar",
+        "Vanilla: Builder Accessories Bar",
+        "Vanilla: Mouse Over",
+        "Vanilla: Radial Hotbars",
+        "Vanilla: Player Chat",
+        "Vanilla: Laser Ruler",
+        "Vanilla: Gamepad Lock On",
+        "Vanilla: Tile Grid Option",
+        "Reverie: Experience Meter"
+    ];
+
+    public override void PostSetupContent()
+    {
+        Letterbox.Initialize(TextureAssets.MagicPixel.Value);
+    }
+
+    public override void PostUpdateEverything()
+    {
+        Letterbox.Update();
+    }
+
+    public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
+    {
+        if (Letterbox.IsActive)
+        {
+            foreach (var layer in layers)
+            {
+                if (UILayersToHide.Contains(layer.Name))
+                {
+                    layer.Active = false;
+                }
+            }
+        }
+    }
 }

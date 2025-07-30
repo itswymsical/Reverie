@@ -25,6 +25,7 @@ public class CutsceneSystem : ModSystem
         "Vanilla: Laser Ruler",
         "Vanilla: Gamepad Lock On",
         "Vanilla: Tile Grid Option",
+        "Reverie: Experience Meter",
     ];
 
     public override void Load()

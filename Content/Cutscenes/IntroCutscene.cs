@@ -171,9 +171,9 @@ public class IntroCutscene : Cutscene
             Main.LocalPlayer.position = originalPlayerPosition - new Vector2(Main.LocalPlayer.width / 2f, Main.LocalPlayer.height);
             Main.LocalPlayer.velocity = Vector2.Zero;
         }
-
-        DialogueManager.Instance.StartDialogue("JourneysBegin.Crash", 4, zoomIn: false, letterbox: false, music: MusicID.AltOverworldDay - 1);
         MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
         player.UnlockMission(MissionID.JourneysBegin);
+
+        DialogueManager.Instance.StartDialogue("JourneysBegin.Crash", 4, zoomIn: false, letterbox: false, music: MusicID.AltOverworldDay - 1);
     }
 }

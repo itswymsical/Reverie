@@ -40,35 +40,18 @@ public class MissionIndicator : ScreenIndicator
         return indicator;
     }
 
-    protected override void PostUpdate()
-    {
-        // Custom mission-specific update logic can go here
-    }
+    protected override void PostUpdate() { }
 
     private void DrawIndicator(SpriteBatch spriteBatch, Vector2 screenPos, float opacity)
     {
-        // Debug visualization when needed
         if (ShowDebugHitbox)
         {
             DrawDebugHitbox(spriteBatch, screenPos, opacity);
         }
 
-        if (iconTexture == null)
-        {
-            // Draw fallback rectangle if texture fails to load
-            var pixel = TextureAssets.MagicPixel.Value;
-            spriteBatch.Draw(
-                pixel,
-                new Rectangle((int)screenPos.X - Width / 2, (int)screenPos.Y - Height / 2, Width, Height),
-                Color.Yellow * opacity
-            );
-            return;
-        }
-
         var scale = GetAnimationScale();
         var glowColor = IsHovering ? Color.White : Color.White * 0.8f;
         var rotation = GetAnimationRotation();
-
         spriteBatch.Draw(
             iconTexture,
             screenPos,

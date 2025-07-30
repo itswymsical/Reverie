@@ -1,0 +1,99 @@
+DialogueLibrary: {
+	JourneysBegin: {
+		Crash: {
+			Line1: {
+			}
+
+			Line2: {
+			}
+
+			Line3: {
+			}
+
+			Line4: {
+			}
+		}
+
+		Tutorial: {
+			Line1: {
+			}
+
+			Line2: {
+			}
+
+			Line3: {
+			}
+
+			Line4: {
+			}
+
+			Line5: {
+			}
+
+			Line6: {
+			}
+		}
+
+		MirrorGiven: {
+			Line1: {
+			}
+		}
+
+		Mirror: {
+			Line1: {
+			}
+
+			Line2: {
+			}
+
+			Line3: {
+			}
+
+			Line4: {
+			}
+
+			Line5: {
+			}
+
+			Line6: {
+			}
+		}
+
+		ChronicleFound: {
+			Line1: {
+			}
+
+			Line2: {
+			}
+
+			Line3: {
+			}
+
+			Line4: {
+			}
+
+			Line5: {
+			}
+		}
+
+		ChronicleReading: {
+			Line1: {
+			}
+
+			Line2: {
+			}
+
+			Line3: {
+			}
+
+			Line4: {
+			}
+
+			Line5: {
+			}
+
+			Line6: {
+			}
+		}
+	}
+}
