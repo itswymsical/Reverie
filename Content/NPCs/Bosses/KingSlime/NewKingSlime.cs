@@ -4,10 +4,11 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
 using Reverie.Core.Cinematics.Camera;
+using Reverie.Core.Loaders;
 
 namespace Reverie.Content.NPCs.Bosses.KingSlime;
 
-public class NewKingSlime : ModNPC
+public class KinguSlime : ModNPC
 {
     public override string Texture => $"{TEXTURE_DIRECTORY}NPCs/Bosses/KingSlime/KingSlime";
 
@@ -15,6 +16,50 @@ public class NewKingSlime : ModNPC
     {
         get => (AIState)NPC.ai[0];
         set => NPC.ai[0] = (float)value;
+    }
+
+    private void UpdateScale()
+    {
+        float healthPercentage = (float)NPC.life / NPC.lifeMax;
+        float newScale = MathHelper.Lerp(0.65f, 1.35f, healthPercentage);
+
+        if (newScale < 0.45f)
+            newScale = 0.45f;
+
+        NPC.scale = newScale;
+        UpdateDefenseBasedOnScale();
+        UpdateHitbox();
+    }
+
+    private void UpdateDefenseBasedOnScale()
+    {
+        const int MIN_DEFENSE = 8;
+        const int MAX_DEFENSE = 22;
+
+        float normalizedScale = (NPC.scale - 0.45f) / (1.35f - 0.45f);
+        normalizedScale = MathHelper.Clamp(normalizedScale, 0f, 1f);
+
+        float defenseFactor = normalizedScale * normalizedScale * (3 - 2 * normalizedScale);
+        int calculatedDefense = (int)(MIN_DEFENSE + (baseDefense - MIN_DEFENSE) * defenseFactor);
+
+        NPC.defense = (int)MathHelper.Clamp(calculatedDefense, MIN_DEFENSE, MAX_DEFENSE);
+    }
+
+    private void UpdateHitbox()
+    {
+        Vector2 center = NPC.Center;
+
+        NPC.width = (int)(BASE_WIDTH * NPC.scale);
+        NPC.height = (int)(BASE_HEIGHT * NPC.scale);
+
+        NPC.position = center - new Vector2(NPC.width / 2, NPC.height / 2);
+    }
+
+    private float GetScaledJumpHeight()
+    {
+        float baseHeight = -8.5f;
+        float scaleMultiplier = MathHelper.Lerp(1.4f, 0.8f, NPC.scale / 1.35f);
+        return baseHeight * scaleMultiplier;
     }
 
     private ref float Timer => ref NPC.ai[1];
@@ -42,6 +87,20 @@ public class NewKingSlime : ModNPC
     private int groundPoundCount = 0;
     private int targetGroundPounds = 1;
 
+    private int baseDefense = 14;
+    private const int BASE_WIDTH = 158;
+    private const int BASE_HEIGHT = 106;
+
+    private const float CONSUME_DETECTION_RANGE = 200f;
+    private const float SCALE_PER_SLIME = 0.05f;
+    private const float MAX_CONSUME_SCALE = 2.0f;
+    private const float HP_PER_SLIME = 0.08f;
+
+    private const int SLIME_THRESHOLD = 7;
+    private const float CONSUME_COOLDOWN = 600f;
+
+    private float lastConsumeTime = -CONSUME_COOLDOWN;
+
     public override void SetStaticDefaults()
     {
         base.SetStaticDefaults();
@@ -51,7 +110,7 @@ public class NewKingSlime : ModNPC
     public override void SetDefaults()
     {
         NPC.damage = 12;
-        NPC.defense = 14;
+        NPC.defense = baseDefense;
         NPC.lifeMax = 900;
         NPC.width = 158;
         NPC.height = 106;
@@ -68,6 +127,7 @@ public class NewKingSlime : ModNPC
 
     public override void AI()
     {
+        Main.StartSlimeRain();
         Player target = Main.player[NPC.target];
 
         if (!target.active || target.dead)
@@ -81,9 +141,11 @@ public class NewKingSlime : ModNPC
             }
         }
         Timer++;
+        UpdateScale();
         HandleSquishScale();
         HandleRotation();
         HandleDustTrail();
+        HandleSlimeTrail();
 
         switch (State)
         {
@@ -95,6 +157,9 @@ public class NewKingSlime : ModNPC
                 break;
             case AIState.GroundPound:
                 DoGroundPound(target);
+                break;
+            case AIState.ConsumingSlimes:
+                DoConsumingSlimes(target);
                 break;
         }
         NPCUtils.SlopedCollision(NPC);
@@ -114,7 +179,6 @@ public class NewKingSlime : ModNPC
         float progress = Timer / strollDuration;
 
         float easedProgress = EaseFunction.EaseCubicInOut.Ease(progress);
-
         float velocityCurve = (float)Math.Sin(easedProgress * Math.PI);
         float targetSpeed = velocityCurve * (float)MathHelper.PiOver2 * 1.25f;
 
@@ -136,21 +200,31 @@ public class NewKingSlime : ModNPC
 
             if (StrollCount >= targetStrolls)
             {
+                // Check for consumption opportunity first
+                if (ShouldStartConsuming())
+                {
+                    State = AIState.ConsumingSlimes;
+                    Timer = 0;
+                    StrollCount = 0;
+                    return;
+                }
+
+                // Original attack selection logic
                 float attackRoll = Main.rand.NextFloat();
 
-                if (attackRoll < 0.3f) // 30% jump
+                if (attackRoll < 0.3f)
                 {
                     State = AIState.Jumping;
                     JumpPhase = 0;
                 }
-                else if (attackRoll < 0.65f) // 35% ground pound
+                else if (attackRoll < 0.65f)
                 {
                     State = AIState.GroundPound;
                     JumpPhase = 0;
                     targetGroundPounds = 1;
                     groundPoundCount = 0;
                 }
-                else // 35% triple ground pound combo
+                else
                 {
                     State = AIState.GroundPound;
                     JumpPhase = 0;
@@ -175,7 +249,7 @@ public class NewKingSlime : ModNPC
                 NPC.netUpdate = true;
                 float dirToPlayer = Math.Sign(target.Center.X - NPC.Center.X);
                 NPC.spriteDirection = -Math.Sign(dirToPlayer);
-                float baseJumpHeight = -7.5f;
+                float baseJumpHeight = GetScaledJumpHeight();
                 float baseXVelocity = 2.15f;
                 float overshootMod = Main.rand.NextFloat() < 0.33f ? 1.3f : 1f;
                 NPC.velocity.Y = baseJumpHeight;
@@ -200,6 +274,7 @@ public class NewKingSlime : ModNPC
                 State = AIState.Strolling;
                 JumpPhase = 0;
                 Timer = 0;
+                // Start wobble after landing
                 isWobbling = true;
                 wobbleTimer = 0f;
             }
@@ -217,6 +292,7 @@ public class NewKingSlime : ModNPC
                 if (Math.Abs(NPC.velocity.X) < 0.1f)
                     NPC.velocity.X = 0f;
 
+                // Handle combo delay timing - rapid combo attacks
                 float chargeTime;
                 if (targetGroundPounds > 1 && groundPoundCount > 0)
                     chargeTime = 25f; // Very fast for combo follow-ups
@@ -257,17 +333,17 @@ public class NewKingSlime : ModNPC
                     NPC.velocity.X += 0.1f * dirToPlayer;
                 }
 
+                // Update sprite direction to face movement direction
                 if (Math.Abs(NPC.velocity.X) > 0.1f)
                     NPC.spriteDirection = -Math.Sign(NPC.velocity.X);
 
                 if (NPC.velocity.Y > 0f)
                 {
-                    float currentXVel = NPC.velocity.X;
-                    float targetDirection = target.Center.X > NPC.Center.X ? 1f : -1f;
-                    float adjustedXVel = MathHelper.Lerp(currentXVel, targetDirection * 2f, 0.3f);
-
-                    NPC.velocity = new Vector2(adjustedXVel, 12f);
-
+                    NPC.velocity = new Vector2(
+                        target.Center.X > NPC.Center.X ? 2f : -2f,
+                        12f
+                    );
+                    // Update sprite direction for slam direction
                     NPC.spriteDirection = target.Center.X > NPC.Center.X ? -1 : 1;
                     JumpPhase = 2;
                     Timer = 0;
@@ -307,7 +383,19 @@ public class NewKingSlime : ModNPC
                         dust.scale = 2f;
                     }
 
-                    if (targetGroundPounds > 1)
+                    int gelBallCount = 8;
+                    for (int i = 0; i < gelBallCount; i++)
+                    {
+                        float angle = MathHelper.Lerp(-MathHelper.PiOver2 - 0.8f, -MathHelper.PiOver2 + 0.8f, (float)i / (gelBallCount - 1));
+                        Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Main.rand.NextFloat(5f, 6f);
+
+                        Vector2 spawnPos = NPC.Center + new Vector2(Main.rand.NextFloat(-20f, 20f), 0f);
+
+                        int projType = ModContent.ProjectileType<GelBallProjectile>();
+                        Projectile.NewProjectile(NPC.GetSource_FromAI(), spawnPos, velocity, projType, 3, 0.5f);
+                    }
+
+                    if (targetGroundPounds > 1 && Main.rand.NextBool(2))
                     {
                         Vector2 spawnPos = NPC.Center + new Vector2(0f, NPC.height / 2f);
 
@@ -324,8 +412,6 @@ public class NewKingSlime : ModNPC
                         {
                             Main.npc[rightSlime].scale = 1.2f;
                         }
-
-                        int centerSlime = NPC.NewNPC(NPC.GetSource_FromAI(), (int)spawnPos.X, (int)spawnPos.Y, NPCID.SlimeSpiked);
                     }
 
                     JumpPhase = 3;
@@ -336,7 +422,8 @@ public class NewKingSlime : ModNPC
                 }
                 else
                 {
-                    float timeInPhase = Timer; // Time since entering slam phase
+                    // Gliding acceleration
+                    float timeInPhase = Timer;
                     float accelCurve = MathHelper.Clamp(timeInPhase / 20f, 0.1f, 1f);
                     float baseAccel = 0.25f;
                     float currentAccel = baseAccel + (accelCurve * 0.4f);
@@ -357,10 +444,11 @@ public class NewKingSlime : ModNPC
                 }
                 break;
 
-            case 3:
+            case 3: // Recovery with wobble
                 NPC.damage = 12;
                 NPC.velocity *= 0.8f;
 
+                // Shorter recovery time for combo attacks
                 float recoveryTime = targetGroundPounds > 1 ? 45f : 90f;
 
                 if (Timer >= recoveryTime)
@@ -380,9 +468,92 @@ public class NewKingSlime : ModNPC
                         JumpPhase = 0;
                         Timer = 0;
                         isWobbling = false;
+
+                        // Brief pause between combo attacks
+                        Timer = -15f; // Negative timer for short delay
                     }
                 }
                 break;
+        }
+    }
+
+    private void DoConsumingSlimes(Player target)
+    {
+        if (Timer == 1)
+        {
+            CameraSystem.shake = 15;
+            SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}KingSlimeRoar") with { Volume = 0.5f, }, NPC.Center);
+
+            for (int i = 0; i < 20; i++)
+            {
+                Vector2 dustVel = Vector2.One.RotatedBy(MathHelper.ToRadians(i * 18)) * 5f;
+                Dust dust = Dust.NewDustDirect(NPC.Center, 0, 0, DustID.t_Slime, dustVel.X, dustVel.Y,
+                    newColor: new Color(78, 136, 255, 150));
+                dust.noGravity = true;
+                dust.scale = 1.8f;
+            }
+        }
+
+        if (Timer <= 90f && Timer % 30 == 0 && Timer > 1)
+            CameraSystem.shake = (int)MathHelper.Lerp(8, 3, Timer / 90f);
+
+        NPC.velocity *= 0.85f;
+
+        if (Timer % 15 == 0)
+        {
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC slime = Main.npc[i];
+
+                if (slime.active && slime.aiStyle == NPCAIStyleID.Slime
+                    && slime.type != NPCID.KingSlime && !slime.boss)
+                {
+                    float distance = Vector2.Distance(NPC.Center, slime.Center);
+
+                    if (distance <= CONSUME_DETECTION_RANGE)
+                    {
+                        if (NPC.Hitbox.Intersects(slime.Hitbox))
+                        {
+                            ConsumeSlime(slime);
+                        }
+                    }
+                }
+            }
+
+            if (Timer % 30 == 0)
+            {
+                int healAmount = (int)(NPC.lifeMax * 0.02f);
+                NPC.life += healAmount;
+                NPC.HealEffect(healAmount);
+
+                if (NPC.life > NPC.lifeMax)
+                    NPC.life = NPC.lifeMax;
+            }
+        }
+
+        float pulse = (float)Math.Sin(Timer * 0.05f) * 0.1f;
+        squishScale = new Vector2(1f + pulse, 1f - pulse);
+
+        if (Main.rand.NextBool(10))
+        {
+            Vector2 offset = new Vector2(Main.rand.NextFloat(-NPC.width * 0.5f, NPC.width * 0.5f),
+                Main.rand.NextFloat(-NPC.height * 0.5f, NPC.height * 0.5f));
+            Vector2 position = NPC.Center + offset;
+
+            Dust dust = Dust.NewDustDirect(position, 0, 0, DustID.t_Slime, 0f, 0f,
+                150, new Color(78, 136, 255, 150), 1.3f);
+            dust.noGravity = true;
+            dust.velocity = Vector2.Zero;
+            dust.fadeIn = 1.2f;
+        }
+
+        if (Timer >= 450f || !HasNearbySlimes())
+        {
+            lastConsumeTime = Main.GameUpdateCount;
+            State = AIState.Strolling;
+            Timer = 0;
+            isWobbling = true;
+            wobbleTimer = 0f;
         }
     }
 
@@ -572,15 +743,13 @@ public class NewKingSlime : ModNPC
         }
         else
         {
-            // Return to normal when grounded and not wobbling
             squishScale = Vector2.Lerp(squishScale, Vector2.One, 0.15f);
         }
-        // Additional horizontal squish for movement
         if (Math.Abs(NPC.velocity.X) > 0.5f && !isAirborne)
         {
-            float horizontalSquish = 0.995f; // Reduced from 0.98f
+            float horizontalSquish = 0.995f;
             squishScale.Y *= horizontalSquish;
-            squishScale.X *= 1.001f; // Reduced from 1.003f
+            squishScale.X *= 1.001f;
         }
     }
 
@@ -617,6 +786,140 @@ public class NewKingSlime : ModNPC
             }
         }
     }
+
+    private void HandleSlimeTrail()
+    {
+        if (Math.Abs(NPC.velocity.X) > 0.3f && Math.Abs(NPC.velocity.Y) < 2f)
+        {
+            int tileX = (int)(NPC.Center.X / 16f);
+            int tileY = (int)((NPC.position.Y + NPC.height + 2) / 16f);
+
+            if (WorldGen.InWorld(tileX, tileY))
+            {
+                Tile tile = Framing.GetTileSafely(tileX, tileY);
+
+                if (tile.HasTile && Main.tileSolid[tile.TileType])
+                {
+                    float slimeChance = Math.Abs(NPC.velocity.X) * 0.6f;
+
+                    if (Main.rand.NextFloat() < slimeChance)
+                    {
+                        SlimedTileSystem.AddSlimedTile(tileX, tileY);
+
+                        // wider trail
+                        if (Main.rand.NextBool(3))
+                        {
+                            int offsetX = Main.rand.NextBool() ? -3 : 3;
+                            if (WorldGen.InWorld(tileX + offsetX, tileY))
+                            {
+                                Tile adjacentTile = Framing.GetTileSafely(tileX + offsetX, tileY);
+                                if (adjacentTile.HasTile && Main.tileSolid[adjacentTile.TileType])
+                                    SlimedTileSystem.AddSlimedTile(tileX + offsetX, tileY);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void ConsumeSlime(NPC slime)
+    {
+        // Visual effects
+        for (int d = 0; d < 15; d++)
+        {
+            Vector2 velocity = new Vector2(Main.rand.NextFloat(-3f, 3f), Main.rand.NextFloat(-3f, 3f));
+            Dust dust = Dust.NewDustDirect(slime.Center, 0, 0, DustID.t_Slime, velocity.X, velocity.Y,
+                150, new Color(78, 136, 255, 200), 1.5f);
+            dust.noGravity = true;
+        }
+
+        // Increase scale and HP
+        float healthGain = slime.life * HP_PER_SLIME;
+        float newScale = NPC.scale + SCALE_PER_SLIME;
+        NPC.scale = MathHelper.Min(newScale, MAX_CONSUME_SCALE);
+
+        NPC.life += (int)healthGain;
+        NPC.HealEffect((int)healthGain);
+
+        if (NPC.life > NPC.lifeMax)
+            NPC.life = NPC.lifeMax;
+
+        SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}SlimeConsume")
+        {
+            PitchVariance = 0.3f,
+            MaxInstances = 3
+        }, slime.Center);
+
+        // Kill the slime
+        slime.life = 0;
+        slime.HitEffect();
+        slime.active = false;
+
+        UpdateHitbox();
+    }
+
+    private bool HasNearbySlimes()
+    {
+        for (int i = 0; i < Main.maxNPCs; i++)
+        {
+            NPC slime = Main.npc[i];
+            if (slime.active && slime.aiStyle == NPCAIStyleID.Slime
+                && slime.type != NPCID.KingSlime && !slime.boss)
+            {
+                if (Vector2.Distance(NPC.Center, slime.Center) <= CONSUME_DETECTION_RANGE)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private int CountNearbySlimes()
+    {
+        int count = 0;
+        for (int i = 0; i < Main.maxNPCs; i++)
+        {
+            NPC slime = Main.npc[i];
+            if (slime.active && slime.aiStyle == NPCAIStyleID.Slime
+                && slime.type != NPCID.KingSlime && !slime.boss)
+            {
+                if (Vector2.Distance(NPC.Center, slime.Center) <= CONSUME_DETECTION_RANGE)
+                    count++;
+            }
+        }
+        return count;
+    }
+
+    private bool ShouldStartConsuming()
+    {
+        if (Main.GameUpdateCount - lastConsumeTime < CONSUME_COOLDOWN)
+            return false;
+
+        int nearbySlimes = CountNearbySlimes();
+
+        if (nearbySlimes >= SLIME_THRESHOLD)
+            return true;
+
+        if (nearbySlimes == 0)
+            return false;
+
+        float healthPercentage = (float)NPC.life / NPC.lifeMax;
+
+        if (healthPercentage > 0.8f)
+            return false;
+
+        float consumeChance = 0f;
+
+        if (healthPercentage <= 0.3f)
+            consumeChance = 0.36f;
+        else if (healthPercentage <= 0.45f)
+            consumeChance = 0.19f;
+        else if (healthPercentage <= 0.65f)
+            consumeChance = 0.1f;
+
+        return Main.rand.NextFloat() < consumeChance;
+    }
+
     #endregion
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)

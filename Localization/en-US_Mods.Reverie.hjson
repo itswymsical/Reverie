@@ -480,6 +480,8 @@ Projectiles: {
 	LodestoneMagnetizerProj.DisplayName: Lodestone Magnetizer
 	ArchiverChronicleProjectile.DisplayName: Archiver Chronicle Projectile
 	TumbleweedProjectile.DisplayName: Tumbleweed Projectile
+	GelBall.DisplayName: Gel Ball
+	GelBallProjectile.DisplayName: Gel Ball Projectile
 }
 
 Configs: {
@@ -667,6 +669,7 @@ NPCs: {
 	}
 
 	NewKingSlime.DisplayName: New King Slime
+	KinguSlime.DisplayName: Kingu Slime
 }
 
 Biomes: {
