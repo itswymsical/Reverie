@@ -117,7 +117,7 @@ public class CorruptTaigaGrassTile : GrassTile
         VanillaFallbackOnModDeletion = TileID.CorruptGrass;
 
         //TileID.Sets.CorruptBiome[Type] = Type;
-        AddMapEntry(new Color(200, 199, 215));
+        AddMapEntry(new Color(144, 124, 197));
     }
 
     public override bool HasWalkDust()
@@ -159,7 +159,7 @@ public class CrimsonTaigaGrassTile : GrassTile
         VanillaFallbackOnModDeletion = TileID.CrimsonGrass;
 
         //TileID.Sets.CrimsonBiome[Type] = Type;
-        AddMapEntry(new Color(215, 199, 201));
+        AddMapEntry(new Color(238, 98, 98));
     }
 
     public override bool HasWalkDust()

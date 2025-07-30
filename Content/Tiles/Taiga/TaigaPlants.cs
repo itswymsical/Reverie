@@ -137,7 +137,7 @@ public class CorruptTaigaPlants : ModTile
         DustType = DustID.CorruptPlants;
         HitSound = SoundID.Grass;
 
-        AddMapEntry(Color.Purple);
+        AddMapEntry(new Color(173, 155, 224));
     }
 
     public override void NumDust(int i, int j, bool fail, ref int num)
@@ -188,7 +188,7 @@ public class CrimsonTaigaPlants : ModTile
         DustType = DustID.CrimsonPlants;
         HitSound = SoundID.Grass;
 
-        AddMapEntry(Color.IndianRed);
+        AddMapEntry(new Color(255, 128, 128));
     }
 
     public override void NumDust(int i, int j, bool fail, ref int num)

@@ -1,98 +1,32 @@
 DialogueLibrary: {
-	JourneysBegin: {
-		Crash: {
+	ForgottenAges: {
+		FindChronicles: {
 			Line1: {
+				Text: According to the last chronicle, volume II is located in the jungle.
+				Speaker: Guide
+				Emote: "2"
+				Speed: "1.5"
 			}
 
 			Line2: {
+				Text: It's quite vague of a description, but I think I know where it is.
+				Speaker: Guide
+				Emote: "2"
+				Speed: "1.5"
 			}
 
 			Line3: {
+				Text: Apparently there's a structure made of bramble and vines contains the chronicle.
+				Speaker: Guide
+				Emote: "2"
+				Speed: "1.5"
 			}
 
 			Line4: {
-			}
-		}
-
-		Tutorial: {
-			Line1: {
-			}
-
-			Line2: {
-			}
-
-			Line3: {
-			}
-
-			Line4: {
-			}
-
-			Line5: {
-			}
-
-			Line6: {
-			}
-		}
-
-		MirrorGiven: {
-			Line1: {
-			}
-		}
-
-		Mirror: {
-			Line1: {
-			}
-
-			Line2: {
-			}
-
-			Line3: {
-			}
-
-			Line4: {
-			}
-
-			Line5: {
-			}
-
-			Line6: {
-			}
-		}
-
-		ChronicleFound: {
-			Line1: {
-			}
-
-			Line2: {
-			}
-
-			Line3: {
-			}
-
-			Line4: {
-			}
-
-			Line5: {
-			}
-		}
-
-		ChronicleReading: {
-			Line1: {
-			}
-
-			Line2: {
-			}
-
-			Line3: {
-			}
-
-			Line4: {
-			}
-
-			Line5: {
-			}
-
-			Line6: {
+				Text: If you find it, bring it back and I'll help you read it.
+				Speaker: Guide
+				Emote: "2"
+				Speed: "1.5"
 			}
 		}
 	}

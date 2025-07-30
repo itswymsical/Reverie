@@ -43,7 +43,7 @@ public class MissionForgottenAges : Mission
     {
         base.OnMissionStart();
 
-        DialogueManager.Instance.StartDialogue("JourneysBegin2.FindChronicles", 1, zoomIn: false, true);
+        DialogueManager.Instance.StartDialogue("ForgottenAges.FindChronicles", 4, zoomIn: false, true);
     }
 
     public override void OnMissionComplete(bool giveRewards = true)
