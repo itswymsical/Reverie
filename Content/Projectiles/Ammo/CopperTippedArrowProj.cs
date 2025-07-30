@@ -36,7 +36,7 @@ public class CopperTippedArrowProj : ModProjectile
     public override void OnKill(int timeLeft)
     {
         SoundEngine.PlaySound(SoundID.Dig, Projectile.position);
-        DustExtensions.SpawnDustCloud(Projectile.position, Projectile.width, Projectile.height, DustID.Copper, scale: 0.7f);
+        //DustExtensions.SpawnDustCloud(Projectile.position, Projectile.width, Projectile.height, DustID.Copper, scale: 0.7f);
         for (var i = 0; i < 3; ++i)
         {
             Projectile.NewProjectile(default, Projectile.Center, -Vector2.UnitY.RotatedByRandom(MathHelper.PiOver2) * 4f,
@@ -90,6 +90,6 @@ public class CopperShrapnelProj : ModProjectile
 
     public override void OnKill(int timeLeft)
     {
-        DustExtensions.SpawnDustCloud(Projectile.position, Projectile.width, Projectile.height, DustID.Copper, scale: 0.4f);
+        //DustExtensions.SpawnDustCloud(Projectile.position, Projectile.width, Projectile.height, DustID.Copper, scale: 0.4f);
     }
 }

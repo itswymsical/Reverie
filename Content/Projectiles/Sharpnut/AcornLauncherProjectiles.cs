@@ -164,7 +164,7 @@ public class AcornProj : ModProjectile
     {
         Collision.HitTiles(Projectile.position + Projectile.velocity, Projectile.velocity, Projectile.width, Projectile.height);
         SoundEngine.PlaySound(SoundID.Item10, Projectile.position);
-        DustExtensions.SpawnDustCloud(Projectile.position, Projectile.width, Projectile.height, DustID.t_LivingWood);
+        //DustExtensions.SpawnDustCloud(Projectile.position, Projectile.width, Projectile.height, DustID.t_LivingWood);
         for (var i = 0; i < 3; ++i)
         {
             Projectile.NewProjectile(default, Projectile.Center, -Vector2.UnitY.RotatedByRandom(MathHelper.PiOver2) * 4f,
@@ -209,6 +209,6 @@ public class AcornShrapnelProj : ModProjectile
 
     public override void OnKill(int timeLeft)
     {
-        DustExtensions.SpawnDustCloud(Projectile.position, Projectile.width, Projectile.height, DustID.t_LivingWood);
+        //DustExtensions.SpawnDustCloud(Projectile.position, Projectile.width, Projectile.height, DustID.t_LivingWood);
     }
 }
