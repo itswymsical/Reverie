@@ -196,39 +196,100 @@ public class ObjectiveEventTile : GlobalTile
 
 public class ObjectiveEventPlayer : ModPlayer
 {
-    public delegate void BiomeEnterHandler(Player player, BiomeType biome);
-
+    /// <summary>
+    /// Delegate for when a player enters a biome and meets time requirements.
+    /// </summary>
+    /// <param name="player">you</param>
+    /// <param name="biome">the current biome</param>
+    /// <param name="timeSpent">time in seconds</param>
+    public delegate void BiomeEnterHandler(Player player, BiomeType biome, int timeSpent);
     public static event BiomeEnterHandler OnBiomeEnter;
-    private int timer = 0;
+
+    private readonly Dictionary<BiomeType, int> biomeTimers = new();
+    private readonly Dictionary<BiomeType, HashSet<int>> triggeredTimeRequirements = new();
+    private BiomeType? currentBiome = null;
+    private readonly List<int> activeTimeRequirements = new() { 5 * 60 };
 
     public override void PostUpdate()
     {
         base.PostUpdate();
-        //TriggerEvents();
+        TrackBiomeTime();
+    }
 
-        timer++;
-        if (timer > 7 * 60)
+    private void TrackBiomeTime()
+    {
+        BiomeType? playerBiome = GetCurrentBiome();
+
+        // Reset timer if player changed biomes or left all biomes
+        if (currentBiome != playerBiome)
         {
-            foreach (var biome in Enum.GetValues<BiomeType>())
+            ResetAllTimers();
+            currentBiome = playerBiome;
+        }
+
+        // If player is in a biome, increment its timer
+        if (currentBiome.HasValue)
+        {
+            if (!biomeTimers.ContainsKey(currentBiome.Value))
+                biomeTimers[currentBiome.Value] = 0;
+
+            biomeTimers[currentBiome.Value]++;
+
+            // Check all active time requirements
+            foreach (int timeReq in activeTimeRequirements)
             {
-                if (biome.IsPlayerInBiome(Player))
+                if (biomeTimers[currentBiome.Value] == timeReq)
                 {
-                    OnBiomeEnter?.Invoke(Player, biome);
+                    // Ensure we only fire once per time requirement
+                    if (!triggeredTimeRequirements.ContainsKey(currentBiome.Value))
+                        triggeredTimeRequirements[currentBiome.Value] = new HashSet<int>();
+
+                    if (!triggeredTimeRequirements[currentBiome.Value].Contains(timeReq))
+                    {
+                        triggeredTimeRequirements[currentBiome.Value].Add(timeReq);
+                        OnBiomeEnter?.Invoke(Player, currentBiome.Value, timeReq);
+                    }
                 }
             }
-            timer = 0;
         }
     }
 
-    private void TriggerEvents()
+    private BiomeType? GetCurrentBiome()
     {
-        var p = Player.GetModPlayer<MissionPlayer>();
-        //var merchantPresent = NPC.AnyNPCs(NPCID.Merchant);
-        //var copperStandard = p.GetMission(MissionID.CopperStandard);
-        //if (copperStandard.Status == MissionStatus.Locked && copperStandard.Progress == MissionProgress.Inactive
-        //    && merchantPresent && Player.HasItemInAnyInventory(ItemID.CopperBar))
-        //{
-        //    p.UnlockMission(MissionID.CopperStandard, true);
-        //}
+        foreach (var biome in Enum.GetValues<BiomeType>())
+        {
+            if (biome.IsPlayerInBiome(Player))
+            {
+                return biome;
+            }
+        }
+        return null;
+    }
+
+    private void ResetAllTimers()
+    {
+        biomeTimers.Clear();
+        triggeredTimeRequirements.Clear();
+    }
+
+    public int GetBiomeTime(BiomeType biome)
+    {
+        return biomeTimers.TryGetValue(biome, out int time) ? time : 0;
+    }
+
+    public void AddTimeRequirement(int ticks)
+    {
+        if (!activeTimeRequirements.Contains(ticks))
+            activeTimeRequirements.Add(ticks);
+    }
+
+    public void RemoveTimeRequirement(int ticks)
+    {
+        activeTimeRequirements.Remove(ticks);
+    }
+
+    public void ClearTimeRequirements()
+    {
+        activeTimeRequirements.Clear();
     }
 }

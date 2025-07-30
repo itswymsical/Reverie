@@ -6,7 +6,10 @@ using static Reverie.Core.Dialogue.DialogueManager;
 using static Reverie.Core.Missions.Core.ObjectiveEventItem;
 using static Reverie.Core.Missions.Core.ObjectiveEventNPC;
 using static Reverie.Core.Missions.Core.ObjectiveEventTile;
-
+using static Reverie.Core.Missions.Core.ObjectiveEventPlayer;
+using Reverie.Utilities;
+using System;
+using Reverie.Content.Projectiles.Misc;
 namespace Reverie.Content.Missions;
 
 public class MissionForgottenAges : Mission
@@ -28,7 +31,7 @@ public class MissionForgottenAges : Mission
         [
             [("Talk to Guide", 1)],
             [("Explore the Jungle", 1)],
-            [("Locate next Chronicle", 1), ("Break pots", 20), ("Defeat Man Eaters", 20)],
+            [("Locate next Chronicle", 1), ("Break pots", 20), ("Defeat Jungle Creatures", 10)],
             [("Give Guide Chronicle", 1), ("Listen to Guide", 1)]
         ],
 
@@ -49,10 +52,6 @@ public class MissionForgottenAges : Mission
     public override void OnMissionComplete(bool giveRewards = true)
     {
         base.OnMissionComplete(giveRewards);
-
-
-        //MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        //player.UnlockMission(MissionID.JourneysBegin_Part2);
     }
 
     public override void Update()
@@ -76,6 +75,10 @@ public class MissionForgottenAges : Mission
         OnTileInteract += TileInteractHandler;
         OnDialogueEnd += OnDialogueEndHandler;
         OnTileBreak += OnTileBreakHandler;
+        OnBiomeEnter += OnBiomeEnterHandler;
+        OnNPCKill += OnNPCKillHandler;
+        var eventPlayer = Main.LocalPlayer.GetModPlayer<ObjectiveEventPlayer>();
+        eventPlayer.AddTimeRequirement(5 * 60);
 
         ModContent.GetInstance<Reverie>().Logger.Debug($"Mission [Journey's Begin] Registered event handlers");
 
@@ -89,10 +92,14 @@ public class MissionForgottenAges : Mission
         OnNPCChat -= OnNPCChatHandler;
         OnItemUse -= OnItemUseHandler;
         OnItemPickup -= OnItemPickupHandler;
-        OnTileInteract += TileInteractHandler;
+        OnTileInteract -= TileInteractHandler;
         OnDialogueEnd -= OnDialogueEndHandler;
         OnTileBreak -= OnTileBreakHandler;
+        OnBiomeEnter -= OnBiomeEnterHandler;
+        OnNPCKill -= OnNPCKillHandler;
 
+        var eventPlayer = Main.LocalPlayer.GetModPlayer<ObjectiveEventPlayer>();
+        eventPlayer.RemoveTimeRequirement(5 * 60);
 
         ModContent.GetInstance<Reverie>().Logger.Debug($"Mission [Journey's Begin] Unregistered event handlers");
         base.UnregisterEventHandlers();
@@ -108,7 +115,7 @@ public class MissionForgottenAges : Mission
         switch (objective)
         {
             case Objectives.TalkToGuide:
-                if (dialogueKey == "JourneysBegin2.FindChronicles")
+                if (dialogueKey == "ForgottenAges.FindChronicles")
                 {
                     UpdateProgress(objective: 0);
                 }
@@ -125,6 +132,36 @@ public class MissionForgottenAges : Mission
         {
             case Objectives.ChronicleSegment:
 
+                break;
+        }
+    }
+
+    private void OnBiomeEnterHandler(Player player, BiomeType biome, int timeRequired)
+    {
+        if (Progress != MissionProgress.Ongoing) return;
+        var objective = (Objectives)CurrentIndex;
+        switch (objective)
+        {
+            case Objectives.ExploreJungle:
+                if (biome == BiomeType.Jungle && timeRequired == 5 * 60)
+                {
+                    UpdateProgress(objective: 0);
+                }
+                break;
+        }
+    }
+
+    private void OnNPCKillHandler(NPC npc)
+    {
+        if (Progress != MissionProgress.Ongoing) return;
+        var objective = (Objectives)CurrentIndex;
+        switch (objective)
+        {
+            case Objectives.ExploreUnderground:
+                if (npc.type is NPCID.ManEater or NPCID.JungleSlime or NPCID.SpikedJungleSlime || npc.TypeName.Contains("Hornet"))
+                {
+                    UpdateProgress(objective: 2);
+                }
                 break;
         }
     }
@@ -164,7 +201,22 @@ public class MissionForgottenAges : Mission
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
-  
+            case Objectives.ExploreUnderground:
+                if (type == TileID.Pots && player.ZoneJungle)
+                {
+                    Tile tile = Main.tile[i, j];
+                    int originX = i - (tile.TileFrameX / 18);
+                    int originY = j - (tile.TileFrameY / 18);
+
+                    var originPos = new Point(originX, originY);
+
+                    if (interactedTiles.Contains(originPos)) return;
+
+                    interactedTiles.Add(originPos);
+
+                    UpdateProgress(objective: 1);
+                }
+                break;
         }
     }
 }
