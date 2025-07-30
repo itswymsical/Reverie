@@ -11,7 +11,8 @@ Reverie focuses on exploration and interaction over an RPG-like progression, cre
 
 DEVELOPER TEAM
 --------------------------------
-Composer: wymsical
-Lead Artist: ElectroManiac
-Developers: pil, Pie, Agent_Delta4, Viejosabroson, ElectroManiac, wymsical
-Contributing Members: HugeKraken, grae, naka, Dominick, Crystal_zone, Zemmie (zenovia), .sweetberries, RAWTHORN
+Composers: wymsical, Agent_Delta4
+Lead Artists: Viejosabroson, ElectroManiac
+Artists: Swamon3, Crystal_zone, pil
+Contributing Artists: Dominick, RAWTHORN, naka
+Contributing Members: HugeKraken, naka, grae, .sweetberries, Loving Zemmie
