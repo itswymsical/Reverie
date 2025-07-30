@@ -1,210 +1,98 @@
-﻿DialogueLibrary: {
+DialogueLibrary: {
 	JourneysBegin: {
 		Crash: {
 			Line1: {
-				Text: <shake:1>Whoa!</shake>
-				Speaker: Guide
-				Emote: "3"
-				Speed: "1.5"
 			}
 
 			Line2: {
-				Text: Are...<pause:28> are you okay?
-				Speaker: Guide
-				Emote: "3"
-				Speed: "1.5"
 			}
 
 			Line3: {
-				Text: You just fell from the<shake> sky!</shake>
-				Speaker: Guide
-				Emote: "3"
-				Speed: "1.5"
 			}
 
 			Line4: {
-				Text: This actually isn't even the weirdest thing I've seen...
-				Speaker: Guide
-				Emote: "4"
-				Speed: "1.1"
 			}
 		}
 
 		Tutorial: {
 			Line1: {
-				Text: You're not from around here, are you?
-				Speaker: Guide
-				Emote: "1"
-				Speed: "1.5"
 			}
 
 			Line2: {
-				Text: Not to worry, I can help you get started.
-				Speaker: Guide
-				Emote: "1"
-				Speed: "1.5"
 			}
 
 			Line3: {
-				Text: First, let's get you familiar with the basics.
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.5"
 			}
 
 			Line4: {
-				Text: What?<pause:28> You already know everything?
-				Speaker: Guide
-				Emote: "2"
-				Speed: "1.1"
 			}
 
 			Line5: {
-				Text: You're sure? <pause:28>Well<pause:8>, I guess we can skip the tutorial then.
-				Speaker: Guide
-				Emote: "4"
-				Speed: "1.1"
 			}
 
 			Line6: {
-				Text: Take this Magic Mirror.<pause:10> It'll let you check messages and teleport back to the surface.
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.1"
 			}
 		}
 
 		MirrorGiven: {
 			Line1: {
-				Text: Open up your inventory and use it now.
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.1"
 			}
 		}
 
 		Mirror: {
 			Line1: {
-				Text: Nice!<pause:8> Now you can teleport back to the surface whenever you want.
-				Speaker: Guide
-				Emote: "1"
-				Speed: "1.5"
 			}
 
 			Line2: {
-				Text: You're mirror also allows you to see tasks lists for jobs you pick up.
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.5"
 			}
 
 			Line3: {
-				Text: If you look to your map while in inventory,<pause:8> you'll see a list of tasks.
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.5"
 			}
 
 			Line4: {
-				Text: With that,<pause:8> it's time to get started on your journey!
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.5"
 			}
 
 			Line5: {
-				Text: If you need any help, you can always ask me.
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.5"
 			}
 
 			Line6: {
-				Text: You gain a feeling,<pause:12> that the Guide may actually be useful for once...
-				Speaker: You
-				Emote: "0"
-				Speed: "1.5"
 			}
 		}
 
 		ChronicleFound: {
 			Line1: {
-				Text: ...
-				Speaker: You
-				Emote: "0"
-				Speed: "0.5"
 			}
 
 			Line2: {
-				Text: You have found a strange book,<pause:12> titled "Chronicles of Reverie".
-				Speaker: You
-				Emote: "0"
-				Speed: "1.3"
 			}
 
 			Line3: {
-				Text: <sine>Something about this book seems eerily familiar...</sine>
-				Speaker: You
-				Emote: "0"
-				Speed: "1.3"
 			}
 
 			Line4: {
-				Text: You contact the Guide<pause:12>, and ask if they know anything about it.
-				Speaker: You
-				Emote: "0"
-				Speed: "1.3"
 			}
 
 			Line5: {
-				Text: Chronicle of Reverie? <pause:12>I've never heard of it.<pause:15> Bring it to me, and I'll take a look.
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.5"
 			}
 		}
 
 		ChronicleReading: {
 			Line1: {
-				Text: Where did you find this? <pause:8>This looks like a chronicle from the Order!
-				Speaker: Guide
-				Emote: "2"
-				Speed: "1.2"
 			}
 
 			Line2: {
-				Text: Oh, yeah,<pause:10> The Order of the Guide,<pause:8> also known as the Archivers.
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.2"
 			}
 
 			Line3: {
-				Text: They were a group of Guides who dedicated themselves to recording the history of Terraria.
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.2"
 			}
 
 			Line4: {
-				Text: They were active during the early days of Terraria, but they disappeared long ago.
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.2"
 			}
 
 			Line5: {
-				Text: Unfortunately, I don't know much more than that.<pause:10> All of the Archivers were lost in the Great Cataclysm.
-				Speaker: Guide
-				Emote: "2"
-				Speed: "1.2"
 			}
 
 			Line6: {
-				Text: If you want to learn more,<pause:8> you should try to find more of these chronicles.
-				Speaker: Guide
-				Emote: "2"
-				Speed: "1.2"
 			}
 		}
 	}
