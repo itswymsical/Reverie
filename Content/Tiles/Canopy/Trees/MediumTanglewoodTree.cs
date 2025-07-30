@@ -2,6 +2,7 @@
 using Terraria.GameContent;
 using Terraria.Utilities;
 using Terraria;
+using Reverie.Core.Tiles;
 
 namespace Reverie.Content.Tiles.Canopy.Trees;
 

@@ -9,7 +9,7 @@ using Terraria.Localization;
 using Terraria.ObjectData;
 using Terraria.Utilities;
 
-namespace Reverie.Content.Tiles.Canopy.Trees;
+namespace Reverie.Core.Tiles;
 
 /// <summary>
 /// Abstract base class for all custom trees in the mod

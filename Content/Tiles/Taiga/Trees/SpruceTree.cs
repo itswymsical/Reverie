@@ -1,5 +1,4 @@
 ﻿using Reverie.Content.Tiles.Canopy;
-using Reverie.Content.Tiles.Canopy.Trees;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +6,7 @@ using Terraria.DataStructures;
 using Terraria.Utilities;
 using Terraria.GameContent.Drawing;
 using Terraria.GameContent;
+using Reverie.Core.Tiles;
 
 namespace Reverie.Content.Tiles.Taiga.Trees;
 

@@ -2,13 +2,13 @@
 using Terraria.Enums;
 using Terraria.ObjectData;
 
-namespace Reverie.Content.Tiles.Misc;
+namespace Reverie.Content.Tiles.Desert;
 
-public class DeadbushTile : ModTile
+public class DeadBushTile : ModTile
 {
     public override void SetStaticDefaults()
     {
-        const int height = 32;
+        const int height = 34;
 
         Main.tileSolid[Type] = false;
         Main.tileBlockLight[Type] = false;
@@ -25,7 +25,7 @@ public class DeadbushTile : ModTile
 
         TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile, 1, 0);
         TileObjectData.newTile.AnchorValidTiles = [TileID.Sand, TileID.HardenedSand];
-        TileObjectData.newTile.RandomStyleRange = 2;
+        TileObjectData.newTile.RandomStyleRange = 3;
         TileObjectData.newTile.StyleHorizontal = true;
         TileObjectData.addTile(Type);
 
