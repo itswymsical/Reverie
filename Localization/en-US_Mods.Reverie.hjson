@@ -665,6 +665,8 @@ NPCs: {
 			Princess_LovesNPC: I like {NPCName}.
 		}
 	}
+
+	NewKingSlime.DisplayName: New King Slime
 }
 
 Biomes: {
