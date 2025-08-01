@@ -1,15 +1,13 @@
-﻿using Reverie.Utilities;
-using Reverie.Core.Cinematics;
-using Terraria;
+﻿using Reverie.Core.Cinematics;
+using Reverie.Core.Cinematics.Camera;
+using Reverie.Utilities;
+using System.Collections.Generic;
 using Terraria.Audio;
 using Terraria.GameContent;
-using Reverie.Core.Cinematics.Camera;
-using Reverie.Core.Loaders;
-using System.Collections.Generic;
 
 namespace Reverie.Content.NPCs.Bosses.KingSlime;
 
-public partial class KinguSlime : ModNPC
+public class KinguSlime : ModNPC
 {
     public override string Texture => $"{TEXTURE_DIRECTORY}NPCs/Bosses/KingSlime/KingSlime";
 
@@ -51,15 +49,15 @@ public partial class KinguSlime : ModNPC
         ),
 
         [PatternType.Phase2] = new AttackPattern(
-            new[] { AIState.Strolling, AIState.Jumping, AIState.ConsumingSlimes, AIState.GroundPound, AIState.Strolling, AIState.BounceHouse },
-            new[] { 150, -1, -1, -1, 180, -1 }, // BounceHouse waits for completion
-            new[] { 1, 4, 1, 1, 1, 1 } // Single BounceHouse attack
+            new[] { AIState.Strolling, AIState.Jumping, AIState.ConsumingSlimes, AIState.GroundPound, AIState.Strolling, AIState.BounceHouse, AIState.ConsumingSlimes },
+            new[] { 150, -1, -1, -1, 180, -1, 120 },
+            new[] { 1, 4, 1, 1, 1, 1, 1 }
         ),
 
         [PatternType.Phase3] = new AttackPattern(
             new[] { AIState.Jumping, AIState.BounceHouse, AIState.ConsumingSlimes, AIState.GroundPound, AIState.BounceHouse },
             new[] { -1, -1, -1, -1, -1 },
-            new[] { 5, 1, 1, 4, 1 } // More frequent BounceHouse in final phase
+            new[] { 5, 1, 1, 4, 1 }
         )
     };
 
@@ -188,10 +186,10 @@ public partial class KinguSlime : ModNPC
 
     private int bounceHouseSlams = 0;
     private int targetBounceSlams = 3;
-    private const float BOUNCE_HOUSE_JUMP_HEIGHT = -16f;
-    private const float BOUNCE_HOUSE_SLAM_SPEED = 16f;
-    private Vector2 bounceHouseTargetPos;
-    private bool bounceHouseTargetSet = false;
+    private const float BOUNCE_HOUSE_JUMP_HEIGHT = -12f;
+    private const float BOUNCE_HOUSE_SLAM_SPEED = 24f;
+    private bool bounceHouseCompleteLogged = false;
+
     public override void SetStaticDefaults()
     {
         base.SetStaticDefaults();
@@ -241,6 +239,7 @@ public partial class KinguSlime : ModNPC
 
         UpdateLineOfSightTracking(target);
         HandlePatternTeleport(target);
+        HandlePatternConsume(target);
         UpdatePatternFlow(target);
 
         switch (State)
@@ -261,7 +260,7 @@ public partial class KinguSlime : ModNPC
                 DoConsumingSlimes(target);
                 break;
             case AIState.BounceHouse:
-                DoBounceHouse(target); // Placeholder for future implementation
+                DoBounceHouse(target);
                 break;
         }
 
@@ -425,8 +424,8 @@ public partial class KinguSlime : ModNPC
             case AIState.BounceHouse:
                 JumpPhase = 0;
                 bounceHouseSlams = 0;
-                bounceHouseTargetSet = false; // Reset target lock
-                targetBounceSlams = Main.rand.Next(3, 6); // 3-5 rapid slams
+                bounceHouseCompleteLogged = false;
+                targetBounceSlams = Main.rand.Next(3, 6);
 
                 if (Main.netMode != NetmodeID.Server)
                     Main.NewText($"[DEBUG] BounceHouse Setup: {targetBounceSlams} slams", Color.Purple);
@@ -513,6 +512,53 @@ public partial class KinguSlime : ModNPC
 
             if (Main.netMode != NetmodeID.Server)
                 Main.NewText($"[DEBUG] Teleport state set to: {State}", Color.Yellow);
+        }
+    }
+
+    private void HandlePatternConsume(Player target)
+    {
+        // Don't override during critical moments or if already overriding
+        if (patternOverride || State == AIState.Teleporting || State == AIState.ConsumingSlimes ||
+            (State == AIState.GroundPound && JumpPhase != 0) ||
+            (State == AIState.Jumping && NPC.velocity.Y != 0f) ||
+            (State == AIState.BounceHouse && JumpPhase != 0))
+            return;
+
+        // Only override if we're NOT in phase 1
+        PatternType currentPhase = GetCurrentPhase();
+        if (currentPhase == PatternType.Phase1)
+            return;
+
+        // Check cooldown
+        if (Main.GameUpdateCount - lastConsumeTime < CONSUME_COOLDOWN)
+            return;
+
+        int nearbySlimes = CountNearbySlimes();
+        bool shouldOverride = false;
+
+        // More aggressive consuming in later phases when multiple slimes present
+        if (nearbySlimes >= 5) // 5+ slimes = immediate override
+        {
+            shouldOverride = true;
+        }
+        else if (nearbySlimes >= 3) // 3-4 slimes = chance based on health
+        {
+            float healthPercentage = (float)NPC.life / NPC.lifeMax;
+            if (healthPercentage <= 0.4f) // Low health = more likely to consume
+                shouldOverride = true;
+            else if (healthPercentage <= 0.7f && Main.rand.NextBool(3)) // Medium health = small chance
+                shouldOverride = true;
+        }
+
+        if (shouldOverride && Main.netMode != NetmodeID.MultiplayerClient)
+        {
+            if (Main.netMode != NetmodeID.Server)
+                Main.NewText($"[DEBUG] CONSUME OVERRIDE - {nearbySlimes} slimes nearby", Color.Orange);
+
+            patternOverride = true;
+            State = AIState.ConsumingSlimes;
+            Timer = 0;
+            NPC.netUpdate = true;
         }
     }
 
@@ -810,16 +856,6 @@ public partial class KinguSlime : ModNPC
     }
     private void DoBounceHouse(Player target)
     {
-        // Lock target position at the start of the attack sequence
-        if (!bounceHouseTargetSet)
-        {
-            bounceHouseTargetPos = target.Center;
-            bounceHouseTargetSet = true;
-
-            if (Main.netMode != NetmodeID.Server)
-                Main.NewText($"[DEBUG] BounceHouse target locked at player position", Color.Purple);
-        }
-
         switch (JumpPhase)
         {
             case 0: // Setup and launch phase
@@ -828,29 +864,25 @@ public partial class KinguSlime : ModNPC
                     NPC.velocity.X = 0f;
 
                 // Shorter charge time for rapid succession
-                float chargeTime = bounceHouseSlams > 0 ? 15f : 45f; // First slam takes longer, rest are rapid
+                float chargeTime = bounceHouseSlams > 0 ? 5f : 45f;
 
                 if (Timer >= chargeTime)
                 {
                     NPC.netUpdate = true;
 
-                    // Face the locked target position, not current player position
-                    float dirToTarget = Math.Sign(bounceHouseTargetPos.X - NPC.Center.X);
-                    NPC.spriteDirection = -Math.Sign(dirToTarget);
-
                     // Sound effect
                     SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}SlimeSlamCharge") with { PitchVariance = 0.2f }, NPC.Center);
 
-                    // Higher jump for BounceHouse
-                    NPC.velocity.Y = BOUNCE_HOUSE_JUMP_HEIGHT; // -16f vs normal -8.5f
-                    NPC.velocity.X = 3f * dirToTarget; // Slightly more horizontal movement
+                    // Jump straight up - no horizontal movement
+                    NPC.velocity.Y = BOUNCE_HOUSE_JUMP_HEIGHT; // -16f
+                    NPC.velocity.X = 0f; // No horizontal movement
 
                     // Charge-up dust effect
                     for (int i = 0; i < 12; i++)
                     {
                         Dust dust = Dust.NewDustDirect(NPC.position, NPC.width, NPC.height,
-                            DustID.t_Slime, NPC.velocity.X * 0.4f, NPC.velocity.Y * 0.4f,
-                            150, new Color(86, 162, 255, 100), 1.8f); // Slightly bigger dust
+                            DustID.t_Slime, 0f, NPC.velocity.Y * 0.4f,
+                            150, new Color(86, 162, 255, 100), 1.8f);
                         dust.noGravity = true;
                         dust.velocity *= 0.5f;
                     }
@@ -860,44 +892,20 @@ public partial class KinguSlime : ModNPC
                 }
                 break;
 
-            case 1: // Airborne phase - move toward locked target
-                NPC.damage = 35; // Higher damage than ground pound
+            case 1: // Airborne phase - just go up and down
+                NPC.damage = 40;
+                NPC.velocity.X *= 0.95f;
 
-                // Move toward the LOCKED target position, not current player
-                float dirToLockedTarget = Math.Sign(bounceHouseTargetPos.X - NPC.Center.X);
-                float maxSpeed = 4f;
-
-                if ((dirToLockedTarget == 1 && NPC.velocity.X < maxSpeed) ||
-                    (dirToLockedTarget == -1 && NPC.velocity.X > -maxSpeed))
-                {
-                    NPC.velocity.X += 0.15f * dirToLockedTarget;
-                }
-
-                // Update sprite direction based on movement
-                if (Math.Abs(NPC.velocity.X) > 0.1f)
-                    NPC.spriteDirection = -Math.Sign(NPC.velocity.X);
-
-                // Transition to slam when falling
                 if (NPC.velocity.Y > 0f)
                 {
-                    // Aim for locked target position
-                    NPC.velocity = new Vector2(
-                        bounceHouseTargetPos.X > NPC.Center.X ? 3f : -3f,
-                        BOUNCE_HOUSE_SLAM_SPEED // 16f - faster than ground pound
-                    );
-                    NPC.spriteDirection = bounceHouseTargetPos.X > NPC.Center.X ? -1 : 1;
+                    NPC.velocity = new Vector2(0f, BOUNCE_HOUSE_SLAM_SPEED);
                     JumpPhase = 2;
                     Timer = 0;
                 }
                 break;
 
             case 2: // Slamming down phase
-                    // Keep facing slam direction
-                float slamDir = Math.Sign(bounceHouseTargetPos.X - NPC.Center.X);
-                if (Timer % 8 == 0) // Faster sprite updates
-                    NPC.spriteDirection = -Math.Sign(slamDir);
-
-                // Ground detection
+                    // Ground detection
                 bool hitGround = false;
                 int tileX = (int)(NPC.position.X / 16);
                 int tileEndX = (int)((NPC.position.X + NPC.width) / 16);
@@ -917,7 +925,7 @@ public partial class KinguSlime : ModNPC
                 {
                     // Impact effects
                     SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}SlimeSlam") with { PitchVariance = 0.2f }, NPC.Center);
-                    CameraSystem.shake = 8; // Slightly less shake than ground pound to avoid spam
+                    CameraSystem.shake = 8;
 
                     // Impact dust
                     for (int i = 0; i < 25; i++)
@@ -929,8 +937,8 @@ public partial class KinguSlime : ModNPC
                         dust.scale = 2.2f;
                     }
 
-                    // Enhanced projectile barrage for BounceHouse
-                    SpawnBounceHouseProjectiles(bounceHouseTargetPos); // Use locked position
+                    // Aggressive projectile barrage in all directions
+                    SpawnBounceHouseProjectiles();
 
                     // Spawn extra slimes occasionally
                     if (Main.rand.NextBool(3))
@@ -965,8 +973,8 @@ public partial class KinguSlime : ModNPC
                 {
                     // Accelerating fall with enhanced effects
                     float timeInPhase = Timer;
-                    float accelCurve = MathHelper.Clamp(timeInPhase / 15f, 0.1f, 1f); // Faster acceleration curve
-                    float baseAccel = 0.4f; // Faster than ground pound
+                    float accelCurve = MathHelper.Clamp(timeInPhase / 15f, 0.1f, 1f);
+                    float baseAccel = 0.4f;
                     float currentAccel = baseAccel + (accelCurve * 0.6f);
 
                     NPC.velocity.Y += currentAccel;
@@ -978,7 +986,7 @@ public partial class KinguSlime : ModNPC
                     if (Main.rand.NextBool(2))
                     {
                         Dust dust = Dust.NewDustDirect(NPC.position, NPC.width, NPC.height,
-                            DustID.t_Slime, NPC.velocity.X * 0.5f, NPC.velocity.Y * 0.3f,
+                            DustID.t_Slime, 0f, NPC.velocity.Y * 0.3f,
                             150, new Color(86, 162, 255, 100), 1.6f);
                         dust.noGravity = true;
                         dust.velocity *= 0.5f;
@@ -987,73 +995,73 @@ public partial class KinguSlime : ModNPC
                 break;
 
             case 3: // Brief recovery phase
-                NPC.damage = 12; // Reset damage
-                NPC.velocity *= 0.85f; // Faster deceleration
+                NPC.damage = 12;
+                NPC.velocity *= 0.85f;
 
-                // Very short recovery for rapid succession
-                float recoveryTime = 10f; // Much shorter than ground pound's 45-90f
+                float recoveryTime = 10f;
 
                 if (Timer >= recoveryTime)
                 {
                     if (bounceHouseSlams < targetBounceSlams)
                     {
-                        // Continue the combo - go back to charging
                         JumpPhase = 0;
                         Timer = 0;
                         isWobbling = false;
+                        bounceHouseCompleteLogged = false;
 
                         if (Main.netMode != NetmodeID.Server)
                             Main.NewText($"[DEBUG] BounceHouse continuing combo", Color.LightBlue);
                     }
                     else
                     {
-                        // Attack sequence complete - reset for next time
-                        bounceHouseTargetSet = false;
-                        isWobbling = false;
+                        // Only log completion once
+                        if (!bounceHouseCompleteLogged)
+                        {
+                            bounceHouseCompleteLogged = true;
+                            if (Main.netMode != NetmodeID.Server)
+                                Main.NewText($"[DEBUG] BounceHouse sequence complete!", Color.Green);
+                        }
 
-                        if (Main.netMode != NetmodeID.Server)
-                            Main.NewText($"[DEBUG] BounceHouse sequence complete!", Color.Green);
+                        isWobbling = false;
                     }
                 }
                 break;
         }
     }
 
-    private void SpawnBounceHouseProjectiles(Vector2 targetPos)
+    private void SpawnBounceHouseProjectiles()
     {
-        // Always use high projectile count for BounceHouse spectacle
-        int gelBallCount = 28; // Even more than we planned
-        float baseVelocity = 9f;
+        // Massive projectile barrage in all directions for evasion challenge
+        int gelBallCount = 24; // Even more projectiles
+        float baseVelocity = 8f;
         float velocityVariance = 3f;
 
-        // Wider arc for more coverage
-        float startAngle = -MathHelper.PiOver2 - 1.3f; // Wider than ground pound
-        float endAngle = -MathHelper.PiOver2 + 1.3f;
-
+        // Full 360-degree coverage for maximum evasion challenge
         for (int i = 0; i < gelBallCount; i++)
         {
-            float angle = MathHelper.Lerp(startAngle, endAngle, (float)i / (gelBallCount - 1));
+            float angle = (float)i / gelBallCount * MathHelper.TwoPi; // Full circle
             Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) *
                               (baseVelocity + Main.rand.NextFloat(-velocityVariance, velocityVariance));
 
-            // Spawn with more spread
-            Vector2 spawnPos = NPC.Center + new Vector2(Main.rand.NextFloat(-35f, 35f), 0f);
+            // Spawn with radial spread from center
+            Vector2 spawnPos = NPC.Center + new Vector2(Main.rand.NextFloat(-25f, 25f), -5f);
             int projType = ModContent.ProjectileType<GelBallProjectile>();
-            Projectile.NewProjectile(NPC.GetSource_FromAI(), spawnPos, velocity, projType, 4, 0.7f); // Higher damage and knockback
+            Projectile.NewProjectile(NPC.GetSource_FromAI(), spawnPos, velocity, projType, 4, 0.7f);
         }
 
-        // Add some extra projectiles aimed more directly at the locked target
-        for (int i = 0; i < 8; i++)
+        // Add some extra high-arc projectiles for aerial coverage
+        for (int i = 0; i < 12; i++)
         {
-            Vector2 toTarget = targetPos - NPC.Center;
-            float targetAngle = toTarget.ToRotation() + Main.rand.NextFloat(-0.5f, 0.5f); // Some spread around target
-            Vector2 velocity = targetAngle.ToRotationVector2() * (7f + Main.rand.NextFloat(-1f, 2f));
+            float angle = MathHelper.Lerp(-MathHelper.PiOver2 - 1f, -MathHelper.PiOver2 + 1f, (float)i / 11f);
+            Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) *
+                              (10f + Main.rand.NextFloat(-2f, 3f)); // Higher velocity for arcing shots
 
-            Vector2 spawnPos = NPC.Center + new Vector2(Main.rand.NextFloat(-20f, 20f), -10f);
+            Vector2 spawnPos = NPC.Center + new Vector2(Main.rand.NextFloat(-30f, 30f), -10f);
             int projType = ModContent.ProjectileType<GelBallProjectile>();
-            Projectile.NewProjectile(NPC.GetSource_FromAI(), spawnPos, velocity, projType, 5, 0.8f); // Even higher damage for targeted shots
+            Projectile.NewProjectile(NPC.GetSource_FromAI(), spawnPos, velocity, projType, 5, 0.8f);
         }
     }
+
 
     private void DoTeleporting(Player target)
     {
@@ -1246,15 +1254,25 @@ public partial class KinguSlime : ModNPC
         if (Timer >= 450f || !HasNearbySlimes())
         {
             lastConsumeTime = Main.GameUpdateCount;
-            // Let pattern system handle transition
-            isWobbling = true;
-            wobbleTimer = 0f;
+
+            if (patternOverride)
+            {
+                if (Main.netMode != NetmodeID.Server)
+                    Main.NewText($"[DEBUG] Consume override complete - resuming pattern", Color.Lime);
+
+                ResumeBattlePattern();
+            }
+            else
+            {
+                isWobbling = true;
+                wobbleTimer = 0f;
+            }
         }
     }
 
     #endregion
 
-    #region Helper Methods (unchanged)
+    #region Helper Methods
 
     public override void FindFrame(int frameHeight)
     {
@@ -1281,7 +1299,7 @@ public partial class KinguSlime : ModNPC
                 NPC.frame.Y = frameHeight * 5;
             }
         }
-        else if (State == AIState.GroundPound)
+        else if (State == AIState.GroundPound || State == AIState.BounceHouse)
         {
             if (JumpPhase == 0)
             {
@@ -1905,36 +1923,6 @@ public partial class KinguSlime : ModNPC
             }
         }
         return count;
-    }
-
-    private bool ShouldConsumeSlime()
-    {
-        if (Main.GameUpdateCount - lastConsumeTime < CONSUME_COOLDOWN)
-            return false;
-
-        int nearbySlimes = CountNearbySlimes();
-
-        if (nearbySlimes == 0)
-            return false;
-
-        float healthPercentage = (float)NPC.life / NPC.lifeMax;
-
-        if (healthPercentage >= 0.5f)
-            return false;
-
-        if (nearbySlimes >= SLIME_THRESHOLD && healthPercentage <= 0.5f)
-            return true;
-
-        float consumeChance = 0f;
-
-        if (healthPercentage <= 0.3f)
-            consumeChance = 0.33f;
-        else if (healthPercentage <= 0.45f)
-            consumeChance = 0.20f;
-        else if (healthPercentage <= 0.65f)
-            consumeChance = 0.15f;
-
-        return Main.rand.NextFloat() < consumeChance;
     }
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)

@@ -27,7 +27,7 @@ public class SlimedTile : GlobalTile
         if (SlimedTileSystem.IsSlimed(tileX, tileY))
         {
             player.AddBuff(BuffID.Slimed, 2);
-            player.AddBuff(BuffID.Slow, 5);
+            player.AddBuff(BuffID.Slow, 2);
 
             if (Main.rand.NextBool(8))
             {
