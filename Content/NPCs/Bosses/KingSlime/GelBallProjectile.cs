@@ -59,7 +59,6 @@ public class GelBallProjectile : ModProjectile
     public override void AI()
     {
         base.AI();
-
         Projectile.frameCounter++;
         if (Projectile.frameCounter >= 5)
         {

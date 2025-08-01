@@ -26,6 +26,9 @@ public class KinguSlime : ModNPC
         if (newScale < 0.45f)
             newScale = 0.45f;
 
+        if (State == AIState.Teleporting)
+            newScale *= teleportScaleMultiplier;
+
         NPC.scale = newScale;
         UpdateDefenseBasedOnScale();
         UpdateHitbox();
@@ -33,8 +36,8 @@ public class KinguSlime : ModNPC
 
     private void UpdateDefenseBasedOnScale()
     {
-        const int MIN_DEFENSE = 8;
-        const int MAX_DEFENSE = 22;
+        const int MIN_DEFENSE = 12;
+        const int MAX_DEFENSE = 25;
 
         float normalizedScale = (NPC.scale - 0.45f) / (1.35f - 0.45f);
         normalizedScale = MathHelper.Clamp(normalizedScale, 0f, 1f);
@@ -74,6 +77,12 @@ public class KinguSlime : ModNPC
         ConsumingSlimes
     }
 
+    internal enum TeleportPhase
+    {
+        Prepare,
+        Execute
+    }
+
     private Vector2 squishScale = Vector2.One;
     private bool wasGliding = false;
     private ref float JumpPhase => ref NPC.ai[2];
@@ -87,7 +96,7 @@ public class KinguSlime : ModNPC
     private int groundPoundCount = 0;
     private int targetGroundPounds = 1;
 
-    private int baseDefense = 14;
+    private int baseDefense = 18;
     private const int BASE_WIDTH = 158;
     private const int BASE_HEIGHT = 106;
 
@@ -99,7 +108,29 @@ public class KinguSlime : ModNPC
     private const int SLIME_THRESHOLD = 7;
     private const float CONSUME_COOLDOWN = 600f;
 
+    // Teleportation constants
+    private const int DESPAWN_DISTANCE = 3000;
+    private const float TELEPORT_COOLDOWN = 180f;
+    private const int TELEPORT_SEARCH_ATTEMPTS = 100;
+    private const int TELEPORT_RADIUS = 20;
+    private const int TELEPORT_AVOID_RADIUS = 7;
+    private const float LINE_OF_SIGHT_TIMEOUT = 180f;
+
     private float lastConsumeTime = -CONSUME_COOLDOWN;
+
+    // Teleportation tracking
+    private float lineOfSightTimer = 0f;
+    private float teleportTimer = 0f;
+    private TeleportPhase teleportPhase = TeleportPhase.Prepare;
+    private Vector2 teleportDestination;
+    private float teleportScaleMultiplier = 1f;
+    private bool isInvulnerable = false;
+
+    private Vector2 lastPosition;
+    private Vector2 teleportStartPos;
+    private float stuckTimer = 0f;
+    private const float STUCK_TIMEOUT = 180f;
+    private const float MIN_MOVEMENT_THRESHOLD = 16f;
 
     public override void SetStaticDefaults()
     {
@@ -111,7 +142,7 @@ public class KinguSlime : ModNPC
     {
         NPC.damage = 12;
         NPC.defense = baseDefense;
-        NPC.lifeMax = 900;
+        NPC.lifeMax = 1100;
         NPC.width = 158;
         NPC.height = 106;
         NPC.aiStyle = -1;
@@ -147,6 +178,9 @@ public class KinguSlime : ModNPC
         HandleDustTrail();
         HandleSlimeTrail();
 
+        UpdateLineOfSightTracking(target);
+        CheckTeleportConditions(target);
+
         switch (State)
         {
             case AIState.Strolling:
@@ -157,6 +191,9 @@ public class KinguSlime : ModNPC
                 break;
             case AIState.GroundPound:
                 DoGroundPound(target);
+                break;
+            case AIState.Teleporting:
+                DoTeleporting(target);
                 break;
             case AIState.ConsumingSlimes:
                 DoConsumingSlimes(target);
@@ -201,7 +238,7 @@ public class KinguSlime : ModNPC
             if (StrollCount >= targetStrolls)
             {
                 // Check for consumption opportunity first
-                if (ShouldStartConsuming())
+                if (ShouldConsumeSlime())
                 {
                     State = AIState.ConsumingSlimes;
                     Timer = 0;
@@ -212,12 +249,12 @@ public class KinguSlime : ModNPC
                 // Original attack selection logic
                 float attackRoll = Main.rand.NextFloat();
 
-                if (attackRoll < 0.3f)
+                if (attackRoll < 0.6f)
                 {
                     State = AIState.Jumping;
                     JumpPhase = 0;
                 }
-                else if (attackRoll < 0.65f)
+                else if (attackRoll < 0.55f)
                 {
                     State = AIState.GroundPound;
                     JumpPhase = 0;
@@ -383,14 +420,40 @@ public class KinguSlime : ModNPC
                         dust.scale = 2f;
                     }
 
-                    int gelBallCount = 8;
+                    // Calculate distance to player in tiles
+                    float distToPlayer = Vector2.Distance(NPC.Center, target.Center) / 16f;
+
+                    // Scale projectile count and velocity based on distance
+                    int gelBallCount;
+                    float baseVelocity;
+                    float velocityVariance;
+
+                    if (distToPlayer <= 20f) // Close range
+                    {
+                        gelBallCount = 8;
+                        baseVelocity = 5.5f;
+                        velocityVariance = 1.6f;
+                    }
+                    else if (distToPlayer <= 42f)
+                    {
+                        gelBallCount = 12;
+                        baseVelocity = 7f;
+                        velocityVariance = 2.1f;
+                    }
+                    else
+                    {
+                        gelBallCount = 16;
+                        baseVelocity = 9f;
+                        velocityVariance = 3f;
+                    }
+
                     for (int i = 0; i < gelBallCount; i++)
                     {
                         float angle = MathHelper.Lerp(-MathHelper.PiOver2 - 0.8f, -MathHelper.PiOver2 + 0.8f, (float)i / (gelBallCount - 1));
-                        Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Main.rand.NextFloat(5f, 6f);
+                        Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) *
+                                          (baseVelocity + Main.rand.NextFloat(-velocityVariance, velocityVariance));
 
                         Vector2 spawnPos = NPC.Center + new Vector2(Main.rand.NextFloat(-20f, 20f), 0f);
-
                         int projType = ModContent.ProjectileType<GelBallProjectile>();
                         Projectile.NewProjectile(NPC.GetSource_FromAI(), spawnPos, velocity, projType, 3, 0.5f);
                     }
@@ -398,7 +461,6 @@ public class KinguSlime : ModNPC
                     if (targetGroundPounds > 1 && Main.rand.NextBool(2))
                     {
                         Vector2 spawnPos = NPC.Center + new Vector2(0f, NPC.height / 2f);
-
                         int leftSlime = NPC.NewNPC(NPC.GetSource_FromAI(), (int)spawnPos.X - 20, (int)spawnPos.Y, NPCID.BlueSlime);
                         if (leftSlime < Main.maxNPCs)
                         {
@@ -406,17 +468,14 @@ public class KinguSlime : ModNPC
                                                                        -3f + Main.rand.NextFloat(-1f, 1f));
                             Main.npc[leftSlime].scale = 1.2f;
                         }
-
                         int rightSlime = NPC.NewNPC(NPC.GetSource_FromAI(), (int)spawnPos.X + 20, (int)spawnPos.Y, NPCID.GreenSlime);
                         if (rightSlime < Main.maxNPCs)
                         {
                             Main.npc[rightSlime].scale = 1.2f;
                         }
                     }
-
                     JumpPhase = 3;
                     Timer = 0;
-
                     isWobbling = true;
                     wobbleTimer = 0f;
                 }
@@ -472,6 +531,127 @@ public class KinguSlime : ModNPC
                         // Brief pause between combo attacks
                         Timer = -15f; // Negative timer for short delay
                     }
+                }
+                break;
+        }
+    }
+
+    private void DoTeleporting(Player target)
+    {
+        switch (teleportPhase)
+        {
+            case TeleportPhase.Prepare:
+                NPC.aiAction = 1;
+
+                // Fade out effect (first 20 frames)
+                if (Timer <= 20f)
+                {
+                    float fadeProgress = MathHelper.Clamp((20f - Timer) / 20f, 0f, 1f);
+                    teleportScaleMultiplier = 0.5f + fadeProgress * 0.5f;
+
+                    if (Timer >= 20f)
+                    {
+                        isInvulnerable = true;
+                        NPC.dontTakeDamage = true;
+                        NPC.hide = true;
+                    }
+
+                    // Gore effect when becoming invisible
+                    if (Timer == 20f)
+                    {
+                        Gore.NewGore(NPC.GetSource_FromAI(),
+                                    NPC.Center + new Vector2(-40f, -NPC.height / 2),
+                                    NPC.velocity, 734);
+                    }
+                }
+                // Transition phase (frames 20-35) - snap to destination quickly
+                else if (Timer <= 35f)
+                {
+                    float transitionProgress = (Timer - 20f) / 15f; // 0 to 1 over 15 frames
+
+                    if (Timer == 21f)
+                    {
+                        teleportStartPos = NPC.Bottom;
+                    }
+
+                    NPC.Bottom = Vector2.Lerp(teleportStartPos, teleportDestination,
+                        EaseFunction.EaseQuadOut.Ease(transitionProgress)); // Faster easing
+
+                    NPC.hide = true;
+                    isInvulnerable = true;
+                    NPC.dontTakeDamage = true;
+                    teleportScaleMultiplier = 0.5f;
+                }
+                // Transition complete, start fade-in
+                else if (Timer >= 35f && Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    teleportPhase = TeleportPhase.Execute;
+                    Timer = 0;
+                    NPC.netUpdate = true;
+                }
+
+                CreateTeleportDust(1f); // More intense dust
+                break;
+
+            case TeleportPhase.Execute:
+                NPC.aiAction = 0;
+
+                // Wind-up phase (frames 0-10) - very brief anticipation
+                if (Timer <= 10f)
+                {
+                    NPC.hide = true;
+                    isInvulnerable = true;
+                    NPC.dontTakeDamage = true;
+                    teleportScaleMultiplier = 0.5f;
+
+                    float windUpProgress = Timer / 10f;
+                    float dustIntensity = 1f + windUpProgress * 2f; // More intense buildup
+                    CreateTeleportDust(dustIntensity);
+
+                    if (Timer == 5f) // Quick sound effect
+                    {
+                        SoundEngine.PlaySound(SoundID.QueenSlime with { PitchVariance = 0.2f }, NPC.Center);
+                    }
+
+                    if (Timer > 5f && Timer % 2 == 0) // Rapid shake
+                    {
+                        CameraSystem.shake = (int)(3 + windUpProgress * 4);
+                    }
+                }
+                // Fade-in phase (frames 10-25) - rapid emergence
+                else if (Timer <= 25f)
+                {
+                    float fadeInProgress = MathHelper.Clamp((Timer - 10f) / 15f, 0f, 1f);
+                    teleportScaleMultiplier = 0.5f + fadeInProgress * 0.5f;
+
+                    if (fadeInProgress >= 0.1f) // Show slime almost immediately
+                    {
+                        NPC.hide = false;
+                        isInvulnerable = false;
+                        NPC.dontTakeDamage = false;
+                    }
+                    else
+                    {
+                        NPC.hide = true;
+                        isInvulnerable = true;
+                        NPC.dontTakeDamage = true;
+                    }
+
+                    CreateTeleportDust(3f - fadeInProgress * 2f); // Intense dust that fades
+                }
+                // Teleport complete - back to action!
+                else if (Timer >= 25f && Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    State = AIState.Strolling;
+                    Timer = 0;
+                    NPC.netUpdate = true;
+                    NPC.TargetClosest();
+                    NPC.hide = false;
+                    isInvulnerable = false;
+                    NPC.dontTakeDamage = false;
+                    teleportScaleMultiplier = 1f;
+                    teleportPhase = TeleportPhase.Prepare;
+                    lastPosition = NPC.Center;
                 }
                 break;
         }
@@ -619,6 +799,28 @@ public class KinguSlime : ModNPC
                 NPC.frame.Y = frameHeight * 5;
             }
         }
+        else if (State == AIState.Teleporting)
+        {
+            if (teleportPhase == TeleportPhase.Prepare)
+            {
+                // Charging animation during prepare phase
+                float animSpeed = 4f;
+                NPC.frameCounter++;
+                if (NPC.frameCounter >= animSpeed)
+                {
+                    NPC.frameCounter = 0;
+                    NPC.frame.Y += frameHeight;
+
+                    if (NPC.frame.Y >= frameHeight * 4)
+                        NPC.frame.Y = frameHeight;
+                }
+            }
+            else // Execute phase
+            {
+                // Static frame during teleport execution
+                NPC.frame.Y = frameHeight * 4;
+            }
+        }
         else // Strolling
         {
             float speed = Math.Abs(NPC.velocity.X);
@@ -672,6 +874,220 @@ public class KinguSlime : ModNPC
     }
 
     #region Helper Methods
+
+    private void UpdateLineOfSightTracking(Player target)
+    {
+        bool hasLineOfSight = Collision.CanHitLine(NPC.Center, 0, 0, target.Center, 0, 0);
+        bool heightDifferenceOk = Math.Abs(NPC.Top.Y - target.Bottom.Y) <= 160f;
+
+        if (!hasLineOfSight || !heightDifferenceOk)
+        {
+            teleportTimer += 3.5f; // Accumulate faster when no line of sight
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+                lineOfSightTimer += 2.5f; // Accumulate faster
+        }
+        else if (Main.netMode != NetmodeID.MultiplayerClient)
+        {
+            lineOfSightTimer--;
+            if (lineOfSightTimer < 0f)
+                lineOfSightTimer = 0f;
+        }
+
+        // Track if slime is stuck
+        float distanceMoved = Vector2.Distance(NPC.Center, lastPosition);
+        if (distanceMoved < MIN_MOVEMENT_THRESHOLD && NPC.velocity.Y == 0f)
+        {
+            stuckTimer++;
+        }
+        else
+        {
+            stuckTimer = 0f;
+            lastPosition = NPC.Center;
+        }
+    }
+
+    private void CheckTeleportConditions(Player target)
+    {
+        // Don't interrupt existing important states
+        if (State == AIState.Teleporting || State == AIState.ConsumingSlimes || State == AIState.Despawning)
+            return;
+
+        float distToPlayer = Vector2.Distance(NPC.Center, target.Center);
+        bool targetTooFar = target.dead || distToPlayer > DESPAWN_DISTANCE;
+
+        if (targetTooFar)
+        {
+            NPC.TargetClosest();
+            target = Main.player[NPC.target];
+
+            if (target.dead || Vector2.Distance(NPC.Center, target.Center) > DESPAWN_DISTANCE)
+            {
+                BeginTeleport(target);
+                return;
+            }
+        }
+
+        bool shouldTeleport = false;
+
+        if (teleportTimer >= TELEPORT_COOLDOWN && NPC.velocity.Y == 0f && State != AIState.GroundPound)
+        {
+            shouldTeleport = true;
+        }
+
+        if (stuckTimer >= STUCK_TIMEOUT && NPC.velocity.Y == 0f)
+        {
+            shouldTeleport = true;
+        }
+
+        if (distToPlayer > 600f && teleportTimer >= TELEPORT_COOLDOWN * 0.5f && NPC.velocity.Y == 0f)
+        {
+            shouldTeleport = true;
+        }
+
+        if (!target.dead && NPC.timeLeft > 10 && shouldTeleport)
+        {
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                BeginTeleport(target);
+            }
+        }
+    }
+
+    private void BeginTeleport(Player target)
+    {
+        FindTeleportLocation(target);
+        State = AIState.Teleporting;
+        teleportPhase = TeleportPhase.Prepare;
+        Timer = 0;
+        teleportTimer = 0f;
+        stuckTimer = 0f;
+        NPC.netUpdate = true;
+    }
+
+    private void FindTeleportLocation(Player target)
+    {
+        Point npcTile = NPC.Center.ToTileCoordinates();
+        Point targetTile = target.Center.ToTileCoordinates();
+        Vector2 toTarget = target.Center - NPC.Center;
+
+        bool foundSpot = false;
+        int attempts = 0;
+        bool forceRandomSpot = lineOfSightTimer >= LINE_OF_SIGHT_TIMEOUT || toTarget.Length() > 2000f;
+
+        if (forceRandomSpot && lineOfSightTimer >= LINE_OF_SIGHT_TIMEOUT)
+            lineOfSightTimer = LINE_OF_SIGHT_TIMEOUT;
+
+        Vector2 playerVel = target.velocity;
+        bool playerIsMoving = Math.Abs(playerVel.X) > 0.5f;
+
+        int teleportSide = 0; // 0 = random, -1 = left of player, 1 = right of player
+        if (playerIsMoving)
+        {
+            // If player moving left, teleport to their left (behind them)
+            // If player moving right, teleport to their right (behind them)
+            teleportSide = Math.Sign(playerVel.X);
+        }
+
+        while (!foundSpot && attempts < TELEPORT_SEARCH_ATTEMPTS)
+        {
+            attempts++;
+            int testX, testY;
+
+            if (teleportSide != 0 && attempts < TELEPORT_SEARCH_ATTEMPTS * 0.8f)
+            {
+                float behindDistance = Main.rand.NextFloat(10f, 20f);
+                testX = targetTile.X + (int)(teleportSide * behindDistance);
+                testY = targetTile.Y;
+            }
+            else
+            {
+                testX = Main.rand.Next(targetTile.X - TELEPORT_RADIUS, targetTile.X + TELEPORT_RADIUS + 1);
+                testY = Main.rand.Next(targetTile.Y - TELEPORT_RADIUS, targetTile.Y + 1);
+            }
+
+            bool tooCloseToTarget = testY >= targetTile.Y - TELEPORT_AVOID_RADIUS &&
+                                   testY <= targetTile.Y + TELEPORT_AVOID_RADIUS &&
+                                   testX >= targetTile.X - TELEPORT_AVOID_RADIUS &&
+                                   testX <= targetTile.X + TELEPORT_AVOID_RADIUS;
+
+            bool tooCloseToNPC = testY >= npcTile.Y && testY <= npcTile.Y &&
+                                 testX >= npcTile.X && testX <= npcTile.X;
+
+            if (tooCloseToTarget || tooCloseToNPC || Main.tile[testX, testY].HasTile)
+                continue;
+
+            int groundY = testY;
+            int dropDistance = 0;
+
+            if (Main.tile[testX, groundY].HasTile &&
+                Main.tileSolid[Main.tile[testX, groundY].TileType] &&
+                !Main.tileSolidTop[Main.tile[testX, groundY].TileType])
+            {
+                dropDistance = 1;
+            }
+            else
+            {
+                for (; dropDistance < 150 && groundY + dropDistance < Main.maxTilesY; dropDistance++)
+                {
+                    int checkY = groundY + dropDistance;
+                    if (Main.tile[testX, checkY].HasTile &&
+                        Main.tileSolid[Main.tile[testX, checkY].TileType] &&
+                        !Main.tileSolidTop[Main.tile[testX, checkY].TileType])
+                    {
+                        dropDistance--;
+                        break;
+                    }
+                }
+            }
+
+            testY += dropDistance;
+            Vector2 teleportPos = new Vector2(testX * 16 + 8, testY * 16 + 16);
+
+            bool validSpot = true;
+
+            if (validSpot && Main.tile[testX, testY].LiquidType == LiquidID.Lava)
+                validSpot = false;
+
+            if (validSpot && !Collision.CanHitLine(teleportPos, 0, 0, target.Center, 0, 0))
+                validSpot = false;
+
+            if (validSpot)
+            {
+                teleportDestination = teleportPos;
+                foundSpot = true;
+                break;
+            }
+        }
+
+        if (attempts >= TELEPORT_SEARCH_ATTEMPTS)
+        {
+            teleportDestination = target.Bottom;
+        }
+    }
+
+    private void CreateTeleportDust(float velocityMultiplier)
+    {
+        if (isInvulnerable) return;
+
+        for (int i = 0; i < 10; i++)
+        {
+            int dustIndex = Dust.NewDust(
+                NPC.position + Vector2.UnitX * -20f,
+                NPC.width + 40,
+                NPC.height,
+                DustID.t_Slime,
+                NPC.velocity.X,
+                NPC.velocity.Y,
+                150,
+                new Color(86, 162, 255, 100),
+                2f
+            );
+
+            Main.dust[dustIndex].noGravity = true;
+            Main.dust[dustIndex].velocity *= velocityMultiplier;
+        }
+    }
+
     private void HandleRotation()
     {
         bool isAirborne = NPC.velocity.Y != 0f;
@@ -890,32 +1306,32 @@ public class KinguSlime : ModNPC
         return count;
     }
 
-    private bool ShouldStartConsuming()
+    private bool ShouldConsumeSlime()
     {
         if (Main.GameUpdateCount - lastConsumeTime < CONSUME_COOLDOWN)
             return false;
 
         int nearbySlimes = CountNearbySlimes();
 
-        if (nearbySlimes >= SLIME_THRESHOLD)
-            return true;
-
         if (nearbySlimes == 0)
             return false;
 
         float healthPercentage = (float)NPC.life / NPC.lifeMax;
 
-        if (healthPercentage > 0.8f)
+        if (healthPercentage >= 0.5f)
             return false;
+
+        if (nearbySlimes >= SLIME_THRESHOLD && healthPercentage <= 0.5f)
+            return true;
 
         float consumeChance = 0f;
 
         if (healthPercentage <= 0.3f)
-            consumeChance = 0.36f;
+            consumeChance = 0.33f;
         else if (healthPercentage <= 0.45f)
-            consumeChance = 0.19f;
+            consumeChance = 0.20f;
         else if (healthPercentage <= 0.65f)
-            consumeChance = 0.1f;
+            consumeChance = 0.15f;
 
         return Main.rand.NextFloat() < consumeChance;
     }
