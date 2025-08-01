@@ -1,4 +1,4 @@
-UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+﻿UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
 
 Conditions: {
 	CopperStandardComplete: After (Copper Standard) Mission
@@ -446,6 +446,65 @@ Items: {
 	PineTreeDebugWand: {
 		DisplayName: Pine Tree Debug Wand
 		Tooltip: ""
+	}
+
+	AmethystPendant: {
+		DisplayName: Amethyst Pendant
+		Tooltip:
+        '''
+        Increases damage reduction by 2%-10% depending on your current mana
+        Requires 60 mana
+        '''
+	}
+
+	DiamondPendant: {
+		DisplayName: Diamond Pendant
+		Tooltip: Increases critical strike chance by 10%
+	}
+
+	EmeraldPendant: {
+		DisplayName: Emerald Pendant
+		Tooltip:         
+        '''
+        Increases defense by 2-8 depending on your current mana
+        Requires 60 mana
+        '''
+	}
+
+	RubyPendant: {
+		DisplayName: Ruby Pendant
+		Tooltip:
+        '''
+        Increases life regeneration 3%-10% depending on your current mana
+        Requires 80 mana
+        '''
+	}
+
+	SapphirePendant: {
+		DisplayName: Sapphire Pendant
+		Tooltip:
+        '''
+        Increases maximum mana by 40
+        Decreases mana cost by 8%
+        '''
+	}
+
+	TopazPendant: {
+		DisplayName: Topaz Pendant
+		Tooltip:
+        '''
+        Increases item pickup range
+        Increases movement and acceleration speed 3%-12% depending on your current mana
+        Requires 60 mana for movement bonus
+        '''
+	}
+
+	AmberPendant: {
+		DisplayName: Amber Pendant
+		Tooltip:         
+        '''
+        Increases max minions and sentries by 1
+        '''
 	}
 }
 
