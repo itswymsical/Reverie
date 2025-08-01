@@ -18,10 +18,10 @@ public class TopazPendant : ModItem
 
         if (player.statManaMax2 >= reqMana)
         {
-            var moveSpeed = 0.02f + (currentMana * 0.12f);
+            var moveSpeed = 0.02f + (currentMana * 0.08f);
             player.moveSpeed += moveSpeed;
 
-            var runAcceleration = 0.02f + (currentMana * 0.12f);
+            var runAcceleration = 0.02f + (currentMana * 0.08f);
             player.runAcceleration += runAcceleration;
         }
 
