@@ -157,20 +157,13 @@ public class KinguSlime : ModNPC
     private const float MAX_CONSUME_SCALE = 2.0f;
     private const float HP_PER_SLIME = 0.08f;
 
-    private const int SLIME_THRESHOLD = 7;
     private const float CONSUME_COOLDOWN = 600f;
 
-    // Teleportation constants
-    private const int DESPAWN_DISTANCE = 3000;
     private const float TELEPORT_COOLDOWN = 240f;
-    private const int TELEPORT_SEARCH_ATTEMPTS = 100;
-    private const int TELEPORT_RADIUS = 20;
-    private const int TELEPORT_AVOID_RADIUS = 7;
     private const float LINE_OF_SIGHT_TIMEOUT = 240f;
 
     private float lastConsumeTime = -CONSUME_COOLDOWN;
 
-    // Teleportation tracking
     private float lineOfSightTimer = 0f;
     private float teleportTimer = 0f;
     private TeleportPhase teleportPhase = TeleportPhase.Prepare;
@@ -237,7 +230,7 @@ public class KinguSlime : ModNPC
         HandleDustTrail();
         HandleSlimeTrail();
 
-        UpdateLineOfSightTracking(target);
+        UpdateLOS(target);
         HandlePatternTeleport(target);
         HandlePatternConsume(target);
         UpdatePatternFlow(target);
@@ -485,7 +478,7 @@ public class KinguSlime : ModNPC
     {
         // Don't trigger teleport during BounceHouse or other critical attacks
         if (patternOverride || State == AIState.Teleporting || State == AIState.ConsumingSlimes ||
-            State == AIState.BounceHouse || // No teleports during BounceHouse
+            State == AIState.BounceHouse ||
             (State == AIState.GroundPound && JumpPhase != 0) ||
             (State == AIState.Jumping && NPC.velocity.Y != 0f))
             return;
@@ -536,17 +529,16 @@ public class KinguSlime : ModNPC
         int nearbySlimes = CountNearbySlimes();
         bool shouldOverride = false;
 
-        // More aggressive consuming in later phases when multiple slimes present
-        if (nearbySlimes >= 5) // 5+ slimes = immediate override
+        if (nearbySlimes >= 5)
         {
             shouldOverride = true;
         }
-        else if (nearbySlimes >= 3) // 3-4 slimes = chance based on health
+        else if (nearbySlimes >= 3)
         {
             float healthPercentage = (float)NPC.life / NPC.lifeMax;
-            if (healthPercentage <= 0.4f) // Low health = more likely to consume
+            if (healthPercentage <= 0.4f)
                 shouldOverride = true;
-            else if (healthPercentage <= 0.7f && Main.rand.NextBool(3)) // Medium health = small chance
+            else if (healthPercentage <= 0.7f && Main.rand.NextBool(3))
                 shouldOverride = true;
         }
 
@@ -575,7 +567,7 @@ public class KinguSlime : ModNPC
 
     #endregion
 
-    #region State Methods - No Direct Transitions
+    #region State Methods
 
     private void DoStrolling(Player target)
     {
@@ -854,16 +846,16 @@ public class KinguSlime : ModNPC
                 break;
         }
     }
+
     private void DoBounceHouse(Player target)
     {
         switch (JumpPhase)
         {
-            case 0: // Setup and launch phase
+            case 0: // Setup and launch
                 NPC.velocity.X *= 0.5f;
                 if (Math.Abs(NPC.velocity.X) < 0.1f)
                     NPC.velocity.X = 0f;
 
-                // Shorter charge time for rapid succession
                 float chargeTime = bounceHouseSlams > 0 ? 5f : 45f;
 
                 if (Timer >= chargeTime)
@@ -873,11 +865,9 @@ public class KinguSlime : ModNPC
                     // Sound effect
                     SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}SlimeSlamCharge") with { PitchVariance = 0.2f }, NPC.Center);
 
-                    // Jump straight up - no horizontal movement
-                    NPC.velocity.Y = BOUNCE_HOUSE_JUMP_HEIGHT; // -16f
-                    NPC.velocity.X = 0f; // No horizontal movement
+                    NPC.velocity.Y = BOUNCE_HOUSE_JUMP_HEIGHT;
+                    NPC.velocity.X = 0f;
 
-                    // Charge-up dust effect
                     for (int i = 0; i < 12; i++)
                     {
                         Dust dust = Dust.NewDustDirect(NPC.position, NPC.width, NPC.height,
@@ -892,7 +882,7 @@ public class KinguSlime : ModNPC
                 }
                 break;
 
-            case 1: // Airborne phase - just go up and down
+            case 1: // Airborne
                 NPC.damage = 40;
                 NPC.velocity.X *= 0.95f;
 
@@ -904,8 +894,7 @@ public class KinguSlime : ModNPC
                 }
                 break;
 
-            case 2: // Slamming down phase
-                    // Ground detection
+            case 2: // Slamming down
                 bool hitGround = false;
                 int tileX = (int)(NPC.position.X / 16);
                 int tileEndX = (int)((NPC.position.X + NPC.width) / 16);
@@ -923,11 +912,9 @@ public class KinguSlime : ModNPC
 
                 if (hitGround || NPC.velocity.Y == 0f)
                 {
-                    // Impact effects
                     SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}SlimeSlam") with { PitchVariance = 0.2f }, NPC.Center);
                     CameraSystem.shake = 8;
 
-                    // Impact dust
                     for (int i = 0; i < 25; i++)
                     {
                         Vector2 dustVel = Vector2.One.RotatedBy(MathHelper.ToRadians(i * 14.4f)) * 9f;
@@ -937,10 +924,8 @@ public class KinguSlime : ModNPC
                         dust.scale = 2.2f;
                     }
 
-                    // Aggressive projectile barrage in all directions
-                    SpawnBounceHouseProjectiles();
+                    BounceHouseProjectiles();
 
-                    // Spawn extra slimes occasionally
                     if (Main.rand.NextBool(3))
                     {
                         Vector2 spawnPos = NPC.Center + new Vector2(0f, NPC.height / 2f);
@@ -971,7 +956,6 @@ public class KinguSlime : ModNPC
                 }
                 else
                 {
-                    // Accelerating fall with enhanced effects
                     float timeInPhase = Timer;
                     float accelCurve = MathHelper.Clamp(timeInPhase / 15f, 0.1f, 1f);
                     float baseAccel = 0.4f;
@@ -982,7 +966,6 @@ public class KinguSlime : ModNPC
                     if (NPC.velocity.Y > BOUNCE_HOUSE_SLAM_SPEED)
                         NPC.velocity.Y = BOUNCE_HOUSE_SLAM_SPEED;
 
-                    // More frequent dust trail
                     if (Main.rand.NextBool(2))
                     {
                         Dust dust = Dust.NewDustDirect(NPC.position, NPC.width, NPC.height,
@@ -994,7 +977,7 @@ public class KinguSlime : ModNPC
                 }
                 break;
 
-            case 3: // Brief recovery phase
+            case 3: // Brief recovery
                 NPC.damage = 12;
                 NPC.velocity *= 0.85f;
 
@@ -1029,39 +1012,34 @@ public class KinguSlime : ModNPC
         }
     }
 
-    private void SpawnBounceHouseProjectiles()
+    private void BounceHouseProjectiles()
     {
-        // Massive projectile barrage in all directions for evasion challenge
-        int gelBallCount = 24; // Even more projectiles
+        int gelBallCount = 24;
         float baseVelocity = 8f;
         float velocityVariance = 3f;
 
-        // Full 360-degree coverage for maximum evasion challenge
         for (int i = 0; i < gelBallCount; i++)
         {
-            float angle = (float)i / gelBallCount * MathHelper.TwoPi; // Full circle
+            float angle = (float)i / gelBallCount * MathHelper.TwoPi;
             Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) *
                               (baseVelocity + Main.rand.NextFloat(-velocityVariance, velocityVariance));
 
-            // Spawn with radial spread from center
             Vector2 spawnPos = NPC.Center + new Vector2(Main.rand.NextFloat(-25f, 25f), -5f);
             int projType = ModContent.ProjectileType<GelBallProjectile>();
             Projectile.NewProjectile(NPC.GetSource_FromAI(), spawnPos, velocity, projType, 4, 0.7f);
         }
 
-        // Add some extra high-arc projectiles for aerial coverage
         for (int i = 0; i < 12; i++)
         {
             float angle = MathHelper.Lerp(-MathHelper.PiOver2 - 1f, -MathHelper.PiOver2 + 1f, (float)i / 11f);
             Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) *
-                              (10f + Main.rand.NextFloat(-2f, 3f)); // Higher velocity for arcing shots
+                              (10f + Main.rand.NextFloat(-2f, 3f));
 
             Vector2 spawnPos = NPC.Center + new Vector2(Main.rand.NextFloat(-30f, 30f), -10f);
             int projType = ModContent.ProjectileType<GelBallProjectile>();
             Projectile.NewProjectile(NPC.GetSource_FromAI(), spawnPos, velocity, projType, 5, 0.8f);
         }
     }
-
 
     private void DoTeleporting(Player target)
     {
@@ -1113,7 +1091,7 @@ public class KinguSlime : ModNPC
                     NPC.netUpdate = true;
                 }
 
-                CreateTeleportDust(1f);
+                TeleportDust(1f);
                 break;
 
             case TeleportPhase.Execute:
@@ -1128,7 +1106,7 @@ public class KinguSlime : ModNPC
 
                     float windUpProgress = Timer / 10f;
                     float dustIntensity = 1f + windUpProgress * 2f;
-                    CreateTeleportDust(dustIntensity);
+                    TeleportDust(dustIntensity);
 
                     if (Timer == 5f)
                     {
@@ -1158,7 +1136,7 @@ public class KinguSlime : ModNPC
                         NPC.dontTakeDamage = true;
                     }
 
-                    CreateTeleportDust(3f - fadeInProgress * 2f);
+                    TeleportDust(3f - fadeInProgress * 2f);
                 }
                 else if (Timer >= 25f && Main.netMode != NetmodeID.MultiplayerClient)
                 {
@@ -1407,7 +1385,7 @@ public class KinguSlime : ModNPC
         }
     }
 
-    private void UpdateLineOfSightTracking(Player target)
+    private void UpdateLOS(Player target)
     {
         bool hasLineOfSight = Collision.CanHitLine(NPC.Center, 0, 0, target.Center, 0, 0);
         bool heightDifferenceOk = Math.Abs(NPC.Top.Y - target.Bottom.Y) <= 160f;
@@ -1452,7 +1430,7 @@ public class KinguSlime : ModNPC
         if (Main.netMode != NetmodeID.Server)
             Main.NewText($"[DEBUG] BeginTeleport called - Current state: {State}", Color.Orange);
 
-        FindTeleportLocation(target);
+        FindTeleportSpot(target);
         State = AIState.Teleporting;
         teleportPhase = TeleportPhase.Prepare;
         Timer = 0;
@@ -1464,8 +1442,7 @@ public class KinguSlime : ModNPC
             Main.NewText($"[DEBUG] Teleport initialized - New state: {State}", Color.Green);
     }
 
-    // Much more robust teleport location finding that prioritizes player-friendly positions
-    private void FindTeleportLocation(Player target)
+    private void FindTeleportSpot(Player target)
     {
         if (Main.netMode != NetmodeID.Server)
             Main.NewText($"[DEBUG] Finding teleport location...", Color.Gray);
@@ -1494,7 +1471,7 @@ public class KinguSlime : ModNPC
             int testX = targetTile.X + offsetX;
             int testY = targetTile.Y + offsetY;
 
-            Vector2 testPos = TryFindGroundPosition(testX, testY, target);
+            Vector2 testPos = FindGroundPos(testX, testY, target);
             if (testPos != Vector2.Zero)
             {
                 bestLocation = testPos;
@@ -1519,7 +1496,7 @@ public class KinguSlime : ModNPC
                 int testX = targetTile.X + offsetX;
                 int testY = targetTile.Y + offsetY;
 
-                Vector2 testPos = TryFindGroundPosition(testX, testY, target);
+                Vector2 testPos = FindGroundPos(testX, testY, target);
                 if (testPos != Vector2.Zero)
                 {
                     bestLocation = testPos;
@@ -1545,7 +1522,7 @@ public class KinguSlime : ModNPC
                 int testY = targetTile.Y + offsetY;
 
                 // More lenient position finding
-                Vector2 testPos = TryFindGroundPositionLenient(testX, testY, target);
+                Vector2 testPos = FindGroundPosLenient(testX, testY, target);
                 if (testPos != Vector2.Zero)
                 {
                     bestLocation = testPos;
@@ -1570,7 +1547,7 @@ public class KinguSlime : ModNPC
 
             // Make sure it's not in the ground
             Point safeTile = bestLocation.ToTileCoordinates();
-            Vector2 groundPos = TryFindGroundPositionLenient(safeTile.X, safeTile.Y, target);
+            Vector2 groundPos = FindGroundPosLenient(safeTile.X, safeTile.Y, target);
             if (groundPos != Vector2.Zero)
                 bestLocation = groundPos;
         }
@@ -1584,8 +1561,7 @@ public class KinguSlime : ModNPC
         }
     }
 
-    // Helper method for strict ground position finding
-    private Vector2 TryFindGroundPosition(int startX, int startY, Player target)
+    private Vector2 FindGroundPos(int startX, int startY, Player target)
     {
         // Don't teleport too close to player
         float distToPlayer = Vector2.Distance(new Vector2(startX * 16, startY * 16), target.Center) / 16f;
@@ -1634,8 +1610,7 @@ public class KinguSlime : ModNPC
         return testPos;
     }
 
-    // Helper method for more lenient ground position finding
-    private Vector2 TryFindGroundPositionLenient(int startX, int startY, Player target)
+    private Vector2 FindGroundPosLenient(int startX, int startY, Player target)
     {
         // More lenient minimum distance
         float distToPlayer = Vector2.Distance(new Vector2(startX * 16, startY * 16), target.Center) / 16f;
@@ -1691,7 +1666,7 @@ public class KinguSlime : ModNPC
         return testPos;
     }
 
-    private void CreateTeleportDust(float velocityMultiplier)
+    private void TeleportDust(float velocityMultiplier)
     {
         if (isInvulnerable) return;
 
