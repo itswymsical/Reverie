@@ -5,10 +5,11 @@ using Terraria.Audio;
 using Terraria.GameContent;
 using Reverie.Core.Cinematics.Camera;
 using Reverie.Core.Loaders;
+using System.Collections.Generic;
 
 namespace Reverie.Content.NPCs.Bosses.KingSlime;
 
-public class KinguSlime : ModNPC
+public partial class KinguSlime : ModNPC
 {
     public override string Texture => $"{TEXTURE_DIRECTORY}NPCs/Bosses/KingSlime/KingSlime";
 
@@ -18,10 +19,62 @@ public class KinguSlime : ModNPC
         set => NPC.ai[0] = (float)value;
     }
 
+    #region Pattern Management
+
+    private enum PatternType
+    {
+        Phase1,
+        Phase2,
+        Phase3
+    }
+
+    private struct AttackPattern
+    {
+        public AIState[] States;
+        public int[] Durations;
+        public int[] Repetitions;
+
+        public AttackPattern(AIState[] states, int[] durations, int[] repetitions)
+        {
+            States = states;
+            Durations = durations;
+            Repetitions = repetitions;
+        }
+    }
+
+    private static readonly Dictionary<PatternType, AttackPattern> AttackPatterns = new()
+    {
+        [PatternType.Phase1] = new AttackPattern(
+            new[] { AIState.Strolling, AIState.Jumping, AIState.Strolling, AIState.GroundPound, AIState.Strolling, AIState.Jumping },
+            new[] { 180, -1, 120, -1, 240, -1 },
+            new[] { 1, 3, 1, 1, 1, 2 }
+        ),
+
+        [PatternType.Phase2] = new AttackPattern(
+            new[] { AIState.Strolling, AIState.Jumping, AIState.ConsumingSlimes, AIState.GroundPound, AIState.Strolling, AIState.BounceHouse },
+            new[] { 150, -1, -1, -1, 180, -1 }, // BounceHouse waits for completion
+            new[] { 1, 4, 1, 1, 1, 1 } // Single BounceHouse attack
+        ),
+
+        [PatternType.Phase3] = new AttackPattern(
+            new[] { AIState.Jumping, AIState.BounceHouse, AIState.ConsumingSlimes, AIState.GroundPound, AIState.BounceHouse },
+            new[] { -1, -1, -1, -1, -1 },
+            new[] { 5, 1, 1, 4, 1 } // More frequent BounceHouse in final phase
+        )
+    };
+
+    private PatternType currentPattern = PatternType.Phase1;
+    private int patternStep = 0;
+    private int currentRepetition = 0;
+    private int patternTimer = 0;
+    private bool patternOverride = false;
+
+    #endregion
+
     private void UpdateScale()
     {
         float healthPercentage = (float)NPC.life / NPC.lifeMax;
-        float newScale = MathHelper.Lerp(0.65f, 1.35f, healthPercentage);
+        float newScale = MathHelper.Lerp(0.65f, 1.55f, healthPercentage);
 
         if (newScale < 0.45f)
             newScale = 0.45f;
@@ -60,7 +113,7 @@ public class KinguSlime : ModNPC
 
     private float GetScaledJumpHeight()
     {
-        float baseHeight = -8.5f;
+        float baseHeight = -11.5f;
         float scaleMultiplier = MathHelper.Lerp(1.4f, 0.8f, NPC.scale / 1.35f);
         return baseHeight * scaleMultiplier;
     }
@@ -74,7 +127,8 @@ public class KinguSlime : ModNPC
         GroundPound,
         Teleporting,
         Despawning,
-        ConsumingSlimes
+        ConsumingSlimes,
+        BounceHouse
     }
 
     internal enum TeleportPhase
@@ -110,11 +164,11 @@ public class KinguSlime : ModNPC
 
     // Teleportation constants
     private const int DESPAWN_DISTANCE = 3000;
-    private const float TELEPORT_COOLDOWN = 180f;
+    private const float TELEPORT_COOLDOWN = 240f;
     private const int TELEPORT_SEARCH_ATTEMPTS = 100;
     private const int TELEPORT_RADIUS = 20;
     private const int TELEPORT_AVOID_RADIUS = 7;
-    private const float LINE_OF_SIGHT_TIMEOUT = 180f;
+    private const float LINE_OF_SIGHT_TIMEOUT = 240f;
 
     private float lastConsumeTime = -CONSUME_COOLDOWN;
 
@@ -132,6 +186,12 @@ public class KinguSlime : ModNPC
     private const float STUCK_TIMEOUT = 180f;
     private const float MIN_MOVEMENT_THRESHOLD = 16f;
 
+    private int bounceHouseSlams = 0;
+    private int targetBounceSlams = 3;
+    private const float BOUNCE_HOUSE_JUMP_HEIGHT = -16f;
+    private const float BOUNCE_HOUSE_SLAM_SPEED = 16f;
+    private Vector2 bounceHouseTargetPos;
+    private bool bounceHouseTargetSet = false;
     public override void SetStaticDefaults()
     {
         base.SetStaticDefaults();
@@ -171,6 +231,7 @@ public class KinguSlime : ModNPC
                 return;
             }
         }
+
         Timer++;
         UpdateScale();
         HandleSquishScale();
@@ -179,7 +240,8 @@ public class KinguSlime : ModNPC
         HandleSlimeTrail();
 
         UpdateLineOfSightTracking(target);
-        CheckTeleportConditions(target);
+        HandlePatternTeleport(target);
+        UpdatePatternFlow(target);
 
         switch (State)
         {
@@ -198,18 +260,279 @@ public class KinguSlime : ModNPC
             case AIState.ConsumingSlimes:
                 DoConsumingSlimes(target);
                 break;
+            case AIState.BounceHouse:
+                DoBounceHouse(target); // Placeholder for future implementation
+                break;
         }
+
         NPCUtils.SlopedCollision(NPC);
         NPCUtils.CheckPlatform(NPC, target);
     }
 
-    private void DoStrolling(Player target)
+    #region Pattern System Implementation
+
+    private PatternType GetCurrentPhase()
     {
-        if (Timer == 1)
+        float healthPercent = (float)NPC.life / NPC.lifeMax;
+
+        PatternType phase;
+        if (healthPercent <= 0.25f)
+            phase = PatternType.Phase3;
+        else if (healthPercent <= 0.60f)
+            phase = PatternType.Phase2;
+        else
+            phase = PatternType.Phase1;
+
+        if (Main.netMode != NetmodeID.Server && Timer % 180 == 0)
+            Main.NewText($"[DEBUG] Health: {(int)(healthPercent * 100)}% -> {phase}", Color.Magenta);
+
+        return phase;
+    }
+
+    private void UpdatePatternFlow(Player target)
+    {
+        if (patternOverride)
         {
-            targetStrolls = Main.rand.NextBool() ? 3 : 6;
+            if (Main.netMode != NetmodeID.Server && patternTimer % 60 == 0)
+                Main.NewText($"[DEBUG] Pattern Override Active - {State}", Color.Orange);
+
+            patternTimer++;
+            return;
         }
 
+        PatternType targetPhase = GetCurrentPhase();
+        if (currentPattern != targetPhase)
+        {
+            TransitionToPhase(targetPhase);
+            return;
+        }
+
+        var pattern = AttackPatterns[currentPattern];
+        AIState currentPatternState = pattern.States[patternStep];
+
+        if (Main.netMode != NetmodeID.Server && patternTimer % 60 == 0)
+        {
+            string durationType = pattern.Durations[patternStep] > 0 ? "Fixed" : "Complete";
+            Main.NewText($"[DEBUG] {currentPattern} Step:{patternStep} State:{currentPatternState} Rep:{currentRepetition}/{pattern.Repetitions[patternStep]} Timer:{patternTimer} ({durationType})", Color.Cyan);
+        }
+
+        bool shouldAdvance = false;
+
+        if (pattern.Durations[patternStep] > 0)
+        {
+            if (patternTimer >= pattern.Durations[patternStep])
+                shouldAdvance = true;
+        }
+        else
+        {
+            if (IsCurrentAttackComplete())
+                shouldAdvance = true;
+        }
+
+        if (shouldAdvance)
+        {
+            currentRepetition++;
+
+            if (Main.netMode != NetmodeID.Server)
+                Main.NewText($"[DEBUG] Advancing - Rep {currentRepetition}/{pattern.Repetitions[patternStep]}", Color.Yellow);
+
+            if (currentRepetition >= pattern.Repetitions[patternStep])
+            {
+                AdvancePatternStep();
+            }
+            else
+            {
+                if (Main.netMode != NetmodeID.Server)
+                    Main.NewText($"[DEBUG] Repeating {currentPatternState}", Color.LightBlue);
+                StartPatternAttack(currentPatternState, target);
+            }
+
+            patternTimer = 0;
+        }
+
+        patternTimer++;
+    }
+
+    private void TransitionToPhase(PatternType newPhase)
+    {
+        if (Main.netMode != NetmodeID.Server)
+            Main.NewText($"[DEBUG] PHASE TRANSITION: {currentPattern} -> {newPhase}", Color.Lime);
+
+        currentPattern = newPhase;
+        patternStep = 0;
+        currentRepetition = 0;
+        patternTimer = 0;
+
+        var pattern = AttackPatterns[currentPattern];
+        StartPatternAttack(pattern.States[0], Main.player[NPC.target]);
+    }
+
+    private void AdvancePatternStep()
+    {
+        var pattern = AttackPatterns[currentPattern];
+
+        patternStep++;
+        currentRepetition = 0;
+
+        if (patternStep >= pattern.States.Length)
+        {
+            patternStep = 0;
+            if (Main.netMode != NetmodeID.Server)
+                Main.NewText($"[DEBUG] Pattern Loop Complete - Restarting {currentPattern}", Color.Pink);
+        }
+
+        if (Main.netMode != NetmodeID.Server)
+            Main.NewText($"[DEBUG] Step Advance: {patternStep - 1} -> {patternStep} ({pattern.States[patternStep]})", Color.LightGreen);
+
+        StartPatternAttack(pattern.States[patternStep], Main.player[NPC.target]);
+    }
+
+    private void StartPatternAttack(AIState newState, Player target)
+    {
+        State = newState;
+        Timer = 0;
+
+        var pattern = AttackPatterns[currentPattern];
+
+        if (Main.netMode != NetmodeID.Server)
+            Main.NewText($"[DEBUG] Starting Attack: {newState} (Rep {currentRepetition + 1}/{pattern.Repetitions[patternStep]})", Color.White);
+
+        switch (newState)
+        {
+            case AIState.Jumping:
+                JumpPhase = 0;
+                if (Main.netMode != NetmodeID.Server)
+                    Main.NewText($"[DEBUG] Jump charging - need 40 ticks", Color.Gray);
+                break;
+
+            case AIState.GroundPound:
+                JumpPhase = 0;
+                groundPoundCount = 0;
+
+                int maxReps = pattern.Repetitions[patternStep];
+
+                if (maxReps >= 3)
+                    targetGroundPounds = 3;
+                else if (maxReps >= 2)
+                    targetGroundPounds = 2;
+                else
+                    targetGroundPounds = 1;
+
+                if (Main.netMode != NetmodeID.Server)
+                    Main.NewText($"[DEBUG] Ground Pound Setup: {targetGroundPounds} pounds", Color.Gray);
+                break;
+
+            case AIState.BounceHouse:
+                JumpPhase = 0;
+                bounceHouseSlams = 0;
+                bounceHouseTargetSet = false; // Reset target lock
+                targetBounceSlams = Main.rand.Next(3, 6); // 3-5 rapid slams
+
+                if (Main.netMode != NetmodeID.Server)
+                    Main.NewText($"[DEBUG] BounceHouse Setup: {targetBounceSlams} slams", Color.Purple);
+                break;
+
+            case AIState.ConsumingSlimes:
+                if (!HasNearbySlimes())
+                {
+                    if (Main.netMode != NetmodeID.Server)
+                        Main.NewText($"[DEBUG] No slimes nearby - skipping consume", Color.Red);
+                    AdvancePatternStep();
+                    return;
+                }
+                if (Main.netMode != NetmodeID.Server)
+                    Main.NewText($"[DEBUG] Slimes detected - starting consume", Color.Gray);
+                break;
+
+            case AIState.Strolling:
+                StrollCount = 0;
+                targetStrolls = pattern.Durations[patternStep] > 0 ? 1 : 3;
+                if (Main.netMode != NetmodeID.Server)
+                    Main.NewText($"[DEBUG] Stroll Setup: {targetStrolls} strolls", Color.Gray);
+                break;
+        }
+
+        NPC.netUpdate = true;
+    }
+
+    private bool IsCurrentAttackComplete()
+    {
+        switch (State)
+        {
+            case AIState.Jumping:
+                return JumpPhase == 1 && NPC.velocity.Y == 0f && Timer > 30;
+
+            case AIState.GroundPound:
+                return JumpPhase == 3 && Timer >= 90f && groundPoundCount >= targetGroundPounds;
+
+            case AIState.BounceHouse:
+                return bounceHouseSlams >= targetBounceSlams && NPC.velocity.Y == 0f && Timer > 60;
+
+            case AIState.ConsumingSlimes:
+                return Timer >= 450f || !HasNearbySlimes();
+
+            case AIState.Strolling:
+                return StrollCount >= targetStrolls;
+
+            case AIState.Teleporting:
+                return teleportPhase == TeleportPhase.Prepare && Timer >= 25f;
+
+            default:
+                return true;
+        }
+    }
+
+    private void HandlePatternTeleport(Player target)
+    {
+        // Don't trigger teleport during BounceHouse or other critical attacks
+        if (patternOverride || State == AIState.Teleporting || State == AIState.ConsumingSlimes ||
+            State == AIState.BounceHouse || // No teleports during BounceHouse
+            (State == AIState.GroundPound && JumpPhase != 0) ||
+            (State == AIState.Jumping && NPC.velocity.Y != 0f))
+            return;
+
+        float distToPlayer = Vector2.Distance(NPC.Center, target.Center);
+        bool shouldTeleport = false;
+
+        if (distToPlayer > 1000f && teleportTimer >= TELEPORT_COOLDOWN * 0.8f)
+            shouldTeleport = true;
+
+        if (stuckTimer >= STUCK_TIMEOUT)
+            shouldTeleport = true;
+
+        if (lineOfSightTimer >= LINE_OF_SIGHT_TIMEOUT * 1.5f)
+            shouldTeleport = true;
+
+        if (shouldTeleport && Main.netMode != NetmodeID.MultiplayerClient)
+        {
+            if (Main.netMode != NetmodeID.Server)
+                Main.NewText($"[DEBUG] TELEPORT OVERRIDE INITIATED - Distance: {(int)distToPlayer}", Color.Red);
+
+            patternOverride = true;
+            BeginTeleport(target);
+
+            if (Main.netMode != NetmodeID.Server)
+                Main.NewText($"[DEBUG] Teleport state set to: {State}", Color.Yellow);
+        }
+    }
+
+    private void ResumeBattlePattern()
+    {
+        if (Main.netMode != NetmodeID.Server)
+            Main.NewText($"[DEBUG] Resuming Pattern - {currentPattern} Step:{patternStep}", Color.Green);
+
+        patternOverride = false;
+
+        var pattern = AttackPatterns[currentPattern];
+        StartPatternAttack(pattern.States[patternStep], Main.player[NPC.target]);
+    }
+
+    #endregion
+
+    #region State Methods - No Direct Transitions
+
+    private void DoStrolling(Player target)
+    {
         float distToPlayer = Vector2.Distance(NPC.Center, target.Center);
         float dirToPlayer = Math.Sign(target.Center.X - NPC.Center.X);
         float strollDuration = 54f;
@@ -234,58 +557,25 @@ public class KinguSlime : ModNPC
         if (Timer >= strollDuration)
         {
             StrollCount++;
-
-            if (StrollCount >= targetStrolls)
-            {
-                // Check for consumption opportunity first
-                if (ShouldConsumeSlime())
-                {
-                    State = AIState.ConsumingSlimes;
-                    Timer = 0;
-                    StrollCount = 0;
-                    return;
-                }
-
-                // Original attack selection logic
-                float attackRoll = Main.rand.NextFloat();
-
-                if (attackRoll < 0.6f)
-                {
-                    State = AIState.Jumping;
-                    JumpPhase = 0;
-                }
-                else if (attackRoll < 0.55f)
-                {
-                    State = AIState.GroundPound;
-                    JumpPhase = 0;
-                    targetGroundPounds = 1;
-                    groundPoundCount = 0;
-                }
-                else
-                {
-                    State = AIState.GroundPound;
-                    JumpPhase = 0;
-                    targetGroundPounds = 3;
-                    groundPoundCount = 0;
-                }
-                StrollCount = 0;
-            }
             Timer = 0;
         }
     }
 
     private void DoJumping(Player target)
     {
+        float dirToPlayer = Math.Sign(target.Center.X - NPC.Center.X);
+        NPC.spriteDirection = -Math.Sign(dirToPlayer);
+
         if (NPC.velocity.Y == 0f)
         {
-            NPC.velocity.X *= 0.5f;
+            NPC.velocity.X *= 0.98f;
             if (Math.Abs(NPC.velocity.X) < 0.1f)
                 NPC.velocity.X = 0f;
+
             if (Timer >= 40f)
             {
                 NPC.netUpdate = true;
-                float dirToPlayer = Math.Sign(target.Center.X - NPC.Center.X);
-                NPC.spriteDirection = -Math.Sign(dirToPlayer);
+
                 float baseJumpHeight = GetScaledJumpHeight();
                 float baseXVelocity = 2.15f;
                 float overshootMod = Main.rand.NextFloat() < 0.33f ? 1.3f : 1f;
@@ -298,7 +588,6 @@ public class KinguSlime : ModNPC
         }
         else
         {
-            float dirToPlayer = Math.Sign(target.Center.X - NPC.Center.X);
             float maxSpeed = 4f;
             if ((dirToPlayer == 1 && NPC.velocity.X < maxSpeed) ||
                 (dirToPlayer == -1 && NPC.velocity.X > -maxSpeed))
@@ -308,10 +597,7 @@ public class KinguSlime : ModNPC
 
             if (Timer > 30 && NPC.velocity.Y > 0)
             {
-                State = AIState.Strolling;
-                JumpPhase = 0;
-                Timer = 0;
-                // Start wobble after landing
+                // Let pattern system handle transitions
                 isWobbling = true;
                 wobbleTimer = 0f;
             }
@@ -324,19 +610,18 @@ public class KinguSlime : ModNPC
 
         switch (JumpPhase)
         {
-            case 0: // Charging phase
+            case 0:
                 NPC.velocity.X *= 0.5f;
                 if (Math.Abs(NPC.velocity.X) < 0.1f)
                     NPC.velocity.X = 0f;
 
-                // Handle combo delay timing - rapid combo attacks
                 float chargeTime;
                 if (targetGroundPounds > 1 && groundPoundCount > 0)
-                    chargeTime = 25f; // Very fast for combo follow-ups
+                    chargeTime = 25f;
                 else if (Timer < 0)
-                    chargeTime = 45f; // Normal follow-up
+                    chargeTime = 45f;
                 else
-                    chargeTime = 60f; // Initial attack
+                    chargeTime = 60f;
 
                 if (Timer >= chargeTime)
                 {
@@ -361,7 +646,7 @@ public class KinguSlime : ModNPC
                 }
                 break;
 
-            case 1: // Airborne
+            case 1:
                 NPC.damage = 30;
                 float maxSpeed = 3f;
                 if ((dirToPlayer == 1 && NPC.velocity.X < maxSpeed) ||
@@ -370,7 +655,6 @@ public class KinguSlime : ModNPC
                     NPC.velocity.X += 0.1f * dirToPlayer;
                 }
 
-                // Update sprite direction to face movement direction
                 if (Math.Abs(NPC.velocity.X) > 0.1f)
                     NPC.spriteDirection = -Math.Sign(NPC.velocity.X);
 
@@ -380,14 +664,13 @@ public class KinguSlime : ModNPC
                         target.Center.X > NPC.Center.X ? 2f : -2f,
                         12f
                     );
-                    // Update sprite direction for slam direction
                     NPC.spriteDirection = target.Center.X > NPC.Center.X ? -1 : 1;
                     JumpPhase = 2;
                     Timer = 0;
                 }
                 break;
 
-            case 2: // Slamming down
+            case 2:
                 dirToPlayer = Math.Sign(target.Center.X - NPC.Center.X);
                 if (Timer % 10 == 0)
                     NPC.spriteDirection = -Math.Sign(dirToPlayer);
@@ -411,6 +694,7 @@ public class KinguSlime : ModNPC
                 {
                     SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}SlimeSlam") with { PitchVariance = 0.2f }, NPC.Center);
                     CameraSystem.shake = 6;
+
                     for (int i = 0; i < 30; i++)
                     {
                         Vector2 dustVel = Vector2.One.RotatedBy(MathHelper.ToRadians(i * 12)) * 8f;
@@ -420,15 +704,13 @@ public class KinguSlime : ModNPC
                         dust.scale = 2f;
                     }
 
-                    // Calculate distance to player in tiles
                     float distToPlayer = Vector2.Distance(NPC.Center, target.Center) / 16f;
 
-                    // Scale projectile count and velocity based on distance
                     int gelBallCount;
                     float baseVelocity;
                     float velocityVariance;
 
-                    if (distToPlayer <= 20f) // Close range
+                    if (distToPlayer <= 20f)
                     {
                         gelBallCount = 8;
                         baseVelocity = 5.5f;
@@ -481,7 +763,6 @@ public class KinguSlime : ModNPC
                 }
                 else
                 {
-                    // Gliding acceleration
                     float timeInPhase = Timer;
                     float accelCurve = MathHelper.Clamp(timeInPhase / 20f, 0.1f, 1f);
                     float baseAccel = 0.25f;
@@ -503,36 +784,274 @@ public class KinguSlime : ModNPC
                 }
                 break;
 
-            case 3: // Recovery with wobble
+            case 3:
                 NPC.damage = 12;
                 NPC.velocity *= 0.8f;
 
-                // Shorter recovery time for combo attacks
                 float recoveryTime = targetGroundPounds > 1 ? 45f : 90f;
 
                 if (Timer >= recoveryTime)
                 {
                     groundPoundCount++;
 
-                    if (groundPoundCount >= targetGroundPounds)
+                    if (groundPoundCount < targetGroundPounds)
                     {
-                        State = AIState.Strolling;
                         JumpPhase = 0;
-                        Timer = 0;
+                        Timer = -15f;
                         isWobbling = false;
-                        groundPoundCount = 0;
                     }
                     else
                     {
+                        isWobbling = false;
+                    }
+                }
+                break;
+        }
+    }
+    private void DoBounceHouse(Player target)
+    {
+        // Lock target position at the start of the attack sequence
+        if (!bounceHouseTargetSet)
+        {
+            bounceHouseTargetPos = target.Center;
+            bounceHouseTargetSet = true;
+
+            if (Main.netMode != NetmodeID.Server)
+                Main.NewText($"[DEBUG] BounceHouse target locked at player position", Color.Purple);
+        }
+
+        switch (JumpPhase)
+        {
+            case 0: // Setup and launch phase
+                NPC.velocity.X *= 0.5f;
+                if (Math.Abs(NPC.velocity.X) < 0.1f)
+                    NPC.velocity.X = 0f;
+
+                // Shorter charge time for rapid succession
+                float chargeTime = bounceHouseSlams > 0 ? 15f : 45f; // First slam takes longer, rest are rapid
+
+                if (Timer >= chargeTime)
+                {
+                    NPC.netUpdate = true;
+
+                    // Face the locked target position, not current player position
+                    float dirToTarget = Math.Sign(bounceHouseTargetPos.X - NPC.Center.X);
+                    NPC.spriteDirection = -Math.Sign(dirToTarget);
+
+                    // Sound effect
+                    SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}SlimeSlamCharge") with { PitchVariance = 0.2f }, NPC.Center);
+
+                    // Higher jump for BounceHouse
+                    NPC.velocity.Y = BOUNCE_HOUSE_JUMP_HEIGHT; // -16f vs normal -8.5f
+                    NPC.velocity.X = 3f * dirToTarget; // Slightly more horizontal movement
+
+                    // Charge-up dust effect
+                    for (int i = 0; i < 12; i++)
+                    {
+                        Dust dust = Dust.NewDustDirect(NPC.position, NPC.width, NPC.height,
+                            DustID.t_Slime, NPC.velocity.X * 0.4f, NPC.velocity.Y * 0.4f,
+                            150, new Color(86, 162, 255, 100), 1.8f); // Slightly bigger dust
+                        dust.noGravity = true;
+                        dust.velocity *= 0.5f;
+                    }
+
+                    JumpPhase = 1;
+                    Timer = 0;
+                }
+                break;
+
+            case 1: // Airborne phase - move toward locked target
+                NPC.damage = 35; // Higher damage than ground pound
+
+                // Move toward the LOCKED target position, not current player
+                float dirToLockedTarget = Math.Sign(bounceHouseTargetPos.X - NPC.Center.X);
+                float maxSpeed = 4f;
+
+                if ((dirToLockedTarget == 1 && NPC.velocity.X < maxSpeed) ||
+                    (dirToLockedTarget == -1 && NPC.velocity.X > -maxSpeed))
+                {
+                    NPC.velocity.X += 0.15f * dirToLockedTarget;
+                }
+
+                // Update sprite direction based on movement
+                if (Math.Abs(NPC.velocity.X) > 0.1f)
+                    NPC.spriteDirection = -Math.Sign(NPC.velocity.X);
+
+                // Transition to slam when falling
+                if (NPC.velocity.Y > 0f)
+                {
+                    // Aim for locked target position
+                    NPC.velocity = new Vector2(
+                        bounceHouseTargetPos.X > NPC.Center.X ? 3f : -3f,
+                        BOUNCE_HOUSE_SLAM_SPEED // 16f - faster than ground pound
+                    );
+                    NPC.spriteDirection = bounceHouseTargetPos.X > NPC.Center.X ? -1 : 1;
+                    JumpPhase = 2;
+                    Timer = 0;
+                }
+                break;
+
+            case 2: // Slamming down phase
+                    // Keep facing slam direction
+                float slamDir = Math.Sign(bounceHouseTargetPos.X - NPC.Center.X);
+                if (Timer % 8 == 0) // Faster sprite updates
+                    NPC.spriteDirection = -Math.Sign(slamDir);
+
+                // Ground detection
+                bool hitGround = false;
+                int tileX = (int)(NPC.position.X / 16);
+                int tileEndX = (int)((NPC.position.X + NPC.width) / 16);
+                int tileY = (int)((NPC.position.Y + NPC.height) / 16);
+
+                for (int i = tileX; i <= tileEndX; i++)
+                {
+                    Tile tile = Framing.GetTileSafely(i, tileY);
+                    if (tile.HasTile && Main.tileSolid[tile.TileType] && !Main.tileSolidTop[tile.TileType])
+                    {
+                        hitGround = true;
+                        break;
+                    }
+                }
+
+                if (hitGround || NPC.velocity.Y == 0f)
+                {
+                    // Impact effects
+                    SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}SlimeSlam") with { PitchVariance = 0.2f }, NPC.Center);
+                    CameraSystem.shake = 8; // Slightly less shake than ground pound to avoid spam
+
+                    // Impact dust
+                    for (int i = 0; i < 25; i++)
+                    {
+                        Vector2 dustVel = Vector2.One.RotatedBy(MathHelper.ToRadians(i * 14.4f)) * 9f;
+                        Dust dust = Dust.NewDustDirect(NPC.Center, 0, 0, DustID.t_Slime, dustVel.X, dustVel.Y,
+                            newColor: new Color(86, 162, 255, 100));
+                        dust.noGravity = true;
+                        dust.scale = 2.2f;
+                    }
+
+                    // Enhanced projectile barrage for BounceHouse
+                    SpawnBounceHouseProjectiles(bounceHouseTargetPos); // Use locked position
+
+                    // Spawn extra slimes occasionally
+                    if (Main.rand.NextBool(3))
+                    {
+                        Vector2 spawnPos = NPC.Center + new Vector2(0f, NPC.height / 2f);
+                        int leftSlime = NPC.NewNPC(NPC.GetSource_FromAI(), (int)spawnPos.X - 25, (int)spawnPos.Y, NPCID.BlueSlime);
+                        if (leftSlime < Main.maxNPCs)
+                        {
+                            Main.npc[leftSlime].velocity = new Vector2(-5f + Main.rand.NextFloat(-1.5f, 0f),
+                                                                       -4f + Main.rand.NextFloat(-1f, 1f));
+                            Main.npc[leftSlime].scale = 1.3f;
+                        }
+                        int rightSlime = NPC.NewNPC(NPC.GetSource_FromAI(), (int)spawnPos.X + 25, (int)spawnPos.Y, NPCID.GreenSlime);
+                        if (rightSlime < Main.maxNPCs)
+                        {
+                            Main.npc[rightSlime].velocity = new Vector2(5f + Main.rand.NextFloat(0f, 1.5f),
+                                                                        -4f + Main.rand.NextFloat(-1f, 1f));
+                            Main.npc[rightSlime].scale = 1.3f;
+                        }
+                    }
+
+                    JumpPhase = 3;
+                    Timer = 0;
+                    isWobbling = true;
+                    wobbleTimer = 0f;
+                    bounceHouseSlams++;
+
+                    if (Main.netMode != NetmodeID.Server)
+                        Main.NewText($"[DEBUG] BounceHouse slam {bounceHouseSlams}/{targetBounceSlams}", Color.Purple);
+                }
+                else
+                {
+                    // Accelerating fall with enhanced effects
+                    float timeInPhase = Timer;
+                    float accelCurve = MathHelper.Clamp(timeInPhase / 15f, 0.1f, 1f); // Faster acceleration curve
+                    float baseAccel = 0.4f; // Faster than ground pound
+                    float currentAccel = baseAccel + (accelCurve * 0.6f);
+
+                    NPC.velocity.Y += currentAccel;
+
+                    if (NPC.velocity.Y > BOUNCE_HOUSE_SLAM_SPEED)
+                        NPC.velocity.Y = BOUNCE_HOUSE_SLAM_SPEED;
+
+                    // More frequent dust trail
+                    if (Main.rand.NextBool(2))
+                    {
+                        Dust dust = Dust.NewDustDirect(NPC.position, NPC.width, NPC.height,
+                            DustID.t_Slime, NPC.velocity.X * 0.5f, NPC.velocity.Y * 0.3f,
+                            150, new Color(86, 162, 255, 100), 1.6f);
+                        dust.noGravity = true;
+                        dust.velocity *= 0.5f;
+                    }
+                }
+                break;
+
+            case 3: // Brief recovery phase
+                NPC.damage = 12; // Reset damage
+                NPC.velocity *= 0.85f; // Faster deceleration
+
+                // Very short recovery for rapid succession
+                float recoveryTime = 10f; // Much shorter than ground pound's 45-90f
+
+                if (Timer >= recoveryTime)
+                {
+                    if (bounceHouseSlams < targetBounceSlams)
+                    {
+                        // Continue the combo - go back to charging
                         JumpPhase = 0;
                         Timer = 0;
                         isWobbling = false;
 
-                        // Brief pause between combo attacks
-                        Timer = -15f; // Negative timer for short delay
+                        if (Main.netMode != NetmodeID.Server)
+                            Main.NewText($"[DEBUG] BounceHouse continuing combo", Color.LightBlue);
+                    }
+                    else
+                    {
+                        // Attack sequence complete - reset for next time
+                        bounceHouseTargetSet = false;
+                        isWobbling = false;
+
+                        if (Main.netMode != NetmodeID.Server)
+                            Main.NewText($"[DEBUG] BounceHouse sequence complete!", Color.Green);
                     }
                 }
                 break;
+        }
+    }
+
+    private void SpawnBounceHouseProjectiles(Vector2 targetPos)
+    {
+        // Always use high projectile count for BounceHouse spectacle
+        int gelBallCount = 28; // Even more than we planned
+        float baseVelocity = 9f;
+        float velocityVariance = 3f;
+
+        // Wider arc for more coverage
+        float startAngle = -MathHelper.PiOver2 - 1.3f; // Wider than ground pound
+        float endAngle = -MathHelper.PiOver2 + 1.3f;
+
+        for (int i = 0; i < gelBallCount; i++)
+        {
+            float angle = MathHelper.Lerp(startAngle, endAngle, (float)i / (gelBallCount - 1));
+            Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) *
+                              (baseVelocity + Main.rand.NextFloat(-velocityVariance, velocityVariance));
+
+            // Spawn with more spread
+            Vector2 spawnPos = NPC.Center + new Vector2(Main.rand.NextFloat(-35f, 35f), 0f);
+            int projType = ModContent.ProjectileType<GelBallProjectile>();
+            Projectile.NewProjectile(NPC.GetSource_FromAI(), spawnPos, velocity, projType, 4, 0.7f); // Higher damage and knockback
+        }
+
+        // Add some extra projectiles aimed more directly at the locked target
+        for (int i = 0; i < 8; i++)
+        {
+            Vector2 toTarget = targetPos - NPC.Center;
+            float targetAngle = toTarget.ToRotation() + Main.rand.NextFloat(-0.5f, 0.5f); // Some spread around target
+            Vector2 velocity = targetAngle.ToRotationVector2() * (7f + Main.rand.NextFloat(-1f, 2f));
+
+            Vector2 spawnPos = NPC.Center + new Vector2(Main.rand.NextFloat(-20f, 20f), -10f);
+            int projType = ModContent.ProjectileType<GelBallProjectile>();
+            Projectile.NewProjectile(NPC.GetSource_FromAI(), spawnPos, velocity, projType, 5, 0.8f); // Even higher damage for targeted shots
         }
     }
 
@@ -543,7 +1062,6 @@ public class KinguSlime : ModNPC
             case TeleportPhase.Prepare:
                 NPC.aiAction = 1;
 
-                // Fade out effect (first 20 frames)
                 if (Timer <= 20f)
                 {
                     float fadeProgress = MathHelper.Clamp((20f - Timer) / 20f, 0f, 1f);
@@ -556,7 +1074,6 @@ public class KinguSlime : ModNPC
                         NPC.hide = true;
                     }
 
-                    // Gore effect when becoming invisible
                     if (Timer == 20f)
                     {
                         Gore.NewGore(NPC.GetSource_FromAI(),
@@ -564,10 +1081,9 @@ public class KinguSlime : ModNPC
                                     NPC.velocity, 734);
                     }
                 }
-                // Transition phase (frames 20-35) - snap to destination quickly
                 else if (Timer <= 35f)
                 {
-                    float transitionProgress = (Timer - 20f) / 15f; // 0 to 1 over 15 frames
+                    float transitionProgress = (Timer - 20f) / 15f;
 
                     if (Timer == 21f)
                     {
@@ -575,14 +1091,13 @@ public class KinguSlime : ModNPC
                     }
 
                     NPC.Bottom = Vector2.Lerp(teleportStartPos, teleportDestination,
-                        EaseFunction.EaseQuadOut.Ease(transitionProgress)); // Faster easing
+                        EaseFunction.EaseQuadOut.Ease(transitionProgress));
 
                     NPC.hide = true;
                     isInvulnerable = true;
                     NPC.dontTakeDamage = true;
                     teleportScaleMultiplier = 0.5f;
                 }
-                // Transition complete, start fade-in
                 else if (Timer >= 35f && Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     teleportPhase = TeleportPhase.Execute;
@@ -590,13 +1105,12 @@ public class KinguSlime : ModNPC
                     NPC.netUpdate = true;
                 }
 
-                CreateTeleportDust(1f); // More intense dust
+                CreateTeleportDust(1f);
                 break;
 
             case TeleportPhase.Execute:
                 NPC.aiAction = 0;
 
-                // Wind-up phase (frames 0-10) - very brief anticipation
                 if (Timer <= 10f)
                 {
                     NPC.hide = true;
@@ -605,26 +1119,25 @@ public class KinguSlime : ModNPC
                     teleportScaleMultiplier = 0.5f;
 
                     float windUpProgress = Timer / 10f;
-                    float dustIntensity = 1f + windUpProgress * 2f; // More intense buildup
+                    float dustIntensity = 1f + windUpProgress * 2f;
                     CreateTeleportDust(dustIntensity);
 
-                    if (Timer == 5f) // Quick sound effect
+                    if (Timer == 5f)
                     {
                         SoundEngine.PlaySound(SoundID.QueenSlime with { PitchVariance = 0.2f }, NPC.Center);
                     }
 
-                    if (Timer > 5f && Timer % 2 == 0) // Rapid shake
+                    if (Timer > 5f && Timer % 2 == 0)
                     {
                         CameraSystem.shake = (int)(3 + windUpProgress * 4);
                     }
                 }
-                // Fade-in phase (frames 10-25) - rapid emergence
                 else if (Timer <= 25f)
                 {
                     float fadeInProgress = MathHelper.Clamp((Timer - 10f) / 15f, 0f, 1f);
                     teleportScaleMultiplier = 0.5f + fadeInProgress * 0.5f;
 
-                    if (fadeInProgress >= 0.1f) // Show slime almost immediately
+                    if (fadeInProgress >= 0.1f)
                     {
                         NPC.hide = false;
                         isInvulnerable = false;
@@ -637,24 +1150,27 @@ public class KinguSlime : ModNPC
                         NPC.dontTakeDamage = true;
                     }
 
-                    CreateTeleportDust(3f - fadeInProgress * 2f); // Intense dust that fades
+                    CreateTeleportDust(3f - fadeInProgress * 2f);
                 }
-                // Teleport complete - back to action!
                 else if (Timer >= 25f && Main.netMode != NetmodeID.MultiplayerClient)
                 {
-                    State = AIState.Strolling;
-                    Timer = 0;
-                    NPC.netUpdate = true;
-                    NPC.TargetClosest();
-                    NPC.hide = false;
-                    isInvulnerable = false;
-                    NPC.dontTakeDamage = false;
-                    teleportScaleMultiplier = 1f;
-                    teleportPhase = TeleportPhase.Prepare;
-                    lastPosition = NPC.Center;
+                    CompleteTeleport();
                 }
                 break;
         }
+    }
+
+    private void CompleteTeleport()
+    {
+        NPC.TargetClosest();
+        NPC.hide = false;
+        isInvulnerable = false;
+        NPC.dontTakeDamage = false;
+        teleportScaleMultiplier = 1f;
+        teleportPhase = TeleportPhase.Prepare;
+        lastPosition = NPC.Center;
+
+        ResumeBattlePattern();
     }
 
     private void DoConsumingSlimes(Player target)
@@ -730,18 +1246,21 @@ public class KinguSlime : ModNPC
         if (Timer >= 450f || !HasNearbySlimes())
         {
             lastConsumeTime = Main.GameUpdateCount;
-            State = AIState.Strolling;
-            Timer = 0;
+            // Let pattern system handle transition
             isWobbling = true;
             wobbleTimer = 0f;
         }
     }
 
+    #endregion
+
+    #region Helper Methods (unchanged)
+
     public override void FindFrame(int frameHeight)
     {
         if (State == AIState.Jumping)
         {
-            if (NPC.velocity.Y == 0f) // Charging jump
+            if (NPC.velocity.Y == 0f)
             {
                 float animSpeed = 4f;
                 NPC.frameCounter++;
@@ -757,14 +1276,14 @@ public class KinguSlime : ModNPC
                     }
                 }
             }
-            else // Airborne
+            else
             {
                 NPC.frame.Y = frameHeight * 5;
             }
         }
         else if (State == AIState.GroundPound)
         {
-            if (JumpPhase == 0) // Charging ground pound
+            if (JumpPhase == 0)
             {
                 float animSpeed = 2.5f;
                 NPC.frameCounter++;
@@ -780,21 +1299,20 @@ public class KinguSlime : ModNPC
                     }
                 }
             }
-            else if (JumpPhase == 3) // Recovery wobble phase
+            else if (JumpPhase == 3)
             {
-                float animSpeed = 3f; // Wobble animation speed
+                float animSpeed = 3f;
                 NPC.frameCounter++;
                 if (NPC.frameCounter >= animSpeed)
                 {
                     NPC.frameCounter = 0;
                     NPC.frame.Y += frameHeight;
 
-                    // Loop through frames 0-2 for wobble
                     if (NPC.frame.Y > frameHeight * 2)
                         NPC.frame.Y = 0;
                 }
             }
-            else // Airborne/slamming
+            else
             {
                 NPC.frame.Y = frameHeight * 5;
             }
@@ -803,7 +1321,6 @@ public class KinguSlime : ModNPC
         {
             if (teleportPhase == TeleportPhase.Prepare)
             {
-                // Charging animation during prepare phase
                 float animSpeed = 4f;
                 NPC.frameCounter++;
                 if (NPC.frameCounter >= animSpeed)
@@ -815,13 +1332,12 @@ public class KinguSlime : ModNPC
                         NPC.frame.Y = frameHeight;
                 }
             }
-            else // Execute phase
+            else
             {
-                // Static frame during teleport execution
                 NPC.frame.Y = frameHeight * 4;
             }
         }
-        else // Strolling
+        else
         {
             float speed = Math.Abs(NPC.velocity.X);
             float animSpeed;
@@ -873,88 +1389,51 @@ public class KinguSlime : ModNPC
         }
     }
 
-    #region Helper Methods
-
     private void UpdateLineOfSightTracking(Player target)
     {
         bool hasLineOfSight = Collision.CanHitLine(NPC.Center, 0, 0, target.Center, 0, 0);
         bool heightDifferenceOk = Math.Abs(NPC.Top.Y - target.Bottom.Y) <= 160f;
 
-        if (!hasLineOfSight || !heightDifferenceOk)
+        bool isAirborne = NPC.velocity.Y != 0f;
+        bool shouldIgnoreLineOfSight = isAirborne && (State == AIState.Jumping || State == AIState.GroundPound || State == AIState.BounceHouse);
+
+        if ((!hasLineOfSight || !heightDifferenceOk) && !shouldIgnoreLineOfSight)
         {
-            teleportTimer += 3.5f; // Accumulate faster when no line of sight
+            teleportTimer += 2f;
             if (Main.netMode != NetmodeID.MultiplayerClient)
-                lineOfSightTimer += 2.5f; // Accumulate faster
+                lineOfSightTimer += 1.5f;
         }
         else if (Main.netMode != NetmodeID.MultiplayerClient)
         {
-            lineOfSightTimer--;
+            lineOfSightTimer -= 2f;
             if (lineOfSightTimer < 0f)
                 lineOfSightTimer = 0f;
         }
 
-        // Track if slime is stuck
-        float distanceMoved = Vector2.Distance(NPC.Center, lastPosition);
-        if (distanceMoved < MIN_MOVEMENT_THRESHOLD && NPC.velocity.Y == 0f)
+        if (!isAirborne)
         {
-            stuckTimer++;
+            float distanceMoved = Vector2.Distance(NPC.Center, lastPosition);
+            if (distanceMoved < MIN_MOVEMENT_THRESHOLD && NPC.velocity.Y == 0f)
+            {
+                stuckTimer++;
+            }
+            else
+            {
+                stuckTimer = 0f;
+                lastPosition = NPC.Center;
+            }
         }
         else
         {
-            stuckTimer = 0f;
             lastPosition = NPC.Center;
-        }
-    }
-
-    private void CheckTeleportConditions(Player target)
-    {
-        // Don't interrupt existing important states
-        if (State == AIState.Teleporting || State == AIState.ConsumingSlimes || State == AIState.Despawning)
-            return;
-
-        float distToPlayer = Vector2.Distance(NPC.Center, target.Center);
-        bool targetTooFar = target.dead || distToPlayer > DESPAWN_DISTANCE;
-
-        if (targetTooFar)
-        {
-            NPC.TargetClosest();
-            target = Main.player[NPC.target];
-
-            if (target.dead || Vector2.Distance(NPC.Center, target.Center) > DESPAWN_DISTANCE)
-            {
-                BeginTeleport(target);
-                return;
-            }
-        }
-
-        bool shouldTeleport = false;
-
-        if (teleportTimer >= TELEPORT_COOLDOWN && NPC.velocity.Y == 0f && State != AIState.GroundPound)
-        {
-            shouldTeleport = true;
-        }
-
-        if (stuckTimer >= STUCK_TIMEOUT && NPC.velocity.Y == 0f)
-        {
-            shouldTeleport = true;
-        }
-
-        if (distToPlayer > 600f && teleportTimer >= TELEPORT_COOLDOWN * 0.5f && NPC.velocity.Y == 0f)
-        {
-            shouldTeleport = true;
-        }
-
-        if (!target.dead && NPC.timeLeft > 10 && shouldTeleport)
-        {
-            if (Main.netMode != NetmodeID.MultiplayerClient)
-            {
-                BeginTeleport(target);
-            }
         }
     }
 
     private void BeginTeleport(Player target)
     {
+        if (Main.netMode != NetmodeID.Server)
+            Main.NewText($"[DEBUG] BeginTeleport called - Current state: {State}", Color.Orange);
+
         FindTeleportLocation(target);
         State = AIState.Teleporting;
         teleportPhase = TeleportPhase.Prepare;
@@ -962,107 +1441,236 @@ public class KinguSlime : ModNPC
         teleportTimer = 0f;
         stuckTimer = 0f;
         NPC.netUpdate = true;
+
+        if (Main.netMode != NetmodeID.Server)
+            Main.NewText($"[DEBUG] Teleport initialized - New state: {State}", Color.Green);
     }
 
+    // Much more robust teleport location finding that prioritizes player-friendly positions
     private void FindTeleportLocation(Player target)
     {
+        if (Main.netMode != NetmodeID.Server)
+            Main.NewText($"[DEBUG] Finding teleport location...", Color.Gray);
+
         Point npcTile = NPC.Center.ToTileCoordinates();
         Point targetTile = target.Center.ToTileCoordinates();
-        Vector2 toTarget = target.Center - NPC.Center;
 
+        Vector2 bestLocation = Vector2.Zero;
         bool foundSpot = false;
         int attempts = 0;
-        bool forceRandomSpot = lineOfSightTimer >= LINE_OF_SIGHT_TIMEOUT || toTarget.Length() > 2000f;
 
-        if (forceRandomSpot && lineOfSightTimer >= LINE_OF_SIGHT_TIMEOUT)
-            lineOfSightTimer = LINE_OF_SIGHT_TIMEOUT;
+        // Try multiple approaches with decreasing strictness
 
-        Vector2 playerVel = target.velocity;
-        bool playerIsMoving = Math.Abs(playerVel.X) > 0.5f;
-
-        int teleportSide = 0; // 0 = random, -1 = left of player, 1 = right of player
-        if (playerIsMoving)
-        {
-            // If player moving left, teleport to their left (behind them)
-            // If player moving right, teleport to their right (behind them)
-            teleportSide = Math.Sign(playerVel.X);
-        }
-
-        while (!foundSpot && attempts < TELEPORT_SEARCH_ATTEMPTS)
+        // Approach 1: Behind player (most player-friendly)
+        for (int i = 0; i < 20 && !foundSpot; i++)
         {
             attempts++;
-            int testX, testY;
 
-            if (teleportSide != 0 && attempts < TELEPORT_SEARCH_ATTEMPTS * 0.8f)
+            // Position behind player based on their movement or facing
+            Vector2 playerVel = target.velocity;
+            int direction = Math.Abs(playerVel.X) > 0.5f ? -Math.Sign(playerVel.X) : target.direction;
+
+            int offsetX = Main.rand.Next(8, 16) * direction; // 8-16 tiles behind
+            int offsetY = Main.rand.Next(-3, 2); // Slight height variation
+
+            int testX = targetTile.X + offsetX;
+            int testY = targetTile.Y + offsetY;
+
+            Vector2 testPos = TryFindGroundPosition(testX, testY, target);
+            if (testPos != Vector2.Zero)
             {
-                float behindDistance = Main.rand.NextFloat(10f, 20f);
-                testX = targetTile.X + (int)(teleportSide * behindDistance);
-                testY = targetTile.Y;
-            }
-            else
-            {
-                testX = Main.rand.Next(targetTile.X - TELEPORT_RADIUS, targetTile.X + TELEPORT_RADIUS + 1);
-                testY = Main.rand.Next(targetTile.Y - TELEPORT_RADIUS, targetTile.Y + 1);
-            }
-
-            bool tooCloseToTarget = testY >= targetTile.Y - TELEPORT_AVOID_RADIUS &&
-                                   testY <= targetTile.Y + TELEPORT_AVOID_RADIUS &&
-                                   testX >= targetTile.X - TELEPORT_AVOID_RADIUS &&
-                                   testX <= targetTile.X + TELEPORT_AVOID_RADIUS;
-
-            bool tooCloseToNPC = testY >= npcTile.Y && testY <= npcTile.Y &&
-                                 testX >= npcTile.X && testX <= npcTile.X;
-
-            if (tooCloseToTarget || tooCloseToNPC || Main.tile[testX, testY].HasTile)
-                continue;
-
-            int groundY = testY;
-            int dropDistance = 0;
-
-            if (Main.tile[testX, groundY].HasTile &&
-                Main.tileSolid[Main.tile[testX, groundY].TileType] &&
-                !Main.tileSolidTop[Main.tile[testX, groundY].TileType])
-            {
-                dropDistance = 1;
-            }
-            else
-            {
-                for (; dropDistance < 150 && groundY + dropDistance < Main.maxTilesY; dropDistance++)
-                {
-                    int checkY = groundY + dropDistance;
-                    if (Main.tile[testX, checkY].HasTile &&
-                        Main.tileSolid[Main.tile[testX, checkY].TileType] &&
-                        !Main.tileSolidTop[Main.tile[testX, checkY].TileType])
-                    {
-                        dropDistance--;
-                        break;
-                    }
-                }
-            }
-
-            testY += dropDistance;
-            Vector2 teleportPos = new Vector2(testX * 16 + 8, testY * 16 + 16);
-
-            bool validSpot = true;
-
-            if (validSpot && Main.tile[testX, testY].LiquidType == LiquidID.Lava)
-                validSpot = false;
-
-            if (validSpot && !Collision.CanHitLine(teleportPos, 0, 0, target.Center, 0, 0))
-                validSpot = false;
-
-            if (validSpot)
-            {
-                teleportDestination = teleportPos;
+                bestLocation = testPos;
                 foundSpot = true;
+                if (Main.netMode != NetmodeID.Server)
+                    Main.NewText($"[DEBUG] Found behind-player spot after {attempts} attempts", Color.Green);
                 break;
             }
         }
 
-        if (attempts >= TELEPORT_SEARCH_ATTEMPTS)
+        // Approach 2: To the sides (still player-friendly)
+        if (!foundSpot)
         {
-            teleportDestination = target.Bottom;
+            for (int i = 0; i < 30 && !foundSpot; i++)
+            {
+                attempts++;
+
+                int side = Main.rand.NextBool() ? -1 : 1;
+                int offsetX = Main.rand.Next(10, 20) * side; // 10-20 tiles to side
+                int offsetY = Main.rand.Next(-4, 3);
+
+                int testX = targetTile.X + offsetX;
+                int testY = targetTile.Y + offsetY;
+
+                Vector2 testPos = TryFindGroundPosition(testX, testY, target);
+                if (testPos != Vector2.Zero)
+                {
+                    bestLocation = testPos;
+                    foundSpot = true;
+                    if (Main.netMode != NetmodeID.Server)
+                        Main.NewText($"[DEBUG] Found side spot after {attempts} attempts", Color.Green);
+                    break;
+                }
+            }
         }
+
+        // Approach 3: Anywhere reasonable (more lenient)
+        if (!foundSpot)
+        {
+            for (int i = 0; i < 50 && !foundSpot; i++)
+            {
+                attempts++;
+
+                int offsetX = Main.rand.Next(-25, 26);
+                int offsetY = Main.rand.Next(-8, 5);
+
+                int testX = targetTile.X + offsetX;
+                int testY = targetTile.Y + offsetY;
+
+                // More lenient position finding
+                Vector2 testPos = TryFindGroundPositionLenient(testX, testY, target);
+                if (testPos != Vector2.Zero)
+                {
+                    bestLocation = testPos;
+                    foundSpot = true;
+                    if (Main.netMode != NetmodeID.Server)
+                        Main.NewText($"[DEBUG] Found lenient spot after {attempts} attempts", Color.Yellow);
+                    break;
+                }
+            }
+        }
+
+        // Final fallback: Safe distance from player
+        if (!foundSpot)
+        {
+            if (Main.netMode != NetmodeID.Server)
+                Main.NewText($"[DEBUG] All searches failed, using safe fallback", Color.Orange);
+
+            // At least put it a safe distance away from player
+            int safeDirection = target.direction == 1 ? -1 : 1; // Opposite side of where player faces
+            Vector2 safeOffset = new Vector2(safeDirection * 400f, -100f); // 25 tiles away, slightly above
+            bestLocation = target.Center + safeOffset;
+
+            // Make sure it's not in the ground
+            Point safeTile = bestLocation.ToTileCoordinates();
+            Vector2 groundPos = TryFindGroundPositionLenient(safeTile.X, safeTile.Y, target);
+            if (groundPos != Vector2.Zero)
+                bestLocation = groundPos;
+        }
+
+        teleportDestination = bestLocation;
+
+        if (Main.netMode != NetmodeID.Server)
+        {
+            float distFromPlayer = Vector2.Distance(bestLocation, target.Center) / 16f;
+            Main.NewText($"[DEBUG] Final teleport: {distFromPlayer:F1} tiles from player", Color.Cyan);
+        }
+    }
+
+    // Helper method for strict ground position finding
+    private Vector2 TryFindGroundPosition(int startX, int startY, Player target)
+    {
+        // Don't teleport too close to player
+        float distToPlayer = Vector2.Distance(new Vector2(startX * 16, startY * 16), target.Center) / 16f;
+        if (distToPlayer < 6f) // Minimum 6 tile distance
+            return Vector2.Zero;
+
+        // Find ground level
+        int groundY = startY;
+        bool foundGround = false;
+
+        // Look down for ground (up to 20 tiles)
+        for (int checkY = startY; checkY < startY + 20 && checkY < Main.maxTilesY; checkY++)
+        {
+            if (WorldGen.InWorld(startX, checkY))
+            {
+                Tile tile = Framing.GetTileSafely(startX, checkY);
+                if (tile.HasTile && Main.tileSolid[tile.TileType] && !Main.tileSolidTop[tile.TileType])
+                {
+                    groundY = checkY;
+                    foundGround = true;
+                    break;
+                }
+            }
+        }
+
+        if (!foundGround)
+            return Vector2.Zero;
+
+        Vector2 testPos = new Vector2(startX * 16 + 8, groundY * 16);
+
+        // Basic checks
+        if (Main.tile[startX, groundY].LiquidType == LiquidID.Lava)
+            return Vector2.Zero;
+
+        // Make sure there's space above for the boss (3 tiles high)
+        for (int y = groundY - 1; y >= groundY - 3; y--)
+        {
+            if (WorldGen.InWorld(startX, y))
+            {
+                Tile tile = Framing.GetTileSafely(startX, y);
+                if (tile.HasTile && Main.tileSolid[tile.TileType])
+                    return Vector2.Zero; // Not enough space
+            }
+        }
+
+        return testPos;
+    }
+
+    // Helper method for more lenient ground position finding
+    private Vector2 TryFindGroundPositionLenient(int startX, int startY, Player target)
+    {
+        // More lenient minimum distance
+        float distToPlayer = Vector2.Distance(new Vector2(startX * 16, startY * 16), target.Center) / 16f;
+        if (distToPlayer < 4f) // Reduced to 4 tiles minimum
+            return Vector2.Zero;
+
+        // Find ground level (more lenient search)
+        int groundY = startY;
+        bool foundGround = false;
+
+        // Look both up and down for ground
+        for (int offset = 0; offset <= 25; offset++)
+        {
+            // Check down first
+            int checkDownY = startY + offset;
+            if (WorldGen.InWorld(startX, checkDownY))
+            {
+                Tile tile = Framing.GetTileSafely(startX, checkDownY);
+                if (tile.HasTile && Main.tileSolid[tile.TileType])
+                {
+                    groundY = checkDownY;
+                    foundGround = true;
+                    break;
+                }
+            }
+
+            // Then check up
+            if (offset > 0)
+            {
+                int checkUpY = startY - offset;
+                if (WorldGen.InWorld(startX, checkUpY))
+                {
+                    Tile tile = Framing.GetTileSafely(startX, checkUpY);
+                    if (tile.HasTile && Main.tileSolid[tile.TileType])
+                    {
+                        groundY = checkUpY;
+                        foundGround = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!foundGround)
+            return Vector2.Zero;
+
+        Vector2 testPos = new Vector2(startX * 16 + 8, groundY * 16);
+
+        // Only reject lava (more lenient)
+        if (Main.tile[startX, groundY].LiquidType == LiquidID.Lava)
+            return Vector2.Zero;
+
+        return testPos;
     }
 
     private void CreateTeleportDust(float velocityMultiplier)
@@ -1102,7 +1710,6 @@ public class KinguSlime : ModNPC
                 swayIntensity = Math.Max(swayIntensity, groundPoundIntensity * 1.2f);
             }
 
-            // Sinusoidal sway
             float swayFreq = 0.12f + Math.Abs(NPC.velocity.Y) * 0.009f;
             float sway = (float)Math.Sin(Timer * swayFreq) * swayIntensity * 2.25f;
             rotationSway = MathHelper.Lerp(rotationSway, sway, 0.08f);
@@ -1129,12 +1736,12 @@ public class KinguSlime : ModNPC
                 stretchIntensity *= 0.55f;
 
             stretchIntensity = MathHelper.Clamp(stretchIntensity, 0f, 0.33f);
-            if (yVel < 0) // Rising - stretch top
+            if (yVel < 0)
             {
                 squishScale.Y = 1f + stretchIntensity;
                 squishScale.X = 1f - stretchIntensity * 0.18f;
             }
-            else // Falling - stretch bottom
+            else
             {
                 squishScale.Y = 1f + stretchIntensity;
                 squishScale.X = 1f - stretchIntensity * 0.25f;
@@ -1142,7 +1749,6 @@ public class KinguSlime : ModNPC
         }
         else if (isWobbling)
         {
-            // Gelatin wobble effect after landing
             wobbleTimer += 0.15f;
             float wobbleIntensity = (State == AIState.GroundPound && JumpPhase == 3) ? 0.06f : 0.085f;
 
@@ -1153,7 +1759,6 @@ public class KinguSlime : ModNPC
             squishScale.Y = 1f + wobbleY;
             squishScale.X = 1f + wobbleX;
 
-            // Stop wobbling when intensity is low
             if (dampening <= 0.3f)
                 isWobbling = false;
         }
@@ -1222,7 +1827,6 @@ public class KinguSlime : ModNPC
                     {
                         SlimedTileSystem.AddSlimedTile(tileX, tileY);
 
-                        // wider trail
                         if (Main.rand.NextBool(3))
                         {
                             int offsetX = Main.rand.NextBool() ? -3 : 3;
@@ -1241,7 +1845,6 @@ public class KinguSlime : ModNPC
 
     private void ConsumeSlime(NPC slime)
     {
-        // Visual effects
         for (int d = 0; d < 15; d++)
         {
             Vector2 velocity = new Vector2(Main.rand.NextFloat(-3f, 3f), Main.rand.NextFloat(-3f, 3f));
@@ -1250,7 +1853,6 @@ public class KinguSlime : ModNPC
             dust.noGravity = true;
         }
 
-        // Increase scale and HP
         float healthGain = slime.life * HP_PER_SLIME;
         float newScale = NPC.scale + SCALE_PER_SLIME;
         NPC.scale = MathHelper.Min(newScale, MAX_CONSUME_SCALE);
@@ -1267,7 +1869,6 @@ public class KinguSlime : ModNPC
             MaxInstances = 3
         }, slime.Center);
 
-        // Kill the slime
         slime.life = 0;
         slime.HitEffect();
         slime.active = false;
@@ -1336,8 +1937,6 @@ public class KinguSlime : ModNPC
         return Main.rand.NextFloat() < consumeChance;
     }
 
-    #endregion
-
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
         Texture2D texture = TextureAssets.Npc[Type].Value;
@@ -1354,4 +1953,6 @@ public class KinguSlime : ModNPC
 
         return false;
     }
+
+    #endregion
 }
