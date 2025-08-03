@@ -23,7 +23,7 @@ public class KinguSlime : ModNPC
     {
         Phase1,
         Phase2,
-        Phase3
+        Phase3,
     }
 
     private struct AttackPattern
@@ -111,7 +111,7 @@ public class KinguSlime : ModNPC
 
     private float GetScaledJumpHeight()
     {
-        float baseHeight = -11.5f;
+        float baseHeight = -12f;
         float scaleMultiplier = MathHelper.Lerp(1.4f, 0.8f, NPC.scale / 1.35f);
         return baseHeight * scaleMultiplier;
     }
@@ -126,7 +126,8 @@ public class KinguSlime : ModNPC
         Teleporting,
         Despawning,
         ConsumingSlimes,
-        BounceHouse
+        BounceHouse,
+        DeathAnimation
     }
 
     internal enum TeleportPhase
@@ -179,9 +180,12 @@ public class KinguSlime : ModNPC
 
     private int bounceHouseSlams = 0;
     private int targetBounceSlams = 3;
-    private const float BOUNCE_HOUSE_JUMP_HEIGHT = -12f;
-    private const float BOUNCE_HOUSE_SLAM_SPEED = 24f;
-    private bool bounceHouseCompleteLogged = false;
+    private const float BOUNCE_HOUSE_JUMP_HEIGHT = -16f;
+    private const float BOUNCE_HOUSE_SLAM_SPEED = 28f;
+
+    private bool deathAnimationStarted = false;
+    private float deathScale = 1f;
+    private int deathAnimationPhase = 0;
 
     public override void SetStaticDefaults()
     {
@@ -224,16 +228,31 @@ public class KinguSlime : ModNPC
         }
 
         Timer++;
-        UpdateScale();
+
+        // Don't update scale during death animation
+        if (State != AIState.DeathAnimation)
+        {
+            UpdateScale();
+        }
+        else
+        {
+            // Use death scale instead
+            NPC.scale = deathScale;
+            UpdateHitbox();
+        }
+
         HandleSquishScale();
         HandleRotation();
         HandleDustTrail();
         HandleSlimeTrail();
 
-        UpdateLOS(target);
-        HandlePatternTeleport(target);
-        HandlePatternConsume(target);
-        UpdatePatternFlow(target);
+        if (State != AIState.DeathAnimation)
+        {
+            UpdateLOS(target);
+            HandlePatternTeleport(target);
+            HandlePatternConsume(target);
+            UpdatePatternFlow(target);
+        }
 
         switch (State)
         {
@@ -255,11 +274,15 @@ public class KinguSlime : ModNPC
             case AIState.BounceHouse:
                 DoBounceHouse(target);
                 break;
+            case AIState.DeathAnimation:
+                DoDeathAnimation(target);
+                break;
         }
 
         NPCUtils.SlopedCollision(NPC);
         NPCUtils.CheckPlatform(NPC, target);
     }
+
 
     #region Pattern System Implementation
 
@@ -275,9 +298,6 @@ public class KinguSlime : ModNPC
         else
             phase = PatternType.Phase1;
 
-        if (Main.netMode != NetmodeID.Server && Timer % 180 == 0)
-            Main.NewText($"[DEBUG] Health: {(int)(healthPercent * 100)}% -> {phase}", Color.Magenta);
-
         return phase;
     }
 
@@ -285,9 +305,6 @@ public class KinguSlime : ModNPC
     {
         if (patternOverride)
         {
-            if (Main.netMode != NetmodeID.Server && patternTimer % 60 == 0)
-                Main.NewText($"[DEBUG] Pattern Override Active - {State}", Color.Orange);
-
             patternTimer++;
             return;
         }
@@ -301,12 +318,6 @@ public class KinguSlime : ModNPC
 
         var pattern = AttackPatterns[currentPattern];
         AIState currentPatternState = pattern.States[patternStep];
-
-        if (Main.netMode != NetmodeID.Server && patternTimer % 60 == 0)
-        {
-            string durationType = pattern.Durations[patternStep] > 0 ? "Fixed" : "Complete";
-            Main.NewText($"[DEBUG] {currentPattern} Step:{patternStep} State:{currentPatternState} Rep:{currentRepetition}/{pattern.Repetitions[patternStep]} Timer:{patternTimer} ({durationType})", Color.Cyan);
-        }
 
         bool shouldAdvance = false;
 
@@ -325,17 +336,12 @@ public class KinguSlime : ModNPC
         {
             currentRepetition++;
 
-            if (Main.netMode != NetmodeID.Server)
-                Main.NewText($"[DEBUG] Advancing - Rep {currentRepetition}/{pattern.Repetitions[patternStep]}", Color.Yellow);
-
             if (currentRepetition >= pattern.Repetitions[patternStep])
             {
                 AdvancePatternStep();
             }
             else
             {
-                if (Main.netMode != NetmodeID.Server)
-                    Main.NewText($"[DEBUG] Repeating {currentPatternState}", Color.LightBlue);
                 StartPatternAttack(currentPatternState, target);
             }
 
@@ -347,9 +353,6 @@ public class KinguSlime : ModNPC
 
     private void TransitionToPhase(PatternType newPhase)
     {
-        if (Main.netMode != NetmodeID.Server)
-            Main.NewText($"[DEBUG] PHASE TRANSITION: {currentPattern} -> {newPhase}", Color.Lime);
-
         currentPattern = newPhase;
         patternStep = 0;
         currentRepetition = 0;
@@ -369,12 +372,7 @@ public class KinguSlime : ModNPC
         if (patternStep >= pattern.States.Length)
         {
             patternStep = 0;
-            if (Main.netMode != NetmodeID.Server)
-                Main.NewText($"[DEBUG] Pattern Loop Complete - Restarting {currentPattern}", Color.Pink);
         }
-
-        if (Main.netMode != NetmodeID.Server)
-            Main.NewText($"[DEBUG] Step Advance: {patternStep - 1} -> {patternStep} ({pattern.States[patternStep]})", Color.LightGreen);
 
         StartPatternAttack(pattern.States[patternStep], Main.player[NPC.target]);
     }
@@ -386,15 +384,10 @@ public class KinguSlime : ModNPC
 
         var pattern = AttackPatterns[currentPattern];
 
-        if (Main.netMode != NetmodeID.Server)
-            Main.NewText($"[DEBUG] Starting Attack: {newState} (Rep {currentRepetition + 1}/{pattern.Repetitions[patternStep]})", Color.White);
-
         switch (newState)
         {
             case AIState.Jumping:
                 JumpPhase = 0;
-                if (Main.netMode != NetmodeID.Server)
-                    Main.NewText($"[DEBUG] Jump charging - need 40 ticks", Color.Gray);
                 break;
 
             case AIState.GroundPound:
@@ -410,37 +403,26 @@ public class KinguSlime : ModNPC
                 else
                     targetGroundPounds = 1;
 
-                if (Main.netMode != NetmodeID.Server)
-                    Main.NewText($"[DEBUG] Ground Pound Setup: {targetGroundPounds} pounds", Color.Gray);
                 break;
 
             case AIState.BounceHouse:
                 JumpPhase = 0;
                 bounceHouseSlams = 0;
-                bounceHouseCompleteLogged = false;
                 targetBounceSlams = Main.rand.Next(3, 6);
 
-                if (Main.netMode != NetmodeID.Server)
-                    Main.NewText($"[DEBUG] BounceHouse Setup: {targetBounceSlams} slams", Color.Purple);
                 break;
 
             case AIState.ConsumingSlimes:
                 if (!HasNearbySlimes())
                 {
-                    if (Main.netMode != NetmodeID.Server)
-                        Main.NewText($"[DEBUG] No slimes nearby - skipping consume", Color.Red);
                     AdvancePatternStep();
                     return;
                 }
-                if (Main.netMode != NetmodeID.Server)
-                    Main.NewText($"[DEBUG] Slimes detected - starting consume", Color.Gray);
                 break;
 
             case AIState.Strolling:
                 StrollCount = 0;
                 targetStrolls = pattern.Durations[patternStep] > 0 ? 1 : 3;
-                if (Main.netMode != NetmodeID.Server)
-                    Main.NewText($"[DEBUG] Stroll Setup: {targetStrolls} strolls", Color.Gray);
                 break;
         }
 
@@ -497,14 +479,8 @@ public class KinguSlime : ModNPC
 
         if (shouldTeleport && Main.netMode != NetmodeID.MultiplayerClient)
         {
-            if (Main.netMode != NetmodeID.Server)
-                Main.NewText($"[DEBUG] TELEPORT OVERRIDE INITIATED - Distance: {(int)distToPlayer}", Color.Red);
-
             patternOverride = true;
             BeginTeleport(target);
-
-            if (Main.netMode != NetmodeID.Server)
-                Main.NewText($"[DEBUG] Teleport state set to: {State}", Color.Yellow);
         }
     }
 
@@ -544,9 +520,6 @@ public class KinguSlime : ModNPC
 
         if (shouldOverride && Main.netMode != NetmodeID.MultiplayerClient)
         {
-            if (Main.netMode != NetmodeID.Server)
-                Main.NewText($"[DEBUG] CONSUME OVERRIDE - {nearbySlimes} slimes nearby", Color.Orange);
-
             patternOverride = true;
             State = AIState.ConsumingSlimes;
             Timer = 0;
@@ -556,9 +529,6 @@ public class KinguSlime : ModNPC
 
     private void ResumeBattlePattern()
     {
-        if (Main.netMode != NetmodeID.Server)
-            Main.NewText($"[DEBUG] Resuming Pattern - {currentPattern} Step:{patternStep}", Color.Green);
-
         patternOverride = false;
 
         var pattern = AttackPatterns[currentPattern];
@@ -568,6 +538,140 @@ public class KinguSlime : ModNPC
     #endregion
 
     #region State Methods
+    public override bool CheckDead()
+    {
+        if (!deathAnimationStarted)
+        {
+            deathAnimationStarted = true;
+            State = AIState.DeathAnimation;
+            Timer = 0;
+            deathAnimationPhase = 0;
+            deathScale = NPC.scale;
+
+            NPC.life = 1;
+            NPC.dontTakeDamage = true;
+
+            Main.StopSlimeRain();
+
+            SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}KingSlimeDeath") with
+            {
+                Volume = 0.8f,
+                PitchVariance = 0.1f
+            }, NPC.Center);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private void DoDeathAnimation(Player target)
+    {
+        NPC.velocity *= 0.92f;
+
+        switch (deathAnimationPhase)
+        {
+            case 0:
+                if (Timer <= 120f)
+                {
+                    float shrinkProgress = Timer / 120f;
+                    deathScale = MathHelper.Lerp(NPC.scale, 0.45f, EaseFunction.EaseQuadIn.Ease(shrinkProgress));
+
+                    if (Timer % 8 == 0)
+                    {
+                        for (int i = 0; i < 5; i++)
+                        {
+                            Vector2 dustPos = NPC.Center + Main.rand.NextVector2Circular(NPC.width * 0.4f, NPC.height * 0.4f);
+                            Dust dust = Dust.NewDustDirect(dustPos, 0, 0, DustID.t_Slime,
+                                Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(-3f, -1f),
+                                150, new Color(86, 162, 255, 150), 1.2f);
+                            dust.noGravity = true;
+                            dust.velocity *= 0.8f;
+                        }
+                    }
+
+                    if (Timer % 15 == 0)
+                        CameraSystem.shake = (int)MathHelper.Lerp(2, 8, shrinkProgress);
+                }
+                else
+                {
+                    deathAnimationPhase = 1;
+                    Timer = 0;
+                }
+                break;
+
+            case 1:
+                deathScale = 0.35f;
+
+                if (Timer <= 60f)
+                {
+                    if (Timer % 3 == 0)
+                    {
+                        for (int i = 0; i < 8; i++)
+                        {
+                            Vector2 dustVel = Vector2.One.RotatedBy(MathHelper.ToRadians(i * 45)) * 4f;
+                            Dust dust = Dust.NewDustDirect(NPC.Center, 0, 0, DustID.t_Slime,
+                                dustVel.X, dustVel.Y, 150, new Color(86, 162, 255, 200), 1.5f);
+                            dust.noGravity = true;
+                        }
+                    }
+
+                    if (Timer % 5 == 0)
+                        CameraSystem.shake = (int)MathHelper.Lerp(3, 12, Timer / 60f);
+                }
+                else
+                {
+                    deathAnimationPhase = 2;
+                    Timer = 0;
+                }
+                break;
+
+            case 2: // big finish
+                for (int i = 0; i < 150; i++)
+                {
+                    Vector2 dustVel = Main.rand.NextVector2CircularEdge(12f, 12f);
+                    Dust dust = Dust.NewDustDirect(NPC.Center, 0, 0, DustID.t_Slime,
+                        dustVel.X, dustVel.Y, 150, new Color(86, 162, 255, 150), 2f);
+                    dust.noGravity = true;
+                    dust.velocity = dustVel;
+                }
+
+                for (int i = 0; i < 30; i++)
+                {
+                    float angle = (float)i / 30f * MathHelper.TwoPi;
+                    Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) *
+                                      Main.rand.NextFloat(8f, 15f);
+
+                    Vector2 spawnPos = NPC.Center + Main.rand.NextVector2Circular(20f, 20f);
+                    int projType = ModContent.ProjectileType<GelBallProjectile>();
+                    var proj = Main.projectile[Projectile.NewProjectile(NPC.GetSource_FromAI(), spawnPos, velocity, projType, 0, 0f)];
+                    proj.friendly = true;
+                }
+
+                NPC.NewNPC(NPC.GetSource_FromAI(), (int)NPC.Center.X, (int)NPC.Center.Y, NPCID.TownSlimeBlue);
+
+                CameraSystem.shake = 20;
+
+                SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}SlimeSlam") with
+                {
+                    Volume = 1f,
+                    Pitch = -0.3f
+                }, NPC.Center);
+
+                SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}KingSlimeRoar") with
+                {
+                    Volume = 1f,
+                    Pitch = -0.25f
+                }, NPC.Center);
+
+                Timer = 0;
+
+                NPC.life = 0;
+                NPC.dontTakeDamage = false;
+                NPC.checkDead();
+                break;
+        }
+    }
 
     private void DoStrolling(Player target)
     {
@@ -606,7 +710,7 @@ public class KinguSlime : ModNPC
 
         if (NPC.velocity.Y == 0f)
         {
-            NPC.velocity.X *= 0.98f;
+            NPC.velocity.X *= 0.96f;
             if (Math.Abs(NPC.velocity.X) < 0.1f)
                 NPC.velocity.X = 0f;
 
@@ -750,20 +854,20 @@ public class KinguSlime : ModNPC
 
                     if (distToPlayer <= 20f)
                     {
-                        gelBallCount = 8;
-                        baseVelocity = 5.5f;
+                        gelBallCount = 10;
+                        baseVelocity = 7.5f;
                         velocityVariance = 1.6f;
                     }
                     else if (distToPlayer <= 42f)
                     {
-                        gelBallCount = 12;
-                        baseVelocity = 7f;
+                        gelBallCount = 14;
+                        baseVelocity = 9f;
                         velocityVariance = 2.1f;
                     }
                     else
                     {
-                        gelBallCount = 16;
-                        baseVelocity = 9f;
+                        gelBallCount = 18;
+                        baseVelocity = 11f;
                         velocityVariance = 3f;
                     }
 
@@ -950,9 +1054,6 @@ public class KinguSlime : ModNPC
                     isWobbling = true;
                     wobbleTimer = 0f;
                     bounceHouseSlams++;
-
-                    if (Main.netMode != NetmodeID.Server)
-                        Main.NewText($"[DEBUG] BounceHouse slam {bounceHouseSlams}/{targetBounceSlams}", Color.Purple);
                 }
                 else
                 {
@@ -990,21 +1091,9 @@ public class KinguSlime : ModNPC
                         JumpPhase = 0;
                         Timer = 0;
                         isWobbling = false;
-                        bounceHouseCompleteLogged = false;
-
-                        if (Main.netMode != NetmodeID.Server)
-                            Main.NewText($"[DEBUG] BounceHouse continuing combo", Color.LightBlue);
                     }
                     else
                     {
-                        // Only log completion once
-                        if (!bounceHouseCompleteLogged)
-                        {
-                            bounceHouseCompleteLogged = true;
-                            if (Main.netMode != NetmodeID.Server)
-                                Main.NewText($"[DEBUG] BounceHouse sequence complete!", Color.Green);
-                        }
-
                         isWobbling = false;
                     }
                 }
@@ -1235,9 +1324,6 @@ public class KinguSlime : ModNPC
 
             if (patternOverride)
             {
-                if (Main.netMode != NetmodeID.Server)
-                    Main.NewText($"[DEBUG] Consume override complete - resuming pattern", Color.Lime);
-
                 ResumeBattlePattern();
             }
             else
@@ -1247,7 +1333,6 @@ public class KinguSlime : ModNPC
             }
         }
     }
-
     #endregion
 
     #region Helper Methods
@@ -1277,7 +1362,45 @@ public class KinguSlime : ModNPC
                 NPC.frame.Y = frameHeight * 5;
             }
         }
-        else if (State == AIState.GroundPound || State == AIState.BounceHouse)
+        else if (State == AIState.DeathAnimation)
+        {
+            // Death animation frames
+            switch (deathAnimationPhase)
+            {
+                case 0: // Shrinking - use wobbling frames
+                    float animSpeed = 6f + (Timer / 120f) * 10f; // Speed up as we shrink
+                    NPC.frameCounter++;
+                    if (NPC.frameCounter >= animSpeed)
+                    {
+                        NPC.frameCounter = 0;
+                        NPC.frame.Y += frameHeight;
+
+                        if (NPC.frame.Y >= frameHeight * 4)
+                            NPC.frame.Y = frameHeight;
+                    }
+                    break;
+
+                case 1: // Buildup - fast wobbling
+                    float buildupSpeed = 3f;
+                    NPC.frameCounter++;
+                    if (NPC.frameCounter >= buildupSpeed)
+                    {
+                        NPC.frameCounter = 0;
+                        NPC.frame.Y += frameHeight;
+
+                        if (NPC.frame.Y >= frameHeight * 4)
+                            NPC.frame.Y = frameHeight;
+                    }
+                    break;
+
+                case 2: // Explosion - hold final frame
+                case 3:
+                    NPC.frame.Y = frameHeight * 5; // Jump frame for explosion effect
+                    break;
+            }
+            return;
+        }
+        else if (State == AIState.GroundPound)
         {
             if (JumpPhase == 0)
             {
@@ -1311,6 +1434,49 @@ public class KinguSlime : ModNPC
             else
             {
                 NPC.frame.Y = frameHeight * 5;
+            }
+        }
+        else if (State == AIState.BounceHouse)
+        {
+            if (JumpPhase == 0)
+            {
+                float animSpeed = 4f;
+                NPC.frameCounter++;
+                if (NPC.frameCounter >= animSpeed)
+                {
+                    NPC.frameCounter = 0;
+                    NPC.frame.Y += frameHeight;
+
+                    if (NPC.frame.Y >= frameHeight * 3)
+                    {
+                        SoundEngine.PlaySound(SoundID.QueenSlime with { Volume = 0.35f }, NPC.Center);
+                        NPC.frame.Y = frameHeight;
+                    }
+                }
+            }
+            else if (JumpPhase == 1)
+            {
+                NPC.frame.Y = frameHeight * 5;
+            }
+            else if (JumpPhase == 2)
+            {
+                NPC.frame.Y = frameHeight * 4;
+            }
+            else
+            {
+                float animSpeed = 8f;
+                NPC.frameCounter++;
+                if (NPC.frameCounter >= animSpeed)
+                {
+                    NPC.frameCounter = 0;
+                    NPC.frame.Y += frameHeight;
+
+                    if (NPC.frame.Y >= frameHeight * 4)
+                    {
+                        SoundEngine.PlaySound(SoundID.QueenSlime with { Volume = 0.35f }, NPC.Center);
+                        NPC.frame.Y = frameHeight;
+                    }
+                }
             }
         }
         else if (State == AIState.Teleporting)
@@ -1427,9 +1593,6 @@ public class KinguSlime : ModNPC
 
     private void BeginTeleport(Player target)
     {
-        if (Main.netMode != NetmodeID.Server)
-            Main.NewText($"[DEBUG] BeginTeleport called - Current state: {State}", Color.Orange);
-
         FindTeleportSpot(target);
         State = AIState.Teleporting;
         teleportPhase = TeleportPhase.Prepare;
@@ -1437,16 +1600,10 @@ public class KinguSlime : ModNPC
         teleportTimer = 0f;
         stuckTimer = 0f;
         NPC.netUpdate = true;
-
-        if (Main.netMode != NetmodeID.Server)
-            Main.NewText($"[DEBUG] Teleport initialized - New state: {State}", Color.Green);
     }
 
     private void FindTeleportSpot(Player target)
     {
-        if (Main.netMode != NetmodeID.Server)
-            Main.NewText($"[DEBUG] Finding teleport location...", Color.Gray);
-
         Point npcTile = NPC.Center.ToTileCoordinates();
         Point targetTile = target.Center.ToTileCoordinates();
 
@@ -1454,19 +1611,15 @@ public class KinguSlime : ModNPC
         bool foundSpot = false;
         int attempts = 0;
 
-        // Try multiple approaches with decreasing strictness
-
-        // Approach 1: Behind player (most player-friendly)
         for (int i = 0; i < 20 && !foundSpot; i++)
         {
             attempts++;
 
-            // Position behind player based on their movement or facing
             Vector2 playerVel = target.velocity;
             int direction = Math.Abs(playerVel.X) > 0.5f ? -Math.Sign(playerVel.X) : target.direction;
 
-            int offsetX = Main.rand.Next(8, 16) * direction; // 8-16 tiles behind
-            int offsetY = Main.rand.Next(-3, 2); // Slight height variation
+            int offsetX = Main.rand.Next(8, 16) * direction;
+            int offsetY = Main.rand.Next(-3, 2);
 
             int testX = targetTile.X + offsetX;
             int testY = targetTile.Y + offsetY;
@@ -1476,13 +1629,10 @@ public class KinguSlime : ModNPC
             {
                 bestLocation = testPos;
                 foundSpot = true;
-                if (Main.netMode != NetmodeID.Server)
-                    Main.NewText($"[DEBUG] Found behind-player spot after {attempts} attempts", Color.Green);
                 break;
             }
         }
 
-        // Approach 2: To the sides (still player-friendly)
         if (!foundSpot)
         {
             for (int i = 0; i < 30 && !foundSpot; i++)
@@ -1490,7 +1640,7 @@ public class KinguSlime : ModNPC
                 attempts++;
 
                 int side = Main.rand.NextBool() ? -1 : 1;
-                int offsetX = Main.rand.Next(10, 20) * side; // 10-20 tiles to side
+                int offsetX = Main.rand.Next(10, 20) * side;
                 int offsetY = Main.rand.Next(-4, 3);
 
                 int testX = targetTile.X + offsetX;
@@ -1501,14 +1651,11 @@ public class KinguSlime : ModNPC
                 {
                     bestLocation = testPos;
                     foundSpot = true;
-                    if (Main.netMode != NetmodeID.Server)
-                        Main.NewText($"[DEBUG] Found side spot after {attempts} attempts", Color.Green);
                     break;
                 }
             }
         }
 
-        // Approach 3: Anywhere reasonable (more lenient)
         if (!foundSpot)
         {
             for (int i = 0; i < 50 && !foundSpot; i++)
@@ -1521,31 +1668,22 @@ public class KinguSlime : ModNPC
                 int testX = targetTile.X + offsetX;
                 int testY = targetTile.Y + offsetY;
 
-                // More lenient position finding
                 Vector2 testPos = FindGroundPosLenient(testX, testY, target);
                 if (testPos != Vector2.Zero)
                 {
                     bestLocation = testPos;
                     foundSpot = true;
-                    if (Main.netMode != NetmodeID.Server)
-                        Main.NewText($"[DEBUG] Found lenient spot after {attempts} attempts", Color.Yellow);
                     break;
                 }
             }
         }
 
-        // Final fallback: Safe distance from player
         if (!foundSpot)
         {
-            if (Main.netMode != NetmodeID.Server)
-                Main.NewText($"[DEBUG] All searches failed, using safe fallback", Color.Orange);
-
-            // At least put it a safe distance away from player
-            int safeDirection = target.direction == 1 ? -1 : 1; // Opposite side of where player faces
-            Vector2 safeOffset = new Vector2(safeDirection * 400f, -100f); // 25 tiles away, slightly above
+            int safeDirection = target.direction == 1 ? -1 : 1;
+            Vector2 safeOffset = new Vector2(safeDirection * 400f, -100f);
             bestLocation = target.Center + safeOffset;
 
-            // Make sure it's not in the ground
             Point safeTile = bestLocation.ToTileCoordinates();
             Vector2 groundPos = FindGroundPosLenient(safeTile.X, safeTile.Y, target);
             if (groundPos != Vector2.Zero)
@@ -1553,12 +1691,6 @@ public class KinguSlime : ModNPC
         }
 
         teleportDestination = bestLocation;
-
-        if (Main.netMode != NetmodeID.Server)
-        {
-            float distFromPlayer = Vector2.Distance(bestLocation, target.Center) / 16f;
-            Main.NewText($"[DEBUG] Final teleport: {distFromPlayer:F1} tiles from player", Color.Cyan);
-        }
     }
 
     private Vector2 FindGroundPos(int startX, int startY, Player target)
@@ -1612,12 +1744,11 @@ public class KinguSlime : ModNPC
 
     private Vector2 FindGroundPosLenient(int startX, int startY, Player target)
     {
-        // More lenient minimum distance
         float distToPlayer = Vector2.Distance(new Vector2(startX * 16, startY * 16), target.Center) / 16f;
-        if (distToPlayer < 4f) // Reduced to 4 tiles minimum
+        if (distToPlayer < 4f)
             return Vector2.Zero;
 
-        // Find ground level (more lenient search)
+        // Find ground level
         int groundY = startY;
         bool foundGround = false;
 
@@ -1659,7 +1790,6 @@ public class KinguSlime : ModNPC
 
         Vector2 testPos = new Vector2(startX * 16 + 8, groundY * 16);
 
-        // Only reject lava (more lenient)
         if (Main.tile[startX, groundY].LiquidType == LiquidID.Lava)
             return Vector2.Zero;
 
