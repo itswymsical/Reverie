@@ -7,7 +7,7 @@ using Terraria.GameContent;
 
 namespace Reverie.Content.NPCs.Bosses.KingSlime;
 
-public class KinguSlime : ModNPC
+public class KingSlime : ModNPC
 {
     public override string Texture => $"{TEXTURE_DIRECTORY}NPCs/Bosses/KingSlime/KingSlime";
 
@@ -283,6 +283,10 @@ public class KinguSlime : ModNPC
         NPCUtils.CheckPlatform(NPC, target);
     }
 
+    public override void ModifyNPCLoot(NPCLoot npcLoot)
+    {
+        base.ModifyNPCLoot(npcLoot);
+    }
 
     #region Pattern System Implementation
 
@@ -668,6 +672,7 @@ public class KinguSlime : ModNPC
 
                 NPC.life = 0;
                 NPC.dontTakeDamage = false;
+                NPC.downedSlimeKing = true;
                 NPC.checkDead();
                 break;
         }
