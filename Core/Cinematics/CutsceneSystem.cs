@@ -26,6 +26,7 @@ public class CutsceneSystem : ModSystem
         "Vanilla: Gamepad Lock On",
         "Vanilla: Tile Grid Option",
         "Reverie: Experience Meter",
+        "Reverie: Pre-release info", // temporary
     ];
 
     public override void Load()

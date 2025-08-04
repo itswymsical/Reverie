@@ -3,8 +3,10 @@ using Reverie.Content.Tiles.Taiga;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Utilities;
+using System.Collections.Generic;
 using Terraria.GameContent;
 using Terraria.Localization;
+using Terraria.UI;
 
 namespace Reverie.Common.Systems;
 
@@ -78,7 +80,7 @@ public class ReverieSystem : ModSystem
         RecipeGroup.RegisterGroup(nameof(ItemID.DirtBlock), soilRecipeGroup);
     }
 
-    public override void PostDrawInterface(SpriteBatch spriteBatch)
+    public void DrawReleaseInfo(SpriteBatch spriteBatch)
     {
         if (Main.gameMenu)
             return;
@@ -99,5 +101,22 @@ public class ReverieSystem : ModSystem
 
         DrawUtils.DrawText(spriteBatch, Color.Wheat, title, titlePos, 0.3f);
         DrawUtils.DrawText(spriteBatch, Color.Wheat, subtitle, subtitlePos, 0.3f);
+    }
+
+    public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
+    {
+        var resourceBarIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Resource Bars"));
+        if (resourceBarIndex != -1)
+        {
+            layers.Insert(resourceBarIndex, new LegacyGameInterfaceLayer(
+                "Reverie: Pre-release info",
+                delegate
+                {
+                    DrawReleaseInfo(Main.spriteBatch);
+                    return true;
+                },
+                InterfaceScaleType.UI)
+            );
+        }
     }
 }
