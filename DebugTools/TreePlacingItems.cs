@@ -4,7 +4,7 @@ using Reverie.Content.Tiles.TemperateForest;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Reverie.DebugItems;
+namespace Reverie.DebugTools;
 
 public class SmallTanglewoodTreeDebugWand : ModItem
 {
@@ -93,7 +93,7 @@ public class SmallTanglewoodTreeDebugWand : ModItem
     }
 }
 
-public class PineTreeDebugWand : ModItem
+public class SpruceTreeDebugWand : ModItem
 {
     public override string Texture => PLACEHOLDER;
 
@@ -131,9 +131,9 @@ public class PineTreeDebugWand : ModItem
             if (success)
             {
                 // Success feedback
-                Main.NewText($"Pine tree grown at ({tryX}, {tryY}) after {attempts + 1} attempts", Color.Green);
+                Main.NewText($"Spruce tree grown at ({tryX}, {tryY}) after {attempts + 1} attempts", Color.Green);
 
-                // Enhanced visual effect
+                //  visual effect
                 var effectPos = new Vector2(tryX, tryY) * 16;
                 for (var i = 0; i < 30; i++) // Fewer particles for smaller tree
                 {
@@ -160,7 +160,7 @@ public class PineTreeDebugWand : ModItem
             else if (currentTile.HasTile && Main.tileSolid[currentTile.TileType])
                 reason = "Solid tile in the way";
 
-            Main.NewText($"Failed to grow tanglewood tree at ({tileX}, {tileY}) - {reason}", Color.Red);
+            Main.NewText($"Failed to grow Spruce tree at ({tileX}, {tileY}) - {reason}", Color.Red);
 
             // Red dust effect
             for (var i = 0; i < 15; i++)
@@ -176,7 +176,7 @@ public class PineTreeDebugWand : ModItem
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
-        tooltips.Add(new TooltipLine(Mod, "Usage", "[c/00FF00:Left Click:] Grow pine tree at cursor"));
+        tooltips.Add(new TooltipLine(Mod, "Usage", "[c/00FF00:Left Click:] Grow spruce tree at cursor"));
     }
 }
 

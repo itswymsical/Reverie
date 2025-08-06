@@ -7,6 +7,8 @@ public static class MissionID
     public static int JourneysBegin = 1;
     public static int ForgottenAges = 2;
     public static int SporeSplinter = 3;
+    public static int CopperStandard = 4;
+
 
 #pragma warning restore IDE1006
 }

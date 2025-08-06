@@ -7,6 +7,7 @@ using Terraria.Utilities;
 using Terraria.GameContent.Drawing;
 using Terraria.GameContent;
 using Reverie.Core.Tiles;
+using Reverie.Content.Tiles.Taiga.Furniture;
 
 namespace Reverie.Content.Tiles.Taiga.Trees;
 
@@ -18,7 +19,7 @@ public class SpruceTree : CustomTree
     public override int TreeWidth => 1;
     public override int MaxHeight => 30;
     public override int MinHeight => 12;
-    public override int WoodType => ItemID.BorealWood;
+    public override int WoodType => ModContent.ItemType<SpruceWoodItem>();
     #endregion
 
     public override int[] ValidAnchorTiles => [
@@ -103,7 +104,7 @@ public class SpruceTree : CustomTree
             trunkType = TrunkType.Small;
 
         // Check if we're too close to the base
-        if (trunkType.HasValue && (i + j) % 2 == 0 && !IsTooCloseToBase(i, j))
+        if (trunkType.HasValue && (i + j) % 3 == 0 && !IsTooCloseToBase(i, j))
         {
             DrawFoliage(i, j, spriteBatch, trunkType.Value);
         }
@@ -134,9 +135,9 @@ public class SpruceTree : CustomTree
         if (!TileDrawing.IsVisible(tile))
             return;
 
-        float rotation = GetSway(i, j) * .2f;
+        float rotation = GetSway(i, j) * .3f;
 
-        var tileCenterScreen = new Vector2(i * 16 + 8, j * 16 + 8) - Main.screenPosition;
+        var tileCenterScreen = new Vector2(i * 16 + 8, j * 16 + 4) - Main.screenPosition;
 
         var samplerState = Main.graphics.GraphicsDevice.SamplerStates[0];
         spriteBatch.End();
@@ -146,14 +147,14 @@ public class SpruceTree : CustomTree
         Texture2D foliageTexture;
         int leftOffset, rightOffset;
 
-        int variant = (i + j) % 3;
+        int variant = (i + j) % 2;
 
         switch (trunkType)
         {
             case TrunkType.Large:
                 foliageTexture = ModContent.Request<Texture2D>($"Reverie/Content/Tiles/Taiga/Trees/BranchesLarge_{variant}").Value;
-                leftOffset = -4;
-                rightOffset = 72;
+                leftOffset = -12;
+                rightOffset = 76;
                 break;
 
             case TrunkType.Medium:
@@ -180,7 +181,7 @@ public class SpruceTree : CustomTree
         int height = (Main.screenHeight / 16) + 118;
 
         var leftPos = tileCenterScreen + new Vector2(width + leftOffset, height);
-        spriteBatch.Draw(foliageTexture, leftPos, null, color, rotation, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+        spriteBatch.Draw(foliageTexture, leftPos, null, color , -rotation, Vector2.Zero, 1f, SpriteEffects.None, 0f);
 
         var rightPos = tileCenterScreen + new Vector2(width + rightOffset, height);
         spriteBatch.Draw(foliageTexture, rightPos, null, color, -rotation, Vector2.Zero, 1f, SpriteEffects.FlipHorizontally, 0f);

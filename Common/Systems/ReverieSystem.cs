@@ -1,5 +1,7 @@
 ﻿using Reverie.Content.Items.Accessories;
 using Reverie.Content.Tiles.Taiga;
+using Reverie.Content.Tiles.Taiga.Furniture;
+using Reverie.Content.Tiles.TemperateForest.Furniture;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Reverie.Utilities;

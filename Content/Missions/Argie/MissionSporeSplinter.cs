@@ -7,7 +7,7 @@ using static Reverie.Core.Missions.Core.ObjectiveEventNPC;
 
 namespace Reverie.Content.Missions.Argie;
 
-public class Mission_SporeSplinter : Mission
+public class MissionSporeSplinter : Mission
 {
     private enum Objectives
     {
@@ -15,7 +15,7 @@ public class Mission_SporeSplinter : Mission
         GatherResources = 1,
     }
 
-    public Mission_SporeSplinter() : base(MissionID.SporeSplinter,
+    public MissionSporeSplinter() : base(MissionID.SporeSplinter,
         name: "Spore & Splinter",
 
         description: @"""Every spore needs a floor! Help me stake my claim on this flat!.""",

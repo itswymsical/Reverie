@@ -508,6 +508,46 @@ Items: {
 		DisplayName: Birch Wood Platform
 		Tooltip: ""
 	}
+
+	SpruceWoodItem: {
+		DisplayName: Spruce Wood
+		Tooltip: ""
+	}
+
+	SpruceTreeDebugWand: {
+		DisplayName: Spruce Tree Debug Wand
+		Tooltip: ""
+	}
+
+	BirchCampfireItem: {
+		DisplayName: Temperate Campfire
+		Tooltip: ""
+	}
+
+	BirchDresserItem: {
+		DisplayName: Birch Wood Dresser
+		Tooltip: ""
+	}
+
+	BirchFenceItem: {
+		DisplayName: Birch Wood Fence
+		Tooltip: ""
+	}
+
+	BirchTorchItem: {
+		DisplayName: Temperate Torch
+		Tooltip: ""
+	}
+
+	BirchWoodHammerItem: {
+		DisplayName: Birch Wood Hammer
+		Tooltip: ""
+	}
+
+	BirchWoodSwordItem: {
+		DisplayName: Birch Wood Sword
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
@@ -783,6 +823,7 @@ Keybinds: {
 Tiles: {
 	MagnoliaTile.MapEntry: Magnolia
 	BirchChestTile.MapEntry: Birch Wood Chest
+	BirchDresserTile.MapEntry: Birch Dresser Tile
 }
 
 Buffs: {
