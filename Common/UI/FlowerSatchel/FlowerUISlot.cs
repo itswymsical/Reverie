@@ -177,8 +177,8 @@ internal class FlowerSatchelUIState : UIState
         // Add title text
         _effectsTitle = new UIText("No active effects", 0.925f, false)
         {
-            Left = new StyleDimension(Main.screenWidth / 48, 0),
-            Top = new StyleDimension(Main.screenHeight / 2.7f, 0),
+            Left = new StyleDimension(Main.screenWidth / 64, 0),
+            Top = new StyleDimension(Main.screenHeight / 3.25f, 0),
             TextColor = Color.LightGreen * 0.95f,
             ShadowColor = Color.Black
         };
@@ -187,22 +187,22 @@ internal class FlowerSatchelUIState : UIState
         // Add effects list below title
         _effectsList = new UIText("", 0.8f, false)
         {
-            Left = new StyleDimension(Main.screenWidth / 48, 0),
-            Top = new StyleDimension(Main.screenHeight / 2.7f + 25, 0),
+            Left = new StyleDimension(Main.screenWidth / 64, 0),
+            Top = new StyleDimension(Main.screenHeight / 3.25f + 25, 0),
             TextColor = Color.White * 0.8f,
             ShadowColor = Color.Black
         };
         Append(_effectsList);
 
         // Add flower slots in a single row
-        float baseX = Main.screenWidth / 20 - SLOTS_PER_ROW * 47 / 2;
-        var baseY = Main.screenHeight / 3.23f;
+        float baseX = Main.screenWidth / 5.01f - SLOTS_PER_ROW * 52 / 2;
+        var baseY = Main.screenHeight / 3.5f;
 
         for (var i = 0; i < satchel.items.Length; i++)
         {
             var slot = new FlowerInventorySlot(satchel.items, i, satchel)
             {
-                Left = new StyleDimension(baseX + i * 47, 0),
+                Left = new StyleDimension(baseX + i * 48, 0),
                 Top = new StyleDimension(baseY, 0),
                 Width = StyleDimension.FromPixels(32),
                 Height = StyleDimension.FromPixels(32)

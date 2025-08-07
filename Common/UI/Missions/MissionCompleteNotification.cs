@@ -53,18 +53,23 @@ public class MissionCompleteNotification(Mission mission) : IInGameNotification
         if (timeLeft <= 0) return;
 
         var fadeoutOffset = MathHelper.Lerp(30f, 0f, FadeoutProgress);
-        Vector2 screenCenter = new(Main.screenWidth / 2f, Main.screenHeight / 4.5f - fadeoutOffset);
+        Vector2 screenCenter = new(Main.screenWidth / 2f, Main.screenHeight / 3f - fadeoutOffset);
 
-
-
+        var header = $"Mission Complete!";
         var title = $"{completedMission.Name}";
-        var titleScale = UnifiedScale * 0.75f; // Use unified scale
-        var titleSize = FontAssets.DeathText.Value.MeasureString(title) * titleScale;
-        var titlePos = screenCenter - titleSize / 2f;
+
+        var headerSize = FontAssets.DeathText.Value.MeasureString(header);
+        var titleSize = FontAssets.DeathText.Value.MeasureString(title);
+
+        var headerScale = UnifiedScale;
+        var titleScale = UnifiedScale * 0.65f;
+
+        var headerPos = screenCenter - new Vector2(0, headerSize.Y * headerScale + 10);
+        var titlePos = screenCenter + new Vector2(0, titleSize.Y * titleScale * 0.5f);
 
         var accentTexture = ModContent.Request<Texture2D>($"Reverie/Assets/Textures/UI/Missions/Accent").Value;
-        Vector2 accentOrigin = new(accentTexture.Width / 2f, 0);
-        Vector2 accentPosition = new(screenCenter.X, titlePos.Y);
+        Vector2 accentOrigin = new(accentTexture.Width / 2f, accentTexture.Height / 2f);
+        Vector2 accentPosition = headerPos + new Vector2(0, (headerSize.Y / 2 * headerScale) + 8);
 
         spriteBatch.Draw(
             accentTexture,
@@ -73,7 +78,7 @@ public class MissionCompleteNotification(Mission mission) : IInGameNotification
             TextColor * 0.8f,
             0f,
             accentOrigin,
-            UnifiedScale, // Use unified scale
+            UnifiedScale * 1.15f,
             SpriteEffects.None,
             0f
         );
@@ -81,16 +86,29 @@ public class MissionCompleteNotification(Mission mission) : IInGameNotification
         Utils.DrawBorderStringFourWay(
             spriteBatch,
             FontAssets.DeathText.Value,
-            title,
-            titlePos.X + 4,
-            titlePos.Y - 30,
+            header,
+            headerPos.X,
+            headerPos.Y,
             TextColor,
             Color.Black * ElementOpacity,
-            Vector2.Zero,
+            headerSize / 2f,
+            headerScale
+        );
+
+        Utils.DrawBorderStringFourWay(
+            spriteBatch,
+            FontAssets.DeathText.Value,
+            title,
+            titlePos.X,
+            titlePos.Y,
+            TextColor,
+            Color.Black * ElementOpacity,
+            titleSize / 2f,
             titleScale
         );
 
-        DrawRewardItems(spriteBatch, screenCenter, titlePos.Y + titleSize.Y + 20);
+        DrawRewardItems(spriteBatch, screenCenter, titlePos.Y + (titleSize.Y * titleScale) / 2f + 20);
+
         spriteBatch.End();
 
         var effect = ShaderLoader.GetShader("SunburstShader").Value;
@@ -102,15 +120,14 @@ public class MissionCompleteNotification(Mission mission) : IInGameNotification
             effect.Parameters["uTime"]?.SetValue(SunburstRotation);
             effect.Parameters["uScreenResolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
             effect.Parameters["uSourceRect"]?.SetValue(new Vector4(0, 0, Main.screenWidth, Main.screenHeight));
-            effect.Parameters["uIntensity"]?.SetValue((TextColor.R / 255f) * 0.35f);
-            //effect.Parameters["uImage0"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin").Value);
+            effect.Parameters["uIntensity"]?.SetValue((TextColor.R / 255f) * 0.1f);
 
             Vector2 shaderCenter = new(
                 (screenCenter.X / Main.screenWidth) * 2f - 1f,
-                (screenCenter.Y / Main.screenHeight) * 2f - 1f
+                (screenCenter.Y / Main.screenHeight) * 2f - 1.1f
             );
             effect.Parameters["uCenter"]?.SetValue(shaderCenter);
-            effect.Parameters["uScale"]?.SetValue(UnifiedScale * 0.8f);
+            effect.Parameters["uScale"]?.SetValue(UnifiedScale * 0.9f);
             effect.Parameters["uRayCount"]?.SetValue(18f);
         }
 

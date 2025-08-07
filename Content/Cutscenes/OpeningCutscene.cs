@@ -1,4 +1,5 @@
-﻿using ReLogic.Content;
+﻿using Microsoft.Xna.Framework;
+using ReLogic.Content;
 using Reverie.Core.Cinematics;
 using Reverie.Core.Cinematics.Camera;
 using Reverie.Core.Cinematics.Music;
@@ -12,9 +13,7 @@ namespace Reverie.Content.Cutscenes;
 public class OpeningCutscene : Cutscene
 {
     private const float SCENE1_DURATION = 12f;
-    private const float SCENE2_DURATION = 6f;
-    private const float SCENE3_DURATION = 3f;
-
+    private const float SCENE2_DURATION = 7f;
     private const float FADE_IN_DURATION = 3f;
     private const float LOGO_FADE_DELAY = 2f;
     private const float LOGO_FADE_DURATION = 2f;
@@ -23,17 +22,13 @@ public class OpeningCutscene : Cutscene
     private const float STAR_FADE_START = 8f;
     private const float STAR_FADE_DURATION = 4f;
 
-    private const float SHOOTING_STAR_START = SCENE1_DURATION + 1f;
-
-    private const float IMPACT_TIME = SCENE1_DURATION + SCENE2_DURATION;
-
     private float logoAlpha = 0f;
     private float logoScale = 1.35f;
     private float logoRotation = 0f;
     private Texture2D logoTexture;
     private float starFieldAlpha = 1f;
 
-    private Vector2 playerPosition;
+    private Vector2 spawnTilePosition;
     private Vector2 topLeftPosition;
     private Vector2 topRightPosition;
     private bool cameraPathStarted = false;
@@ -45,16 +40,22 @@ public class OpeningCutscene : Cutscene
     private Dictionary<CutsceneStar, Vector2> starVelocities = [];
     private float spaceDriftSpeed = 0.32f;
 
-    private ShootingStar shootingStar;
-    private bool shootingStarCreated = false;
+    // Player fall variables
+    private bool playerFallStarted = false;
+    private bool playerFalling = false;
+    private bool impactOccurred = false;
+    private Vector2 originalPlayerPos;
+    private float fallHeight = 6500f;
+    private float impactTimer = 0f;
+    private bool wasOnGround = false;
 
     public override void Start()
     {
-        playerPosition = new Vector2(Main.spawnTileX * 16f + 8f, Main.spawnTileY * 16f + 8f);
+        spawnTilePosition = new Vector2(Main.spawnTileX * 16f + 8f, Main.spawnTileY * 16f + 8f);
 
-        var topY = 50f * 16f;
-        topLeftPosition = new Vector2(playerPosition.X - horizontalPanDistance / 2f, topY);
-        topRightPosition = new Vector2(playerPosition.X + horizontalPanDistance / 2f, topY);
+        var topY = 40f * 16f;
+        topLeftPosition = new Vector2(spawnTilePosition.X - horizontalPanDistance / 2f, topY);
+        topRightPosition = new Vector2(spawnTilePosition.X + horizontalPanDistance / 2f, topY);
 
         EnableLetterbox = true;
         base.Start();
@@ -69,25 +70,31 @@ public class OpeningCutscene : Cutscene
 
         StartCameraPath();
 
+        ControlsOFF();
         InvisON();
         Main.shimmerAlpha = 1f;
 
         InitializeStars();
+
+        // Store original player state
+        var player = Main.LocalPlayer;
+        originalPlayerPos = player.position;
+        wasOnGround = player.velocity.Y == 0f && Collision.SolidCollision(player.position, player.width, player.height + 1);
     }
 
     private void StartCameraPath()
     {
         var waypoints = new List<Vector2>
         {
-            topLeftPosition,     // Start: top-left
-            topRightPosition,    // Middle: top-right (horizontal pan)
-            playerPosition       // End: player position (vertical pan)
+            topLeftPosition,
+            topRightPosition,
+            spawnTilePosition
         };
 
         var durations = new List<int>
         {
-            (int)(SCENE1_DURATION * 60f),  // 12 seconds horizontal pan
-            (int)(SCENE2_DURATION * 60f)   // 8 seconds vertical pan
+            (int)(SCENE1_DURATION * 60f),
+            (int)(SCENE2_DURATION * 60f)
         };
 
         CameraSystem.CreateCameraPath(waypoints, durations);
@@ -96,39 +103,26 @@ public class OpeningCutscene : Cutscene
 
     protected override void OnCutsceneUpdate(GameTime gameTime)
     {
-        // Scene 1: Fade in + horizontal pan + logo + star field
         if (ElapsedSeconds < SCENE1_DURATION)
         {
-            UpdateScene1();
+            StarfieldScene();
         }
-        // Scene 2: Vertical pan + shooting star growth
-        else if (ElapsedSeconds < SCENE1_DURATION + SCENE2_DURATION)
-        {
-            UpdateScene2();
-        }
-        // Scene 3: Impact + fade out
         else
         {
-            UpdateScene3();
+            FallingScene(gameTime);
         }
 
-        // Always update star systems and shooting star
         UpdateStars();
-        if (shootingStar != null)
-        {
-            shootingStar.Update();
-        }
+        UpdatePlayerFall();
     }
 
-    private void UpdateScene1()
+    private void StarfieldScene()
     {
-        // Fade in from black
         if (ElapsedSeconds < FADE_IN_DURATION)
         {
             FadeIn(FADE_IN_DURATION * 60f);
         }
 
-        // Logo fade in/out
         if (ElapsedSeconds >= LOGO_FADE_DELAY && ElapsedSeconds < LOGO_FADE_OUT_DELAY)
         {
             var logoProgress = Math.Min((ElapsedSeconds - LOGO_FADE_DELAY) / LOGO_FADE_DURATION, 1f);
@@ -140,44 +134,94 @@ public class OpeningCutscene : Cutscene
             logoAlpha = MathHelper.SmoothStep(1f, 0f, fadeOutProgress);
         }
 
-        // Star field fade out
         if (ElapsedSeconds >= STAR_FADE_START)
         {
             float fadeProgress = (ElapsedSeconds - STAR_FADE_START) / STAR_FADE_DURATION;
             starFieldAlpha = Math.Max(0f, 1f - fadeProgress);
         }
 
-        // Keep shimmer active
         Main.shimmerAlpha = 1f;
     }
 
-    private void UpdateScene2()
+    private void FallingScene(GameTime gameTime)
     {
-        // Create and grow shooting star
-        if (!shootingStarCreated && ElapsedSeconds >= SHOOTING_STAR_START)
+        if (!playerFallStarted)
         {
-            CreateShootingStar();
-            shootingStarCreated = true;
+            InvisOFF();
+            StartPlayerFall();
+            playerFallStarted = true;
         }
 
-        // Start fading shimmer
         float scene2Progress = (ElapsedSeconds - SCENE1_DURATION) / SCENE2_DURATION;
         Main.shimmerAlpha = 1f - (scene2Progress * 0.8f);
+
+        if (impactOccurred)
+        {
+            impactTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            Main.shimmerAlpha = 0f;
+
+            if (impactTimer > 0.5f)
+            {
+                FadeOut(3f * 60f, 0f, Color.Black);
+            }
+        }
     }
 
-    private void UpdateScene3()
+    private void StartPlayerFall()
     {
-        if (!impactStarted)
+        var player = Main.LocalPlayer;
+
+        var fallStartPos = new Vector2(
+            spawnTilePosition.X + Main.rand.Next(-100, 100),
+            spawnTilePosition.Y - fallHeight
+        );
+
+        player.position = fallStartPos - new Vector2(player.width / 2f, player.height);
+
+        FallDamageOFF();
+        playerFalling = true;
+    }
+
+    private void UpdatePlayerFall()
+    {
+        if (!playerFalling || impactOccurred) return;
+
+        var player = Main.LocalPlayer;
+
+        // Add rotation while falling
+        player.fullRotation += 0.2f;
+        player.fullRotationOrigin = new Vector2(player.width / 2f, player.height / 2f);
+
+        // Check if player has landed (using Terraria's collision detection)
+        bool isOnGround = player.velocity.Y == 0f && Collision.SolidCollision(player.position, player.width, player.height + 1);
+
+        // Trigger impact when player lands (transition from falling to grounded)
+        if (!wasOnGround && isOnGround && player.velocity.Y >= 0f)
         {
-            // Impact effects
-            CameraSystem.shake = 35;
-            SoundEngine.PlaySound(SoundID.Item14); // Explosion sound
-            impactStarted = true;
+            TriggerImpact();
         }
 
-        // Fade to black
-        FadeOut(SCENE3_DURATION * 60f, 0f, Color.Black);
-        Main.shimmerAlpha = 0f;
+        wasOnGround = isOnGround;
+    }
+
+    private void TriggerImpact()
+    {
+        var player = Main.LocalPlayer;
+
+        // Stop rotation
+        player.fullRotation = 0f;
+        player.fullRotationOrigin = Vector2.Zero;
+
+        // Impact effects
+        CameraSystem.shake = 35;
+        SoundEngine.PlaySound(SoundID.Item14);
+
+        impactOccurred = true;
+        playerFalling = false;
+        impactTimer = 0f;
+        FallDamageOFF();
+
+        // Don't lock camera - let it finish panning to spawn naturally
     }
 
     private void InitializeStars()
@@ -237,7 +281,7 @@ public class OpeningCutscene : Cutscene
                 Main.rand.Next(100, Main.screenHeight - 100)
             ),
             velocity = new Vector2(
-                spaceDriftSpeed * 0.6f, // Rightward drift
+                spaceDriftSpeed * 0.6f,
                 Main.rand.NextFloat(-0.05f, 0.05f)
             ),
             rotation = Main.rand.NextFloat(0, MathHelper.TwoPi),
@@ -290,35 +334,15 @@ public class OpeningCutscene : Cutscene
         }
     }
 
-    private void CreateShootingStar()
-    {
-        shootingStar = new ShootingStar
-        {
-            position = new Vector2(-50, 0),
-            velocity = new Vector2(4f, 2f),
-            scale = 0.005f,
-            alpha = 0f,
-            trail = []
-        };
-    }
-
     protected override void DrawCutsceneContent(SpriteBatch spriteBatch)
     {
         base.DrawCutsceneContent(spriteBatch);
 
-        // Draw star field (Scene 1 only)
         if (starFieldAlpha > 0f && ElapsedSeconds < SCENE1_DURATION)
         {
             DrawStarField(spriteBatch);
         }
 
-        // Draw shooting star (Scene 2+)
-        if (shootingStar != null && ElapsedSeconds >= SHOOTING_STAR_START)
-        {
-            DrawShootingStar(spriteBatch);
-        }
-
-        // Draw logo (Scene 1 only)
         if (logoTexture != null && logoAlpha > 0f)
         {
             DrawLogo(spriteBatch);
@@ -370,42 +394,6 @@ public class OpeningCutscene : Cutscene
                            easterEgg.rotation, new Vector2(texture.Width / 2, texture.Height / 2),
                            easterEgg.scale, SpriteEffects.None, 0f);
         }
-
-        spriteBatch.End();
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap,
-                         DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
-    }
-
-    private void DrawShootingStar(SpriteBatch spriteBatch)
-    {
-        if (shootingStar.alpha <= 0f) return;
-
-        var starTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Star").Value;
-        var glowTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Glow").Value;
-
-        spriteBatch.End();
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearWrap,
-                         DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
-
-        // Draw trail
-        for (var i = 0; i < shootingStar.trail.Count; i++)
-        {
-            var trailAlpha = (float)i / shootingStar.trail.Count * shootingStar.alpha * 0.5f;
-            var trailScale = shootingStar.scale * (0.5f + (float)i / shootingStar.trail.Count * 0.5f);
-
-            spriteBatch.Draw(glowTexture, shootingStar.trail[i], null, Color.White * trailAlpha,
-                           0f, new Vector2(glowTexture.Width / 2, glowTexture.Height / 2),
-                           trailScale, SpriteEffects.None, 0f);
-        }
-
-        // Draw shooting star
-        spriteBatch.Draw(glowTexture, shootingStar.position, null, Color.White * shootingStar.alpha,
-                       0f, new Vector2(glowTexture.Width / 2, glowTexture.Height / 2),
-                       shootingStar.scale, SpriteEffects.None, 0f);
-
-        spriteBatch.Draw(starTexture, shootingStar.position, null, Color.White * shootingStar.alpha,
-                       0f, new Vector2(starTexture.Width / 2, starTexture.Height / 2),
-                       shootingStar.scale, SpriteEffects.None, 0f);
 
         spriteBatch.End();
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap,
@@ -471,17 +459,27 @@ public class OpeningCutscene : Cutscene
     {
         base.OnCutsceneEnd();
         Main.shimmerAlpha = 0f;
+
+        CameraSystem.UnlockCamera();
+        CameraSystem.ReturnCamera(1);
+
+        ControlsON();
         InvisOFF();
+        FallDamageON();
+
+        // Reset player rotation
+        var player = Main.LocalPlayer;
+        player.fullRotation = 0f;
+        player.fullRotationOrigin = Vector2.Zero;
 
         cutsceneStars.Clear();
         easterEggs.Clear();
         starVelocities.Clear();
-        CameraSystem.Reset();
     }
 
     public override bool IsFinished()
     {
-        return ElapsedSeconds >= SCENE1_DURATION + SCENE2_DURATION + SCENE3_DURATION;
+        return impactOccurred && impactTimer >= 2f;
     }
 }
 
@@ -538,29 +536,5 @@ public class CutsceneEasterEgg
             6 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}DeadEye").Value,
             _ => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostMartian").Value
         };
-    }
-}
-
-public class ShootingStar
-{
-    public Vector2 position;
-    public Vector2 velocity;
-    public float scale;
-    public float alpha;
-    public List<Vector2> trail;
-
-    public void Update()
-    {
-        position += velocity;
-
-        trail.Add(position);
-        if (trail.Count > 30)
-            trail.RemoveAt(0);
-
-        if (scale < 1.1f)
-            scale += 0.0025f;
-
-        if (alpha < 1f)
-            alpha += 0.025f;
     }
 }
