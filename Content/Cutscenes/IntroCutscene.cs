@@ -1,10 +1,13 @@
-﻿using Reverie.Common.Systems;
+﻿using Microsoft.Xna.Framework.Graphics;
+using Reverie.Common.Systems;
 using Reverie.Core.Cinematics;
 using Reverie.Core.Cinematics.Camera;
 using Reverie.Core.Cinematics.Music;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Terraria.Audio;
+using Terraria.GameContent;
+using Terraria.GameContent.Skies;
 
 namespace Reverie.Content.Cutscenes;
 
@@ -55,25 +58,25 @@ public class IntroCutscene : Cutscene
     {
         FadeIn(fadeInDuration);
 
-        if (!panStarted && ElapsedTime >= panStartDelay)
+        if (!panStarted && ElapsedSeconds >= panStartDelay)
         {
             CameraSystem.ReturnCamera(panDuration);
             panStarted = true;
         }
 
-        if (ElapsedTime >= logoFadeDelay && ElapsedTime < logoFadeOutDelay)
+        if (ElapsedSeconds >= logoFadeDelay && ElapsedSeconds < logoFadeOutDelay)
         {
-            var logoProgress = Math.Min((ElapsedTime - logoFadeDelay) / logoFadeDuration, 1f);
+            var logoProgress = Math.Min((ElapsedSeconds - logoFadeDelay) / logoFadeDuration, 1f);
             logoAlpha = MathHelper.SmoothStep(0f, 1f, logoProgress);
         }
-        else if (ElapsedTime >= logoFadeOutDelay)
+        else if (ElapsedSeconds >= logoFadeOutDelay)
         {
-            var fadeOutProgress = Math.Min((ElapsedTime - logoFadeOutDelay) / logoFadeOutDuration, 1f);
+            var fadeOutProgress = Math.Min((ElapsedSeconds - logoFadeOutDelay) / logoFadeOutDuration, 1f);
             logoAlpha = MathHelper.SmoothStep(1f, 0f, fadeOutProgress);
         }
 
         var logoFadeEndTime = logoFadeOutDelay + logoFadeOutDuration;
-        if (!fallSequenceStarted && ElapsedTime >= logoFadeEndTime + fallStartDelay)
+        if (!fallSequenceStarted && ElapsedSeconds >= logoFadeEndTime + fallStartDelay)
         {
             StartFalling();
             fallSequenceStarted = true;
@@ -152,7 +155,7 @@ public class IntroCutscene : Cutscene
         {
             return true;
         }
-        return ElapsedTime >= logoFadeOutDelay + logoFadeOutDuration + 10f;
+        return ElapsedSeconds >= logoFadeOutDelay + logoFadeOutDuration + 10f;
     }
 
     protected override void OnCutsceneEnd()

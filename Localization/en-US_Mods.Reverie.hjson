@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Experience Bar
+UI.ExperienceTracker: Experience Bar
 
 Conditions: {
 	CopperStandardComplete: After Mission, (Copper Standard)
@@ -548,6 +548,11 @@ Items: {
 		DisplayName: Birch Wood Sword
 		Tooltip: ""
 	}
+
+	GeodePlacer: {
+		DisplayName: Geode Placer
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
@@ -581,6 +586,7 @@ Projectiles: {
 	LodestoneMagnetizerProj.DisplayName: Lodestone Magnetizer
 	ArchiverChronicleProjectile.DisplayName: Archiver Chronicle Projectile
 	TumbleweedProjectile.DisplayName: Tumbleweed Projectile
+	ShootingStarProj.DisplayName: Shooting Star Proj
 }
 
 Configs: {

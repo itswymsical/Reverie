@@ -18,8 +18,7 @@ public class MissionJourneysBegin : Mission
     {
         TalkToGuide = 0,
         UseMirror = 1,
-        ExploreUnderground = 2,
-        ChronicleSegment = 3
+        ExploreUnderground = 2
     }
 
     public MissionJourneysBegin() : base(MissionID.JourneysBegin,
@@ -31,9 +30,8 @@ public class MissionJourneysBegin : Mission
         [
             [("Talk to Guide", 1)],
             [("Use Magic Mirror", 1)],
-            [("Loot chests", 5), ("Mine ore", 20), ("Break pots", 30)],
-
-            [("Give Guide Mysterious Book", 1), ("Listen to Guide", 1)]
+            [("Loot chests", 3), ("Mine ore", 20), ("Break pots", 20)],
+            [("Build a shelter", 1), ("Check in with Guide", 1)]
         ],
 
         rewards: [new Item(ItemID.RegenerationPotion), new Item(ItemID.LesserHealingPotion, Main.rand.Next(5, 10)), new Item(ItemID.GoldCoin, Main.rand.Next(1, 2))],
@@ -47,7 +45,7 @@ public class MissionJourneysBegin : Mission
     {
         base.OnMissionStart();
 
-        DialogueManager.Instance.StartDialogue("JourneysBegin.Tutorial", 6, zoomIn: false, true);
+        DialogueManager.Instance.StartDialogue("JourneysBegin.Tutorial", 7, zoomIn: false, true);
     }
 
     public override void OnMissionComplete(bool giveRewards = true)
@@ -57,6 +55,9 @@ public class MissionJourneysBegin : Mission
 
         MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
         player.UnlockMission(MissionID.ForgottenAges);
+
+        DialogueManager.Instance.StartDialogue("JourneysBegin.MissionEnd", 2, zoomIn: false, false);
+
     }
 
     public override void Update()
@@ -66,18 +67,6 @@ public class MissionJourneysBegin : Mission
         Main.slimeRain = false;
         Main.slimeRainTime = 0;
         Main.bloodMoon = false;
-
-        if (WasItemInteracted(ModContent.ItemType<ArchiverChronicleI>()))
-        {
-            for (int i = 0; i < player.inventory.Length; i++)
-            {
-                Item item = player.inventory[i];
-                if (item.type == ModContent.ItemType<ArchiverChronicleI>() && !item.IsAir)
-                {
-                    item.favorited = true;
-                }
-            }
-        }
     }
 
     #region Event Registration
@@ -131,14 +120,6 @@ public class MissionJourneysBegin : Mission
                     DialogueManager.Instance.StartDialogue("JourneysBegin.MirrorGiven", 1, zoomIn: false, letterbox: true);
                 }
                 break;
-
-            case Objectives.ChronicleSegment:
-                if (dialogueKey == "JourneysBegin.ChronicleReading")
-                {
-                    UpdateProgress(objective: 1);
-                    player.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ModContent.ItemType<ArchiverChronicleI>(), 1);
-                }
-                break;
         }
     }
 
@@ -149,27 +130,13 @@ public class MissionJourneysBegin : Mission
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
-            case Objectives.ChronicleSegment:
-                if (npc.type == NPCID.Guide)
-                {
-                    UpdateProgress(0);
-                    MissionUtils.RetrieveItemsFromPlayer(player, ModContent.ItemType<ArchiverChronicleI>(), 1);
-                    DialogueManager.Instance.StartDialogue("JourneysBegin.ChronicleReading", 6, zoomIn: true);
-                }
-                break;
+
         }
     }
 
     private void OnItemPickupHandler(Item item, Player player)
     {
-        if (item.type == ModContent.ItemType<ArchiverChronicleI>())
-        {
-            if (!WasItemInteracted(item.type))
-            {
-                MarkItemInteracted(item.type);
-                DialogueManager.Instance.StartDialogue("JourneysBegin.ChronicleFound", 5, zoomIn: false, letterbox: false);
-            }
-        }
+
     }
 
     private void OnItemUseHandler(Item item, Player player)
@@ -247,14 +214,6 @@ public class MissionJourneysBegin : Mission
 
                     UpdateProgress(objective: 2);
 
-                    if (CurrentIndex == (int)Objectives.ExploreUnderground)
-                    {
-                        var currentSet = Objective[CurrentIndex];
-                        if (currentSet.Objectives[2].CurrentCount == 25)
-                        {
-                            Projectile.NewProjectile(new EntitySource_Misc("Mission"), new Vector2(i * 16, j * 16), Vector2.Zero, ModContent.ProjectileType<ArchiverChronicleProjectile>(), 0, 0);
-                        }
-                    }
                 }
                 if (TileID.Sets.Ore[type])
                 {
