@@ -4,6 +4,7 @@ using Terraria.Localization;
 using Terraria.ObjectData;
 using Reverie.Content.Items.Botany;
 using Reverie.Content.Tiles.Farming;
+using Reverie.Content.Tiles.Taiga;
 
 namespace Reverie.Content.Tiles.Misc
 {
@@ -37,8 +38,8 @@ namespace Reverie.Content.Tiles.Misc
 			TileObjectData.newTile.CopyFrom(TileObjectData.StyleAlch);
 			TileObjectData.newTile.AnchorValidTiles = [
 				TileID.Grass,
-				TileID.LivingWood,
-			];
+                 ModContent.TileType<TaigaGrassTile>()
+            ];
 
 			TileObjectData.newTile.AnchorAlternateTiles = [
 				TileID.ClayPot,

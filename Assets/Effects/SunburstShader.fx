@@ -4,9 +4,10 @@ float4 uSourceRect;
 float2 uScreenResolution;
 float uTime;
 float uIntensity;
-float2 uCenter; // sunburst center position (-1 to 1 range)
-float uScale; // sunburst scale multiplier
-float uRayCount; // number of rays (default: 12)
+float3 uColor;
+float2 uCenter;
+float uScale;
+float uRayCount;
 
 struct VSInput
 {
@@ -35,8 +36,8 @@ float4 PixelShaderFunction(VSInput input) : COLOR0
     
     float brightness = (rays * falloff + centerGlow) * fade;
     
-    // Simple color blend
-    float3 color = float3(1.0, 0.7 - dist * 0.3, 0.2 + centerGlow * 0.6);
+    // Color blend using provided color
+    float3 color = uColor * (0.8 + centerGlow * 0.4) + float3(0.2, 0.1, 0.0) * dist;
     
     return float4(color * brightness * uIntensity, brightness);
 }

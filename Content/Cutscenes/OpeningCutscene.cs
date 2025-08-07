@@ -36,7 +36,7 @@ public class OpeningCutscene : Cutscene
     private float horizontalPanDistance = 2000f;
 
     private List<CutsceneStar> cutsceneStars = [];
-    private List<CutsceneEasterEgg> easterEggs = [];
+    private List<CutsceneObject> screenObj = [];
     private Dictionary<CutsceneStar, Vector2> starVelocities = [];
     private float spaceDriftSpeed = 0.32f;
 
@@ -192,10 +192,8 @@ public class OpeningCutscene : Cutscene
         player.fullRotation += 0.2f;
         player.fullRotationOrigin = new Vector2(player.width / 2f, player.height / 2f);
 
-        // Check if player has landed (using Terraria's collision detection)
         bool isOnGround = player.velocity.Y == 0f && Collision.SolidCollision(player.position, player.width, player.height + 1);
 
-        // Trigger impact when player lands (transition from falling to grounded)
         if (!wasOnGround && isOnGround && player.velocity.Y >= 0f)
         {
             TriggerImpact();
@@ -208,26 +206,22 @@ public class OpeningCutscene : Cutscene
     {
         var player = Main.LocalPlayer;
 
-        // Stop rotation
         player.fullRotation = 0f;
         player.fullRotationOrigin = Vector2.Zero;
 
-        // Impact effects
-        CameraSystem.shake = 35;
+        CameraSystem.shake = 25;
         SoundEngine.PlaySound(SoundID.Item14);
 
         impactOccurred = true;
         playerFalling = false;
         impactTimer = 0f;
         FallDamageOFF();
-
-        // Don't lock camera - let it finish panning to spawn naturally
     }
 
     private void InitializeStars()
     {
         cutsceneStars.Clear();
-        easterEggs.Clear();
+        screenObj.Clear();
         starVelocities.Clear();
 
         var starCount = Main.rand.Next(60, 100);
@@ -236,10 +230,9 @@ public class OpeningCutscene : Cutscene
             CreateNewStar(true);
         }
 
-        // Create easter eggs
         for (var i = 0; i < Main.rand.Next(3, 6); i++)
         {
-            CreateEasterEgg();
+            CreateObjects();
         }
     }
 
@@ -272,9 +265,9 @@ public class OpeningCutscene : Cutscene
         cutsceneStars.Add(star);
     }
 
-    private void CreateEasterEgg()
+    private void CreateObjects()
     {
-        var easterEgg = new CutsceneEasterEgg
+        var spaceObj = new CutsceneObject
         {
             position = new Vector2(
                 Main.rand.Next(-100, Main.screenWidth + 100),
@@ -286,11 +279,11 @@ public class OpeningCutscene : Cutscene
             ),
             rotation = Main.rand.NextFloat(0, MathHelper.TwoPi),
             scale = Main.rand.NextFloat(0.4f, 0.7f),
-            type = Main.rand.Next(7),
+            type = Main.rand.Next(4),
             alpha = 0f
         };
 
-        easterEggs.Add(easterEgg);
+        screenObj.Add(spaceObj);
     }
 
     private void UpdateStars()
@@ -314,15 +307,15 @@ public class OpeningCutscene : Cutscene
             }
 
             // Update easter eggs
-            for (var i = easterEggs.Count - 1; i >= 0; i--)
+            for (var i = screenObj.Count - 1; i >= 0; i--)
             {
-                var easterEgg = easterEggs[i];
+                var easterEgg = screenObj[i];
                 easterEgg.Update();
 
                 if (easterEgg.position.X > Main.screenWidth + 100)
                 {
-                    easterEggs.RemoveAt(i);
-                    CreateEasterEgg();
+                    screenObj.RemoveAt(i);
+                    CreateObjects();
                 }
             }
 
@@ -380,7 +373,7 @@ public class OpeningCutscene : Cutscene
         }
 
         // Draw easter eggs
-        foreach (var easterEgg in easterEggs)
+        foreach (var easterEgg in screenObj)
         {
             var texture = easterEgg.GetTexture();
 
@@ -473,7 +466,7 @@ public class OpeningCutscene : Cutscene
         player.fullRotationOrigin = Vector2.Zero;
 
         cutsceneStars.Clear();
-        easterEggs.Clear();
+        screenObj.Clear();
         starVelocities.Clear();
     }
 
@@ -505,7 +498,7 @@ public class CutsceneStar
     }
 }
 
-public class CutsceneEasterEgg
+public class CutsceneObject
 {
     public Vector2 position;
     public Vector2 velocity;
@@ -527,13 +520,10 @@ public class CutsceneEasterEgg
     {
         return type switch
         {
-            0 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostMartian").Value,
-            1 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostMeteorHead").Value,
-            2 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}SpaceDolphin").Value,
-            3 => TextureAssets.Item[ItemID.FirstFractal].Value,
-            4 => TextureAssets.Item[ItemID.SDMG].Value,
-            5 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostTree").Value,
-            6 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}DeadEye").Value,
+            0 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}Rock_01").Value,
+            1 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}Rock_02").Value,
+            2 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}Rock_03").Value,
+            3 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostTree").Value,
             _ => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostMartian").Value
         };
     }
