@@ -1,17 +1,27 @@
-﻿//i dont know what i am doing
+/*
+    * Copyright (C) 2024 Project Starlight River
+    * 
+    * This program is free software: you can redistribute it and/or modify
+    * it under the terms of the GNU General Public License as published by
+    * the Free Software Foundation, either version 3 of the License, or
+    * (at your option) any later version.
+    * 
+    * This program is distributed in the hope that it will be useful,
+    * but WITHOUT ANY WARRANTY; without even the implied warranty of
+    * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    * GNU General Public License for more details.
+    * 
+    * You should have received a copy of the GNU General Public License
+    * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 float time;
 float repeats;
-
-float pixelation;
-float2 resolution;
 
 matrix transformMatrix;
 
 texture sampleTexture;
 sampler2D samplerTex = sampler_state { texture = <sampleTexture>; magfilter = LINEAR; minfilter = LINEAR; mipfilter = LINEAR; AddressU = wrap; AddressV = wrap; };
-
-texture targetTexture;
-sampler2D targetTex = sampler_state { texture = <targetTexture>; magfilter = LINEAR; minfilter = LINEAR; mipfilter = LINEAR; AddressU = mirror; AddressV = mirror; };
 
 struct VertexShaderInput
 {
@@ -40,13 +50,11 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 
 float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 {
-	float2 scaledRes = resolution / pixelation;
-	float2 modUV = (round(input.TexCoords * scaledRes) / scaledRes);
+	float2 st = float2(input.TexCoords.x * repeats, 0.25 + input.TexCoords.y * 0.5);
 
-    float3 color = tex2D(samplerTex, modUV + float2(time, 0)).xyz;
-	float3 color2 = tex2D(samplerTex, modUV + float2(-time * 1.5, 0)).xyz * 0.5;
+	float3 color = tex2D(samplerTex, st + float2(time, 0)).xyz;
 
-    return float4((color + color2) * input.Color * (1.0 + color.x * 2.0), color.x * input.Color.w);
+    return float4(color * input.Color * (1.0 + color.x * 2.0), color.x * input.Color.w);
 }
 
 technique Technique1

@@ -1,7 +1,8 @@
-﻿sampler uImage0 : register(s0); // Contents of the screen.
+sampler uImage0 : register(s0);
 sampler uImage1 : register(s1);
 sampler uImage2 : register(s2);
 sampler uImage3 : register(s3);
+
 float3 uColor;
 float3 uSecondaryColor;
 float2 uScreenResolution;
@@ -20,16 +21,21 @@ float uSaturation;
 float4 uSourceRect;
 float2 uZoom;
 
-	float4 SimpleBloomFunction(float2 uv : TEXCOORD0) : COLOR0
-	{
-		float4 c = tex2D(uImage0, uv);
-		return saturate((c - uIntensity) / (1 - uIntensity));
-	}
+float4 FilterMyShader(float2 coords : TEXCOORD0) : COLOR0
+{
+    float4 colour = tex2D(uImage0, coords);
+    
+    float distance = sqrt(pow(coords.x - 0.5f, 2) + pow(coords.y - 0.5f, 2));
+    
+    colour *= (1.3f - (uOpacity / 1000)) - distance;
+    
+    return colour;
+}
 
-	technique Technique1
-	{
-		pass SimpleBloomPass
-		{
-			PixelShader = compile ps_2_0 SimpleBloomFunction();
-		}
-	}
+technique Technique1
+{
+    pass Ripple
+    {
+        PixelShader = compile ps_2_0 FilterMyShader();
+    }
+}

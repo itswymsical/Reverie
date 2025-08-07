@@ -1,4 +1,4 @@
-﻿// Magnetic field vertex + pixel shader combo
+// Magnetic field vertex + pixel shader combo
 sampler uImage0 : register(s0);
 float4x4 uTransform;
 float4 uSourceRect;
