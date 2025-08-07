@@ -1,4 +1,5 @@
-﻿sampler2D TrailTexture;
+sampler2D TrailTexture : register(s0);
+float4x4 MatrixTransform;
 
 struct VertexShaderInput
 {

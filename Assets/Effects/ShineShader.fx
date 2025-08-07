@@ -1,4 +1,4 @@
-﻿sampler uImage0 : register(s0); // Contents of the screen.
+sampler uImage0 : register(s0); // Contents of the screen.
 sampler uImage1 : register(s1);
 sampler uImage2 : register(s2);
 sampler uImage3 : register(s3);

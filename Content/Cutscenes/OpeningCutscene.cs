@@ -437,14 +437,21 @@ public class OpeningCutscene : Cutscene
 
         if (effect != null)
         {
-            effect.Parameters["uTime"]?.SetValue((float)(Main.timeForVisualEffects * 0.005f));
+            effect.Parameters["uTime"]?.SetValue((float)(Main.timeForVisualEffects * 0.0015f));
             effect.Parameters["uScreenResolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
             effect.Parameters["uSourceRect"]?.SetValue(new Vector4(0, 0, Main.screenWidth, Main.screenHeight));
-            effect.Parameters["uIntensity"]?.SetValue(2f * logoAlpha);
-            effect.Parameters["uImage0"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin", AssetRequestMode.ImmediateLoad).Value);
-            effect.Parameters["uImage1"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail", AssetRequestMode.ImmediateLoad).Value);
+            effect.Parameters["uIntensity"]?.SetValue(.85f * logoAlpha);
+
+            effect.Parameters["uImage0"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}RibbonTrail", AssetRequestMode.ImmediateLoad).Value);
+            effect.Parameters["uImage1"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}StormTrail", AssetRequestMode.ImmediateLoad).Value);
+
             effect.Parameters["uCenter"]?.SetValue(galaxyShaderPos);
-            effect.Parameters["uScale"]?.SetValue(5.5f);
+            effect.Parameters["uScale"]?.SetValue(3.5f);
+
+            effect.Parameters["uRotation"]?.SetValue((float)(Main.timeForVisualEffects * 0.001f));
+            effect.Parameters["uArmCount"]?.SetValue(4.0f);
+
+            effect.Parameters["uColor"]?.SetValue(new Vector4(0.8f, 0.4f, 1.5f, .85f));
         }
 
         var perlinSpiral = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin").Value;

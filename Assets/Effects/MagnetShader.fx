@@ -1,4 +1,4 @@
-﻿sampler uImage0 : register(s0);
+sampler uImage0 : register(s0);
 float4 uSourceRect;
 float2 uScreenResolution;
 float uTime;

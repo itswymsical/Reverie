@@ -13,8 +13,6 @@ float3 uLightSource;
 float2 uImageSize0;
 float2 uImageSize1;
 
-// This is a shader. You are on your own with shaders. Compile shaders in an XNB project.
-
 float4 PixelShaderFunction(float4 sampleColor : COLOR0, float2 coords : TEXCOORD0) : COLOR0
 {
 	float2 pixelCoords = 2 / uImageSize0;
