@@ -118,16 +118,17 @@ public class MissionCompleteNotification(Mission mission) : IInGameNotification
         if (effect != null)
         {
             effect.Parameters["uTime"]?.SetValue(SunburstRotation);
-            effect.Parameters["uScreenResolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
-            effect.Parameters["uSourceRect"]?.SetValue(new Vector4(0, 0, Main.screenWidth, Main.screenHeight));
-            effect.Parameters["uIntensity"]?.SetValue((TextColor.R / 255f) * 0.1f);
+            effect.Parameters["uIntensity"]?.SetValue((TextColor.R / 255f) * 0.2f);
+            effect.Parameters["uColor"]?.SetValue(new Vector3(1f, 0.65f, 0.4f));
+
 
             Vector2 shaderCenter = new(
                 (screenCenter.X / Main.screenWidth) * 2f - 1f,
                 (screenCenter.Y / Main.screenHeight) * 2f - 1.1f
             );
+
             effect.Parameters["uCenter"]?.SetValue(shaderCenter);
-            effect.Parameters["uScale"]?.SetValue(UnifiedScale * 0.9f);
+            effect.Parameters["uScale"]?.SetValue(UnifiedScale * 0.7f);
             effect.Parameters["uRayCount"]?.SetValue(18f);
         }
 

@@ -99,7 +99,7 @@ public class TaigaDecorPass : GenPass
 
         if (Main.rand.NextBool(10) && HasSpacing(x, y, 3))
         {
-            SpruceTree.GrowSpruceTree(x, y - 1);
+            SpruceTree.Grow(x, y - 1);
         }
 
         if (Main.rand.NextBool(2))

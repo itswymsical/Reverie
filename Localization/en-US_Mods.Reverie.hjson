@@ -33,12 +33,12 @@ Items: {
 
 	FrostbarkHauberk: {
 		DisplayName: Frostbark Hauberk
-		Tooltip: ""
+		Tooltip: Increases melee daamge by 5%
 	}
 
 	FrostbarkHelm: {
 		DisplayName: Frostbark Helm
-		Tooltip: ""
+		Tooltip: Increases melee critical strike chance by 3%
 	}
 
 	LodestoneMagnetizerItem: {
@@ -551,6 +551,21 @@ Items: {
 
 	GeodePlacer: {
 		DisplayName: Geode Placer
+		Tooltip: ""
+	}
+
+	MediumTanglewoodTreeWand: {
+		DisplayName: Medium Tanglewood Tree Wand
+		Tooltip: ""
+	}
+
+	SmallTanglewoodTreeWand: {
+		DisplayName: Small Tanglewood Tree Wand
+		Tooltip: ""
+	}
+
+	SpruceTreeWand: {
+		DisplayName: Spruce Tree Wand
 		Tooltip: ""
 	}
 }

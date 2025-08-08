@@ -685,7 +685,7 @@ public class SpruceTree : CustomTree
         }
     }
 
-    public static bool GrowSpruceTree(int i, int j)
+    public static bool Grow(int i, int j)
     {
         var instance = ModContent.GetInstance<SpruceTree>();
         return instance.GrowTree(i, j);

@@ -34,7 +34,7 @@ public class FrostbarkHauberk : ModItem
     public override void UpdateEquip(Player player)
     {
         base.UpdateEquip(player);
-        player.GetCritChance(DamageClass.Melee) += 0.05f;
+        player.GetDamage(DamageClass.Melee) += 0.05f;
     }
     public override void AddRecipes()
     {
@@ -61,6 +61,8 @@ public class FrostbarkHelm : ModItem
     public override void UpdateEquip(Player player)
     {
         base.UpdateEquip(player);
+        player.GetCritChance(DamageClass.Melee) += 0.03f;
+
     }
 
     public override bool IsArmorSet(Item head, Item body, Item legs)

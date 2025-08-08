@@ -77,6 +77,8 @@ public class LodestoneHelmet : ModItem
     private void DrawLodestoneField(On_Main.orig_DrawInfernoRings orig, Main self)
     {
         bool effectFound = false;
+        float fieldRadius = 80f; // define here for reuse
+
         for (int i = 0; i < 255; i++)
         {
             if (!Main.player[i].active || Main.player[i].outOfRange || Main.player[i].dead)
@@ -88,45 +90,46 @@ public class LodestoneHelmet : ModItem
             {
                 try
                 {
-                    var fieldEffect = ShaderLoader.GetShader("MagnetShader").Value;
-                    if (fieldEffect == null)
+                    var forceFieldShader = ShaderLoader.GetShader("ForceFieldShader").Value;
+                    if (forceFieldShader == null)
                     {
                         continue;
                     }
 
                     Vector2 screenPos = player.Center - Main.screenPosition;
-                    float fieldRadius = 800f;
 
                     Main.spriteBatch.End();
                     Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive,
                         SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone,
-                        fieldEffect, Main.GameViewMatrix.TransformationMatrix);
+                        forceFieldShader, Main.GameViewMatrix.TransformationMatrix);
 
-                    // Set parameters
-                    fieldEffect.Parameters["uPlayerPosition"]?.SetValue(screenPos);
-                    fieldEffect.Parameters["uScreenResolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
-                    fieldEffect.Parameters["uSourceRect"]?.SetValue(new Vector4(0, 0, Main.screenWidth, Main.screenHeight));
-                    fieldEffect.Parameters["uTime"]?.SetValue(Main.GameUpdateCount * 0.03f);
-                    fieldEffect.Parameters["uFieldRadius"]?.SetValue(fieldRadius);
-                    fieldEffect.Parameters["uRippleFrequency"]?.SetValue(4f);
-                    fieldEffect.Parameters["uDistortionStrength"]?.SetValue(16f);
-                    fieldEffect.Parameters["uFalloffPower"]?.SetValue(2f);
+                    forceFieldShader.Parameters["uPlayerPosition"]?.SetValue(screenPos);
+                    forceFieldShader.Parameters["uScreenResolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
+                    forceFieldShader.Parameters["uSourceRect"]?.SetValue(new Vector4(0, 0, Main.screenWidth, Main.screenHeight));
+                    forceFieldShader.Parameters["uTime"]?.SetValue(Main.GameUpdateCount * 0.02f);
+                    forceFieldShader.Parameters["uFieldRadius"]?.SetValue(fieldRadius);
+                    forceFieldShader.Parameters["uRippleFrequency"]?.SetValue(6f);
+                    forceFieldShader.Parameters["uDistortionStrength"]?.SetValue(5f);
+                    forceFieldShader.Parameters["uFalloffPower"]?.SetValue(1.5f);
+                    forceFieldShader.Parameters["uPulseSpeed"]?.SetValue(7f);
+                    forceFieldShader.Parameters["uPulseIntensity"]?.SetValue(0.3f);
+                    forceFieldShader.Parameters["uBaseOpacity"]?.SetValue(0.8f);
+                    forceFieldShader.Parameters["uColor"]?.SetValue(new Vector4(0.0f, 0.7f, 1.0f, 1.0f)); // cyan forcefield
+                    forceFieldShader.Parameters["uOpacity"]?.SetValue(0.6f);
+                    forceFieldShader.Parameters["uTextureScroll"]?.SetValue(new Vector2(0.02f, 0.01f)); // slow scroll
 
-                    fieldEffect.Parameters["uPulseSpeed"]?.SetValue(1.5f);
-                    fieldEffect.Parameters["uPulseIntensity"]?.SetValue(0.4f);
-                    fieldEffect.Parameters["uBaseOpacity"]?.SetValue(0f);
 
                     effectFound = true;
                 }
                 catch (Exception ex)
                 {
-                    Main.NewText($"Shader error: {ex.Message}", Color.Red);
+                    Main.NewText($"Forcefield shader error: {ex.Message}", Color.Red);
                     continue;
                 }
             }
 
             Vector2 playerScreenPos = player.Center - Main.screenPosition;
-            float effectSize = 200;
+            float effectSize = fieldRadius * 2.5f; // size based on field radius
 
             Rectangle effectRect = new Rectangle(
                 (int)(playerScreenPos.X - effectSize / 2),
@@ -135,16 +138,15 @@ public class LodestoneHelmet : ModItem
                 (int)effectSize
             );
 
-            var color = Lighting.GetColor(effectRect.X, effectRect.Y);
-
-            Rectangle screenBounds = new Rectangle(-50, -50, Main.screenWidth + 100, Main.screenHeight + 100);
+            Rectangle screenBounds = new Rectangle(-100, -100, Main.screenWidth + 200, Main.screenHeight + 200);
             if (effectRect.Intersects(screenBounds))
             {
+                // Draw full screen effect for proper coordinate mapping
                 Main.spriteBatch.Draw(
-                   ModContent.Request<Texture2D>($"{VFX_DIRECTORY}InverseMask").Value,
-                    effectRect,
+                   ModContent.Request<Texture2D>("Terraria/Images/Misc/Perlin").Value,
+                    new Rectangle(0, 0, Main.screenWidth, Main.screenHeight),
                     null,
-                    color,
+                    Color.White * 0.8f,
                     0f,
                     Vector2.Zero,
                     SpriteEffects.None,

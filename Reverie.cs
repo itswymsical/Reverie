@@ -1,18 +1,10 @@
-﻿
-using AnimatedModIconLib.Core;
-using ReLogic.Content;
+﻿using AnimatedModIconLib.Core;
 using Reverie.Common.Players;
-using Reverie.Common.Systems;
 using Reverie.Core.Graphics.Interfaces;
 using Reverie.Core.Loaders;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using Terraria.Graphics.Effects;
-using Terraria.Graphics.Shaders;
-using Terraria.UI.Chat;
 
 namespace Reverie;
 
@@ -60,9 +52,6 @@ public sealed partial class Reverie : Mod
     /// </summary>
     public const string NAME_PREFIX = NAME + ": ";
 
-
-    public const string DIALOGUE_LIBRARY = "DialogueLibrary.";
-
     /// <summary>
     ///     Gets the <see cref="Mod" /> implementation of this mod.
     /// </summary>
@@ -71,6 +60,7 @@ public sealed partial class Reverie : Mod
 
     private List<IOrderedLoadable> loadCache;
     public Reverie() => Instance = this;
+
     public override void Load()
     {
 
@@ -101,8 +91,10 @@ public sealed partial class Reverie : Mod
         Texture2D moon = ModContent.Request<Texture2D>(ICON_DIRECTORY + "Moon").Value;
         Texture2D foreground = ModContent.Request<Texture2D>(ICON_DIRECTORY + "LightTrail").Value;
         Texture2D ocean = ModContent.Request<Texture2D>(ICON_DIRECTORY + "Ocean").Value;
-        Texture2D cloud1 = ModContent.Request<Texture2D>(ICON_DIRECTORY + "MediumCloud").Value;
-        Texture2D cloud2 = ModContent.Request<Texture2D>(ICON_DIRECTORY + "BigCloud").Value;
+        Texture2D medCloud = ModContent.Request<Texture2D>(ICON_DIRECTORY + "MediumCloud").Value;
+        Texture2D bigCloud = ModContent.Request<Texture2D>(ICON_DIRECTORY + "BigCloud").Value;
+        Texture2D tinyCloud = ModContent.Request<Texture2D>(ICON_DIRECTORY + "TinyCloud").Value;
+
         Texture2D stars = ModContent.Request<Texture2D>(ICON_DIRECTORY + "Stars").Value;
         Texture2D frame = ModContent.Request<Texture2D>(ICON_DIRECTORY + "Frame").Value;
 
@@ -114,7 +106,7 @@ public sealed partial class Reverie : Mod
 
         float slowPan = time * 0.35f;
         float mediumPan = time * 0.5f;
-        float fastPan = time * 0.4f;
+        float fastPan = time * 0.55f;
 
         slowPan = slowPan % 1f;
         mediumPan = mediumPan % 1f;
@@ -177,17 +169,24 @@ public sealed partial class Reverie : Mod
             iconWidth, iconHeight
         );
 
-        Rectangle cloud1Source = new Rectangle(
-            (int)(mediumPan * cloud1.Width), 0,
+        Rectangle medCloudSource = new Rectangle(
+            (int)(mediumPan * medCloud.Width), 0,
             iconWidth, iconHeight
         );
-        spriteBatch.Draw(cloud1, iconRect, cloud1Source, Color.White * 0.95f);
+        spriteBatch.Draw(medCloud, iconRect, medCloudSource, Color.White * 0.95f);
 
-        Rectangle cloud2Source = new Rectangle(
-            (int)(slowPan * cloud2.Width), 0,
+        Rectangle bigCloudSource = new Rectangle(
+            (int)(slowPan * bigCloud.Width), 0,
             iconWidth, iconHeight
         );
-        spriteBatch.Draw(cloud2, iconRect, cloud2Source, Color.White * 0.5f);
+        spriteBatch.Draw(bigCloud, iconRect, bigCloudSource, Color.White * 0.5f);
+
+        Rectangle tinyCloudSource = new Rectangle(
+            (int)(fastPan * bigCloud.Width), 0,
+            iconWidth, iconHeight
+        );
+        spriteBatch.Draw(tinyCloud, iconRect, tinyCloudSource, Color.White * 0.5f);
+
         spriteBatch.Draw(foreground, iconRect, oceanSource, Color.White * 0.75f);
         spriteBatch.End();
 

@@ -125,7 +125,7 @@ public class SmallTanglewoodTree : CustomTree
         }
     }
 
-    public static bool GrowTanglewoodTree(int i, int j)
+    public static bool Grow(int i, int j)
     {
         var instance = ModContent.GetInstance<SmallTanglewoodTree>();
         return instance.GrowTree(i, j);
