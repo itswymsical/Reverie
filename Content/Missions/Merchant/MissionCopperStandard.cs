@@ -1,6 +1,7 @@
 ﻿using Reverie.Core.Missions;
 using Reverie.Core.Missions.Core;
 using Reverie.Core.Dialogue;
+using Reverie.Utilities;
 using static Reverie.Core.Missions.Core.ObjectiveEventTile;
 
 namespace Reverie.Content.Missions.Merchant;
@@ -11,9 +12,11 @@ public class MissionCopperStandard : Mission
     {
         TalkToMerchant = 0,
         MineCopper = 1,
+        Innovate = 2,
+        CraftSpear = 3
     }
 
-    public MissionCopperStandard() : base(MissionID.ForgottenAges,
+    public MissionCopperStandard() : base(MissionID.CopperStandard,
         name: "Copper Standard",
 
         description: @"""Copper's the backbone of any economy!...""",
@@ -41,7 +44,6 @@ public class MissionCopperStandard : Mission
         ObjectiveEventItem.OnItemPickup += OnItemPickup;
         DialogueManager.OnDialogueEnd += OnDialogueEndHandler;
         OnTileBreak += OnTileBreakHandler;
-
     }
 
     protected override void UnregisterEventHandlers()
@@ -51,7 +53,6 @@ public class MissionCopperStandard : Mission
         ObjectiveEventItem.OnItemPickup -= OnItemPickup;
         DialogueManager.OnDialogueEnd -= OnDialogueEndHandler;
         OnTileBreak -= OnTileBreakHandler;
-
     }
 
     public override void OnMissionStart()
@@ -62,50 +63,64 @@ public class MissionCopperStandard : Mission
 
     private void OnNPCChatHandler(NPC npc, ref string chat)
     {
-        if (Progress != MissionProgress.Ongoing) return;
-
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
-
         }
     }
+
     private void OnDialogueEndHandler(string dialogueKey)
     {
-        if (Progress != MissionProgress.Ongoing) return;
-
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
             case Objectives.TalkToMerchant:
                 if (dialogueKey == "Merchant.CopperStandard")
-                    UpdateProgress(objective: 0);
-                
+                {
+                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1);
+                }
                 break;
-
         }
     }
-    private void OnTileBreakHandler(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
+
+    private void OnTileBreakHandler(int i, int j, int type, Player player, ref bool fail, ref bool effectOnly, ref bool noItem)
     {
-        if (Progress != MissionProgress.Ongoing) return;
+        if (fail) return;
 
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
             case Objectives.MineCopper:
                 if (type == TileID.Copper)
-                    UpdateProgress(objective: 0);
+                {
+                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1, player);
+                }
                 break;
-
         }
     }
+
     private void OnItemPickup(Item item, Player player)
     {
-        if (Progress != MissionProgress.Ongoing) return;
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
+            case Objectives.Innovate:
+                if (item.type == ItemID.CopperBar)
+                {
+                    MissionUtils.UpdateMissionProgressForPlayers(ID, 1, item.stack, player);
+                }
+                else if (item.type == ItemID.WoodenArrow)
+                {
+                    MissionUtils.UpdateMissionProgressForPlayers(ID, 2, item.stack, player);
+                }
+                break;
 
+            case Objectives.CraftSpear:
+                if (item.type == ItemID.CopperShortsword)
+                {
+                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1, player);
+                }
+                break;
         }
     }
 }

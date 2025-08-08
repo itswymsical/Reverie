@@ -224,10 +224,10 @@ public class ObjectiveEventNPC : GlobalNPC
 
 public class ObjectiveEventTile : GlobalTile
 {
-    public delegate void TileBreakHandler(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem);
-    public delegate void TilePlaceHandler(int i, int j, int type);
+    public delegate void TileBreakHandler(int i, int j, int type, Player player, ref bool fail, ref bool effectOnly, ref bool noItem);
+    public delegate void TilePlaceHandler(int i, int j, int type, Player player);
     public delegate void TileContactHandler(int type, Player player);
-    public delegate void TileInteractHandler(int i, int j, int type); // dunno if we need a player check for tile interactions
+    public delegate void TileInteractHandler(int i, int j, int type, Player player);
 
     public static event TileBreakHandler OnTileBreak;
     public static event TilePlaceHandler OnTilePlace;
@@ -239,7 +239,7 @@ public class ObjectiveEventTile : GlobalTile
         base.KillTile(i, j, type, ref fail, ref effectOnly, ref noItem);
         // Find which player is breaking this tile
         Player breakingPlayer = GetPlayerNearTile(i, j);
-        OnTileBreak?.Invoke(i, j, type, ref fail, ref effectOnly, ref noItem);
+        OnTileBreak?.Invoke(i, j, type, breakingPlayer, ref fail, ref effectOnly, ref noItem);
     }
 
     public override void PlaceInWorld(int i, int j, int type, Item item)
@@ -247,7 +247,7 @@ public class ObjectiveEventTile : GlobalTile
         base.PlaceInWorld(i, j, type, item);
         // Find which player placed this tile
         Player placingPlayer = GetPlayerNearTile(i, j);
-        OnTilePlace?.Invoke(i, j, type);
+        OnTilePlace?.Invoke(i, j, type, placingPlayer);
     }
 
     public override void FloorVisuals(int type, Player player)
@@ -262,7 +262,7 @@ public class ObjectiveEventTile : GlobalTile
         base.RightClick(i, j, type);
         // Find which player right-clicked this tile
         Player interactingPlayer = GetPlayerNearTile(i, j);
-        OnTileInteract?.Invoke(i, j, type);
+        OnTileInteract?.Invoke(i, j, type, interactingPlayer);
     }
 
     /// <summary>

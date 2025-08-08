@@ -9,7 +9,6 @@ using Reverie.Core.Missions.Core;
 
 namespace Reverie.Common.Commands;
 
-// Helper method to be used by all commands
 public static class MissionCommandHelper
 {
     public static int TryParseMissionIdentifier(string identifier)
@@ -106,7 +105,7 @@ public class StartMissionCommand : ModCommand
 
         if (mission.Status != MissionStatus.Unlocked)
         {
-            caller.Reply($"Mission '{mission.Name}' is not unlocked yet. Use /unlockmission first.", Color.Yellow);
+            caller.Reply($"Mission '{mission.Name}' is not unlocked yet. Use /unlockm first.", Color.Yellow);
             return;
         }
 
@@ -253,94 +252,26 @@ public class ResetSideMissionsCommand : ModCommand
     }
 }
 
-public class ListSideMissionsCommand : ModCommand
+public class MissionTestCommand : ModCommand
 {
-    public override string Command => "listsides";
+    public override string Command => "testmissions";
+
     public override CommandType Type => CommandType.Chat | CommandType.World;
-    public override string Usage => "/listsides [available|active|completed|all]";
-    public override string Description => "Lists side missions by category. Defaults to all side missions.";
 
     public override void Action(CommandCaller caller, string input, string[] args)
     {
-        var missionPlayer = caller.Player.GetModPlayer<MissionPlayer>();
-        string filter = args.Length > 0 ? args[0].ToLower() : "all";
+        var player = caller.Player.GetModPlayer<MissionPlayer>();
 
-        switch (filter)
+        if (args[0] == "mainline")
         {
-            case "available":
-                ListSideMissionsByState(caller, missionPlayer, MissionProgress.Inactive, MissionStatus.Unlocked);
-                break;
-            case "active":
-                ListSideMissionsByState(caller, missionPlayer, MissionProgress.Ongoing, null);
-                break;
-            case "completed":
-                ListSideMissionsByState(caller, missionPlayer, MissionProgress.Completed, null);
-                break;
-            case "all":
-            default:
-                caller.Reply("=== All Side Missions ===", Color.LightGreen);
-                ListSideMissionsByState(caller, missionPlayer, MissionProgress.Inactive, MissionStatus.Unlocked);
-                ListSideMissionsByState(caller, missionPlayer, MissionProgress.Ongoing, null);
-                ListSideMissionsByState(caller, missionPlayer, MissionProgress.Completed, null);
-                break;
+            player.StartMission(1);
+            Main.NewText("Started mainline mission - should sync to all players");
         }
-    }
 
-    private void ListSideMissionsByState(CommandCaller caller, MissionPlayer missionPlayer,
-        MissionProgress progress, MissionStatus? availability)
-    {
-        var missions = missionPlayer.missionDict.Values
-            .Where(m => !m.IsMainline && m.Progress == progress &&
-                       (availability == null || m.Status == availability))
-            .ToList();
-
-        if (missions.Count > 0)
+        if (args[0] == "sideline")
         {
-            string title = progress switch
-            {
-                MissionProgress.Inactive => "=== Available Side Missions ===",
-                MissionProgress.Ongoing => "=== Ongoing Side Missions ===",
-                MissionProgress.Completed => "=== Completed Side Missions ===",
-                _ => "=== Side Missions ==="
-            };
-
-            Color titleColor = progress switch
-            {
-                MissionProgress.Inactive => Color.LightBlue,
-                MissionProgress.Ongoing => Color.Yellow,
-                MissionProgress.Completed => Color.Green,
-                _ => Color.White
-            };
-
-            caller.Reply(title, titleColor);
-
-            foreach (var mission in missions)
-            {
-                if (progress == MissionProgress.Ongoing)
-                {
-                    var currentSet = mission.Objective[mission.CurrentIndex];
-                    int completedObjectives = currentSet.Objectives.Count(o => o.IsCompleted);
-                    int totalObjectives = currentSet.Objectives.Count;
-
-                    caller.Reply($"ID: {mission.ID} - {mission.Name} - Progress: {completedObjectives}/{totalObjectives}", Color.White);
-                }
-                else
-                {
-                    caller.Reply($"ID: {mission.ID} - {mission.Name}", Color.White);
-                }
-            }
-        }
-        else if (progress == MissionProgress.Inactive)
-        {
-            caller.Reply("No available side missions.", Color.Gray);
-        }
-        else if (progress == MissionProgress.Ongoing)
-        {
-            caller.Reply("No active side missions.", Color.Gray);
-        }
-        else if (progress == MissionProgress.Completed)
-        {
-            caller.Reply("No completed side missions.", Color.Gray);
+            player.StartMission(100);
+            Main.NewText("Started sideline mission - individual progress only");
         }
     }
 }

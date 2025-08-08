@@ -32,12 +32,12 @@ public enum MissionStatus
 /// </summary>
 /// <remarks>
 /// When all objective sets are complete, the mission finishes and rewards are given.
+/// Mainline missions sync progress across all players, sideline missions are individual.
 /// </remarks>
 public abstract class Mission
 {
 
     #region Fields
-    // Remove the fixed local player reference - missions now work for any player
     protected bool isDirty = false;
     protected bool eventsRegistered = false;
     protected HashSet<Point> interactedTiles = new HashSet<Point>();
@@ -154,7 +154,7 @@ public abstract class Mission
     #region Core Mission Logic
     /// <summary>
     /// Updates the progress of an objective, IN the current set.
-    /// Now accepts a player parameter to specify which player triggered the progress.
+    /// For mainline missions, updates for all players. For sideline missions, only for the triggering player.
     /// </summary>
     /// <param name="objective">the objective index</param>
     /// <param name="amount">progress amount</param>
@@ -165,43 +165,102 @@ public abstract class Mission
         if (Progress != MissionProgress.Ongoing)
             return false;
 
-        // Use the triggering player or fall back to any active player for rewards/notifications
-        var targetPlayer = triggeringPlayer ?? GetAnyActivePlayerWithThisMission();
-        if (targetPlayer == null) return false;
+        // Determine which players should get progress based on mission type
+        var targetPlayers = GetTargetPlayersForProgress(triggeringPlayer);
+        if (targetPlayers.Count == 0) return false;
 
-        var currentSet = Objective[CurrentIndex];
-        if (objective >= 0 && objective < currentSet.Objectives.Count)
+        bool anyUpdated = false;
+
+        foreach (var targetPlayer in targetPlayers)
         {
-            var obj = currentSet.Objectives[objective];
-            if (!obj.IsCompleted || amount < 0)
+            var missionPlayer = targetPlayer.GetModPlayer<MissionPlayer>();
+            var playerMission = missionPlayer.GetMission(ID);
+
+            if (playerMission?.Progress != MissionProgress.Ongoing) continue;
+
+            var currentSet = playerMission.Objective[playerMission.CurrentIndex];
+            if (objective >= 0 && objective < currentSet.Objectives.Count)
             {
-                var wasCompleted = obj.UpdateProgress(amount);
-
-                var missionPlayer = targetPlayer.GetModPlayer<MissionPlayer>();
-                missionPlayer.NotifyMissionUpdate(this);
-
-                if (wasCompleted && amount > 0)
+                var obj = currentSet.Objectives[objective];
+                if (!obj.IsCompleted || amount < 0)
                 {
-                    HandleObjectiveCompletion(objective);
-                    SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ObjectiveComplete") with { Volume = 0.75f }, targetPlayer.position);
-                }
+                    var wasCompleted = obj.UpdateProgress(amount);
 
-                if (currentSet.IsCompleted)
-                {
-                    if (CurrentIndex < Objective.Count - 1)
+                    missionPlayer.NotifyMissionUpdate(playerMission);
+
+                    if (wasCompleted && amount > 0)
                     {
-                        CurrentIndex++;
-                        return true;
+                        playerMission.HandleObjectiveCompletion(objective);
+
+                        // Play sound for local player only
+                        if (targetPlayer.whoAmI == Main.myPlayer)
+                        {
+                            SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ObjectiveComplete") with { Volume = 0.75f }, targetPlayer.position);
+                        }
                     }
-                    if (Objective.All(set => set.IsCompleted))
+
+                    if (currentSet.IsCompleted)
                     {
-                        Complete(targetPlayer);
-                        return true;
+                        if (playerMission.CurrentIndex < playerMission.Objective.Count - 1)
+                        {
+                            playerMission.CurrentIndex++;
+                            anyUpdated = true;
+                        }
+                        else if (playerMission.Objective.All(set => set.IsCompleted))
+                        {
+                            playerMission.Complete(targetPlayer);
+                            anyUpdated = true;
+                        }
+                    }
+                    anyUpdated = true;
+                }
+            }
+        }
+
+        return anyUpdated;
+    }
+
+    /// <summary>
+    /// Gets the list of players who should receive progress for this mission.
+    /// Mainline missions: all players with the mission active
+    /// Sideline missions: only the triggering player
+    /// </summary>
+    private List<Player> GetTargetPlayersForProgress(Player triggeringPlayer)
+    {
+        var targetPlayers = new List<Player>();
+
+        if (IsMainline)
+        {
+            // Mainline missions: update for ALL players who have this mission active
+            for (int i = 0; i < Main.maxPlayers; i++)
+            {
+                var player = Main.player[i];
+                if (player?.active == true)
+                {
+                    var missionPlayer = player.GetModPlayer<MissionPlayer>();
+                    if (missionPlayer.missionDict.ContainsKey(ID) &&
+                        missionPlayer.missionDict[ID].Progress == MissionProgress.Ongoing)
+                    {
+                        targetPlayers.Add(player);
                     }
                 }
             }
         }
-        return false;
+        else
+        {
+            // Sideline missions: only update for the triggering player
+            if (triggeringPlayer?.active == true)
+            {
+                var missionPlayer = triggeringPlayer.GetModPlayer<MissionPlayer>();
+                if (missionPlayer.missionDict.ContainsKey(ID) &&
+                    missionPlayer.missionDict[ID].Progress == MissionProgress.Ongoing)
+                {
+                    targetPlayers.Add(triggeringPlayer);
+                }
+            }
+        }
+
+        return targetPlayers;
     }
 
     /// <summary>
@@ -256,24 +315,49 @@ public abstract class Mission
 
     /// <summary>
     /// Use to set new missions or trigger events. By default, gives rewards and plays the mission complete notification.
-    /// Now accepts a player parameter to specify who should receive rewards.
+    /// For mainline missions, gives rewards to all players. For sideline missions, only to the reward player.
     /// </summary>
     /// <param name="rewardPlayer">The player who should receive rewards and notifications</param>
     /// <param name="giveRewards">Whether to give rewards</param>
     public virtual void OnMissionComplete(Player rewardPlayer = null, bool giveRewards = true)
     {
-        // If no specific player is provided, find any player with this mission
-        var targetPlayer = rewardPlayer ?? GetAnyActivePlayerWithThisMission();
-
-        if (targetPlayer != null)
+        if (IsMainline)
         {
+            // Mainline missions: give rewards to all players
             if (giveRewards)
-                GiveRewards(targetPlayer);
-
-            // Only show notification to the target player (or all players in multiplayer)
-            if (targetPlayer.whoAmI == Main.myPlayer || Main.netMode != NetmodeID.MultiplayerClient)
             {
-                InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(this));
+                for (int i = 0; i < Main.maxPlayers; i++)
+                {
+                    var player = Main.player[i];
+                    if (player?.active == true)
+                    {
+                        var missionPlayer = player.GetModPlayer<MissionPlayer>();
+                        if (missionPlayer.missionDict.ContainsKey(ID))
+                        {
+                            GiveRewards(player);
+                        }
+                    }
+                }
+            }
+
+            // Show notification to all players
+            InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(this));
+        }
+        else
+        {
+            // Sideline missions: only reward the specific player
+            var targetPlayer = rewardPlayer ?? GetAnyActivePlayerWithThisMission();
+
+            if (targetPlayer != null)
+            {
+                if (giveRewards)
+                    GiveRewards(targetPlayer);
+
+                // Only show notification to the target player
+                if (targetPlayer.whoAmI == Main.myPlayer)
+                {
+                    InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(this));
+                }
             }
         }
     }

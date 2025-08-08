@@ -50,14 +50,17 @@ public class MissionJourneysBegin : Mission
 
     public override void OnMissionComplete(Player rewardPlayer = null, bool giveRewards = true)
     {
-        base.OnMissionComplete();
+        base.OnMissionComplete(rewardPlayer, giveRewards);
 
-
-        MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        player.UnlockMission(MissionID.ForgottenAges);
+        // For mainline missions, the next mission unlock is now handled globally!
+        // Just call UnlockMission on ANY MissionPlayer - it will unlock for ALL players automatically
+        var anyMissionPlayer = GetAnyActiveMissionPlayer();
+        if (anyMissionPlayer != null)
+        {
+            anyMissionPlayer.UnlockMission(MissionID.ForgottenAges, broadcast: true);
+        }
 
         DialogueManager.Instance.StartDialogue("JourneysBegin.MissionEnd", 2, zoomIn: false, false);
-
     }
 
     public override void Update()
@@ -94,10 +97,9 @@ public class MissionJourneysBegin : Mission
         OnNPCChat -= OnNPCChatHandler;
         OnItemUse -= OnItemUseHandler;
         OnItemPickup -= OnItemPickupHandler;
-        OnTileInteract += TileInteractHandler;
+        OnTileInteract -= TileInteractHandler;
         OnDialogueEnd -= OnDialogueEndHandler;
         OnTileBreak -= OnTileBreakHandler;
-
 
         ModContent.GetInstance<Reverie>().Logger.Debug($"Mission [Journey's Begin] Unregistered event handlers");
         base.UnregisterEventHandlers();
@@ -107,67 +109,63 @@ public class MissionJourneysBegin : Mission
 
     private void OnDialogueEndHandler(string dialogueKey)
     {
-        for (int i = 0; i < Main.maxPlayers; i++)
+        var objective = (Objectives)CurrentIndex;
+        switch (objective)
         {
-            var currentPlayer = Main.player[i];
-            if (currentPlayer?.active != true) continue;
+            case Objectives.TalkToGuide:
+                if (dialogueKey == "JourneysBegin.Tutorial")
+                {
+                    // Use new progress system - mainline mission so all players get progress
+                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1);
 
-            var missionPlayer = currentPlayer.GetModPlayer<MissionPlayer>();
-
-
-            if (Progress != MissionProgress.Ongoing) return;
-
-            var objective = (Objectives)CurrentIndex;
-            switch (objective)
-            {
-                case Objectives.TalkToGuide:
-                    if (dialogueKey == "JourneysBegin.Tutorial")
+                    // Give magic mirror to all players (mainline mission reward)
+                    for (int i = 0; i < Main.maxPlayers; i++)
                     {
-                        UpdateProgress(objective: 0);
-                        currentPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.MagicMirror, 1);
-                        DialogueManager.Instance.StartDialogue("JourneysBegin.MirrorGiven", 1, zoomIn: false, letterbox: true);
+                        var player = Main.player[i];
+                        if (player?.active == true)
+                        {
+                            player.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.MagicMirror, 1);
+                        }
                     }
-                    break;
-            }
+
+                    DialogueManager.Instance.StartDialogue("JourneysBegin.MirrorGiven", 1, zoomIn: false, letterbox: true);
+                }
+                break;
         }
     }
 
     private void OnNPCChatHandler(NPC npc, ref string chat)
     {
-        if (Progress != MissionProgress.Ongoing) return;
-
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
-
+            // Add NPC chat logic if needed
         }
     }
 
     private void OnItemPickupHandler(Item item, Player player)
     {
-
+        // Handle item pickup logic if needed
     }
 
     private void OnItemUseHandler(Item item, Player player)
     {
-        if (Progress != MissionProgress.Ongoing) return;
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
             case Objectives.UseMirror:
                 if (item.type == ItemID.MagicMirror)
                 {
-                    UpdateProgress(0);
+                    // Use new progress system - mainline mission so all players get progress
+                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1, player);
                     DialogueManager.Instance.StartDialogue("JourneysBegin.Mirror", 6);
                 }
                 break;
         }
     }
 
-    private void TileInteractHandler(int i, int j, int type)
+    private void TileInteractHandler(int i, int j, int type, Player player)
     {
-        if (Progress != MissionProgress.Ongoing) return;
-
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
@@ -193,16 +191,15 @@ public class MissionJourneysBegin : Mission
                         }
                     }
 
-                    UpdateProgress(objective: 0);
+                    // Use new progress system - mainline mission so all players get progress
+                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1, player);
                 }
                 break;
         }
     }
 
-    private void OnTileBreakHandler(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
+    private void OnTileBreakHandler(int i, int j, int type, Player player, ref bool fail, ref bool effectOnly, ref bool noItem)
     {
-        if (Progress != MissionProgress.Ongoing) return;
-
         if (fail) return;
 
         var objective = (Objectives)CurrentIndex;
@@ -221,14 +218,31 @@ public class MissionJourneysBegin : Mission
 
                     interactedTiles.Add(originPos);
 
-                    UpdateProgress(objective: 2);
-
+                    // Use new progress system - mainline mission so all players get progress
+                    MissionUtils.UpdateMissionProgressForPlayers(ID, 2, 1, player);
                 }
                 if (TileID.Sets.Ore[type])
                 {
-                    UpdateProgress(objective: 1);
+                    // Use new progress system - mainline mission so all players get progress
+                    MissionUtils.UpdateMissionProgressForPlayers(ID, 1, 1, player);
                 }
                 break;
         }
+    }
+
+    /// <summary>
+    /// Helper method to get any active mission player for global operations
+    /// </summary>
+    private MissionPlayer GetAnyActiveMissionPlayer()
+    {
+        for (int i = 0; i < Main.maxPlayers; i++)
+        {
+            var player = Main.player[i];
+            if (player?.active == true)
+            {
+                return player.GetModPlayer<MissionPlayer>();
+            }
+        }
+        return null;
     }
 }

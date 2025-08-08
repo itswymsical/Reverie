@@ -31,14 +31,14 @@ public class MissionSporeSplinter : Mission
         isMainline: false,
         providerNPC: ModContent.NPCType<NPCs.Special.Argie>(), xpReward: 150)
     {
-        Instance.Logger.Info($"[{Name} - {ID}] constructed");
+        Reverie.Instance.Logger.Info($"[{Name} - {ID}] constructed");
     }
 
     public override void OnMissionStart()
     {
         base.OnMissionStart();
 
-        DialogueManager.Instance.StartDialogue("Argie.Intro", 9, letterbox: true, 
+        DialogueManager.Instance.StartDialogue("Argie.Intro", 9, letterbox: true,
             music: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}ArgiesTheme"));
     }
 
@@ -50,7 +50,6 @@ public class MissionSporeSplinter : Mission
     public override void Update()
     {
         base.Update(); //prevent events from messing up the flow
-
     }
 
     #region Event Registration
@@ -82,15 +81,19 @@ public class MissionSporeSplinter : Mission
 
     private void OnNPCChatHandler(NPC npc, ref string chat)
     {
-        if (Progress != MissionProgress.Ongoing) return;
-
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
             case Objectives.GreetArgie:
                 if (npc.type == ProviderNPC)
                 {
-                    UpdateProgress(0);
+                    // sideline mission so only triggering player gets progress
+                    //  we need to find which player is chatting
+                    var chattingPlayer = GetPlayerNearNPC(npc);
+                    if (chattingPlayer != null)
+                    {
+                        MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1, chattingPlayer);
+                    }
                 }
                 break;
         }
@@ -98,22 +101,46 @@ public class MissionSporeSplinter : Mission
 
     private void OnItemPickupHandler(Item item, Player player)
     {
-        if (Progress != MissionProgress.Ongoing) return;
         var objective = (Objectives)CurrentIndex;
 
         switch (objective)
         {
             case Objectives.GatherResources:
-
                 if (item.type == ItemID.GlowingMushroom)
-                    UpdateProgress(objective: 0, item.stack);
+                {
+                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, item.stack, player);
+                }
                 else if (item.type == ItemID.Rope)
-                    UpdateProgress(objective: 1, item.stack);
+                {
+                    MissionUtils.UpdateMissionProgressForPlayers(ID, 1, item.stack, player);
+                }
                 else if (item.IsWood())
-                    UpdateProgress(objective: 2, item.stack);
-
-
+                {
+                    MissionUtils.UpdateMissionProgressForPlayers(ID, 2, item.stack, player);
+                }
                 break;
         }
+    }
+
+    private Player GetPlayerNearNPC(NPC npc)
+    {
+        float closestDistance = float.MaxValue;
+        Player closestPlayer = null;
+
+        for (int i = 0; i < Main.maxPlayers; i++)
+        {
+            var player = Main.player[i];
+            if (player?.active == true)
+            {
+                float distance = Vector2.Distance(player.Center, npc.Center);
+                if (distance < closestDistance && distance < 200f) // Within chat range
+                {
+                    closestDistance = distance;
+                    closestPlayer = player;
+                }
+            }
+        }
+
+        return closestPlayer;
     }
 }

@@ -49,9 +49,9 @@ public class MissionForgottenAges : Mission
         DialogueManager.Instance.StartDialogue("ForgottenAges.FindChronicles", 4, zoomIn: false, true);
     }
 
-    public override void OnMissionComplete(Player player = null, bool giveRewards = true)
+    public override void OnMissionComplete(Player rewardPlayer = null, bool giveRewards = true)
     {
-        base.OnMissionComplete();
+        base.OnMissionComplete(rewardPlayer, giveRewards);
     }
 
     public override void Update()
@@ -77,10 +77,19 @@ public class MissionForgottenAges : Mission
         OnTileBreak += OnTileBreakHandler;
         OnBiomeEnter += OnBiomeEnterHandler;
         OnNPCKill += OnNPCKillHandler;
-        var eventPlayer = Main.LocalPlayer.GetModPlayer<ObjectiveEventPlayer>();
-        eventPlayer.AddTimeRequirement(5 * 60);
 
-        ModContent.GetInstance<Reverie>().Logger.Debug($"Mission [Journey's Begin] Registered event handlers");
+        // Add time requirement for any player who has this mission
+        for (int i = 0; i < Main.maxPlayers; i++)
+        {
+            var player = Main.player[i];
+            if (player?.active == true)
+            {
+                var eventPlayer = player.GetModPlayer<ObjectiveEventPlayer>();
+                eventPlayer.AddTimeRequirement(5 * 60);
+            }
+        }
+
+        ModContent.GetInstance<Reverie>().Logger.Debug($"Mission [Forgotten Ages] Registered event handlers");
 
         eventsRegistered = true;
     }
@@ -98,10 +107,18 @@ public class MissionForgottenAges : Mission
         OnBiomeEnter -= OnBiomeEnterHandler;
         OnNPCKill -= OnNPCKillHandler;
 
-        var eventPlayer = Main.LocalPlayer.GetModPlayer<ObjectiveEventPlayer>();
-        eventPlayer.RemoveTimeRequirement(5 * 60);
+        // Remove time requirement for all players
+        for (int i = 0; i < Main.maxPlayers; i++)
+        {
+            var player = Main.player[i];
+            if (player?.active == true)
+            {
+                var eventPlayer = player.GetModPlayer<ObjectiveEventPlayer>();
+                eventPlayer.RemoveTimeRequirement(5 * 60);
+            }
+        }
 
-        ModContent.GetInstance<Reverie>().Logger.Debug($"Mission [Journey's Begin] Unregistered event handlers");
+        ModContent.GetInstance<Reverie>().Logger.Debug($"Mission [Forgotten Ages] Unregistered event handlers");
         base.UnregisterEventHandlers();
     }
 
@@ -109,15 +126,14 @@ public class MissionForgottenAges : Mission
 
     private void OnDialogueEndHandler(string dialogueKey)
     {
-        if (Progress != MissionProgress.Ongoing) return;
-
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
             case Objectives.TalkToGuide:
                 if (dialogueKey == "ForgottenAges.FindChronicles")
                 {
-                    UpdateProgress(objective: 0);
+                    // Use new progress system that handles mainline/sideline distinction
+                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1);
                 }
                 break;
         }
@@ -125,27 +141,25 @@ public class MissionForgottenAges : Mission
 
     private void OnNPCChatHandler(NPC npc, ref string chat)
     {
-        if (Progress != MissionProgress.Ongoing) return;
-
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
             case Objectives.ChronicleSegment:
-
+                // Handle chronicle segment logic here
                 break;
         }
     }
 
     private void OnBiomeEnterHandler(Player player, BiomeType biome, int timeRequired)
     {
-        if (Progress != MissionProgress.Ongoing) return;
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
             case Objectives.ExploreJungle:
                 if (biome == BiomeType.Jungle && timeRequired == 5 * 60)
                 {
-                    UpdateProgress(objective: 0);
+                    // Use new progress system - mainline mission so all players get progress
+                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1, player);
                 }
                 break;
         }
@@ -153,86 +167,66 @@ public class MissionForgottenAges : Mission
 
     private void OnNPCKillHandler(NPC npc, Player player)
     {
-        for (int i = 0; i < Main.maxPlayers; i++)
+        var objective = (Objectives)CurrentIndex;
+        switch (objective)
         {
-            var currentPlayer = Main.player[i];
-            if (currentPlayer?.active != true) continue;
-
-            var missionPlayer = currentPlayer.GetModPlayer<MissionPlayer>();
-            player = currentPlayer;
-
-            if (Progress != MissionProgress.Ongoing) return;
-            var objective = (Objectives)CurrentIndex;
-            switch (objective)
-            {
-                case Objectives.ExploreUnderground:
-                    if (npc.type is NPCID.ManEater or NPCID.JungleSlime or NPCID.SpikedJungleSlime || npc.TypeName.Contains("Hornet"))
-                    {
-                        UpdateProgress(objective: 2);
-                    }
-                    break;
-            }
-        } }
+            case Objectives.ExploreUnderground:
+                if (npc.type is NPCID.ManEater or NPCID.JungleSlime or NPCID.SpikedJungleSlime || npc.TypeName.Contains("Hornet"))
+                {
+                    // Use new progress system - mainline mission so all players get progress
+                    MissionUtils.UpdateMissionProgressForPlayers(ID, 2, 1, player);
+                }
+                break;
+        }
+    }
 
     private void OnItemPickupHandler(Item item, Player player)
     {
-
+        // Handle item pickup logic if needed
     }
 
     private void OnItemUseHandler(Item item, Player player)
     {
-        if (Progress != MissionProgress.Ongoing) return;
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
-
+            // Add item use logic if needed
         }
     }
 
-    private void TileInteractHandler(int i, int j, int type)
+    private void TileInteractHandler(int i, int j, int type, Player player)
     {
-        if (Progress != MissionProgress.Ongoing) return;
+        var objective = (Objectives)CurrentIndex;
+        switch (objective)
+        {
+            // Add tile interaction logic if needed
+        }
+    }
+
+    private void OnTileBreakHandler(int i, int j, int type, Player player, ref bool fail, ref bool effectOnly, ref bool noItem)
+    {
+        if (fail) return;
 
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
+            case Objectives.ExploreUnderground:
+                if (type == TileID.Pots && player.ZoneJungle)
+                {
+                    Tile tile = Main.tile[i, j];
+                    int originX = i - (tile.TileFrameX / 18);
+                    int originY = j - (tile.TileFrameY / 18);
 
-        }
-    }
+                    var originPos = new Point(originX, originY);
 
-    private void OnTileBreakHandler(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
-    {
-        for (int i2 = 0; i2 < Main.maxPlayers; i2++)
-        {
-            var currentPlayer = Main.player[i2];
-            if (currentPlayer?.active != true) continue;
+                    if (interactedTiles.Contains(originPos)) return;
 
-            var missionPlayer = currentPlayer.GetModPlayer<MissionPlayer>();
+                    interactedTiles.Add(originPos);
 
-            if (Progress != MissionProgress.Ongoing) return;
-
-            if (fail) return;
-
-            var objective = (Objectives)CurrentIndex;
-            switch (objective)
-            {
-                case Objectives.ExploreUnderground:
-                    if (type == TileID.Pots && currentPlayer.ZoneJungle)
-                    {
-                        Tile tile = Main.tile[i, j];
-                        int originX = i - (tile.TileFrameX / 18);
-                        int originY = j - (tile.TileFrameY / 18);
-
-                        var originPos = new Point(originX, originY);
-
-                        if (interactedTiles.Contains(originPos)) return;
-
-                        interactedTiles.Add(originPos);
-
-                        UpdateProgress(objective: 1);
-                    }
-                    break;
-            }
+                    // Use new progress system - mainline mission so all players get progress
+                    MissionUtils.UpdateMissionProgressForPlayers(ID, 1, 1, player);
+                }
+                break;
         }
     }
 }

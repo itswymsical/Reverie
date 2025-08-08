@@ -1,19 +1,22 @@
 ﻿using Terraria;
 using Reverie.Common.Items.Components;
 using Reverie.Core.Missions;
+using Reverie.Core.Missions.System;
 using System.Linq;
 using Reverie.Core.Missions.Core;
+using System.Collections.Generic;
 
 namespace Reverie.Utilities;
 
 /// <summary>
-/// Helper class for handling mission progress updates while preventing duplicate progress from the same items.
-/// Now works for ANY player's actions, not just the local player.
+/// Helper class for handling mission progress updates with mainline/sideline distinction.
+/// Mainline missions sync progress across all players, sideline missions are individual.
 /// </summary>
 public static class MissionUtils
 {
     /// <summary>
-    /// Checks if an item should update progress for any player's missions.
+    /// Checks if an item should update progress for missions.
+    /// For mainline missions, checks all players. For sideline missions, only the triggering player.
     /// </summary>
     /// <param name="item">The item to process.</param>
     /// <param name="player">The player who picked up or has the item.</param>
@@ -27,13 +30,11 @@ public static class MissionUtils
 
         var progressUpdated = false;
 
-        // Check missions for ALL active players, not just the triggering player
-        // This allows shared mission progress in multiplayer
-        for (int i = 0; i < Main.maxPlayers; i++)
-        {
-            var currentPlayer = Main.player[i];
-            if (currentPlayer?.active != true) continue;
+        // Check missions based on mainline/sideline distinction
+        var playersToCheck = GetPlayersToCheckForItem(player);
 
+        foreach (var currentPlayer in playersToCheck)
+        {
             var missionPlayer = currentPlayer.GetModPlayer<MissionPlayer>();
 
             foreach (var mission in missionPlayer.ActiveMissions())
@@ -64,6 +65,35 @@ public static class MissionUtils
         }
 
         return progressUpdated;
+    }
+
+    /// <summary>
+    /// Gets the list of players whose missions should be checked for item relevance.
+    /// </summary>
+    private static List<Player> GetPlayersToCheckForItem(Player triggeringPlayer)
+    {
+        var playersToCheck = new List<Player>();
+
+        // For item checking, we need to look at both mainline and sideline missions
+        // but we'll handle the actual progress updates differently in UpdateMissionProgressForPlayers
+
+        // Always check the triggering player (for their sideline missions)
+        if (triggeringPlayer?.active == true)
+        {
+            playersToCheck.Add(triggeringPlayer);
+        }
+
+        // Also check all other players (for mainline missions)
+        for (int i = 0; i < Main.maxPlayers; i++)
+        {
+            var player = Main.player[i];
+            if (player?.active == true && player != triggeringPlayer)
+            {
+                playersToCheck.Add(player);
+            }
+        }
+
+        return playersToCheck;
     }
 
     /// <summary>
@@ -109,33 +139,63 @@ public static class MissionUtils
     }
 
     /// <summary>
-    /// Updates mission progress for any player who has the specified mission active.
-    /// This allows shared progress in multiplayer scenarios.
+    /// Updates mission progress with mainline/sideline distinction.
+    /// Mainline missions: all players with the mission get progress
+    /// Sideline missions: only the triggering player gets progress
     /// </summary>
     /// <param name="missionId">The mission ID to update</param>
     /// <param name="objectiveIndex">The objective index to update</param>
     /// <param name="amount">The amount of progress to add</param>
-    /// <param name="triggeringPlayer">The player who triggered this update (optional)</param>
+    /// <param name="triggeringPlayer">The player who triggered this update</param>
     /// <returns>True if any player's mission was updated</returns>
-    public static bool UpdateMissionProgressForAnyPlayer(int missionId, int objectiveIndex, int amount = 1, Player triggeringPlayer = null)
+    public static bool UpdateMissionProgressForPlayers(int missionId, int objectiveIndex, int amount = 1, Player triggeringPlayer = null)
     {
         bool anyUpdated = false;
 
-        for (int i = 0; i < Main.maxPlayers; i++)
+        // First, determine if this is a mainline mission
+        var sampleMission = MissionFactory.Instance.GetMissionData(missionId);
+        if (sampleMission == null) return false;
+
+        if (sampleMission.IsMainline)
         {
-            var player = Main.player[i];
-            if (player?.active != true) continue;
-
-            var missionPlayer = player.GetModPlayer<MissionPlayer>();
-
-            if (missionPlayer.missionDict.TryGetValue(missionId, out var mission) &&
-                mission.Progress == MissionProgress.Ongoing)
+            // Mainline missions: update for ALL players who have this mission active
+            for (int i = 0; i < Main.maxPlayers; i++)
             {
-                var updated = mission.UpdateProgress(objectiveIndex, amount, triggeringPlayer ?? player);
-                if (updated)
+                var player = Main.player[i];
+                if (player?.active != true) continue;
+
+                var missionPlayer = player.GetModPlayer<MissionPlayer>();
+
+                if (missionPlayer.missionDict.TryGetValue(missionId, out var mission) &&
+                    mission.Progress == MissionProgress.Ongoing)
                 {
-                    missionPlayer.SyncMissionState(mission);
-                    anyUpdated = true;
+                    var updated = mission.UpdateProgress(objectiveIndex, amount, triggeringPlayer ?? player);
+                    if (updated)
+                    {
+                        missionPlayer.SyncMissionState(mission);
+
+                        // Update the authoritative mainline state
+                        MainlineMissionSyncSystem.UpdateMainlineMissionState(mission);
+                        anyUpdated = true;
+                    }
+                }
+            }
+        }
+        else
+        {
+            // Sideline missions: only update for the triggering player
+            if (triggeringPlayer?.active == true)
+            {
+                var missionPlayer = triggeringPlayer.GetModPlayer<MissionPlayer>();
+                if (missionPlayer.missionDict.TryGetValue(missionId, out var mission) &&
+                    mission.Progress == MissionProgress.Ongoing)
+                {
+                    var updated = mission.UpdateProgress(objectiveIndex, amount, triggeringPlayer);
+                    if (updated)
+                    {
+                        missionPlayer.SyncMissionState(mission);
+                        anyUpdated = true;
+                    }
                 }
             }
         }
