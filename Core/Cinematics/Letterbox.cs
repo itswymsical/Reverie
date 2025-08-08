@@ -341,6 +341,10 @@ public class LetterboxSystem : ModSystem
         "Vanilla: Tile Grid Option",
         "Reverie: Experience Meter"
     ];
+    public override bool IsLoadingEnabled(Mod mod)
+    {
+        return Main.netMode != NetmodeID.Server;
+    }
 
     public override void PostSetupContent()
     {

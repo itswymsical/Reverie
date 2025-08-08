@@ -4,6 +4,7 @@ using Reverie.Content.Missions.Merchant;
 using Reverie.Core.Missions.Core;
 using Reverie.Utilities;
 using System.Collections.Generic;
+using Terraria.ModLoader.IO;
 
 namespace Reverie.Core.Missions.System;
 
@@ -149,4 +150,23 @@ public class MissionFactory : ModSystem
             }
         }
     }
+    //public override void LoadWorldData(TagCompound tag)
+    //{
+    //    base.LoadWorldData(tag);
+    //    if (Main.netMode == NetmodeID.MultiplayerClient)
+    //    {
+    //        if (worldJustLoaded)
+    //        {
+    //            worldLoadCounter++;
+
+    //            if (worldLoadCounter >= LOAD_DELAY_FRAMES)
+    //            {
+    //                MissionManager.Instance.OnWorldFullyLoaded();
+    //                worldJustLoaded = false;
+
+    //                ModContent.GetInstance<Reverie>().Logger.Info("MissionLoadingSystem: Deferred world load complete");
+    //            }
+    //        }
+    //    }
+    //}
 }
