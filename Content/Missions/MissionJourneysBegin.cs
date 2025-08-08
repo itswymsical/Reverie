@@ -48,9 +48,9 @@ public class MissionJourneysBegin : Mission
         DialogueManager.Instance.StartDialogue("JourneysBegin.Tutorial", 7, zoomIn: false, true);
     }
 
-    public override void OnMissionComplete(bool giveRewards = true)
+    public override void OnMissionComplete(Player rewardPlayer = null, bool giveRewards = true)
     {
-        base.OnMissionComplete(giveRewards);
+        base.OnMissionComplete();
 
 
         MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
@@ -107,19 +107,28 @@ public class MissionJourneysBegin : Mission
 
     private void OnDialogueEndHandler(string dialogueKey)
     {
-        if (Progress != MissionProgress.Ongoing) return;
-
-        var objective = (Objectives)CurrentIndex;
-        switch (objective)
+        for (int i = 0; i < Main.maxPlayers; i++)
         {
-            case Objectives.TalkToGuide:
-                if (dialogueKey == "JourneysBegin.Tutorial")
-                {
-                    UpdateProgress(objective: 0);
-                    player.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.MagicMirror, 1);
-                    DialogueManager.Instance.StartDialogue("JourneysBegin.MirrorGiven", 1, zoomIn: false, letterbox: true);
-                }
-                break;
+            var currentPlayer = Main.player[i];
+            if (currentPlayer?.active != true) continue;
+
+            var missionPlayer = currentPlayer.GetModPlayer<MissionPlayer>();
+
+
+            if (Progress != MissionProgress.Ongoing) return;
+
+            var objective = (Objectives)CurrentIndex;
+            switch (objective)
+            {
+                case Objectives.TalkToGuide:
+                    if (dialogueKey == "JourneysBegin.Tutorial")
+                    {
+                        UpdateProgress(objective: 0);
+                        currentPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.MagicMirror, 1);
+                        DialogueManager.Instance.StartDialogue("JourneysBegin.MirrorGiven", 1, zoomIn: false, letterbox: true);
+                    }
+                    break;
+            }
         }
     }
 

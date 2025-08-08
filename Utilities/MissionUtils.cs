@@ -7,12 +7,13 @@ using Reverie.Core.Missions.Core;
 namespace Reverie.Utilities;
 
 /// <summary>
-///     Helper class for handling mission progress updates while preventing duplicate progress from the same items.
+/// Helper class for handling mission progress updates while preventing duplicate progress from the same items.
+/// Now works for ANY player's actions, not just the local player.
 /// </summary>
 public static class MissionUtils
 {
     /// <summary>
-    ///     Checks if an item should update progress for a mission.
+    /// Checks if an item should update progress for any player's missions.
     /// </summary>
     /// <param name="item">The item to process.</param>
     /// <param name="player">The player who picked up or has the item.</param>
@@ -24,20 +25,37 @@ public static class MissionUtils
             return false;
         }
 
-        var missionPlayer = player.GetModPlayer<MissionPlayer>();
         var progressUpdated = false;
 
-        foreach (var mission in missionPlayer.ActiveMissions())
+        // Check missions for ALL active players, not just the triggering player
+        // This allows shared mission progress in multiplayer
+        for (int i = 0; i < Main.maxPlayers; i++)
         {
-            if (mission.Progress != MissionProgress.Ongoing)
-                continue;
+            var currentPlayer = Main.player[i];
+            if (currentPlayer?.active != true) continue;
 
-            var currentSet = mission.Objective[mission.CurrentIndex];
+            var missionPlayer = currentPlayer.GetModPlayer<MissionPlayer>();
 
-            if (currentSet.IsCompleted)
-                continue;
+            foreach (var mission in missionPlayer.ActiveMissions())
+            {
+                if (mission.Progress != MissionProgress.Ongoing)
+                    continue;
 
-            progressUpdated = true;
+                var currentSet = mission.Objective[mission.CurrentIndex];
+
+                if (currentSet.IsCompleted)
+                    continue;
+
+                // Check if this item is relevant to any objectives in the current set
+                bool itemIsRelevant = CheckItemRelevantToObjectives(item, currentSet);
+
+                if (itemIsRelevant)
+                {
+                    progressUpdated = true;
+                    // Note: The actual progress update should be handled by the specific mission's event handlers
+                    // This method just checks if the item is relevant and should be marked as contributed
+                }
+            }
         }
 
         if (progressUpdated)
@@ -48,6 +66,86 @@ public static class MissionUtils
         return progressUpdated;
     }
 
+    /// <summary>
+    /// Helper method to check if an item is relevant to any objectives in a set.
+    /// This is a basic implementation - specific missions should override with their own logic.
+    /// </summary>
+    private static bool CheckItemRelevantToObjectives(Item item, ObjectiveSet objectiveSet)
+    {
+        // Basic check - look for item type/name in objective descriptions
+        // More sophisticated missions can implement their own relevance checking
+        foreach (var objective in objectiveSet.Objectives)
+        {
+            if (objective.IsCompleted) continue;
+
+            // Simple heuristic: check if item name appears in objective description
+            var itemName = item.Name.ToLowerInvariant();
+            var objectiveDesc = objective.Description.ToLowerInvariant();
+
+            if (objectiveDesc.Contains(itemName) ||
+                objectiveDesc.Contains(item.type.ToString()) ||
+                CheckItemByCategory(item, objectiveDesc))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Checks if an item matches certain categories mentioned in objective descriptions.
+    /// </summary>
+    private static bool CheckItemByCategory(Item item, string objectiveDescription)
+    {
+        // Check for common item categories
+        if (objectiveDescription.Contains("wood") && item.createWall > 0) return true;
+        if (objectiveDescription.Contains("ore") && item.createTile > 0 && item.rare > 0) return true;
+        if (objectiveDescription.Contains("potion") && item.healLife > 0) return true;
+        if (objectiveDescription.Contains("weapon") && item.damage > 0) return true;
+        if (objectiveDescription.Contains("tool") && (item.pick > 0 || item.axe > 0 || item.hammer > 0)) return true;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Updates mission progress for any player who has the specified mission active.
+    /// This allows shared progress in multiplayer scenarios.
+    /// </summary>
+    /// <param name="missionId">The mission ID to update</param>
+    /// <param name="objectiveIndex">The objective index to update</param>
+    /// <param name="amount">The amount of progress to add</param>
+    /// <param name="triggeringPlayer">The player who triggered this update (optional)</param>
+    /// <returns>True if any player's mission was updated</returns>
+    public static bool UpdateMissionProgressForAnyPlayer(int missionId, int objectiveIndex, int amount = 1, Player triggeringPlayer = null)
+    {
+        bool anyUpdated = false;
+
+        for (int i = 0; i < Main.maxPlayers; i++)
+        {
+            var player = Main.player[i];
+            if (player?.active != true) continue;
+
+            var missionPlayer = player.GetModPlayer<MissionPlayer>();
+
+            if (missionPlayer.missionDict.TryGetValue(missionId, out var mission) &&
+                mission.Progress == MissionProgress.Ongoing)
+            {
+                var updated = mission.UpdateProgress(objectiveIndex, amount, triggeringPlayer ?? player);
+                if (updated)
+                {
+                    missionPlayer.SyncMissionState(mission);
+                    anyUpdated = true;
+                }
+            }
+        }
+
+        return anyUpdated;
+    }
+
+    /// <summary>
+    /// Retrieves items from the specified player's inventory.
+    /// </summary>
     public static void RetrieveItemsFromPlayer(Player player, int itemType, int amount)
     {
         var remainingAmount = amount;

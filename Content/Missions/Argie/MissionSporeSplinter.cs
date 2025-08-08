@@ -42,9 +42,9 @@ public class MissionSporeSplinter : Mission
             music: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}ArgiesTheme"));
     }
 
-    public override void OnMissionComplete(bool giveRewards = true)
+    public override void OnMissionComplete(Player rewardPlayer = null, bool giveRewards = true)
     {
-        base.OnMissionComplete(giveRewards);
+        base.OnMissionComplete(rewardPlayer, giveRewards);
     }
 
     public override void Update()

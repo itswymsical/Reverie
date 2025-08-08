@@ -49,9 +49,9 @@ public class MissionForgottenAges : Mission
         DialogueManager.Instance.StartDialogue("ForgottenAges.FindChronicles", 4, zoomIn: false, true);
     }
 
-    public override void OnMissionComplete(bool giveRewards = true)
+    public override void OnMissionComplete(Player player = null, bool giveRewards = true)
     {
-        base.OnMissionComplete(giveRewards);
+        base.OnMissionComplete();
     }
 
     public override void Update()
@@ -151,20 +151,28 @@ public class MissionForgottenAges : Mission
         }
     }
 
-    private void OnNPCKillHandler(NPC npc)
+    private void OnNPCKillHandler(NPC npc, Player player)
     {
-        if (Progress != MissionProgress.Ongoing) return;
-        var objective = (Objectives)CurrentIndex;
-        switch (objective)
+        for (int i = 0; i < Main.maxPlayers; i++)
         {
-            case Objectives.ExploreUnderground:
-                if (npc.type is NPCID.ManEater or NPCID.JungleSlime or NPCID.SpikedJungleSlime || npc.TypeName.Contains("Hornet"))
-                {
-                    UpdateProgress(objective: 2);
-                }
-                break;
-        }
-    }
+            var currentPlayer = Main.player[i];
+            if (currentPlayer?.active != true) continue;
+
+            var missionPlayer = currentPlayer.GetModPlayer<MissionPlayer>();
+            player = currentPlayer;
+
+            if (Progress != MissionProgress.Ongoing) return;
+            var objective = (Objectives)CurrentIndex;
+            switch (objective)
+            {
+                case Objectives.ExploreUnderground:
+                    if (npc.type is NPCID.ManEater or NPCID.JungleSlime or NPCID.SpikedJungleSlime || npc.TypeName.Contains("Hornet"))
+                    {
+                        UpdateProgress(objective: 2);
+                    }
+                    break;
+            }
+        } }
 
     private void OnItemPickupHandler(Item item, Player player)
     {
@@ -194,29 +202,37 @@ public class MissionForgottenAges : Mission
 
     private void OnTileBreakHandler(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
     {
-        if (Progress != MissionProgress.Ongoing) return;
-
-        if (fail) return;
-
-        var objective = (Objectives)CurrentIndex;
-        switch (objective)
+        for (int i2 = 0; i2 < Main.maxPlayers; i2++)
         {
-            case Objectives.ExploreUnderground:
-                if (type == TileID.Pots && player.ZoneJungle)
-                {
-                    Tile tile = Main.tile[i, j];
-                    int originX = i - (tile.TileFrameX / 18);
-                    int originY = j - (tile.TileFrameY / 18);
+            var currentPlayer = Main.player[i2];
+            if (currentPlayer?.active != true) continue;
 
-                    var originPos = new Point(originX, originY);
+            var missionPlayer = currentPlayer.GetModPlayer<MissionPlayer>();
 
-                    if (interactedTiles.Contains(originPos)) return;
+            if (Progress != MissionProgress.Ongoing) return;
 
-                    interactedTiles.Add(originPos);
+            if (fail) return;
 
-                    UpdateProgress(objective: 1);
-                }
-                break;
+            var objective = (Objectives)CurrentIndex;
+            switch (objective)
+            {
+                case Objectives.ExploreUnderground:
+                    if (type == TileID.Pots && currentPlayer.ZoneJungle)
+                    {
+                        Tile tile = Main.tile[i, j];
+                        int originX = i - (tile.TileFrameX / 18);
+                        int originY = j - (tile.TileFrameY / 18);
+
+                        var originPos = new Point(originX, originY);
+
+                        if (interactedTiles.Contains(originPos)) return;
+
+                        interactedTiles.Add(originPos);
+
+                        UpdateProgress(objective: 1);
+                    }
+                    break;
+            }
         }
     }
 }

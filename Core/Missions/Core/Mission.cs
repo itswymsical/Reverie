@@ -37,12 +37,7 @@ public abstract class Mission
 {
 
     #region Fields
-    protected Player player = Main.LocalPlayer;
-
-    /// <summary>
-    /// A "dirty" mission has changed state and needs to be saved, updated, or synced.
-    /// The dirty flag helps track when mission data is out of date.
-    /// </summary>
+    // Remove the fixed local player reference - missions now work for any player
     protected bool isDirty = false;
     protected bool eventsRegistered = false;
     protected HashSet<Point> interactedTiles = new HashSet<Point>();
@@ -158,15 +153,21 @@ public abstract class Mission
 
     #region Core Mission Logic
     /// <summary>
-    /// updates the progress of an objective, IN the current set.
+    /// Updates the progress of an objective, IN the current set.
+    /// Now accepts a player parameter to specify which player triggered the progress.
     /// </summary>
-    /// <param name="objective">the objective, dumy</param>
-    /// <param name="amount">glorp glerp</param>
+    /// <param name="objective">the objective index</param>
+    /// <param name="amount">progress amount</param>
+    /// <param name="triggeringPlayer">the player who triggered this progress update</param>
     /// <returns></returns>
-    public bool UpdateProgress(int objective, int amount = 1)
+    public bool UpdateProgress(int objective, int amount = 1, Player triggeringPlayer = null)
     {
         if (Progress != MissionProgress.Ongoing)
             return false;
+
+        // Use the triggering player or fall back to any active player for rewards/notifications
+        var targetPlayer = triggeringPlayer ?? GetAnyActivePlayerWithThisMission();
+        if (targetPlayer == null) return false;
 
         var currentSet = Objective[CurrentIndex];
         if (objective >= 0 && objective < currentSet.Objectives.Count)
@@ -176,12 +177,13 @@ public abstract class Mission
             {
                 var wasCompleted = obj.UpdateProgress(amount);
 
-                var player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-                player.NotifyMissionUpdate(this);
+                var missionPlayer = targetPlayer.GetModPlayer<MissionPlayer>();
+                missionPlayer.NotifyMissionUpdate(this);
+
                 if (wasCompleted && amount > 0)
                 {
                     HandleObjectiveCompletion(objective);
-                    SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ObjectiveComplete") with { Volume = 0.75f }, Main.LocalPlayer.position);
+                    SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ObjectiveComplete") with { Volume = 0.75f }, targetPlayer.position);
                 }
 
                 if (currentSet.IsCompleted)
@@ -193,7 +195,7 @@ public abstract class Mission
                     }
                     if (Objective.All(set => set.IsCompleted))
                     {
-                        Complete();
+                        Complete(targetPlayer);
                         return true;
                     }
                 }
@@ -202,12 +204,34 @@ public abstract class Mission
         return false;
     }
 
+    /// <summary>
+    /// Finds any active player who has this mission active.
+    /// Used when we need to give rewards or show notifications but don't have a specific triggering player.
+    /// </summary>
+    private Player GetAnyActivePlayerWithThisMission()
+    {
+        for (int i = 0; i < Main.maxPlayers; i++)
+        {
+            var player = Main.player[i];
+            if (player?.active == true)
+            {
+                var missionPlayer = player.GetModPlayer<MissionPlayer>();
+                if (missionPlayer.missionDict.ContainsKey(ID) &&
+                    missionPlayer.missionDict[ID].Progress == MissionProgress.Ongoing)
+                {
+                    return player;
+                }
+            }
+        }
+        return null;
+    }
+
     public void Reset()
     {
         UnregisterEventHandlers();
         Progress = MissionProgress.Inactive;
         CurrentIndex = 0;
-        interactedTiles.Clear(); // Clear tracked tiles on reset
+        interactedTiles.Clear();
         interactedItems.Clear();
         foreach (var set in Objective)
         {
@@ -215,7 +239,7 @@ public abstract class Mission
         }
     }
 
-    public void Complete()
+    public void Complete(Player rewardPlayer = null)
     {
         if (Progress == MissionProgress.Ongoing && Objective.All(set => set.IsCompleted))
         {
@@ -224,22 +248,34 @@ public abstract class Mission
             Status = MissionStatus.Completed;
             isDirty = true;
 
-            OnMissionComplete();
+            OnMissionComplete(rewardPlayer);
         }
         interactedTiles.Clear();
         interactedItems.Clear();
     }
 
     /// <summary>
-    /// use to set new missions or trigger events. by default, gives rewards and plays the mission complete notification.
+    /// Use to set new missions or trigger events. By default, gives rewards and plays the mission complete notification.
+    /// Now accepts a player parameter to specify who should receive rewards.
     /// </summary>
-    /// <param name="giveRewards"></param>
-    public virtual void OnMissionComplete(bool giveRewards = true)
+    /// <param name="rewardPlayer">The player who should receive rewards and notifications</param>
+    /// <param name="giveRewards">Whether to give rewards</param>
+    public virtual void OnMissionComplete(Player rewardPlayer = null, bool giveRewards = true)
     {
-        if (giveRewards)
-            GiveRewards();
+        // If no specific player is provided, find any player with this mission
+        var targetPlayer = rewardPlayer ?? GetAnyActivePlayerWithThisMission();
 
-        InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(this));
+        if (targetPlayer != null)
+        {
+            if (giveRewards)
+                GiveRewards(targetPlayer);
+
+            // Only show notification to the target player (or all players in multiplayer)
+            if (targetPlayer.whoAmI == Main.myPlayer || Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(this));
+            }
+        }
     }
 
     /// <summary>
@@ -258,16 +294,16 @@ public abstract class Mission
     #endregion
 
     #region Helper Methods
-    private void GiveRewards()
+    private void GiveRewards(Player targetPlayer)
     {
         foreach (var reward in Rewards)
         {
-            Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), reward.type, reward.stack);
+            targetPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), reward.type, reward.stack);
         }
         if (Experience > 0)
         {
-            ExperiencePlayer.AddExperience(Main.LocalPlayer, Experience);
-            Main.NewText($"{Main.LocalPlayer.name} " +
+            ExperiencePlayer.AddExperience(targetPlayer, Experience);
+            Main.NewText($"{targetPlayer.name} " +
                 $"Gained [c/73d5ff:{Experience} Exp.] " +
                 $"from completing [c/73d5ff:{Name}]!", Color.White);
         }
