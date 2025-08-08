@@ -4,6 +4,7 @@ using Reverie.Core.Cinematics;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Indicators;
 using Reverie.Core.Missions;
+using Reverie.Core.Missions.Core;
 using Terraria.UI;
 using Terraria.WorldBuilding;
 using static Terraria.WorldBuilding.Shapes;

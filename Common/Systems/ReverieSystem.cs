@@ -3,7 +3,7 @@ using Reverie.Content.Tiles.Taiga;
 using Reverie.Content.Tiles.Taiga.Furniture;
 using Reverie.Content.Tiles.TemperateForest.Furniture;
 using Reverie.Core.Dialogue;
-using Reverie.Core.Missions;
+using Reverie.Core.Missions.Core;
 using Reverie.Utilities;
 using System.Collections.Generic;
 using Terraria.GameContent;

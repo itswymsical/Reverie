@@ -1,6 +1,5 @@
 ﻿using Terraria;
 using Reverie.Common.Items.Components;
-using Reverie.Core.Missions;
 using Reverie.Core.Missions.System;
 using System.Linq;
 using Reverie.Core.Missions.Core;
@@ -97,24 +96,21 @@ public static class MissionUtils
     }
 
     /// <summary>
-    /// Helper method to check if an item is relevant to any objectives in a set.
-    /// This is a basic implementation - specific missions should override with their own logic.
+    /// check if an item is relevant to any objectives in a set.
+    /// specific missions should override with their own logic.
     /// </summary>
     private static bool CheckItemRelevantToObjectives(Item item, ObjectiveSet objectiveSet)
     {
-        // Basic check - look for item type/name in objective descriptions
-        // More sophisticated missions can implement their own relevance checking
         foreach (var objective in objectiveSet.Objectives)
         {
             if (objective.IsCompleted) continue;
 
-            // Simple heuristic: check if item name appears in objective description
+            // check if item name appears in objective description
             var itemName = item.Name.ToLowerInvariant();
             var objectiveDesc = objective.Description.ToLowerInvariant();
 
             if (objectiveDesc.Contains(itemName) ||
-                objectiveDesc.Contains(item.type.ToString()) ||
-                CheckItemByCategory(item, objectiveDesc))
+                objectiveDesc.Contains(item.type.ToString()))
             {
                 return true;
             }
@@ -123,42 +119,27 @@ public static class MissionUtils
         return false;
     }
 
-    /// <summary>
-    /// Checks if an item matches certain categories mentioned in objective descriptions.
-    /// </summary>
-    private static bool CheckItemByCategory(Item item, string objectiveDescription)
-    {
-        // Check for common item categories
-        if (objectiveDescription.Contains("wood") && item.createWall > 0) return true;
-        if (objectiveDescription.Contains("ore") && item.createTile > 0 && item.rare > 0) return true;
-        if (objectiveDescription.Contains("potion") && item.healLife > 0) return true;
-        if (objectiveDescription.Contains("weapon") && item.damage > 0) return true;
-        if (objectiveDescription.Contains("tool") && (item.pick > 0 || item.axe > 0 || item.hammer > 0)) return true;
-
-        return false;
-    }
 
     /// <summary>
     /// Updates mission progress with mainline/sideline distinction.
-    /// Mainline missions: all players with the mission get progress
-    /// Sideline missions: only the triggering player gets progress
+    /// Mainline missions, all players with the mission get progress
+    /// Sideline missions, only the triggering player gets progress
     /// </summary>
     /// <param name="missionId">The mission ID to update</param>
     /// <param name="objectiveIndex">The objective index to update</param>
     /// <param name="amount">The amount of progress to add</param>
     /// <param name="triggeringPlayer">The player who triggered this update</param>
     /// <returns>True if any player's mission was updated</returns>
-    public static bool UpdateMissionProgressForPlayers(int missionId, int objectiveIndex, int amount = 1, Player triggeringPlayer = null)
+    public static bool UpdateProgressForPlayers(int missionId, int objectiveIndex, int amount = 1, Player triggeringPlayer = null)
     {
         bool anyUpdated = false;
 
-        // First, determine if this is a mainline mission
         var sampleMission = MissionFactory.Instance.GetMissionData(missionId);
         if (sampleMission == null) return false;
 
         if (sampleMission.IsMainline)
         {
-            // Mainline missions: update for ALL players who have this mission active
+            // Mainline missions update for ALL players who have this mission active
             for (int i = 0; i < Main.maxPlayers; i++)
             {
                 var player = Main.player[i];
@@ -174,8 +155,7 @@ public static class MissionUtils
                     {
                         missionPlayer.SyncMissionState(mission);
 
-                        // Update the authoritative mainline state
-                        MainlineMissionSyncSystem.UpdateMainlineMissionState(mission);
+                        MainlineMissionSync.UpdateMissionState(mission);
                         anyUpdated = true;
                     }
                 }
@@ -183,7 +163,7 @@ public static class MissionUtils
         }
         else
         {
-            // Sideline missions: only update for the triggering player
+            // Sideline missions only update for the triggering player
             if (triggeringPlayer?.active == true)
             {
                 var missionPlayer = triggeringPlayer.GetModPlayer<MissionPlayer>();
@@ -264,7 +244,6 @@ public static class MissionUtils
         mission.Status = state.Availability;
         mission.Unlocked = state.Unlocked;
 
-        // Validate current index is within bounds
         if (state.CurObjectiveIndex >= 0 && state.CurObjectiveIndex < mission.Objective.Count)
         {
             mission.CurrentIndex = state.CurObjectiveIndex;
@@ -275,20 +254,18 @@ public static class MissionUtils
             mission.CurrentIndex = 0;
         }
 
-        // If objective counts don't match, log a warning
         if (mission.Objective.Count != state.ObjectiveIndex.Count)
         {
             ModContent.GetInstance<Reverie>().Logger.Warn(
                 $"Mission {mission.ID} objective set count mismatch: Expected {mission.Objective.Count}, got {state.ObjectiveIndex.Count}");
         }
 
-        // Process each objective set with improved matching by description
+        // Process each obj set with matching description
         for (var i = 0; i < Math.Min(mission.Objective.Count, state.ObjectiveIndex.Count); i++)
         {
             var savedSet = state.ObjectiveIndex[i];
             var currentSet = mission.Objective[i];
 
-            // If objective counts within a set don't match, log a warning
             if (currentSet.Objectives.Count != savedSet.Objectives.Count)
             {
                 ModContent.GetInstance<Reverie>().Logger.Warn(
@@ -319,7 +296,6 @@ public static class MissionUtils
             }
         }
 
-        // Ensure mission index is valid if mission is active
         if (mission.Progress == MissionProgress.Ongoing &&
             (mission.CurrentIndex < 0 || mission.CurrentIndex >= mission.Objective.Count))
         {

@@ -52,12 +52,10 @@ public class MissionJourneysBegin : Mission
     {
         base.OnMissionComplete(rewardPlayer, giveRewards);
 
-        // For mainline missions, the next mission unlock is now handled globally!
-        // Just call UnlockMission on ANY MissionPlayer - it will unlock for ALL players automatically
-        var anyMissionPlayer = GetAnyActiveMissionPlayer();
-        if (anyMissionPlayer != null)
+        var players = GetAnyActiveMissionPlayer();
+        if (players != null)
         {
-            anyMissionPlayer.UnlockMission(MissionID.ForgottenAges, broadcast: true);
+            players.UnlockMission(MissionID.ForgottenAges, broadcast: true);
         }
 
         DialogueManager.Instance.StartDialogue("JourneysBegin.MissionEnd", 2, zoomIn: false, false);
@@ -115,10 +113,8 @@ public class MissionJourneysBegin : Mission
             case Objectives.TalkToGuide:
                 if (dialogueKey == "JourneysBegin.Tutorial")
                 {
-                    // Use new progress system - mainline mission so all players get progress
-                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1);
+                    MissionUtils.UpdateProgressForPlayers(ID, 0, 1);
 
-                    // Give magic mirror to all players (mainline mission reward)
                     for (int i = 0; i < Main.maxPlayers; i++)
                     {
                         var player = Main.player[i];
@@ -139,13 +135,11 @@ public class MissionJourneysBegin : Mission
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
-            // Add NPC chat logic if needed
         }
     }
 
     private void OnItemPickupHandler(Item item, Player player)
     {
-        // Handle item pickup logic if needed
     }
 
     private void OnItemUseHandler(Item item, Player player)
@@ -157,7 +151,7 @@ public class MissionJourneysBegin : Mission
                 if (item.type == ItemID.MagicMirror)
                 {
                     // Use new progress system - mainline mission so all players get progress
-                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1, player);
+                    MissionUtils.UpdateProgressForPlayers(ID, 0, 1, player);
                     DialogueManager.Instance.StartDialogue("JourneysBegin.Mirror", 6);
                 }
                 break;
@@ -172,14 +166,13 @@ public class MissionJourneysBegin : Mission
             case Objectives.ExploreUnderground:
                 if (type == TileID.Containers || type == TileID.Containers2)
                 {
-                    // Find the top-left origin of the 2x2 container
                     Tile tile = Main.tile[i, j];
                     int originX = i - (tile.TileFrameX / 18);
                     int originY = j - (tile.TileFrameY / 18);
 
                     var originPos = new Point(originX, originY);
 
-                    // Skip if this container was already interacted with
+                    // Skip, was interacted with
                     if (interactedTiles.Contains(originPos)) return;
 
                     // Mark all 4 tiles of the 2x2 container as interacted
@@ -191,8 +184,7 @@ public class MissionJourneysBegin : Mission
                         }
                     }
 
-                    // Use new progress system - mainline mission so all players get progress
-                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1, player);
+                    MissionUtils.UpdateProgressForPlayers(ID, 0, 1, player);
                 }
                 break;
         }
@@ -218,21 +210,16 @@ public class MissionJourneysBegin : Mission
 
                     interactedTiles.Add(originPos);
 
-                    // Use new progress system - mainline mission so all players get progress
-                    MissionUtils.UpdateMissionProgressForPlayers(ID, 2, 1, player);
+                    MissionUtils.UpdateProgressForPlayers(ID, 2, 1, player);
                 }
                 if (TileID.Sets.Ore[type])
                 {
-                    // Use new progress system - mainline mission so all players get progress
-                    MissionUtils.UpdateMissionProgressForPlayers(ID, 1, 1, player);
+                    MissionUtils.UpdateProgressForPlayers(ID, 1, 1, player);
                 }
                 break;
         }
     }
 
-    /// <summary>
-    /// Helper method to get any active mission player for global operations
-    /// </summary>
     private MissionPlayer GetAnyActiveMissionPlayer()
     {
         for (int i = 0; i < Main.maxPlayers; i++)

@@ -1,18 +1,13 @@
 ﻿using Reverie.Common.UI.Missions;
-using Reverie.Core.Indicators;
-using Reverie.Core.Missions.Core;
 using Reverie.Core.Missions.System;
 using Reverie.Utilities;
-using Reverie.Utilities.Extensions;
 
 using System.Collections.Generic;
 using System.Linq;
-
-using Terraria.ID;
 using Terraria.ModLoader.IO;
 using Terraria.UI;
 
-namespace Reverie.Core.Missions;
+namespace Reverie.Core.Missions.Core;
 
 public partial class MissionPlayer : ModPlayer
 {
@@ -48,10 +43,9 @@ public partial class MissionPlayer : ModPlayer
 
             var container = mission.ToState();
 
-            // Update mainline mission state if this is a mainline mission
             if (mission.IsMainline)
             {
-                MainlineMissionSyncSystem.UpdateMainlineMissionState(mission);
+                MainlineMissionSync.UpdateMissionState(mission);
             }
 
             // Only show UI updates for the local player
@@ -77,17 +71,16 @@ public partial class MissionPlayer : ModPlayer
             missionDict[mission.ID] = mission;
         }
 
-        // Update mainline mission sync if this is a mainline mission
         if (mission.IsMainline)
         {
-            MainlineMissionSyncSystem.UpdateMainlineMissionState(mission);
+            MainlineMissionSync.UpdateMissionState(mission);
         }
     }
 
     public bool UpdateMissionProgress(int missionId, int objectiveIndex, int amount = 1)
     {
-        // Use the utility method that handles mainline/sideline distinction
-        return MissionUtils.UpdateMissionProgressForPlayers(missionId, objectiveIndex, amount, Player);
+        // utility method that handles mainline/sideline distinction
+        return MissionUtils.UpdateProgressForPlayers(missionId, objectiveIndex, amount, Player);
     }
 
     private void ResetToCleanState()
@@ -97,21 +90,6 @@ public partial class MissionPlayer : ModPlayer
         MissionManager.Instance.Reset();
         hasReceivedMainlineSync = false;
     }
-
-    public void DebugMissionState()
-    {
-        // Only show debug info for local player
-        if (Player.whoAmI != Main.myPlayer) return;
-
-        foreach (var mission in missionDict.Values)
-        {
-            Main.NewText($"Mission: {mission.Name}");
-            Main.NewText($"  Type: {(mission.IsMainline ? "Mainline" : "Sideline")}");
-            Main.NewText($"  State: {mission.Status}");
-            Main.NewText($"  Progress: {mission.Progress}");
-            Main.NewText($"  NextMissionID: {mission.NextMissionID}");
-        }
-    }
     #endregion
 
     #region Serialization
@@ -120,14 +98,12 @@ public partial class MissionPlayer : ModPlayer
     {
         try
         {
-            // Ensure all active missions are synced before saving
+            // ensure active missions are synced first
             foreach (var mission in missionDict.Values)
             {
                 SyncMissionState(mission);
             }
 
-            // Save ALL missions (mainline and sideline)
-            // The sync system will handle mainline mission sharing separately
             var activeMissionData = new List<TagCompound>();
             foreach (var mission in missionDict.Values.Where(m => m.Progress != MissionProgress.Completed))
             {
@@ -163,16 +139,15 @@ public partial class MissionPlayer : ModPlayer
 
     public override void LoadData(TagCompound tag)
     {
-        // Only store the data, don't process it yet
+        // don't process it yet
         savedMissionData = tag;
 
-        // Reset to clean state to avoid any partial loading issues
+        // reset to clean to avoid partial loading
         ResetToCleanState();
 
         ModContent.GetInstance<Reverie>().Logger.Info($"Mission data stored for deferred loading (Player: {Player.name})");
     }
 
-    // New method for deferred loading
     private void ProcessDeferredLoad()
     {
         if (hasDeferredLoadRun || savedMissionData == null)
@@ -186,12 +161,12 @@ public partial class MissionPlayer : ModPlayer
         {
             ModContent.GetInstance<Reverie>().Logger.Info($"Starting deferred mission data loading for player {Player.name}");
 
-            // Get sync status
+            // get sync status
             hasReceivedMainlineSync = savedMissionData.GetBool("HasReceivedMainlineSync");
 
-            // Load completed missions first
+            // load completed first
             var completedMissionIds = savedMissionData.GetList<int>("CompletedMissionIDs");
-            int completedMissionsLoaded = 0;
+            var completedMissionsLoaded = 0;
 
             foreach (var missionId in completedMissionIds)
             {
@@ -208,8 +183,8 @@ public partial class MissionPlayer : ModPlayer
 
             ModContent.GetInstance<Reverie>().Logger.Info($"Loaded {completedMissionsLoaded}/{completedMissionIds.Count} completed missions for player {Player.name}");
 
-            // Load active missions (both mainline and sideline from save data)
-            int activeMissionsLoaded = 0;
+            // load active (both mainline and sideline)
+            var activeMissionsLoaded = 0;
             var activeMissionData = savedMissionData.GetList<TagCompound>("ActiveMissions").ToList();
 
             foreach (var missionTag in activeMissionData)
@@ -221,14 +196,14 @@ public partial class MissionPlayer : ModPlayer
                 }
                 catch (Exception ex)
                 {
-                    int missionId = missionTag.ContainsKey("ID") ? missionTag.GetInt("ID") : -1;
+                    var missionId = missionTag.ContainsKey("ID") ? missionTag.GetInt("ID") : -1;
                     ModContent.GetInstance<Reverie>().Logger.Error($"Failed to load active mission {missionId} for player {Player.name}: {ex.Message}");
                 }
             }
 
             ModContent.GetInstance<Reverie>().Logger.Info($"Loaded {activeMissionsLoaded}/{activeMissionData.Count} active missions for player {Player.name}");
 
-            // Load notified missions
+            // load notified missions
             try
             {
                 notifiedMissions.UnionWith([.. savedMissionData.GetList<int>("NotifiedMissions")]);
@@ -238,8 +213,8 @@ public partial class MissionPlayer : ModPlayer
                 ModContent.GetInstance<Reverie>().Logger.Error($"Failed to load notified missions for player {Player.name}: {ex.Message}");
             }
 
-            // Re-register active missions
-            int missionsRegistered = 0;
+            // re-register active missions
+            var missionsRegistered = 0;
             foreach (var mission in ActiveMissions())
             {
                 try
@@ -254,10 +229,10 @@ public partial class MissionPlayer : ModPlayer
             }
             ModContent.GetInstance<Reverie>().Logger.Info($"Registered {missionsRegistered} active missions with manager for player {Player.name}");
 
-            // Validate mission state consistency
+            // validate state consistency
             ValidateStates();
 
-            // Clear saved data to free memory
+            // free up memory
             savedMissionData = null;
 
             ModContent.GetInstance<Reverie>().Logger.Info($"Completed deferred mission loading successfully for player {Player.name}");
@@ -275,17 +250,17 @@ public partial class MissionPlayer : ModPlayer
         {
             try
             {
-                // Ensure current index is valid
+                // check if current index is valid
                 if (mission.CurrentIndex < 0 || mission.CurrentIndex >= mission.Objective.Count)
                 {
                     ModContent.GetInstance<Reverie>().Logger.Warn($"Fixing invalid CurrentIndex for mission {mission.ID} (Player: {Player.name})");
                     mission.CurrentIndex = 0;
                 }
 
-                // Validate objective completion states
+                // validate completion states for objectives
                 foreach (var set in mission.Objective)
                 {
-                    // Validate counts are within bounds
+                    // same with counts
                     foreach (var objective in set.Objectives)
                     {
                         if (objective.CurrentCount > objective.RequiredCount)
@@ -302,11 +277,36 @@ public partial class MissionPlayer : ModPlayer
                     }
                 }
 
-                // Check if the mission progress state is valid
+                // Check if the progress state is valid
                 if (mission.Progress == MissionProgress.Completed)
                 {
-                    // Ensure all objectives are actually complete
-                    bool allSetsComplete = mission.Objective.All(set => set.IsCompleted);
+                    // TRUTH NUKE
+                    //                ⣀⡤⠤⠴⠾⠋⠉⠛⢾⡏⠙⠿⠦⠤⢤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                    //⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡤⢶⣿⠉⢀⣀⡠⠆⠀⠀⠀⠀⠀⠀⠀⢤⣀⣀⠈⢹⣦⢤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                    //⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⠁⢋⡙⠁⠀⡝⠀⠀⠀⠀⣀⡸⠋⠁⠀⠀⠹⡀⠀⠈⠈⠆⢹⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                    //⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣤⣿⣁⡡⣴⡏⠀⠀⠀⢀⠀⢧⣀⠄⠀⠀⠀⣀⣰⠆⢀⠁⠀⠀⢈⣶⡤⣀⢹⣦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀
+                    //⠀⠀⠀⠀⠀⠀⣠⢴⠟⢁⡝⠀⠁⠀⠃⠉⠀⠀⠘⣯⠀⡀⠾⣤⣄⣠⢤⠾⠄⠀⣸⠖⠀⠀⠈⠀⠃⠀⠀⠹⡄⠙⣶⢤⡀⠀⠀⠀⠀⠀
+                    //⠀⠀⠀⠀⣠⠾⡇⠈⣀⡞⠀⠀⠀⠀⡀⠀⢀⣠⣄⣇⠀⣳⠴⠃⠀⠀⠀⠣⢴⠉⣰⣇⣀⣀⠀⠀⡄⠀⠀⠀⢹⣄⡘⠈⡷⣦⠀⠀⠀⠀
+                    //⠀⢠⠞⠉⢻⡄⠀⠀⠈⠙⠀⠀⠀⠀⠙⣶⣏⣤⣤⠟⠉⠁⠀⠀⠀⠀⠀⠀⠀⠉⠙⢦⣱⣌⣷⠊⠀⠀⠀⠀⠈⠁⠀⠀⠀⡝⠉⠻⣄⠀
+                    //⣴⠛⢀⡠⢼⡇⠀⠀⢀⡄⠀⢀⣀⡽⠚⠁⠀⠀⠀⢠⡀⢠⣀⠠⣔⢁⡀⠀⣄⠀⡄⠀⠀⠀⠈⠑⠺⣄⡀⠀⠠⡀⠀⠀⢠⡧⠄⠀⠘⢧
+                    //⣿⡶⠋⠀⠀⠈⣠⣈⣩⠗⠒⠋⠀⠀⠀⠀⣀⣠⣆⡼⣷⣞⠛⠻⡉⠉⡟⠒⡛⣶⠧⣀⣀⣀⠀⠀⠀⠀⠈⠓⠺⢏⣉⣠⠋⠀⠀⠀⢢⣸
+                    //⣿⠇⠐⠤⠤⠖⠁⣿⣀⣀⠀⠀⠀⠀⠀⠉⠁⠈⠉⠙⠛⢿⣷⡄⢣⡼⠀⣾⣿⠧⠒⠓⠚⠛⠉⠀⠀⠀⠀⠀⢀⣀⣾⡉⠓⠤⡤⠄⠸⢿
+                    //⠹⣆⣤⠀⠀⠠⠀⠈⠓⠈⠓⠤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣿⣿⢸⠀⢸⣿⠇⠀⠀⠀⠀⠀⠀⠀⠀⢀⡤⠒⠁⠰⠃⠀⠠⠀⠀⢀⣀⠞
+                    //⠀⠀⠉⠓⢲⣄⡈⢀⣠⠀⠀⠀⡸⠶⠂⠀⠀⢀⠀⠀⠤⠞⢻⡇⠀⠀⢘⡟⠑⠤⠄⠀⢀⠀⠀⠐⠲⢿⡀⠀⠀⢤⣀⢈⣀⡴⠖⠋⠀⠀
+                    //⠀⠀⠀⠀⠀⠈⠉⠉⠙⠓⠒⣾⣁⣀⣴⠀⣀⠙⢧⠂⢀⣆⣀⣷⣤⣀⣾⣇⣀⡆⠀⢢⠛⢁⠀⢰⣀⣀⣹⠒⠒⠛⠉⠉⠉⠀⠀⠀⠀⠀
+                    //⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠁⠈⠉⠉⠛⠉⠙⠉⠀⠀⣿⡟⣿⣿⠀⠀⠈⠉⠉⠙⠋⠉⠉⠀⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                    //⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⡇⢻⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                    //⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣶⣾⣿⣿⠁⠀⢹⡛⣟⡶⢤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                    //⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣴⠛⢯⣽⡟⢿⣿⠛⠿⠳⠞⠻⣿⠻⣆⢽⠟⣶⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                    //⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠛⠃⠲⠯⠴⣦⣼⣷⣤⣤⣶⣤⣩⡧⠽⠷⠐⠛⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                    //⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⡇⠀⣿⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                    //⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣄⡀⢀⣀⣠⡾⡿⢡⢐⠻⣿⣄⣀⡀⠀⣀⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                    //⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣤⢴⡏⠁⠀⠝⠉⣡⠟⣰⠃⢸⣿⠀⣷⠙⢧⡉⠻⡅⠀⠙⡷⢤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                    //⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⡟⠀⠈⣿⢄⡴⠞⠻⣄⣰⣡⠤⣞⣸⡤⢬⣧⣀⡿⠛⠦⣤⣶⡃⠀⢹⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                    //⠀⠀⠀⠀⠀⠀⠀⢀⣴⣶⡿⠃⠉⢺⠁⠙⠒⠀⠀⣠⡉⠀⠉⠚⠉⠉⠑⠈⠀⠈⣧⠀⠀⠒⠋⠀⡹⠋⠀⢻⡶⠶⡄⠀⠀⠀⠀⠀⠀⠀
+                    //⠀⠀⠀⠀⠀⠀⣠⣾⣿⣇⠁⢈⡦⠀⡍⠋⠁⡀⠸⡋⠀⠀⠀⢘⠏⠉⡏⠀⠀⠀⢉⡷⠀⡌⠉⠋⡇⠠⣏⠈⢁⣦⣿⣦⠀⠀⠀⠀⠀⠀
+                    //⠀⠀⠀⠀⠀⠀⠉⣁⠀⠉⠉⠉⠙⠛⠛⠒⠚⠳⠤⢼⣤⣠⠤⣮⣠⣤⣼⠦⢤⣤⣿⠤⠾⠓⠒⠛⢓⠛⠉⠉⠉⠀⠈⠉⠀⠀⠀⠀⠀
+                    var allSetsComplete = mission.Objective.All(set => set.IsCompleted);
                     if (!allSetsComplete)
                     {
                         ModContent.GetInstance<Reverie>().Logger.Warn($"Mission {mission.ID} marked complete but has incomplete objectives (Player: {Player.name})");
@@ -395,10 +395,9 @@ public partial class MissionPlayer : ModPlayer
         try
         {
             var missionId = missionTag.GetInt("ID");
-            bool isMainline = missionTag.GetBool("IsMainline");
+            var isMainline = missionTag.GetBool("IsMainline");
             var stateTag = missionTag.GetCompound("State");
 
-            // Validate that we can create this mission
             var mission = MissionFactory.Instance.GetMissionData(missionId);
             if (mission == null)
             {
@@ -406,11 +405,11 @@ public partial class MissionPlayer : ModPlayer
                 return;
             }
 
-            // For multiplayer, if this is a mainline mission and we're not the host,
+            // if this is a mainline mission and we're not the host
             // we should get the state from the sync system instead of save data
             if (Main.netMode == NetmodeID.MultiplayerClient && isMainline && hasReceivedMainlineSync)
             {
-                var syncedState = MainlineMissionSyncSystem.GetMainlineMissionState(missionId);
+                var syncedState = MainlineMissionSync.GetMissionState(missionId);
                 if (syncedState != null)
                 {
                     mission.LoadState(syncedState);
@@ -420,14 +419,12 @@ public partial class MissionPlayer : ModPlayer
                 }
             }
 
-            // Load from save data (for singleplayer, sideline missions, or when sync isn't available)
-            // Gather state data
+            // Load from save (for singleplayer, sideline missions, or when sync isn't available)
             var progress = (MissionProgress)stateTag.GetInt("Progress");
             var availability = (MissionStatus)stateTag.GetInt("Status");
             var unlocked = stateTag.GetBool("Unlocked");
             var currentIndex = stateTag.GetInt("CurrentIndex");
 
-            // Validate state data
             if (!Enum.IsDefined(typeof(MissionProgress), progress))
             {
                 ModContent.GetInstance<Reverie>().Logger.Warn($"Invalid mission progress value {(int)progress} for mission {missionId} (Player: {Player.name}), defaulting to Inactive");
@@ -456,7 +453,6 @@ public partial class MissionPlayer : ModPlayer
                 CurObjectiveIndex = currentIndex
             };
 
-            // Load objective data with validation
             try
             {
                 container.ObjectiveIndex = DeserializeObjectives(stateTag.GetList<TagCompound>("Objective"));
@@ -466,8 +462,7 @@ public partial class MissionPlayer : ModPlayer
                 ModContent.GetInstance<Reverie>().Logger.Error($"Failed to deserialize objectives for mission {missionId} (Player: {Player.name}): {ex.Message}");
                 container.ObjectiveIndex = new List<ObjectiveIndexState>();
 
-                // Create placeholder empty states
-                for (int i = 0; i < mission.Objective.Count; i++)
+                for (var i = 0; i < mission.Objective.Count; i++)
                 {
                     var set = new ObjectiveIndexState();
                     foreach (var obj in mission.Objective[i].Objectives)
@@ -483,15 +478,13 @@ public partial class MissionPlayer : ModPlayer
                     container.ObjectiveIndex.Add(set);
                 }
 
-                // Mark as inactive if we couldn't load objectives
                 container.Progress = MissionProgress.Inactive;
             }
 
-            // Load state with enhanced recovery
             mission.LoadState(container);
             missionDict[missionId] = mission;
 
-            // Mark mission as dirty to ensure proper sync
+            // validate proper sync
             dirtyMissions.Add(missionId);
 
             ModContent.GetInstance<Reverie>().Logger.Info($"Successfully loaded mission {mission.Name} (ID: {missionId}) with state {mission.Progress} for player {Player.name}");
@@ -539,12 +532,10 @@ public partial class MissionPlayer : ModPlayer
         var mission = GetMission(missionId);
         if (mission?.IsMainline == true)
         {
-            // Mainline missions: reset for ALL players
-            ResetMainlineMissionForAllPlayers(missionId);
+            ResetMissionAllPlayers(missionId);
         }
         else if (mission != null)
         {
-            // Sideline missions: reset only for this player
             mission.Reset();
             mission.Status = MissionStatus.Unlocked;
             SyncMissionState(mission);
@@ -556,12 +547,10 @@ public partial class MissionPlayer : ModPlayer
         var mission = GetMission(missionId);
         if (mission?.IsMainline == true)
         {
-            // Mainline missions: complete for ALL players
-            CompleteMainlineMissionForAllPlayers(missionId);
+            CompleteMissionAllPlayers(missionId);
         }
         else if (mission != null)
         {
-            // Sideline missions: complete only for this player
             mission.Complete(Player);
             SyncMissionState(mission);
         }
@@ -572,20 +561,18 @@ public partial class MissionPlayer : ModPlayer
         var mission = GetMission(missionId);
         if (mission?.IsMainline == true)
         {
-            // Mainline missions: start for ALL players
-            StartMainlineMissionForAllPlayers(missionId);
+            StartMissionAllPlayers(missionId);
         }
         else if (mission != null)
         {
-            // Sideline missions: start only for this player
             mission.Progress = MissionProgress.Ongoing;
             MissionManager.Instance.RegisterMission(mission);
             SyncMissionState(mission);
 
             mission.OnMissionStart();
 
-            // Only show notification to the local player
-            if (Player.whoAmI == Main.myPlayer)
+            //client-side notification
+            if (Main.netMode != NetmodeID.Server)
             {
                 InGameNotificationsTracker.AddNotification(new MissionAcceptNotification(mission));
             }
@@ -597,12 +584,10 @@ public partial class MissionPlayer : ModPlayer
         var mission = GetMission(missionId);
         if (mission?.IsMainline == true)
         {
-            // Mainline missions: unlock for ALL players
             UnlockMainlineMissionForAllPlayers(missionId, broadcast);
         }
         else if (mission != null)
         {
-            // Sideline missions: unlock only for this player
             mission.Status = MissionStatus.Unlocked;
             mission.Progress = MissionProgress.Inactive;
             mission.Unlocked = true;
@@ -624,7 +609,7 @@ public partial class MissionPlayer : ModPlayer
 
     private void UnlockMainlineMissionForAllPlayers(int missionId, bool broadcast = false)
     {
-        for (int i = 0; i < Main.maxPlayers; i++)
+        for (var i = 0; i < Main.maxPlayers; i++)
         {
             var player = Main.player[i];
             if (player?.active == true)
@@ -639,11 +624,10 @@ public partial class MissionPlayer : ModPlayer
                     mission.Unlocked = true;
                     missionPlayer.SyncMissionState(mission);
 
-                    // Only show broadcast message to local player and only if they haven't been notified
                     if (broadcast && mission.ProviderNPC > 0 && player.whoAmI == Main.myPlayer)
                     {
                         var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
-                        Main.NewText($"A new chapter begins! {npcName} has important information for everyone!", Color.Gold);
+                        Main.NewText($"{npcName} has important information!", Color.Gold);
                         missionPlayer.notifiedMissions.Add(mission.ID);
                     }
                 }
@@ -653,9 +637,9 @@ public partial class MissionPlayer : ModPlayer
         ModContent.GetInstance<Reverie>().Logger.Info($"Unlocked mainline mission {missionId} for all players");
     }
 
-    private void StartMainlineMissionForAllPlayers(int missionId)
+    private void StartMissionAllPlayers(int missionId)
     {
-        for (int i = 0; i < Main.maxPlayers; i++)
+        for (var i = 0; i < Main.maxPlayers; i++)
         {
             var player = Main.player[i];
             if (player?.active == true)
@@ -671,8 +655,7 @@ public partial class MissionPlayer : ModPlayer
 
                     mission.OnMissionStart();
 
-                    // Only show notification to the local player
-                    if (player.whoAmI == Main.myPlayer)
+                    if (Main.netMode != NetmodeID.Server)
                     {
                         InGameNotificationsTracker.AddNotification(new MissionAcceptNotification(mission));
                     }
@@ -683,9 +666,9 @@ public partial class MissionPlayer : ModPlayer
         ModContent.GetInstance<Reverie>().Logger.Info($"Started mainline mission {missionId} for all players");
     }
 
-    private void CompleteMainlineMissionForAllPlayers(int missionId)
+    private void CompleteMissionAllPlayers(int missionId)
     {
-        for (int i = 0; i < Main.maxPlayers; i++)
+        for (var i = 0; i < Main.maxPlayers; i++)
         {
             var player = Main.player[i];
             if (player?.active == true)
@@ -704,9 +687,9 @@ public partial class MissionPlayer : ModPlayer
         ModContent.GetInstance<Reverie>().Logger.Info($"Completed mainline mission {missionId} for all players");
     }
 
-    private void ResetMainlineMissionForAllPlayers(int missionId)
+    private void ResetMissionAllPlayers(int missionId)
     {
-        for (int i = 0; i < Main.maxPlayers; i++)
+        for (var i = 0; i < Main.maxPlayers; i++)
         {
             var player = Main.player[i];
             if (player?.active == true)
@@ -754,8 +737,7 @@ public partial class MissionPlayer : ModPlayer
         var mission = GetMission(missionId);
         if (mission?.IsMainline == true)
         {
-            // Mainline missions: assign for ALL players
-            for (int i = 0; i < Main.maxPlayers; i++)
+            for (var i = 0; i < Main.maxPlayers; i++)
             {
                 var player = Main.player[i];
                 if (player?.active == true)
@@ -773,7 +755,6 @@ public partial class MissionPlayer : ModPlayer
         }
         else if (mission != null)
         {
-            // Sideline missions: assign only for this player
             mission.ProviderNPC = npcType;
             missionDict[missionId] = mission;
             SyncMissionState(mission);
@@ -785,8 +766,7 @@ public partial class MissionPlayer : ModPlayer
         var mission = GetMission(missionId);
         if (mission?.IsMainline == true)
         {
-            // Mainline missions: remove for ALL players
-            for (int i = 0; i < Main.maxPlayers; i++)
+            for (var i = 0; i < Main.maxPlayers; i++)
             {
                 var player = Main.player[i];
                 if (player?.active == true)
@@ -804,7 +784,6 @@ public partial class MissionPlayer : ModPlayer
         }
         else if (mission?.ProviderNPC == npcType)
         {
-            // Sideline missions: remove only for this player
             mission.ProviderNPC = 0;
             missionDict[missionId] = mission;
             SyncMissionState(mission);
@@ -818,7 +797,6 @@ public partial class MissionPlayer : ModPlayer
 
     public void CheckAndBroadcastAllAvailableMissions()
     {
-        // Only broadcast for local player to avoid spam
         if (Player.whoAmI != Main.myPlayer) return;
 
         var npcTypesWithMissions = missionDict.Values
@@ -834,7 +812,7 @@ public partial class MissionPlayer : ModPlayer
 
     public bool NPCHasAvailableMission(int npcType, bool broadcast = false)
     {
-        bool hasAvailableMission = false;
+        var hasAvailableMission = false;
 
         foreach (var mission in missionDict.Values.Where(m =>
             m.ProviderNPC == npcType &&
@@ -842,7 +820,6 @@ public partial class MissionPlayer : ModPlayer
         {
             hasAvailableMission = true;
 
-            // Only broadcast for local player and non-mainline missions
             if (!mission.IsMainline && !notifiedMissions.Contains(mission.ID) && broadcast && Player.whoAmI == Main.myPlayer)
             {
                 var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
@@ -861,20 +838,16 @@ public partial class MissionPlayer : ModPlayer
     {
         ProcessDeferredLoad();
 
-        // Sync mainline missions for multiplayer
         if (Main.netMode == NetmodeID.MultiplayerClient && !hasReceivedMainlineSync)
         {
-            // Request mainline mission sync from server
-            MainlineMissionSyncSystem.Instance.OnPlayerJoin(Player);
+            MainlineMissionSync.Instance.OnPlayerJoin(Player);
             hasReceivedMainlineSync = true;
         }
         else if (Main.netMode == NetmodeID.Server)
         {
-            // Initialize mainline missions on server
-            MainlineMissionSyncSystem.Instance.OnWorldStart();
+            MainlineMissionSync.Instance.OnWorldStart();
         }
 
-        // Only clear notifications for local player
         if (Player.whoAmI == Main.myPlayer)
         {
             notifiedMissions.Clear();
@@ -895,6 +868,5 @@ public partial class MissionPlayer : ModPlayer
             dirtyMissions.Clear();
         }
     }
-
     #endregion
 }

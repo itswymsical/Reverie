@@ -132,8 +132,7 @@ public class MissionForgottenAges : Mission
             case Objectives.TalkToGuide:
                 if (dialogueKey == "ForgottenAges.FindChronicles")
                 {
-                    // Use new progress system that handles mainline/sideline distinction
-                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1);
+                    MissionUtils.UpdateProgressForPlayers(ID, 0, 1);
                 }
                 break;
         }
@@ -145,7 +144,6 @@ public class MissionForgottenAges : Mission
         switch (objective)
         {
             case Objectives.ChronicleSegment:
-                // Handle chronicle segment logic here
                 break;
         }
     }
@@ -158,8 +156,7 @@ public class MissionForgottenAges : Mission
             case Objectives.ExploreJungle:
                 if (biome == BiomeType.Jungle && timeRequired == 5 * 60)
                 {
-                    // Use new progress system - mainline mission so all players get progress
-                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1, player);
+                    MissionUtils.UpdateProgressForPlayers(ID, 0, 1, player);
                 }
                 break;
         }
@@ -173,8 +170,7 @@ public class MissionForgottenAges : Mission
             case Objectives.ExploreUnderground:
                 if (npc.type is NPCID.ManEater or NPCID.JungleSlime or NPCID.SpikedJungleSlime || npc.TypeName.Contains("Hornet"))
                 {
-                    // Use new progress system - mainline mission so all players get progress
-                    MissionUtils.UpdateMissionProgressForPlayers(ID, 2, 1, player);
+                    MissionUtils.UpdateProgressForPlayers(ID, 2, 1, player);
                 }
                 break;
         }
@@ -182,7 +178,6 @@ public class MissionForgottenAges : Mission
 
     private void OnItemPickupHandler(Item item, Player player)
     {
-        // Handle item pickup logic if needed
     }
 
     private void OnItemUseHandler(Item item, Player player)
@@ -190,7 +185,6 @@ public class MissionForgottenAges : Mission
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
-            // Add item use logic if needed
         }
     }
 
@@ -199,7 +193,6 @@ public class MissionForgottenAges : Mission
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
-            // Add tile interaction logic if needed
         }
     }
 
@@ -223,8 +216,7 @@ public class MissionForgottenAges : Mission
 
                     interactedTiles.Add(originPos);
 
-                    // Use new progress system - mainline mission so all players get progress
-                    MissionUtils.UpdateMissionProgressForPlayers(ID, 1, 1, player);
+                    MissionUtils.UpdateProgressForPlayers(ID, 1, 1, player);
                 }
                 break;
         }

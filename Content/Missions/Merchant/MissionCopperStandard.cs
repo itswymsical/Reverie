@@ -77,7 +77,7 @@ public class MissionCopperStandard : Mission
             case Objectives.TalkToMerchant:
                 if (dialogueKey == "Merchant.CopperStandard")
                 {
-                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1);
+                    MissionUtils.UpdateProgressForPlayers(ID, 0, 1);
                 }
                 break;
         }
@@ -93,7 +93,7 @@ public class MissionCopperStandard : Mission
             case Objectives.MineCopper:
                 if (type == TileID.Copper)
                 {
-                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1, player);
+                    MissionUtils.UpdateProgressForPlayers(ID, 0, 1, player);
                 }
                 break;
         }
@@ -107,18 +107,18 @@ public class MissionCopperStandard : Mission
             case Objectives.Innovate:
                 if (item.type == ItemID.CopperBar)
                 {
-                    MissionUtils.UpdateMissionProgressForPlayers(ID, 1, item.stack, player);
+                    MissionUtils.UpdateProgressForPlayers(ID, 1, item.stack, player);
                 }
                 else if (item.type == ItemID.WoodenArrow)
                 {
-                    MissionUtils.UpdateMissionProgressForPlayers(ID, 2, item.stack, player);
+                    MissionUtils.UpdateProgressForPlayers(ID, 2, item.stack, player);
                 }
                 break;
 
             case Objectives.CraftSpear:
                 if (item.type == ItemID.CopperShortsword)
                 {
-                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1, player);
+                    MissionUtils.UpdateProgressForPlayers(ID, 0, 1, player);
                 }
                 break;
         }

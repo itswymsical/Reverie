@@ -5,6 +5,7 @@ using Reverie.Core.Cinematics.Camera;
 using Reverie.Core.Cinematics.Music;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
+using Reverie.Core.Missions.Core;
 
 namespace Reverie.Content.Cutscenes;
 

@@ -1,5 +1,4 @@
-﻿using Reverie.Core.Missions;
-using Reverie.Core.Missions.Core;
+﻿using Reverie.Core.Missions.Core;
 using Terraria.GameContent;
 
 namespace Reverie.Core.Indicators;

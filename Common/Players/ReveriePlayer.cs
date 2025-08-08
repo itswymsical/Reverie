@@ -8,7 +8,7 @@ using Reverie.Content.Tiles.Archaea;
 
 using Reverie.Core.Cinematics;
 using Reverie.Core.Dialogue;
-using Reverie.Core.Missions;
+using Reverie.Core.Missions.Core;
 using SubworldLibrary;
 using System.Linq;
 

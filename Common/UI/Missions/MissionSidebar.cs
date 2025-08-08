@@ -1,5 +1,4 @@
-﻿using Reverie.Core.Missions;
-using Reverie.Core.Missions.Core;
+﻿using Reverie.Core.Missions.Core;
 using Reverie.Utilities;
 using System.Collections.Generic;
 using Terraria.Audio;

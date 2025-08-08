@@ -19,14 +19,14 @@ namespace Reverie.Core.Missions.System;
 /// Tracks authoritative state for mainline missions and syncs them to joining players.
 /// Sideline missions remain individual per player.
 /// </summary>
-public class MainlineMissionSyncSystem : ModSystem
+public class MainlineMissionSync : ModSystem
 {
     // Authoritative state for mainline missions (server/host tracks this)
-    private static readonly Dictionary<int, MissionDataContainer> MainlineMissionStates = [];
-    private static readonly HashSet<int> CompletedMainlineMissions = [];
+    private static readonly Dictionary<int, MissionDataContainer> MissionStates = [];
+    private static readonly HashSet<int> CompletedMissions = [];
 
-    private static MainlineMissionSyncSystem instance;
-    public static MainlineMissionSyncSystem Instance => instance ??= ModContent.GetInstance<MainlineMissionSyncSystem>();
+    private static MainlineMissionSync instance;
+    public static MainlineMissionSync Instance => instance ??= ModContent.GetInstance<MainlineMissionSync>();
 
     public override void Load()
     {
@@ -35,8 +35,8 @@ public class MainlineMissionSyncSystem : ModSystem
 
     public override void Unload()
     {
-        MainlineMissionStates.Clear();
-        CompletedMainlineMissions.Clear();
+        MissionStates.Clear();
+        CompletedMissions.Clear();
         instance = null;
     }
 
@@ -46,35 +46,35 @@ public class MainlineMissionSyncSystem : ModSystem
     /// Updates the authoritative state for a mainline mission.
     /// Only call this for mainline missions.
     /// </summary>
-    public static void UpdateMainlineMissionState(Mission mission)
+    public static void UpdateMissionState(Mission mission)
     {
         if (!mission.IsMainline) return;
 
         var state = mission.ToState();
-        MainlineMissionStates[mission.ID] = state;
+        MissionStates[mission.ID] = state;
 
         if (mission.Progress == MissionProgress.Completed)
         {
-            CompletedMainlineMissions.Add(mission.ID);
+            CompletedMissions.Add(mission.ID);
         }
 
-        Reverie.Instance.Logger.Debug($"Updated mainline mission state: {mission.Name} - {mission.Progress}");
+        Reverie.Instance.Logger.Debug($"Updated story mission state: {mission.Name} - {mission.Progress}");
     }
 
     /// <summary>
     /// Gets the authoritative state for a mainline mission.
     /// </summary>
-    public static MissionDataContainer GetMainlineMissionState(int missionId)
+    public static MissionDataContainer GetMissionState(int missionId)
     {
-        return MainlineMissionStates.TryGetValue(missionId, out var state) ? state : null;
+        return MissionStates.TryGetValue(missionId, out var state) ? state : null;
     }
 
     /// <summary>
     /// Checks if a mainline mission is completed in the server state.
     /// </summary>
-    public static bool IsMainlineMissionCompleted(int missionId)
+    public static bool IsMissionCompleted(int missionId)
     {
-        return CompletedMainlineMissions.Contains(missionId);
+        return CompletedMissions.Contains(missionId);
     }
 
     /// <summary>
@@ -82,7 +82,7 @@ public class MainlineMissionSyncSystem : ModSystem
     /// </summary>
     public static Dictionary<int, MissionDataContainer> GetAllMainlineMissionStates()
     {
-        return new Dictionary<int, MissionDataContainer>(MainlineMissionStates);
+        return new Dictionary<int, MissionDataContainer>(MissionStates);
     }
 
     #endregion
@@ -93,14 +93,14 @@ public class MainlineMissionSyncSystem : ModSystem
     /// Syncs all mainline missions to a joining player.
     /// Should be called when a player joins the world.
     /// </summary>
-    public static void SyncMainlineMissionsToPlayer(Player player)
+    public static void SyncToPlayer(Player player)
     {
         if (player?.active != true) return;
 
         var missionPlayer = player.GetModPlayer<MissionPlayer>();
         int syncedCount = 0;
 
-        foreach (var (missionId, state) in MainlineMissionStates)
+        foreach (var (missionId, state) in MissionStates)
         {
             try
             {
@@ -128,7 +128,7 @@ public class MainlineMissionSyncSystem : ModSystem
         }
 
         // Also sync completed mainline missions
-        foreach (var completedMissionId in CompletedMainlineMissions)
+        foreach (var completedMissionId in CompletedMissions)
         {
             if (!missionPlayer.missionDict.ContainsKey(completedMissionId))
             {
@@ -157,7 +157,7 @@ public class MainlineMissionSyncSystem : ModSystem
     /// Initializes mainline mission states from the host player's current state.
     /// Should be called when the world starts or when the first player joins.
     /// </summary>
-    public static void InitializeMainlineMissionsFromHost()
+    public static void InitFromHost()
     {
         // Find the host player (usually player 0, or first active player)
         Player hostPlayer = null;
@@ -191,7 +191,7 @@ public class MainlineMissionSyncSystem : ModSystem
 
             foreach (var mission in hostMissionPlayer.missionDict.Values.Where(m => m.IsMainline))
             {
-                UpdateMainlineMissionState(mission);
+                UpdateMissionState(mission);
             }
 
             Reverie.Instance.Logger.Info($"Initialized mainline mission states from host player {hostPlayer.name}");
@@ -208,17 +208,17 @@ public class MainlineMissionSyncSystem : ModSystem
         {
             // Save mainline mission states
             var mainlineStates = new List<TagCompound>();
-            foreach (var (missionId, state) in MainlineMissionStates)
+            foreach (var (missionId, state) in MissionStates)
             {
                 var stateTag = state.Serialize();
                 stateTag["MissionID"] = missionId;
                 mainlineStates.Add(stateTag);
             }
 
-            tag["MainlineMissionStates"] = mainlineStates;
-            tag["CompletedMainlineMissions"] = CompletedMainlineMissions.ToList();
+            tag["MissionStates"] = mainlineStates;
+            tag["CompletedMissions"] = CompletedMissions.ToList();
 
-            Reverie.Instance.Logger.Info($"Saved {MainlineMissionStates.Count} mainline mission states to world data");
+            Reverie.Instance.Logger.Info($"Saved {MissionStates.Count} mainline mission states to world data");
         }
         catch (Exception ex)
         {
@@ -231,11 +231,11 @@ public class MainlineMissionSyncSystem : ModSystem
         try
         {
             // Clear existing data
-            MainlineMissionStates.Clear();
-            CompletedMainlineMissions.Clear();
+            MissionStates.Clear();
+            CompletedMissions.Clear();
 
             // Load mainline mission states
-            var mainlineStates = tag.GetList<TagCompound>("MainlineMissionStates");
+            var mainlineStates = tag.GetList<TagCompound>("MissionStates");
             foreach (var stateTag in mainlineStates)
             {
                 try
@@ -245,7 +245,7 @@ public class MainlineMissionSyncSystem : ModSystem
 
                     if (container != null)
                     {
-                        MainlineMissionStates[missionId] = container;
+                        MissionStates[missionId] = container;
                     }
                 }
                 catch (Exception ex)
@@ -255,10 +255,10 @@ public class MainlineMissionSyncSystem : ModSystem
             }
 
             // Load completed mainline missions
-            var completedMissions = tag.GetList<int>("CompletedMainlineMissions");
-            CompletedMainlineMissions.UnionWith(completedMissions);
+            var completedMissions = tag.GetList<int>("CompletedMissions");
+            CompletedMissions.UnionWith(completedMissions);
 
-            Reverie.Instance.Logger.Info($"Loaded {MainlineMissionStates.Count} mainline mission states from world data");
+            Reverie.Instance.Logger.Info($"Loaded {MissionStates.Count} mainline mission states from world data");
         }
         catch (Exception ex)
         {
@@ -275,7 +275,7 @@ public class MainlineMissionSyncSystem : ModSystem
         // Periodically sync mainline mission states from active players
         if (Main.GameUpdateCount % (60 * 10) == 0) // Every 10 seconds
         {
-            SyncMainlineStatesFromActivePlayers();
+            SyncStateActivePlayers();
         }
     }
 
@@ -283,7 +283,7 @@ public class MainlineMissionSyncSystem : ModSystem
     /// Updates mainline mission states from all currently active players.
     /// This ensures the authoritative state stays current.
     /// </summary>
-    private void SyncMainlineStatesFromActivePlayers()
+    private void SyncStateActivePlayers()
     {
         for (int i = 0; i < Main.maxPlayers; i++)
         {
@@ -294,7 +294,7 @@ public class MainlineMissionSyncSystem : ModSystem
 
                 foreach (var mission in missionPlayer.missionDict.Values.Where(m => m.IsMainline))
                 {
-                    UpdateMainlineMissionState(mission);
+                    UpdateMissionState(mission);
                 }
             }
         }
@@ -320,7 +320,7 @@ public class MainlineMissionSyncSystem : ModSystem
             await Task.Delay(1000); // 1 second delay
             if (player?.active == true)
             {
-                SyncMainlineMissionsToPlayer(player);
+                SyncToPlayer(player);
             }
         });
     }
@@ -330,9 +330,9 @@ public class MainlineMissionSyncSystem : ModSystem
     /// </summary>
     public void OnWorldStart()
     {
-        if (MainlineMissionStates.Count == 0)
+        if (MissionStates.Count == 0)
         {
-            InitializeMainlineMissionsFromHost();
+            InitFromHost();
         }
     }
 

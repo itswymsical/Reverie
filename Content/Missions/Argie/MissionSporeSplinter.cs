@@ -31,7 +31,7 @@ public class MissionSporeSplinter : Mission
         isMainline: false,
         providerNPC: ModContent.NPCType<NPCs.Special.Argie>(), xpReward: 150)
     {
-        Reverie.Instance.Logger.Info($"[{Name} - {ID}] constructed");
+        Instance.Logger.Info($"[{Name} - {ID}] constructed");
     }
 
     public override void OnMissionStart()
@@ -87,12 +87,10 @@ public class MissionSporeSplinter : Mission
             case Objectives.GreetArgie:
                 if (npc.type == ProviderNPC)
                 {
-                    // sideline mission so only triggering player gets progress
-                    //  we need to find which player is chatting
                     var chattingPlayer = GetPlayerNearNPC(npc);
                     if (chattingPlayer != null)
                     {
-                        MissionUtils.UpdateMissionProgressForPlayers(ID, 0, 1, chattingPlayer);
+                        MissionUtils.UpdateProgressForPlayers(ID, 0, 1, chattingPlayer);
                     }
                 }
                 break;
@@ -108,15 +106,15 @@ public class MissionSporeSplinter : Mission
             case Objectives.GatherResources:
                 if (item.type == ItemID.GlowingMushroom)
                 {
-                    MissionUtils.UpdateMissionProgressForPlayers(ID, 0, item.stack, player);
+                    MissionUtils.UpdateProgressForPlayers(ID, 0, item.stack, player);
                 }
                 else if (item.type == ItemID.Rope)
                 {
-                    MissionUtils.UpdateMissionProgressForPlayers(ID, 1, item.stack, player);
+                    MissionUtils.UpdateProgressForPlayers(ID, 1, item.stack, player);
                 }
                 else if (item.IsWood())
                 {
-                    MissionUtils.UpdateMissionProgressForPlayers(ID, 2, item.stack, player);
+                    MissionUtils.UpdateProgressForPlayers(ID, 2, item.stack, player);
                 }
                 break;
         }
