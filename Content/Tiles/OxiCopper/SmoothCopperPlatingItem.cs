@@ -1,4 +1,4 @@
-﻿namespace Reverie.Content.Tiles.Misc;
+﻿namespace Reverie.Content.Tiles.OxiCopper;
 
 public class SmoothCopperPlatingItem : ModItem
 {

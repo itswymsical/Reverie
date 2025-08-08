@@ -1,7 +1,7 @@
 ﻿using Reverie.Core.Loaders;
 using Terraria.Graphics.Effects;
 
-namespace Reverie.Content.Tiles.Misc;
+namespace Reverie.Content.Tiles.OxiCopper;
 
 public class CopperPlatingTile : ModTile
 {

@@ -1,4 +1,4 @@
-UI.ExperienceTracker: Experience Bar
+﻿UI.ExperienceTracker: Experience Bar
 
 Conditions: {
 	CopperStandardComplete: After Mission, (Copper Standard)
@@ -568,6 +568,51 @@ Items: {
 		DisplayName: Spruce Tree Wand
 		Tooltip: ""
 	}
+
+	OxidizedCopperAxe: {
+		DisplayName: Oxidized Copper Axe
+		Tooltip: ""
+	}
+
+	OxidizedCopperBow: {
+		DisplayName: Oxidized Copper Bow
+		Tooltip: ""
+	}
+
+	OxidizedCopperBroadsword: {
+		DisplayName: Oxidized Copper Broadsword
+		Tooltip: ""
+	}
+
+	OxidizedCopperHammer: {
+		DisplayName: Oxidized Copper Hammer
+		Tooltip: ""
+	}
+
+	OxidizedCopperPickaxe: {
+		DisplayName: Oxidized Copper Pickaxe
+		Tooltip: ""
+	}
+
+	OxidizedCopperShortsword: {
+		DisplayName: Oxidized Copper Shortsword
+		Tooltip: ""
+	}
+
+	OxidizedCopperWatch: {
+		DisplayName: Oxidized Copper Watch
+		Tooltip: ""
+	}
+
+	CopperPipeItem: {
+		DisplayName: Copper Pipe
+		Tooltip: ""
+	}
+
+	OxidizedCopperPlatingItem: {
+		DisplayName: Oxidized Copper Plating
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
@@ -599,9 +644,8 @@ Projectiles: {
 	MagnoliaPheromonesProj.DisplayName: Magnolia Pheromones
 	SharpnutDaggerProj.DisplayName: Sharpnut Dagger
 	LodestoneMagnetizerProj.DisplayName: Lodestone Magnetizer
-	ArchiverChronicleProjectile.DisplayName: Archiver Chronicle Projectile
-	TumbleweedProjectile.DisplayName: Tumbleweed Projectile
-	ShootingStarProj.DisplayName: Shooting Star Proj
+	ArchiverChronicleProjectile.DisplayName: Archiver Chronicle
+	TumbleweedProjectile.DisplayName: Tumbleweed
 }
 
 Configs: {
