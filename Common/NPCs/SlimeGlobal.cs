@@ -2,28 +2,19 @@
 using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.GameContent;
-using static System.Net.Mime.MediaTypeNames;
+using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace Reverie.Common.NPCs;
 
 public class SlimeGlobal : GlobalNPC
 {
     public override bool InstancePerEntity => true;
-    public override bool AppliesToEntity(NPC entity, bool lateInstantiation) => entity.type == NPCAIStyleID.Slime;
+    public override bool AppliesToEntity(NPC entity, bool lateInstantiation) => entity.aiStyle == NPCAIStyleID.Slime;
 
-    #region Constants, Fields, Enums
     private Vector2 squishScale = Vector2.One;
-
-    private bool isGrowing = false;
-    private float growthTimer = 0f;
-    private const float GROWTH_DURATION = 45f;
-    internal enum SlimeState
-    {
-        Idle,
-        PrepareSlamAttack,
-        SlamAttack,
-    }
-    #endregion
+    private bool isBeingConsumed = false;
+    private int consumingKingSlimeIndex = -1;
 
     public override void SetDefaults(NPC npc)
     {
@@ -31,75 +22,103 @@ public class SlimeGlobal : GlobalNPC
 
         npc.HitSound = new SoundStyle($"{SFX_DIRECTORY}SlimeHit") with { Volume = 0.46f, PitchVariance = 0.3f, MaxInstances = 8 };
         npc.DeathSound = new SoundStyle($"{SFX_DIRECTORY}SlimeKilled") with { Volume = 0.76f, PitchVariance = 0.2f, MaxInstances = 8 };
+    }
 
+    public override bool PreAI(NPC npc)
+    {
+        if (npc.aiStyle != NPCAIStyleID.Slime) return true;
+
+        NPC consumingKingSlime = FindConsumingKingSlime(npc);
+
+        if (consumingKingSlime != null)
+        {
+            isBeingConsumed = true;
+            consumingKingSlimeIndex = consumingKingSlime.whoAmI;
+
+            HandleConsumptionAttraction(npc, consumingKingSlime);
+            return false; // Skip normal AI
+        }
+        else
+        {
+            isBeingConsumed = false;
+            consumingKingSlimeIndex = -1;
+        }
+
+        return true; // Continue with normal AI
     }
 
     public override void AI(NPC npc)
     {
-        base.AI(npc);
-
-        if (npc.aiStyle == NPCAIStyleID.Slime)
+        if (npc.aiStyle == NPCAIStyleID.Slime && !isBeingConsumed)
         {
-            if (isGrowing)
-            {
-                growthTimer++;
-                float progress = growthTimer / GROWTH_DURATION;
-
-                npc.scale = MathHelper.Lerp(0.2f, 1.0f, progress);
-                npc.alpha = (int)MathHelper.Lerp(125, 0, progress);
-
-                if (Main.rand.NextBool(8))
-                {
-                    int dust = Dust.NewDust(npc.position, npc.width, npc.height,
-                        DustID.t_Slime, 0f, 0f, 150, new Color(78, 136, 255, 150), 0.8f);
-                    Main.dust[dust].noGravity = true;
-                    Main.dust[dust].velocity *= 0.3f;
-                }
-
-                if (growthTimer >= GROWTH_DURATION)
-                {
-                    isGrowing = false;
-                    npc.scale = 1.0f;
-                    npc.alpha = 0;
-                    npc.damage = 7;
-                    npc.dontTakeDamage = false;
-                    SoundEngine.PlaySound(SoundID.NPCHit1, npc.Center);
-                }
-            }
-
-            if (!isGrowing || growthTimer > GROWTH_DURATION * 0.8f)
-            {
-                HandleSquishScale(npc);
-            }
+            HandleSquishScale(npc);
         }
-
     }
-    
-    public override void OnSpawn(NPC npc, IEntitySource source)
+
+    private NPC FindConsumingKingSlime(NPC slime)
     {
-        base.OnSpawn(npc, source);
-
-        if (npc.aiStyle == NPCAIStyleID.Slime && source is EntitySource_Parent parent &&
-            parent.Entity is NPC parentNPC && parentNPC.type == NPCID.KingSlime)
+        for (int i = 0; i < Main.maxNPCs; i++)
         {
-            npc.scale = 0.2f;
-            npc.alpha = 125;
-            npc.damage = 0;
-            npc.dontTakeDamage = true;
-            isGrowing = true;
-            growthTimer = 0f;
+            NPC kingSlime = Main.npc[i];
 
-            for (int i = 0; i < 8; i++)
+            if (kingSlime.active && kingSlime.type == NPCID.KingSlime)
             {
-                Vector2 velocity = Vector2.One.RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(0.5f, 2f);
-                int dust = Dust.NewDust(npc.Center, 4, 4, DustID.t_Slime,
-                    velocity.X, velocity.Y, 150, new Color(78, 136, 255, 150), 1f);
-                Main.dust[dust].noGravity = true;
+                // Check if king slime is in consuming state and slime is in range
+                if (kingSlime.ai[0] == 5f) // ConsumingSlimes state
+                {
+                    float distance = Vector2.Distance(slime.Center, kingSlime.Center);
+                    if (distance <= 200f) // CONSUME_DETECTION_RANGE
+                    {
+                        return kingSlime;
+                    }
+                }
             }
         }
+        return null;
     }
 
-    #region Visuals
+    private void HandleConsumptionAttraction(NPC slime, NPC kingSlime)
+    {
+        Vector2 toKingSlime = kingSlime.Center - slime.Center;
+        float distance = toKingSlime.Length();
+
+        if (distance > 10f) // Avoid division by zero
+        {
+            toKingSlime.Normalize();
+
+            float attractionForce = MathHelper.Lerp(6f, 2f, distance / 200f);
+
+            slime.velocity = Vector2.Lerp(slime.velocity, toKingSlime * attractionForce, 0.15f);
+
+            slime.spriteDirection = Math.Sign(toKingSlime.X) == 1 ? -1 : 1;
+
+            if (Main.rand.NextBool(3))
+            {
+                Dust dust = Dust.NewDustDirect(slime.position, slime.width, slime.height,
+                    DustID.t_Slime, toKingSlime.X, toKingSlime.Y,
+                    150, new Color(78, 136, 255, 150), 1.2f);
+                dust.velocity *= 0.3f;
+                dust.noGravity = true;
+            }
+        }
+
+        float speed = slime.velocity.Length();
+        float stretchFactor = MathHelper.Clamp(speed / 8f, 0f, 0.4f);
+
+        Vector2 direction = slime.velocity.SafeNormalize(Vector2.UnitX);
+        squishScale.X = 1f + stretchFactor * Math.Abs(direction.X) * 0.3f;
+        squishScale.Y = 1f - stretchFactor * Math.Abs(direction.Y) * 0.3f;
+
+        slime.velocity.Y += 0.5f;
+        if (slime.velocity.Y > 10f)
+            slime.velocity.Y = 10f;
+
+        if (slime.collideX)
+            slime.velocity.X *= -0.8f;
+        if (slime.collideY && slime.velocity.Y > 0f)
+            slime.velocity.Y *= -0.6f;
+    }
+
     private void HandleSquishScale(NPC npc)
     {
         const float MAX_STRETCH = 1.5f;
@@ -109,7 +128,6 @@ public class SlimeGlobal : GlobalNPC
 
         if (npc.velocity.Y == 0f && npc.ai[0] >= -30f)
         {
-            // Progressively squish horizontally and stretch vertically as it prepares to jump
             float preparationProgress = Math.Min(1f, (npc.ai[0] + 30f) / 30f);
             squishScale.X = MathHelper.Lerp(1f, 1.3f, preparationProgress);
             squishScale.Y = MathHelper.Lerp(1f, 0.92f, preparationProgress);
@@ -137,7 +155,7 @@ public class SlimeGlobal : GlobalNPC
 
     public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        if (npc.type != NPCAIStyleID.Slime) return base.PreDraw(npc, spriteBatch, screenPos, drawColor);
+        if (npc.aiStyle != NPCAIStyleID.Slime) return base.PreDraw(npc, spriteBatch, screenPos, drawColor);
 
         Texture2D texture = TextureAssets.Npc[npc.type].Value;
 
@@ -159,14 +177,19 @@ public class SlimeGlobal : GlobalNPC
         finalColor.B = (byte)((finalColor.B * drawColor.B) / 255);
         finalColor.A = npc.color.A;
 
+        // consumption glow
+        if (isBeingConsumed)
+        {
+            float glowIntensity = 0.3f + 0.2f * (float)Math.Sin(Main.timeForVisualEffects * 0.1f);
+            finalColor = Color.Lerp(finalColor, new Color(78, 136, 255), glowIntensity);
+        }
+
         Vector2 drawPos = npc.Center - Main.screenPosition;
         SpriteEffects spriteEffects = npc.spriteDirection == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
-        // Calculate rotation based on X velocity when falling
         float spriteRotation = 0f;
         if (npc.velocity.Y > 0f)
         {
-            // Scale rotation with X velocity, cap at ±π/2 (90 degrees)
             spriteRotation = MathHelper.Clamp(npc.velocity.X * 0.04f, -MathHelper.PiOver2, MathHelper.PiOver2);
         }
 
@@ -183,5 +206,4 @@ public class SlimeGlobal : GlobalNPC
 
         return false;
     }
-    #endregion
 }
