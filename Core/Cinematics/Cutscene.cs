@@ -26,7 +26,7 @@ public abstract class Cutscene
 
     private int? _currentMusicID = null;
 
-    protected float ElapsedTime { get; set; }
+    protected float ElapsedSeconds { get; set; }
 
     private bool _isSkipping = false;
     private int _skipHoldTime = 0;
@@ -40,7 +40,7 @@ public abstract class Cutscene
     protected int SkipHoldDuration { get; set; } = 120;
     protected int SkipAnimationFrameRate { get; set; } = 5;
 
-    private Texture2D _skipIcon;
+    private Texture2D _skipIcon = TextureAssets.LoadingSunflower?.Value;
     private int _skipIconTotalFrames = 19;
 
     /// <summary>
@@ -52,7 +52,7 @@ public abstract class Cutscene
         {
             IsPlaying = true;
             IsUIHidden = false;
-            ElapsedTime = 0f;
+            ElapsedSeconds = 0f;
             _isSkipping = false;
             _skipHoldTime = 0;
             _skipAnimationFrame = 0;
@@ -110,7 +110,7 @@ public abstract class Cutscene
         {
             if (!IsPlaying) return;
 
-            ElapsedTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            ElapsedSeconds += (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             if (EnableLetterbox)
             {
@@ -200,6 +200,10 @@ public abstract class Cutscene
         }
     }
 
+    /// <summary>
+    /// Draws the cutscene content, use DrawCutsceneContent(SpriteBatch) if your not changing the default drawing behavior.
+    /// </summary>
+    /// <param name="spriteBatch"></param>
     public virtual void Draw(SpriteBatch spriteBatch)
     {
         if (!IsPlaying) return;
@@ -213,7 +217,7 @@ public abstract class Cutscene
 
         DrawCutsceneContent(spriteBatch);
 
-        if (_isSkipping && !_skipFadeOutStarted)
+        if ((ElapsedSeconds >= 5f || _isSkipping) && !_skipFadeOutStarted)
         {
             DrawSkipIndicator(spriteBatch);
         }
@@ -221,32 +225,51 @@ public abstract class Cutscene
 
     public virtual void DrawSkipIndicator(SpriteBatch spriteBatch)
     {
-        if (_skipIcon == null)
+        // Only show the animated icon when actually skipping
+        if (_isSkipping && _skipIcon != null)
         {
-            _skipIcon = TextureAssets.LoadingSunflower?.Value;
-            if (_skipIcon == null) return;
+            var frameWidth = _skipIcon.Width;
+            var frameHeight = _skipIcon.Height / _skipIconTotalFrames;
+            Rectangle sourceRectangle = new Rectangle(0, _skipAnimationFrame * frameHeight, frameWidth, frameHeight);
+            Vector2 iconPosition = new Vector2(Main.screenWidth - frameWidth - 10, Main.screenHeight - frameHeight - 10);
+
+            spriteBatch.Draw(_skipIcon, iconPosition, sourceRectangle, Color.White);
         }
 
-        var frameWidth = _skipIcon.Width;
-        var frameHeight = _skipIcon.Height / _skipIconTotalFrames;
-        Rectangle sourceRectangle = new Rectangle(0, _skipAnimationFrame * frameHeight, frameWidth, frameHeight);
-        Vector2 iconPosition = new Vector2(Main.screenWidth - frameWidth - 10, Main.screenHeight - frameHeight - 10);
-
-        spriteBatch.Draw(_skipIcon, iconPosition, sourceRectangle, Color.White);
-
         string keybindName = ReverieSystem.SkipCutsceneKeybind.GetAssignedKeys().FirstOrDefault() ?? "[None]";
-        string skipText = $"Hold [{keybindName}] to skip...";
+
+        string skipText = _isSkipping
+            ? $"Hold [{keybindName}] to skip..."
+            : $"Hold [{keybindName}] to skip";
 
         var font = FontAssets.MouseText.Value;
         Vector2 textSize = font.MeasureString(skipText);
-        Vector2 textPosition = new Vector2(
-            iconPosition.X - textSize.X - 10,
-            iconPosition.Y + (frameHeight - textSize.Y) / 2
-        );
+
+        Vector2 textPosition;
+        if (_isSkipping && _skipIcon != null)
+        {
+            var frameWidth = _skipIcon.Width;
+            var frameHeight = _skipIcon.Height / _skipIconTotalFrames;
+            Vector2 iconPosition = new Vector2(Main.screenWidth - frameWidth - 10, Main.screenHeight - frameHeight - 10);
+            textPosition = new Vector2(
+                iconPosition.X - textSize.X - 10,
+                iconPosition.Y + (frameHeight - textSize.Y) / 2
+            );
+            Rectangle sourceRectangle = new Rectangle(0, _skipAnimationFrame * frameHeight, frameWidth, frameHeight);
+
+            spriteBatch.Draw(_skipIcon, iconPosition, sourceRectangle, Color.White);
+        }
+        else
+        {
+            textPosition = new Vector2(
+                Main.screenWidth - textSize.X - 10,
+                Main.screenHeight - textSize.Y - 10
+            );
+        }
 
         Utils.DrawBorderString(spriteBatch, skipText, textPosition, Color.White);
-    }
 
+    }
     protected virtual bool UsesLetterbox() => EnableLetterbox;
 
     protected virtual void DrawCutsceneContent(SpriteBatch spriteBatch) { }
@@ -313,12 +336,12 @@ public abstract class Cutscene
             FadeColor = color.Value;
         }
 
-        if (ElapsedTime < delay)
+        if (ElapsedSeconds < delay)
         {
             return false;
         }
 
-        float elapsedSinceDelay = ElapsedTime - delay;
+        float elapsedSinceDelay = ElapsedSeconds - delay;
         float progress = Math.Min(elapsedSinceDelay / duration, 1f);
 
         if (easing != null)
@@ -337,7 +360,7 @@ public abstract class Cutscene
 
     protected bool FadeIn(float duration, float delay = 0f, Color? color = null, EaseFunction easing = null)
     {
-        if (ElapsedTime <= delay && FadeAlpha == 0f)
+        if (ElapsedSeconds <= delay && FadeAlpha == 0f)
         {
             FadeAlpha = 1f;
         }

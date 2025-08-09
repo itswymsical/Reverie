@@ -1,0 +1,14 @@
+<Project>
+    <PropertyGroup>
+        <FXCPath>Assets/Effects/Compiler/fxc.exe</FXCPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ShaderFiles Include="**/*.hlsl" />
+        <ShaderFiles Include="**/*.fx" />
+    </ItemGroup>
+
+    <Target Name="BuildEffects" BeforeTargets="BuildMod" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+        <Exec Command="@(ShaderFiles->'&quot;$(FXCPath)&quot; &quot;%(RecursiveDir)%(FileName)%(Extension)&quot; /T fx_2_0 /D FX=1 /nologo /Fo &quot;%(RecursiveDir)%(FileName).fxc&quot; &#xA;&#xD;')" IgnoreExitCode="true" />
+    </Target>
+</Project>

@@ -1,0 +1,63 @@
+﻿DialogueLibrary: {
+	Merchant: {
+		CopperStandard: {
+			Line1: {
+				Text: Oh!<pause:10> Hey!<pause:8> I've been watching you carry copper about with such dedication.
+				Speaker: Merchant
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line2: {
+				Text: Reminds me of my younger days, <pause:12>heh, every coin was earned by the sweat of my brow.
+				Speaker: Merchant
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line3: {
+				Text: You know,<pause:8> copper's got potential most folks don't see.
+				Speaker: Merchant
+				Emote: "1"
+				Speed: "1.5"
+			}
+
+			Line4: {
+				Text: I've got a proposition for someone with your<pause:12>... industrious spirit.
+				Speaker: Merchant
+				Emote: "1"
+				Speed: "1.5"
+			}
+		}
+
+		CopperJobOffer: {
+			Line1: {
+				Text: What if I told you copper could be more than just<pause:8> bars and coins?
+				Speaker: Merchant
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line2: {
+				Text: I need someone to experiment,<pause:10> try new things,<pause:8> see what copper can become.
+				Speaker: Merchant
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line3: {
+				Text: Harvest it,<pause:6> craft with it,<pause:6> innovate with it.
+				Speaker: Merchant
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line4: {
+				Text: I'll pay well for your discoveries.
+				Speaker: Merchant
+				Emote: "0"
+				Speed: "1.5"
+			}
+		}
+	}
+}

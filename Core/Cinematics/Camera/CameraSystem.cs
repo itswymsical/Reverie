@@ -1,4 +1,5 @@
-﻿using Terraria.Graphics.CameraModifiers;
+﻿using System.Collections.Generic;
+using Terraria.Graphics.CameraModifiers;
 
 namespace Reverie.Core.Cinematics.Camera;
 
@@ -8,6 +9,7 @@ public class CameraSystem : ModSystem
 
     private static PanModifier panModifier = new();
     private static MoveModifier moveModifier = new();
+    private static CameraPathModifier pathModifier = new();
 
     private static bool _isLocked = false;
     private static Vector2 _lockedPosition = Vector2.Zero;
@@ -35,6 +37,14 @@ public class CameraSystem : ModSystem
     public static void UnlockCamera()
     {
         _isLocked = false;
+    }
+
+    public static void CreateCameraPath(List<Vector2> waypoints, List<int> durations, Func<Vector2, Vector2, float, Vector2> easing = null)
+    {
+        pathModifier.Reset();
+        pathModifier.WayPoints = waypoints;
+        pathModifier.SegmentDurations = durations;
+        pathModifier.EaseFunction = easing ?? Vector2.SmoothStep;
     }
 
     /// <summary>
@@ -110,6 +120,7 @@ public class CameraSystem : ModSystem
     {
         panModifier.PassiveUpdate();
         moveModifier.PassiveUpdate();
+        pathModifier.PassiveUpdate();
     }
 
     public override void ModifyScreenPosition()
@@ -126,12 +137,16 @@ public class CameraSystem : ModSystem
         if (moveModifier.MovementDuration > 0 && moveModifier.Target != Vector2.Zero)
             Main.instance.CameraModifiers.Add(moveModifier);
 
+        if (pathModifier.WayPoints.Count > 1) // Add this block
+            Main.instance.CameraModifiers.Add(pathModifier);
+
         var mult = 1f;
         Main.instance.CameraModifiers.Add(new PunchCameraModifier(Main.LocalPlayer.position, Main.rand.NextFloat(3.14f).ToRotationVector2(), shake * mult, 15f, 30, 2000, "Shake"));
 
         if (shake > 0)
             shake--;
     }
+
     public static void Reset()
     {
         shake = 0;
@@ -140,6 +155,7 @@ public class CameraSystem : ModSystem
 
         panModifier.Reset();
         moveModifier.Reset();
+        pathModifier.Reset();
     }
 
     public override void OnWorldLoad()
@@ -151,5 +167,6 @@ public class CameraSystem : ModSystem
     {
         panModifier = null;
         moveModifier = null;
+        pathModifier = null;
     }
 }

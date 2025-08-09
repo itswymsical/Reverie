@@ -70,7 +70,7 @@ public class ArgieIntroCutscene : Cutscene
 
     public override bool IsFinished()
     {
-        return ElapsedTime >= cutsceneDuration;
+        return ElapsedSeconds >= cutsceneDuration;
     }
 
     protected override void OnCutsceneEnd()

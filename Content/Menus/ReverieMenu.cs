@@ -3,6 +3,7 @@ using Reverie.Content.Biomes.Canopy;
 using Reverie.Core.Loaders;
 using System.Collections.Generic;
 using Terraria.Audio;
+using Terraria.Graphics.Effects;
 
 namespace Reverie.Content.Menus;
 
@@ -491,13 +492,11 @@ public partial class ReverieMenu : ModMenu
             }
         }
 
-        // Create shooting stars occasionally
         if (Main.rand.NextBool(50))
         {
             var starIndex = Main.rand.Next(menuStars.Count);
             menuStars[starIndex].Fall();
 
-            // Remove from velocity dictionary when a star starts falling
             if (starVelocities.ContainsKey(menuStars[starIndex]))
                 starVelocities.Remove(menuStars[starIndex]);
 
@@ -514,17 +513,13 @@ public partial class ReverieMenu : ModMenu
         }
 
         var logoRenderPos = new Vector2(logoDrawCenter.X / 1.35f, logoDrawCenter.Y * -0.25f);
-
         var logoWidth = Logo.Width() * logoScale;
         var logoHeight = Logo.Height() * logoScale;
-
         var dotOffset = new Vector2(
-            logoWidth * 0.82f,
+            logoWidth * 0.825f,
             logoHeight * 0.39f
         );
-
         var galaxyWorldPos = logoRenderPos + dotOffset;
-
         var galaxyShaderPos = new Vector2(
             (galaxyWorldPos.X - Main.screenWidth * 0.5f) / (Main.screenWidth * 0.5f),
             (galaxyWorldPos.Y - Main.screenHeight * 0.5f) / (Main.screenHeight * 0.5f)
@@ -532,40 +527,40 @@ public partial class ReverieMenu : ModMenu
 
         spriteBatch.Draw(Logo.Value, new Vector2(logoDrawCenter.X / 1.35f, logoDrawCenter.Y * -0.25f),
                          null, Color.White, logoRotation, Vector2.Zero, logoScale, SpriteEffects.None, 0f);
-
         spriteBatch.End();
 
         var effect = ShaderLoader.GetShader("GalaxyShader").Value;
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp,
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearWrap,
                           DepthStencilState.None, Main.Rasterizer, effect, Main.UIScaleMatrix);
 
         if (effect != null)
         {
-            effect.Parameters["uTime"]?.SetValue((float)(Main.timeForVisualEffects * 0.005f));
-
+            effect.Parameters["uTime"]?.SetValue((float)(Main.timeForVisualEffects * 0.0015f));
             effect.Parameters["uScreenResolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
-
             effect.Parameters["uSourceRect"]?.SetValue(new Vector4(0, 0, Main.screenWidth, Main.screenHeight));
+            effect.Parameters["uIntensity"]?.SetValue(.85f);
 
-            effect.Parameters["uIntensity"]?.SetValue(2f);
+            effect.Parameters["uImage0"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}RibbonTrail", AssetRequestMode.ImmediateLoad).Value);
+            effect.Parameters["uImage1"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}StormTrail", AssetRequestMode.ImmediateLoad).Value);
 
-            effect.Parameters["uImage0"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin", AssetRequestMode.ImmediateLoad).Value);
-            effect.Parameters["uImage1"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail", AssetRequestMode.ImmediateLoad).Value);
+            effect.Parameters["uCenter"]?.SetValue(galaxyShaderPos);
+            effect.Parameters["uScale"]?.SetValue(3.5f);
 
-            effect.Parameters["uCenter"].SetValue(galaxyShaderPos);
-            effect.Parameters["uScale"].SetValue(5.5f);
+            effect.Parameters["uRotation"]?.SetValue((float)(Main.timeForVisualEffects * 0.001f));
+            effect.Parameters["uArmCount"]?.SetValue(4.0f);
+
+            effect.Parameters["uColor"]?.SetValue(new Vector4(0.8f, 0.4f, 1.5f, .85f));
         }
 
+        var pixel = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Wyrmscape").Value;
+        spriteBatch.Draw(pixel, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White);
 
-        var perlinSpiral = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin").Value;
-        spriteBatch.Draw(perlinSpiral, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight),
-                         Color.White);
-
-        var pixelTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail").Value;
-        spriteBatch.Draw(pixelTexture, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White);
+        var pixel2 = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail").Value;
+        spriteBatch.Draw(pixel2, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White);
 
         spriteBatch.End();
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap,
+                          DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix); 
         return false;
     }
 }

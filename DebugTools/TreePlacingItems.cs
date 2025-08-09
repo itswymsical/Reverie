@@ -1,12 +1,10 @@
 ﻿using Reverie.Content.Tiles.Canopy.Trees;
 using Reverie.Content.Tiles.Taiga.Trees;
-using Reverie.Content.Tiles.TemperateForest;
 using System.Collections.Generic;
-using System.Linq;
 
-namespace Reverie.DebugItems;
+namespace Reverie.DebugTools;
 
-public class SmallTanglewoodTreeDebugWand : ModItem
+public class SmallTanglewoodTreeWand : ModItem
 {
     public override string Texture => PLACEHOLDER;
 
@@ -33,22 +31,19 @@ public class SmallTanglewoodTreeDebugWand : ModItem
 
         var success = false;
 
-        // Try multiple times with slight position variations if first attempt fails
         for (var attempts = 0; attempts < 5 && !success; attempts++)
         {
             var tryX = tileX + Main.rand.Next(-1, 2);
-            var tryY = tileY + attempts; // Try lower positions
+            var tryY = tileY + attempts; 
 
-            success = SmallTanglewoodTree.GrowTanglewoodTree(tryX, tryY);
+            success = SmallTanglewoodTree.Grow(tryX, tryY);
 
             if (success)
             {
-                // Success feedback
                 Main.NewText($"Tanglewood tree grown at ({tryX}, {tryY}) after {attempts + 1} attempts", Color.Green);
 
-                // Enhanced visual effect
                 var effectPos = new Vector2(tryX, tryY) * 16;
-                for (var i = 0; i < 30; i++) // Fewer particles for smaller tree
+                for (var i = 0; i < 30; i++)
                 {
                     var dust = Dust.NewDustDirect(effectPos, 16, 16, DustID.GrassBlades,
                         Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(-2f, 1f));
@@ -61,7 +56,6 @@ public class SmallTanglewoodTreeDebugWand : ModItem
 
         if (!success)
         {
-            // Enhanced failure feedback with diagnostic info
             var groundTile = Framing.GetTileSafely(tileX, tileY + 1);
             var currentTile = Framing.GetTileSafely(tileX, tileY);
 
@@ -75,7 +69,6 @@ public class SmallTanglewoodTreeDebugWand : ModItem
 
             Main.NewText($"Failed to grow tanglewood tree at ({tileX}, {tileY}) - {reason}", Color.Red);
 
-            // Red dust effect
             for (var i = 0; i < 15; i++)
             {
                 var dust = Dust.NewDustDirect(mouseWorld, 16, 16, DustID.Blood,
@@ -93,7 +86,7 @@ public class SmallTanglewoodTreeDebugWand : ModItem
     }
 }
 
-public class PineTreeDebugWand : ModItem
+public class SpruceTreeWand : ModItem
 {
     public override string Texture => PLACEHOLDER;
 
@@ -120,22 +113,19 @@ public class PineTreeDebugWand : ModItem
 
         var success = false;
 
-        // Try multiple times with slight position variations if first attempt fails
         for (var attempts = 0; attempts < 5 && !success; attempts++)
         {
             var tryX = tileX + Main.rand.Next(-1, 2);
-            var tryY = tileY + attempts; // Try lower positions
+            var tryY = tileY + attempts;
 
-            success = SpruceTree.GrowSpruceTree(tryX, tryY);
+            success = SpruceTree.Grow(tryX, tryY);
 
             if (success)
             {
-                // Success feedback
-                Main.NewText($"Pine tree grown at ({tryX}, {tryY}) after {attempts + 1} attempts", Color.Green);
+                Main.NewText($"Spruce tree grown at ({tryX}, {tryY}) after {attempts + 1} attempts", Color.Green);
 
-                // Enhanced visual effect
                 var effectPos = new Vector2(tryX, tryY) * 16;
-                for (var i = 0; i < 30; i++) // Fewer particles for smaller tree
+                for (var i = 0; i < 30; i++)
                 {
                     var dust = Dust.NewDustDirect(effectPos, 16, 16, DustID.GrassBlades,
                         Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(-2f, 1f));
@@ -148,7 +138,6 @@ public class PineTreeDebugWand : ModItem
 
         if (!success)
         {
-            // Enhanced failure feedback with diagnostic info
             var groundTile = Framing.GetTileSafely(tileX, tileY + 1);
             var currentTile = Framing.GetTileSafely(tileX, tileY);
 
@@ -160,9 +149,8 @@ public class PineTreeDebugWand : ModItem
             else if (currentTile.HasTile && Main.tileSolid[currentTile.TileType])
                 reason = "Solid tile in the way";
 
-            Main.NewText($"Failed to grow tanglewood tree at ({tileX}, {tileY}) - {reason}", Color.Red);
+            Main.NewText($"Failed to grow Spruce tree at ({tileX}, {tileY}) - {reason}", Color.Red);
 
-            // Red dust effect
             for (var i = 0; i < 15; i++)
             {
                 var dust = Dust.NewDustDirect(mouseWorld, 16, 16, DustID.Blood,
@@ -173,14 +161,9 @@ public class PineTreeDebugWand : ModItem
 
         return true;
     }
-
-    public override void ModifyTooltips(List<TooltipLine> tooltips)
-    {
-        tooltips.Add(new TooltipLine(Mod, "Usage", "[c/00FF00:Left Click:] Grow pine tree at cursor"));
-    }
 }
 
-public class MediumTanglewoodTreeDebugWand : ModItem
+public class MediumTanglewoodTreeWand : ModItem
 {
     public override string Texture => PLACEHOLDER;
 
@@ -207,22 +190,19 @@ public class MediumTanglewoodTreeDebugWand : ModItem
 
         var success = false;
 
-        // Try multiple times with slight position variations if first attempt fails
         for (var attempts = 0; attempts < 5 && !success; attempts++)
         {
             var tryX = tileX + Main.rand.Next(-1, 2);
-            var tryY = tileY + attempts; // Try lower positions
+            var tryY = tileY + attempts;
 
-            success = MediumTanglewoodTree.GrowTanglewoodTree(tryX, tryY);
+            success = MediumTanglewoodTree.Grow(tryX, tryY);
 
             if (success)
             {
-                // Success feedback
                 Main.NewText($"Medium Tanglewood tree grown at ({tryX}, {tryY}) after {attempts + 1} attempts", Color.Green);
 
-                // Enhanced visual effect
                 var effectPos = new Vector2(tryX, tryY) * 16;
-                for (var i = 0; i < 30; i++) // Fewer particles for smaller tree
+                for (var i = 0; i < 30; i++)
                 {
                     var dust = Dust.NewDustDirect(effectPos, 16, 16, DustID.GrassBlades,
                         Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(-2f, 1f));
@@ -235,7 +215,6 @@ public class MediumTanglewoodTreeDebugWand : ModItem
 
         if (!success)
         {
-            // Enhanced failure feedback with diagnostic info
             var groundTile = Framing.GetTileSafely(tileX, tileY + 1);
             var currentTile = Framing.GetTileSafely(tileX, tileY);
 
@@ -249,7 +228,6 @@ public class MediumTanglewoodTreeDebugWand : ModItem
 
             Main.NewText($"Failed to grow tanglewood tree at ({tileX}, {tileY}) - {reason}", Color.Red);
 
-            // Red dust effect
             for (var i = 0; i < 15; i++)
             {
                 var dust = Dust.NewDustDirect(mouseWorld, 16, 16, DustID.Blood,
@@ -259,10 +237,5 @@ public class MediumTanglewoodTreeDebugWand : ModItem
         }
 
         return true;
-    }
-
-    public override void ModifyTooltips(List<TooltipLine> tooltips)
-    {
-        tooltips.Add(new TooltipLine(Mod, "Usage", "[c/00FF00:Left Click:] Grow Small Tanglewood tree at cursor"));
     }
 }

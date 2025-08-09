@@ -1,8 +1,8 @@
-UI.ExperienceTracker: Mods.Reverie.UI.ExperienceTracker
+﻿UI.ExperienceTracker: Experience Bar
 
 Conditions: {
-	CopperStandardComplete: After (Copper Standard) Mission
-	CopperStandardActive: During (Copper Standard) Mission
+	CopperStandardComplete: After Mission, (Copper Standard)
+	CopperStandardActive: During Mission, (Copper Standard)
 }
 
 Items: {
@@ -33,12 +33,12 @@ Items: {
 
 	FrostbarkHauberk: {
 		DisplayName: Frostbark Hauberk
-		Tooltip: ""
+		Tooltip: Increases melee daamge by 5%
 	}
 
 	FrostbarkHelm: {
 		DisplayName: Frostbark Helm
-		Tooltip: ""
+		Tooltip: Increases melee critical strike chance by 3%
 	}
 
 	LodestoneMagnetizerItem: {
@@ -447,6 +447,172 @@ Items: {
 		DisplayName: Pine Tree Debug Wand
 		Tooltip: ""
 	}
+
+	AmethystPendant: {
+		DisplayName: Amethyst Pendant
+		Tooltip:
+			'''
+			Increases damage reduction by 2%-10% depending on your current mana
+			Requires 60 mana
+			'''
+	}
+
+	DiamondPendant: {
+		DisplayName: Diamond Pendant
+		Tooltip: Increases critical strike chance by 10%
+	}
+
+	EmeraldPendant: {
+		DisplayName: Emerald Pendant
+		Tooltip:
+			'''
+			Increases defense by 2-8 depending on your current mana
+			Requires 60 mana
+			'''
+	}
+
+	RubyPendant: {
+		DisplayName: Ruby Pendant
+		Tooltip:
+			'''
+			Increases life regeneration 3%-10% depending on your current mana
+			Requires 80 mana
+			'''
+	}
+
+	SapphirePendant: {
+		DisplayName: Sapphire Pendant
+		Tooltip:
+			'''
+			Increases maximum mana by 40
+			Decreases mana cost by 8%
+			'''
+	}
+
+	TopazPendant: {
+		DisplayName: Topaz Pendant
+		Tooltip:
+			'''
+			Increases item pickup range
+			Increases movement and acceleration speed 3%-8% depending on your current mana
+			Requires 60 mana for movement bonus
+			'''
+	}
+
+	AmberPendant: {
+		DisplayName: Amber Pendant
+		Tooltip: Increases max minions and sentries by 1
+	}
+
+	BirchPlatformItem: {
+		DisplayName: Birch Wood Platform
+		Tooltip: ""
+	}
+
+	SpruceWoodItem: {
+		DisplayName: Spruce Wood
+		Tooltip: ""
+	}
+
+	SpruceTreeDebugWand: {
+		DisplayName: Spruce Tree Debug Wand
+		Tooltip: ""
+	}
+
+	BirchCampfireItem: {
+		DisplayName: Temperate Campfire
+		Tooltip: ""
+	}
+
+	BirchDresserItem: {
+		DisplayName: Birch Wood Dresser
+		Tooltip: ""
+	}
+
+	BirchFenceItem: {
+		DisplayName: Birch Wood Fence
+		Tooltip: ""
+	}
+
+	BirchTorchItem: {
+		DisplayName: Temperate Torch
+		Tooltip: ""
+	}
+
+	BirchWoodHammerItem: {
+		DisplayName: Birch Wood Hammer
+		Tooltip: ""
+	}
+
+	BirchWoodSwordItem: {
+		DisplayName: Birch Wood Sword
+		Tooltip: ""
+	}
+
+	GeodePlacer: {
+		DisplayName: Geode Placer
+		Tooltip: ""
+	}
+
+	MediumTanglewoodTreeWand: {
+		DisplayName: Medium Tanglewood Tree Wand
+		Tooltip: ""
+	}
+
+	SmallTanglewoodTreeWand: {
+		DisplayName: Small Tanglewood Tree Wand
+		Tooltip: ""
+	}
+
+	SpruceTreeWand: {
+		DisplayName: Spruce Tree Wand
+		Tooltip: ""
+	}
+
+	OxidizedCopperAxe: {
+		DisplayName: Oxidized Copper Axe
+		Tooltip: ""
+	}
+
+	OxidizedCopperBow: {
+		DisplayName: Oxidized Copper Bow
+		Tooltip: ""
+	}
+
+	OxidizedCopperBroadsword: {
+		DisplayName: Oxidized Copper Broadsword
+		Tooltip: ""
+	}
+
+	OxidizedCopperHammer: {
+		DisplayName: Oxidized Copper Hammer
+		Tooltip: ""
+	}
+
+	OxidizedCopperPickaxe: {
+		DisplayName: Oxidized Copper Pickaxe
+		Tooltip: ""
+	}
+
+	OxidizedCopperShortsword: {
+		DisplayName: Oxidized Copper Shortsword
+		Tooltip: ""
+	}
+
+	OxidizedCopperWatch: {
+		DisplayName: Oxidized Copper Watch
+		Tooltip: ""
+	}
+
+	CopperPipeItem: {
+		DisplayName: Copper Pipe
+		Tooltip: ""
+	}
+
+	OxidizedCopperPlatingItem: {
+		DisplayName: Oxidized Copper Plating
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
@@ -478,10 +644,10 @@ Projectiles: {
 	MagnoliaPheromonesProj.DisplayName: Magnolia Pheromones
 	SharpnutDaggerProj.DisplayName: Sharpnut Dagger
 	LodestoneMagnetizerProj.DisplayName: Lodestone Magnetizer
-	ArchiverChronicleProjectile.DisplayName: Archiver Chronicle Projectile
-	TumbleweedProjectile.DisplayName: Tumbleweed Projectile
+	ArchiverChronicleProjectile.DisplayName: Archiver Chronicle
+	TumbleweedProjectile.DisplayName: Tumbleweed
 	GelBall.DisplayName: Gel Ball
-	GelBallProjectile.DisplayName: Gel Ball Projectile
+	GelBallProjectile.DisplayName: Gel Ball
 }
 
 Configs: {
@@ -728,6 +894,7 @@ Keybinds: {
 Tiles: {
 	MagnoliaTile.MapEntry: Magnolia
 	BirchChestTile.MapEntry: Birch Wood Chest
+	BirchDresserTile.MapEntry: Birch Dresser Tile
 }
 
 Buffs: {

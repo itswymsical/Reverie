@@ -163,7 +163,7 @@ public class MediumTanglewoodTree : CustomTree
         }
     }
 
-    public static bool GrowTanglewoodTree(int i, int j)
+    public static bool Grow(int i, int j)
     {
         var instance = ModContent.GetInstance<MediumTanglewoodTree>();
         return instance.GrowTree(i, j);

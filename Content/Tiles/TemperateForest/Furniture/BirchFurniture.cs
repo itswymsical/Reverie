@@ -104,6 +104,22 @@ public class BirchChairItem : ModItem
     }
 }
 
+public class BirchDresserItem : ModItem
+{
+    public override void SetDefaults()
+    {
+        base.SetDefaults();
+        Item.value = 150;
+        Item.DefaultToPlaceableTile(ModContent.TileType<BirchDresserTile>());
+    }
+    public override void AddRecipes()
+    {
+        CreateRecipe()
+            .AddIngredient<BirchWoodItem>(16)
+            .AddTile(TileID.Sawmill)
+            .Register();
+    }
+}
 public class BirchDoorItem : ModItem
 {
     public override void SetDefaults()

@@ -2,7 +2,7 @@
 	JourneysBegin: {
 		Crash: {
 			Line1: {
-				Text: <shake:1>Whoa!</shake>
+				Text: Whoa!
 				Speaker: Guide
 				Emote: "3"
 				Speed: "1.5"
@@ -53,29 +53,43 @@
 			}
 
 			Line4: {
-				Text: What?<pause:28> You already know everything?
+				Text: What?<pause:28> You've done this before?
 				Speaker: Guide
 				Emote: "2"
 				Speed: "1.1"
 			}
 
 			Line5: {
-				Text: You're sure? <pause:28>Well<pause:8>, I guess we can skip the tutorial then.
+				Text: Don't be ridiculous!
+				Speaker: Guide
+				Emote: "1"
+				Speed: "1.1"
+			}
+
+			Line6: {
+				Text: ...
 				Speaker: Guide
 				Emote: "4"
 				Speed: "1.1"
 			}
 
-			Line6: {
-				Text: Take this Magic Mirror.<pause:10> It'll let you check messages and teleport back to the surface.
+			Line7: {
+				Text: Alright, whatever. We'll skip the tutorial...
 				Speaker: Guide
-				Emote: "0"
+				Emote: "4"
 				Speed: "1.1"
 			}
 		}
 
 		MirrorGiven: {
 			Line1: {
+				Text: Take this Magic Mirror.<pause:10> It'll let you check messages and teleport back to the surface.
+				Speaker: Guide
+				Emote: "0"
+				Speed: "1.1"
+			}
+
+			Line2: {
 				Text: Open up your inventory and use it now.
 				Speaker: Guide
 				Emote: "0"
@@ -127,84 +141,19 @@
 			}
 		}
 
-		ChronicleFound: {
+		MissionEnd: {
 			Line1: {
-				Text: ...
-				Speaker: You
+				Text: You done messing around down there? <pause:12>Perfect, you should come build shelter.
+				Speaker: Guide
 				Emote: "0"
-				Speed: "0.5"
+				Speed: "1.3"
 			}
 
 			Line2: {
-				Text: You have found a strange book,<pause:12> titled "Chronicles of Reverie".
-				Speaker: You
+				Text: If it gets dark, and monsters will come out.
+				Speaker: Guide
 				Emote: "0"
 				Speed: "1.3"
-			}
-
-			Line3: {
-				Text: <sine>Something about this book seems eerily familiar...</sine>
-				Speaker: You
-				Emote: "0"
-				Speed: "1.3"
-			}
-
-			Line4: {
-				Text: You contact the Guide<pause:12>, and ask if they know anything about it.
-				Speaker: You
-				Emote: "0"
-				Speed: "1.3"
-			}
-
-			Line5: {
-				Text: Chronicle of Reverie? <pause:12>I've never heard of it.<pause:15> Bring it to me, and I'll take a look.
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.5"
-			}
-		}
-
-		ChronicleReading: {
-			Line1: {
-				Text: Where did you find this? <pause:8>This looks like a chronicle from the Order!
-				Speaker: Guide
-				Emote: "2"
-				Speed: "1.2"
-			}
-
-			Line2: {
-				Text: Oh, yeah,<pause:10> The Order of the Guide,<pause:8> also known as the Archivers.
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.2"
-			}
-
-			Line3: {
-				Text: They were a group of Guides who dedicated themselves to recording the history of Terraria.
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.2"
-			}
-
-			Line4: {
-				Text: They were active during the early days of Terraria, but they disappeared long ago.
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.2"
-			}
-
-			Line5: {
-				Text: Unfortunately, I don't know much more than that.<pause:10> All of the Archivers were lost in the Great Cataclysm.
-				Speaker: Guide
-				Emote: "2"
-				Speed: "1.2"
-			}
-
-			Line6: {
-				Text: If you want to learn more,<pause:8> you should try to find more of these chronicles.
-				Speaker: Guide
-				Emote: "2"
-				Speed: "1.2"
 			}
 		}
 	}

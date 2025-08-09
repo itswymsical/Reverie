@@ -1,18 +1,10 @@
-﻿
-using AnimatedModIconLib.Core;
-using ReLogic.Content;
+﻿using AnimatedModIconLib.Core;
 using Reverie.Common.Players;
-using Reverie.Common.Systems;
 using Reverie.Core.Graphics.Interfaces;
 using Reverie.Core.Loaders;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using Terraria.Graphics.Effects;
-using Terraria.Graphics.Shaders;
-using Terraria.UI.Chat;
 
 namespace Reverie;
 
@@ -54,13 +46,11 @@ public sealed partial class Reverie : Mod
     ///     Directory for logo textures.
     /// </summary>
     public const string LOGO_DIRECTORY = nameof(Reverie) + "/Assets/Textures/Logo/";
+    public const string ICON_DIRECTORY = nameof(Reverie) + "/Assets/Textures/AnimatedIcon/";
     /// <summary>
     ///     The prefix to use for the name of this mod.
     /// </summary>
     public const string NAME_PREFIX = NAME + ": ";
-
-
-    public const string DIALOGUE_LIBRARY = "DialogueLibrary.";
 
     /// <summary>
     ///     Gets the <see cref="Mod" /> implementation of this mod.
@@ -70,6 +60,7 @@ public sealed partial class Reverie : Mod
 
     private List<IOrderedLoadable> loadCache;
     public Reverie() => Instance = this;
+
     public override void Load()
     {
 
@@ -96,59 +87,128 @@ public sealed partial class Reverie : Mod
 
     public void DrawModIcon(SpriteBatch spriteBatch, Vector2 size)
     {
-        Texture2D background = ModContent.Request<Texture2D>(LOGO_DIRECTORY + "nebula").Value;
-        Texture2D border = ModContent.Request<Texture2D>(LOGO_DIRECTORY + "icon").Value;
+        Texture2D background = ModContent.Request<Texture2D>(ICON_DIRECTORY + "SkyGradient").Value;
+        Texture2D moon = ModContent.Request<Texture2D>(ICON_DIRECTORY + "Moon").Value;
+        Texture2D foreground = ModContent.Request<Texture2D>(ICON_DIRECTORY + "LightTrail").Value;
+        Texture2D ocean = ModContent.Request<Texture2D>(ICON_DIRECTORY + "Ocean").Value;
+        Texture2D medCloud = ModContent.Request<Texture2D>(ICON_DIRECTORY + "MediumCloud").Value;
+        Texture2D bigCloud = ModContent.Request<Texture2D>(ICON_DIRECTORY + "BigCloud").Value;
+        Texture2D tinyCloud = ModContent.Request<Texture2D>(ICON_DIRECTORY + "TinyCloud").Value;
+
+        Texture2D stars = ModContent.Request<Texture2D>(ICON_DIRECTORY + "Stars").Value;
+        Texture2D frame = ModContent.Request<Texture2D>(ICON_DIRECTORY + "Frame").Value;
 
         int iconWidth = (int)size.X;
         int iconHeight = (int)size.Y;
+        Rectangle iconRect = new Rectangle(0, 0, iconWidth, iconHeight);
 
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.None, Main.Rasterizer);
+        float time = (float)Main.timeForVisualEffects * 0.005f;
 
-        float panSpeed = .3f;
-        float offsetX = (float)(Main.timeForVisualEffects * panSpeed) % background.Width;
+        float slowPan = time * 0.35f;
+        float mediumPan = time * 0.5f;
+        float fastPan = time * 0.55f;
 
-        Rectangle sourceRect = new Rectangle(
-            (int)offsetX,
-            0,
-            iconWidth,
-            iconHeight
+        slowPan = slowPan % 1f;
+        mediumPan = mediumPan % 1f;
+        fastPan = fastPan % 1f;
+
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearWrap, DepthStencilState.None, Main.Rasterizer);
+
+        spriteBatch.Draw(background, iconRect, Color.White);
+
+        Rectangle starSource = new Rectangle(
+            (int)(slowPan * stars.Width), 0,
+            iconWidth, iconHeight
         );
+        spriteBatch.Draw(stars, iconRect, starSource, Color.White * 0.9f);
 
-        Rectangle destRect = new Rectangle(0, 0, iconWidth, iconHeight);
-        spriteBatch.Draw(background, destRect, sourceRect, Color.White);
         spriteBatch.End();
 
-        var starEffect = ShaderLoader.GetShader("SunburstShader").Value;
-
-        spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, starEffect, Main.UIScaleMatrix);
-
-        if (starEffect != null)
+        var galaxyShader = ShaderLoader.GetShader("GalaxyShader").Value;
+        if (galaxyShader != null)
         {
-            starEffect.Parameters["uTime"]?.SetValue((float)(Main.timeForVisualEffects * 0.009f));
+            Texture2D whitePixel = ModContent.Request<Texture2D>(VFX_DIRECTORY + "Wyrmscape").Value;
 
-            starEffect.Parameters["uScreenResolution"]?.SetValue(size);
-            starEffect.Parameters["uSourceRect"]?.SetValue(new Vector4(0, 0, size.X, size.Y));
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, galaxyShader);
 
-            starEffect.Parameters["uIntensity"]?.SetValue(2.5f);
-            starEffect.Parameters["uRayCount"]?.SetValue(5f);
+            galaxyShader.Parameters["uTime"]?.SetValue(time * 0.5f);
+            galaxyShader.Parameters["uIntensity"]?.SetValue(0.45f);
+            galaxyShader.Parameters["uColor"]?.SetValue(new Vector4(0.2f, 0.45f, 1f, 0.7f));
+            galaxyShader.Parameters["uCenter"]?.SetValue(new Vector2(-1f, -0.8f));
+            galaxyShader.Parameters["uScale"]?.SetValue(0.2f);
+            galaxyShader.Parameters["uRotation"]?.SetValue(time * 0.055f);
+            galaxyShader.Parameters["uArmCount"]?.SetValue(1f);
 
-            starEffect.Parameters["uCenter"]?.SetValue(Vector2.Zero);
-            starEffect.Parameters["uScale"]?.SetValue(1f);
+            Main.graphics.GraphicsDevice.Textures[1] = whitePixel;
 
-            starEffect.Parameters["uImage0"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin").Value);
-
-            starEffect.CurrentTechnique.Passes[0].Apply();
+            spriteBatch.Draw(whitePixel, iconRect, Color.White);
+            spriteBatch.End();
         }
 
-        var berlin = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin").Value;
-        var benis = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail").Value;
-        Rectangle fullRect = new Rectangle(0, 0, iconWidth, iconHeight);
-        spriteBatch.Draw(berlin, fullRect, Color.White);
-        spriteBatch.Draw(benis, fullRect, Color.White);
+        var shineShader = ShaderLoader.GetShader("ShineShader")?.Value;
+        if (shineShader != null)
+        {
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearWrap, DepthStencilState.None, Main.Rasterizer, shineShader);
+
+            shineShader.Parameters["uTime"]?.SetValue(time * 2f);
+            shineShader.Parameters["uOpacity"]?.SetValue(2f);
+            spriteBatch.Draw(moon, iconRect, Color.White);
+            spriteBatch.End();
+        }
+        else
+        {
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearWrap, DepthStencilState.None, Main.Rasterizer);
+            spriteBatch.Draw(moon, iconRect, Color.White);
+            spriteBatch.End();
+        }
+
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearWrap, DepthStencilState.None, Main.Rasterizer);
+
+        Rectangle oceanSource = new Rectangle(
+            (int)(mediumPan * ocean.Width), 0,
+            iconWidth, iconHeight
+        );
+
+        Rectangle medCloudSource = new Rectangle(
+            (int)(mediumPan * medCloud.Width), 0,
+            iconWidth, iconHeight
+        );
+        spriteBatch.Draw(medCloud, iconRect, medCloudSource, Color.White * 0.95f);
+
+        Rectangle bigCloudSource = new Rectangle(
+            (int)(slowPan * bigCloud.Width), 0,
+            iconWidth, iconHeight
+        );
+        spriteBatch.Draw(bigCloud, iconRect, bigCloudSource, Color.White * 0.5f);
+
+        Rectangle tinyCloudSource = new Rectangle(
+            (int)(fastPan * bigCloud.Width), 0,
+            iconWidth, iconHeight
+        );
+        spriteBatch.Draw(tinyCloud, iconRect, tinyCloudSource, Color.White * 0.5f);
+
+        spriteBatch.Draw(foreground, iconRect, oceanSource, Color.White * 0.75f);
         spriteBatch.End();
 
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.DepthRead, Main.Rasterizer);
-        spriteBatch.Draw(border, new Rectangle(0, 0, iconWidth, iconHeight), Color.White);
+        var shine2 = ShaderLoader.GetShader("ShineShader")?.Value;
+        if (shine2 != null)
+        {
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearWrap, DepthStencilState.None, Main.Rasterizer, shineShader);
+
+            shine2.Parameters["uTime"]?.SetValue(time * 4f);
+            shine2.Parameters["uOpacity"]?.SetValue(2f);
+            spriteBatch.Draw(ocean, iconRect, oceanSource, Color.White);
+            spriteBatch.End();
+        }
+        else
+        {
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearWrap, DepthStencilState.None, Main.Rasterizer);
+            spriteBatch.Draw(ocean, iconRect, oceanSource, Color.White);
+            spriteBatch.End();
+        }
+
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.None, Main.Rasterizer);
+        spriteBatch.Draw(frame, iconRect, Color.White);
         spriteBatch.End();
     }
 

@@ -5,8 +5,10 @@ using Reverie.Core.Dialogue;
 using Reverie.Core.Indicators;
 using Reverie.Core.Missions;
 using Terraria.UI;
+using Terraria.WorldBuilding;
+using static Terraria.WorldBuilding.Shapes;
 
-namespace Reverie.DebugItems;
+namespace Reverie.DebugTools;
 
 public class MissionCompleteIndicator : ModItem
 {
@@ -23,7 +25,7 @@ public class MissionCompleteIndicator : ModItem
         if (Main.myPlayer == player.whoAmI)
         {
             var mplayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-            var mission = mplayer.GetMission(MissionID.SporeSplinter);
+            var mission = mplayer.GetMission(MissionID.JourneysBegin);
             InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(mission));
         }
         return true;
@@ -43,7 +45,7 @@ public class CutscenePlayer : ModItem
     public override bool? UseItem(Player player)
     {
         if (Main.myPlayer == player.whoAmI)
-            CutsceneSystem.PlayCutscene<IntroCutscene>();
+            CutsceneSystem.PlayCutscene<OpeningCutscene>();
 
         return true;
     }

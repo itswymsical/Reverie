@@ -2,8 +2,8 @@
 
 	<!-- Import tModLoader mod properties -->
 	<Import Project="..\tModLoader.targets" />
-
-	<!-- General -->
+    <Import Project="Mod.ShaderCompilation.targets" />
+    <!-- General -->
 	<PropertyGroup>
 		
 	</PropertyGroup>

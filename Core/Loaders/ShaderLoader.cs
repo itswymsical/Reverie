@@ -21,12 +21,12 @@ class ShaderLoader : IOrderedLoadable
         var info = typeof(Mod).GetProperty("File", BindingFlags.NonPublic | BindingFlags.Instance).GetGetMethod(true);
         var file = (TmodFile)info.Invoke(Instance, null);
 
-        var shaders = file.Where(n => n.Name.StartsWith("Effects/") && n.Name.EndsWith(".xnb"));
+        var shaders = file.Where(n => n.Name.StartsWith("Assets/Effects/") && n.Name.EndsWith(".fxc"));
 
         foreach (var entry in shaders)
         {
-            var name = entry.Name.Replace(".xnb", "").Replace("Effects/", "");
-            var path = entry.Name.Replace(".xnb", "");
+            var name = entry.Name.Replace(".fxc", "").Replace("Assets/Effects/", "");
+            var path = entry.Name.Replace(".fxc", "");
             LoadShader(name, path);
         }
     }
@@ -44,7 +44,7 @@ class ShaderLoader : IOrderedLoadable
         }
         else
         {
-            LoadShader(key, $"Effects/{key}");
+            LoadShader(key, $"Assets/Effects/{key}");
             return Shaders[key].Value;
         }
     }

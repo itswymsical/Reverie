@@ -427,7 +427,7 @@ public class DialogueBox : IInGameNotification
         {
             "guide" => 7,
             "player" or "you" => 1,
-            "merchant" => 2,
+            "merchant" => 3,
             "nurse" => 2,
             "demolitionist" => 2,
             "goblin tinkerer" => 2,
