@@ -670,6 +670,7 @@ NPCs: {
 
 	NewKingSlime.DisplayName: New King Slime
 	KinguSlime.DisplayName: Kingu Slime
+	mKingSlime.DisplayName: m King Slime
 }
 
 Biomes: {

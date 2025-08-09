@@ -1,1188 +1,2162 @@
-﻿using Reverie.Core.Cinematics.Camera;
+﻿using Reverie.Content.NPCs.Bosses.KingSlime;
+using Reverie.Core.Cinematics;
+using Reverie.Core.Cinematics.Camera;
 using Reverie.Utilities;
+using System.Collections.Generic;
 using Terraria.Audio;
+using Terraria.DataStructures;
+using Terraria.GameContent;
 
 namespace Reverie.Common.NPCs;
 
-public class KingSlimeGlobal : GlobalNPC
+public class KingSlimeGlobalNPC : GlobalNPC
 {
-    public override bool InstancePerEntity => true;
-    public override bool AppliesToEntity(NPC entity, bool lateInstantiation) => entity.type == NPCID.KingSlime;
+    public override bool AppliesToEntity(NPC entity, bool lateInstantiation)
+    {
+        return entity.type == NPCID.KingSlime;
+    }
 
-    #region Constants & Fields
-    private Vector2 squishScale = Vector2.One;
+    private AIState GetState(NPC npc)
+    {
+        return (AIState)npc.ai[0];
+    }
 
-    private KingSlimeAI currentState = KingSlimeAI.Idle;
-    private KingSlimeAI previousState;
-    private float stateTimer;
-    private int consecutiveSlams;
+    private void SetState(NPC npc, AIState value)
+    {
+        npc.ai[0] = (float)value;
+    }
 
-    private readonly float PHASE_2_THRESHOLD = 0.55f;
-    private readonly int MAX_CONSECUTIVE_SLAMS = 3;
+    #region Pattern Management
 
-    private float JUMP_DURATION = 1.8f * 60f;
-    private float SHOOT_DURATION = 4f * 60f;
-    private float STROLL_SPEED = .65f;
-    private float IDLE_DURATION = 2.5f * 60f;
-    private float SLAM_SPEED = 11.6f;
-    private float CONSUME_SLIMES_DURATION = 6.5f * 60f;
+    private enum PatternType
+    {
+        Phase1,
+        Phase2,
+        Phase3,
+    }
 
-    private readonly float CONSUME_HEALTH_THRESHOLD = 0.8f;
-    private readonly float CONSUME_DETECTION_RANGE = 1100f;
-    private float BASE_SCALE = 1.38f;
-    private float MAX_CONSUME_SCALE = 1.38f;
-    private float SCALE_PER_SLIME = 0.095f;
+    private struct AttackPattern
+    {
+        public AIState[] States;
+        public int[] Durations;
+        public int[] Repetitions;
 
-    private int baseDefense = 9;
-    private int projectileDamage = 8;
-    private int currentJumps = 0;
+        public AttackPattern(AIState[] states, int[] durations, int[] repetitions)
+        {
+            States = states;
+            Durations = durations;
+            Repetitions = repetitions;
+        }
+    }
 
-    private float teleportCooldown = 0f;
-    private readonly float TELEPORT_COOLDOWN = 120f;
+    private static readonly Dictionary<PatternType, AttackPattern> AttackPatterns = new()
+    {
+        [PatternType.Phase1] = new AttackPattern(
+            new[] { AIState.Strolling, AIState.Jumping, AIState.Strolling, AIState.GroundPound, AIState.Strolling, AIState.Jumping },
+            new[] { 180, -1, 120, -1, 240, -1 },
+            new[] { 1, 3, 1, 1, 1, 2 }
+        ),
+
+        [PatternType.Phase2] = new AttackPattern(
+            new[] { AIState.Strolling, AIState.Jumping, AIState.ConsumingSlimes, AIState.GroundPound, AIState.Strolling, AIState.BounceHouse, AIState.ConsumingSlimes },
+            new[] { 150, -1, -1, -1, 180, -1, 120 },
+            new[] { 1, 4, 1, 1, 1, 1, 1 }
+        ),
+
+        [PatternType.Phase3] = new AttackPattern(
+            new[] { AIState.Jumping, AIState.BounceHouse, AIState.ConsumingSlimes, AIState.GroundPound, AIState.BounceHouse },
+            new[] { -1, -1, -1, -1, -1 },
+            new[] { 5, 1, 1, 4, 1 }
+        )
+    };
+
+    // Store pattern data per NPC
+    private static Dictionary<int, PatternData> npcPatternData = new();
+
+    private struct PatternData
+    {
+        public PatternType currentPattern;
+        public int patternStep;
+        public int currentRepetition;
+        public int patternTimer;
+        public bool patternOverride;
+    }
+
+    private PatternData GetPatternData(NPC npc)
+    {
+        if (!npcPatternData.ContainsKey(npc.whoAmI))
+        {
+            npcPatternData[npc.whoAmI] = new PatternData
+            {
+                currentPattern = PatternType.Phase1,
+                patternStep = 0,
+                currentRepetition = 0,
+                patternTimer = 0,
+                patternOverride = false
+            };
+        }
+        return npcPatternData[npc.whoAmI];
+    }
+
+    private void SetPatternData(NPC npc, PatternData data)
+    {
+        npcPatternData[npc.whoAmI] = data;
+    }
+
     #endregion
 
-    internal enum KingSlimeAI
+    private static Dictionary<int, NPCExtraData> npcExtraData = new();
+
+    private struct NPCExtraData
     {
-        Idle,
-        Strolling,
-        Jumping,
-        Shooting,
-        PrepareSlamAttack,
-        SlamAttack,
-        Teleporting,
-        Despawning,
-        ConsumingSlimes
+        public Vector2 squishScale;
+        public bool wasGliding;
+        public int targetStrolls;
+        public float rotationSway;
+        public float wobbleTimer;
+        public bool isWobbling;
+        public int groundPoundCount;
+        public int targetGroundPounds;
+        public int baseDefense;
+        public float lastConsumeTime;
+        public float lineOfSightTimer;
+        public float teleportTimer;
+        public TeleportPhase teleportPhase;
+        public Vector2 teleportDestination;
+        public float teleportScaleMultiplier;
+        public bool isInvulnerable;
+        public Vector2 lastPosition;
+        public Vector2 teleportStartPos;
+        public float stuckTimer;
+        public int bounceHouseSlams;
+        public int targetBounceSlams;
+        public bool deathAnimationStarted;
+        public float deathScale;
+        public int deathAnimationPhase;
     }
 
-    public override void SetStaticDefaults()
+    private NPCExtraData GetExtraData(NPC npc)
     {
-        base.SetStaticDefaults();
-        Main.npcFrameCount[Main.npc[NPCID.KingSlime].type] = 5;
-    }
-
-    public override void SetDefaults(NPC npc)
-    {
-        if (npc.type != NPCID.KingSlime) return;
-
-        npc.aiStyle = -1;
-        npc.width = 158;
-        npc.height = 100;
-        npc.damage = 16;
-        npc.defense = baseDefense;
-        npc.lifeMax = 780;
-        npc.value = Item.buyPrice(gold: 2);
-        npc.knockBackResist = 0f;
-        npc.boss = true;
-        npc.noGravity = false;
-        npc.noTileCollide = false;
-        npc.scale = BASE_SCALE;
-        npc.alpha = 35;
-        npc.HitSound = new SoundStyle($"{SFX_DIRECTORY}KingSlimeHit") with { PitchVariance = 0.3f };
-        npc.DeathSound = new SoundStyle($"{SFX_DIRECTORY}KingSlimeDeath") with { PitchVariance = 0.2f };
-    }
-    public override void ApplyDifficultyAndPlayerScaling(NPC npc, int numPlayers, float balance, float bossAdjustment)
-    {
-        base.ApplyDifficultyAndPlayerScaling(npc, numPlayers, balance, bossAdjustment);
-
-        if (npc.type != NPCID.KingSlime) return;
-
-        npc.lifeMax = (int)(npc.lifeMax * 1.1f * bossAdjustment);
-        npc.damage = (int)(npc.damage * 1.15f * bossAdjustment);
-
-        baseDefense = (int)(baseDefense * (1f + 0.15f * bossAdjustment));
-
-        projectileDamage = (int)(projectileDamage * (1f + 0.25f * bossAdjustment));
-
-        if (Main.expertMode)
+        if (!npcExtraData.ContainsKey(npc.whoAmI))
         {
-            JUMP_DURATION *= 0.85f;
-            SHOOT_DURATION *= 0.75f;
-            IDLE_DURATION *= 0.7f;
-            SLAM_SPEED *= 1.2f;
-            STROLL_SPEED *= 1.2f;
-        }
-
-        if (Main.masterMode)
-        {
-            SLAM_SPEED *= 1.1f;
-            STROLL_SPEED *= 1.1f;
-            CONSUME_SLIMES_DURATION *= 0.75f;
-            BASE_SCALE = 1.47f;
-            SCALE_PER_SLIME = 0.105f;
-        }
-
-        //if (numPlayers > 1)
-        //{
-        //    float multiplayerScaling = 1f + (numPlayers - 1) * 0.35f;
-        //    npc.lifeMax = (int)(npc.lifeMax * multiplayerScaling);
-        //    baseDefense = (int)(baseDefense * (1f + 0.1f * (numPlayers - 1)));
-        //}
-    }
-
-    public override void AI(NPC npc)
-    {
-        if (npc.type != NPCID.KingSlime) return;
-
-        if (teleportCooldown > 0)
-            teleportCooldown--;
-
-        if (currentState != KingSlimeAI.Teleporting && ShouldForceTelepot(npc))
-        {
-            ChangeState(KingSlimeAI.Teleporting);
-        }
-        Main.musicBox2 = MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}GelatinousJoust");
-
-        MaintainSlimePopulation(npc);
-
-        UpdateScale(npc);
-
-        UpdateState(npc);
-        HandleState(npc);
-        UpdateHitbox(npc);
-
-        NPCUtils.SlopedCollision(npc);
-        NPCUtils.CheckPlatform(npc, Main.player[npc.target]);
-    }
-    private bool ShouldForceTelepot(NPC npc)
-    {
-        if (teleportCooldown > 0)
-            return false;
-
-        // Ensure target is valid
-        if (npc.target < 0 || npc.target >= Main.maxPlayers || !Main.player[npc.target].active || Main.player[npc.target].dead)
-        {
-            npc.TargetClosest(true);
-            return false; // Don't teleport if we can't find a valid target
-        }
-
-        Player target = Main.player[npc.target];
-        float distanceToPlayer = Vector2.Distance(npc.Center, target.Center);
-
-        // Force teleport if player is far
-        if (distanceToPlayer > 800f)
-            return true;
-
-        // or if line of sight is broken for too long
-        bool lineOfSightBroken = !Collision.CanHitLine(npc.Center, 1, 1, target.Center, 1, 1);
-        if (lineOfSightBroken && currentState != KingSlimeAI.Jumping)
-        {
-            return Main.rand.NextBool(30); // 1/30 chance per frame when LOS broken (~2 second average)
-        }
-
-        return false;
-    }
-
-    public override void HitEffect(NPC npc, NPC.HitInfo hit)
-    {
-        base.HitEffect(npc, hit);
-
-        if (npc.type != NPCID.KingSlime) return;
-
-        for (int i = 0; i < 10; i++)
-        {
-            int dust = Dust.NewDust(npc.position, npc.width, npc.height,
-                DustID.t_Slime, npc.velocity.X * 0.4f, npc.velocity.Y * 0.4f,
-                150, new Color(78, 136, 255, 150), 1.5f);
-            Main.dust[dust].noGravity = true;
-            Main.dust[dust].velocity *= 0.4f;
-        }
-        if (Main.rand.NextBool(18) && currentState != KingSlimeAI.ConsumingSlimes)
-        {
-            if (Main.rand.NextBool(3))
+            npcExtraData[npc.whoAmI] = new NPCExtraData
             {
-                NPC.NewNPC(npc.GetSource_FromThis(), (int)npc.Center.X, (int)npc.Center.Y, NPCID.BlueSlime);
-            }
-            else if (Main.rand.NextBool(3))
-            {
-                NPC.NewNPC(npc.GetSource_FromThis(), (int)npc.Center.X, (int)npc.Center.Y, NPCID.GreenSlime);
-            }
-            else
-            {
-                NPC.NewNPC(npc.GetSource_FromThis(), (int)npc.Center.X, (int)npc.Center.Y, NPCID.PurpleSlime);
-            }
+                squishScale = Vector2.One,
+                wasGliding = false,
+                targetStrolls = 3,
+                rotationSway = 0f,
+                wobbleTimer = 0f,
+                isWobbling = false,
+                groundPoundCount = 0,
+                targetGroundPounds = 1,
+                baseDefense = 18,
+                lastConsumeTime = -CONSUME_COOLDOWN,
+                lineOfSightTimer = 0f,
+                teleportTimer = 0f,
+                teleportPhase = TeleportPhase.Prepare,
+                teleportDestination = Vector2.Zero,
+                teleportScaleMultiplier = 1f,
+                isInvulnerable = false,
+                lastPosition = Vector2.Zero,
+                teleportStartPos = Vector2.Zero,
+                stuckTimer = 0f,
+                bounceHouseSlams = 0,
+                targetBounceSlams = 3,
+                deathAnimationStarted = false,
+                deathScale = 1f,
+                deathAnimationPhase = 0
+            };
         }
+        return npcExtraData[npc.whoAmI];
     }
 
+    private void SetExtraData(NPC npc, NPCExtraData data)
+    {
+        npcExtraData[npc.whoAmI] = data;
+    }
 
-    #region State Management
     private void UpdateScale(NPC npc)
     {
-        float healthPercentage = (float)npc.life / npc.lifeMax;
-        float scaleRatio = npc.scale = MathHelper.Lerp(0.65f, 1.35f, healthPercentage);
+        var healthPercentage = (float)npc.life / npc.lifeMax;
+        var newScale = MathHelper.Lerp(0.65f, 1.55f, healthPercentage);
 
-        if (npc.scale < 0.45f)
-        {
-            npc.scale = 0.45f;
-        }
+        if (newScale < 0.45f)
+            newScale = 0.45f;
 
+        var extraData = GetExtraData(npc);
+        if (GetState(npc) == AIState.Teleporting)
+            newScale *= extraData.teleportScaleMultiplier;
+
+        npc.scale = newScale;
         UpdateDefenseBasedOnScale(npc);
+        UpdateHitbox(npc);
     }
 
     private void UpdateDefenseBasedOnScale(NPC npc)
     {
-        const int MIN_DEFENSE = 8; 
-        const int MAX_DEFENSE = 22;
+        const int MIN_DEFENSE = 12;
+        const int MAX_DEFENSE = 25;
 
-        float normalizedScale = (npc.scale - 0.45f) / (MAX_CONSUME_SCALE - 0.45f);
+        var extraData = GetExtraData(npc);
+        var normalizedScale = (npc.scale - 0.45f) / (1.35f - 0.45f);
         normalizedScale = MathHelper.Clamp(normalizedScale, 0f, 1f);
 
-        float defenseFactor = normalizedScale * normalizedScale * (3 - 2 * normalizedScale);
-
-        int calculatedDefense = (int)(MIN_DEFENSE + (baseDefense - MIN_DEFENSE) * defenseFactor);
-
-        int consumptionBonus = npc.defense - (int)(baseDefense * npc.scale);
-        if (consumptionBonus > 0)
-        {
-            calculatedDefense += consumptionBonus;
-        }
+        var defenseFactor = normalizedScale * normalizedScale * (3 - 2 * normalizedScale);
+        var calculatedDefense = (int)(MIN_DEFENSE + (extraData.baseDefense - MIN_DEFENSE) * defenseFactor);
 
         npc.defense = (int)MathHelper.Clamp(calculatedDefense, MIN_DEFENSE, MAX_DEFENSE);
     }
 
     private void UpdateHitbox(NPC npc)
     {
-        Vector2 center = npc.Center;
+        var center = npc.Center;
 
-        const int BASE_WIDTH = 158;
-        const int BASE_HEIGHT = 100;
-
-        float healthPercentage = (float)npc.life / npc.lifeMax;
-        float hitboxScale = MathHelper.Lerp(0.65f, 1.35f, healthPercentage);
-
-        npc.width = (int)(BASE_WIDTH * hitboxScale);
-        npc.height = (int)(BASE_HEIGHT * hitboxScale);
+        npc.width = (int)(BASE_WIDTH * npc.scale);
+        npc.height = (int)(BASE_HEIGHT * npc.scale);
 
         npc.position = center - new Vector2(npc.width / 2, npc.height / 2);
     }
 
-    private void UpdateState(NPC npc)
+    private float GetScaledJumpHeight(NPC npc)
     {
-        stateTimer++;
-        HandleStrolling(npc);
-        float healthPercentage = (float)npc.life / npc.lifeMax;
-        switch (currentState)
+        var baseHeight = -16f;
+        var scaleMultiplier = MathHelper.Lerp(1.4f, 0.8f, npc.scale / 1.35f);
+        return baseHeight * scaleMultiplier;
+    }
+
+    private ref float GetTimer(NPC npc) => ref npc.ai[1];
+
+    internal enum AIState
+    {
+        Strolling,
+        Jumping,
+        GroundPound,
+        Teleporting,
+        Despawning,
+        ConsumingSlimes,
+        BounceHouse,
+        DeathAnimation
+    }
+
+    internal enum TeleportPhase
+    {
+        Prepare,
+        Execute
+    }
+
+    private ref float GetJumpPhase(NPC npc) => ref npc.ai[2];
+    private ref float GetStrollCount(NPC npc) => ref npc.ai[3];
+
+    private const int BASE_WIDTH = 158;
+    private const int BASE_HEIGHT = 106;
+
+    private const float CONSUME_DETECTION_RANGE = 200f;
+    private const float SCALE_PER_SLIME = 0.05f;
+    private const float MAX_CONSUME_SCALE = 2.0f;
+    private const float HP_PER_SLIME = 0.08f;
+
+    private const float CONSUME_COOLDOWN = 600f;
+
+    private const float TELEPORT_COOLDOWN = 240f;
+    private const float LINE_OF_SIGHT_TIMEOUT = 240f;
+
+    private const float STUCK_TIMEOUT = 180f;
+    private const float MIN_MOVEMENT_THRESHOLD = 16f;
+
+    private const float BOUNCE_HOUSE_JUMP_HEIGHT = -16f;
+    private const float BOUNCE_HOUSE_SLAM_SPEED = 28f;
+
+    public override void SetStaticDefaults()
+    {
+        Main.npcFrameCount[NPCID.KingSlime] = 6;
+    }
+
+    public override void SetDefaults(NPC npc)
+    {
+        npc.damage = 12;
+        npc.defense = 18;
+        npc.lifeMax = 1400;
+        npc.width = 158;
+        npc.height = 106;
+        npc.alpha = 30;
+        npc.aiStyle = -1;
+        npc.value = Item.buyPrice(gold: 4);
+        npc.boss = true;
+        npc.lavaImmune = true;
+        npc.knockBackResist = 0f;
+
+        npc.HitSound = new SoundStyle($"{SFX_DIRECTORY}KingSlimeHit") with { PitchVariance = 0.3f };
+        npc.DeathSound = new SoundStyle($"{SFX_DIRECTORY}KingSlimeDeath") with { PitchVariance = 0.2f };
+    }
+
+    public override void AI(NPC npc)
+    {        
+        if (!Main.dedServ)
+            MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}GelatinousJoust");
+
+        var target = Main.player[npc.target];
+
+        if (!target.active || target.dead)
         {
-            case KingSlimeAI.Idle:
-                if (stateTimer >= IDLE_DURATION)
+            npc.TargetClosest();
+            target = Main.player[npc.target];
+            if (!target.active || target.dead)
+            {
+                SetState(npc, AIState.Despawning);
+                return;
+            }
+        }
+
+        ref float timer = ref GetTimer(npc);
+        timer++;
+
+        var extraData = GetExtraData(npc);
+
+        if (GetState(npc) != AIState.DeathAnimation)
+        {
+            UpdateScale(npc);
+        }
+        else
+        {
+            npc.scale = extraData.deathScale;
+            UpdateHitbox(npc);
+        }
+
+        HandleSquishScale(npc);
+        HandleRotation(npc);
+        HandleDustTrail(npc);
+        HandleSlimeTrail(npc);
+
+        if (GetState(npc) != AIState.DeathAnimation)
+        {
+            UpdateLOS(npc, target);
+            HandlePatternTeleport(npc, target);
+            HandlePatternConsume(npc, target);
+            UpdatePatternFlow(npc, target);
+        }
+
+        switch (GetState(npc))
+        {
+            case AIState.Strolling:
+                DoStrolling(npc, target);
+                break;
+            case AIState.Jumping:
+                DoJumping(npc, target);
+                break;
+            case AIState.GroundPound:
+                DoGroundPound(npc, target);
+                break;
+            case AIState.Teleporting:
+                DoTeleporting(npc, target);
+                break;
+            case AIState.ConsumingSlimes:
+                DoConsumingSlimes(npc, target);
+                break;
+            case AIState.BounceHouse:
+                DoBounceHouse(npc, target);
+                break;
+            case AIState.DeathAnimation:
+                DoDeathAnimation(npc, target);
+                break;
+        }
+
+        NPCUtils.SlopedCollision(npc);
+        NPCUtils.CheckPlatform(npc, target);
+    }
+
+    public override void ModifyNPCLoot(NPC npc, NPCLoot npcLoot)
+    {
+        // Add loot modifications here if needed
+    }
+
+    #region Pattern System Implementation
+
+    private PatternType GetCurrentPhase(NPC npc)
+    {
+        var healthPercent = (float)npc.life / npc.lifeMax;
+
+        PatternType phase;
+        if (healthPercent <= 0.25f)
+            phase = PatternType.Phase3;
+        else if (healthPercent <= 0.60f)
+            phase = PatternType.Phase2;
+        else
+            phase = PatternType.Phase1;
+
+        return phase;
+    }
+
+    private void UpdatePatternFlow(NPC npc, Player target)
+    {
+        var patternData = GetPatternData(npc);
+
+        if (patternData.patternOverride)
+        {
+            patternData.patternTimer++;
+            SetPatternData(npc, patternData);
+            return;
+        }
+
+        var targetPhase = GetCurrentPhase(npc);
+        if (patternData.currentPattern != targetPhase)
+        {
+            TransitionToPhase(npc, targetPhase);
+            return;
+        }
+
+        var pattern = AttackPatterns[patternData.currentPattern];
+        var currentPatternState = pattern.States[patternData.patternStep];
+
+        var shouldAdvance = false;
+
+        if (pattern.Durations[patternData.patternStep] > 0)
+        {
+            if (patternData.patternTimer >= pattern.Durations[patternData.patternStep])
+                shouldAdvance = true;
+        }
+        else
+        {
+            if (IsCurrentAttackComplete(npc))
+                shouldAdvance = true;
+        }
+
+        if (shouldAdvance)
+        {
+            patternData.currentRepetition++;
+
+            if (patternData.currentRepetition >= pattern.Repetitions[patternData.patternStep])
+            {
+                AdvancePatternStep(npc);
+                return; // AdvancePatternStep handles saving data
+            }
+            else
+            {
+                StartPatternAttack(npc, currentPatternState, target);
+            }
+
+            patternData.patternTimer = 0;
+        }
+        else
+        {
+            patternData.patternTimer++;
+        }
+
+        SetPatternData(npc, patternData);
+    }
+
+    private void TransitionToPhase(NPC npc, PatternType newPhase)
+    {
+        var patternData = GetPatternData(npc);
+        patternData.currentPattern = newPhase;
+        patternData.patternStep = 0;
+        patternData.currentRepetition = 0;
+        patternData.patternTimer = 0;
+        SetPatternData(npc, patternData);
+
+        var pattern = AttackPatterns[patternData.currentPattern];
+        StartPatternAttack(npc, pattern.States[0], Main.player[npc.target]);
+    }
+
+    private void AdvancePatternStep(NPC npc)
+    {
+        var patternData = GetPatternData(npc);
+        var pattern = AttackPatterns[patternData.currentPattern];
+
+        patternData.patternStep++;
+        patternData.currentRepetition = 0;
+
+        if (patternData.patternStep >= pattern.States.Length)
+        {
+            patternData.patternStep = 0;
+        }
+
+        SetPatternData(npc, patternData);
+        StartPatternAttack(npc, pattern.States[patternData.patternStep], Main.player[npc.target]);
+    }
+
+    private void StartPatternAttack(NPC npc, AIState newState, Player target)
+    {
+        SetState(npc, newState);
+        GetTimer(npc) = 0;
+
+        var patternData = GetPatternData(npc);
+        var extraData = GetExtraData(npc);
+        var pattern = AttackPatterns[patternData.currentPattern];
+
+        switch (newState)
+        {
+            case AIState.Jumping:
+                GetJumpPhase(npc) = 0;
+                break;
+
+            case AIState.GroundPound:
+                GetJumpPhase(npc) = 0;
+                extraData.groundPoundCount = 0;
+
+                var maxReps = pattern.Repetitions[patternData.patternStep];
+
+                if (maxReps >= 3)
+                    extraData.targetGroundPounds = 3;
+                else if (maxReps >= 2)
+                    extraData.targetGroundPounds = 2;
+                else
+                    extraData.targetGroundPounds = 1;
+
+                SetExtraData(npc, extraData);
+                break;
+
+            case AIState.BounceHouse:
+                GetJumpPhase(npc) = 0;
+                extraData.bounceHouseSlams = 0;
+                extraData.targetBounceSlams = Main.rand.Next(3, 6);
+                SetExtraData(npc, extraData);
+                break;
+
+            case AIState.ConsumingSlimes:
+                if (!HasNearbySlimes(npc))
                 {
-                    if (ShouldTeleport(npc))
-                    {
-                        ChangeState(KingSlimeAI.Teleporting);
-                    }
-
-                    if (healthPercentage <= CONSUME_HEALTH_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) > 3
-                        && Main.rand.NextBool(2))
-                    {
-                        ChangeState(KingSlimeAI.ConsumingSlimes);
-                    }
-
-                    else if (healthPercentage <= PHASE_2_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) <= 9)
-                    {
-                        consecutiveSlams = 0;
-                        ChangeState(KingSlimeAI.PrepareSlamAttack);
-                    }
-                    else if (Main.rand.NextBool(2))
-                        ChangeState(KingSlimeAI.Shooting);
-                    else
-                        ChangeState(KingSlimeAI.Jumping);
+                    AdvancePatternStep(npc);
+                    return;
                 }
                 break;
 
-            case KingSlimeAI.Shooting:
-                if (stateTimer >= SHOOT_DURATION)
-                {
-                    if (ShouldTeleport(npc))
-                    {
-                        ChangeState(KingSlimeAI.Teleporting);
-                    }
-                    if (healthPercentage <= PHASE_2_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) <= 9)
-                    {
-                        consecutiveSlams = 0;
-                        ChangeState(KingSlimeAI.PrepareSlamAttack);
-                    }
-                    else
-                        ChangeState(KingSlimeAI.Jumping);                
-                }
+            case AIState.Strolling:
+                GetStrollCount(npc) = 0;
+                extraData.targetStrolls = pattern.Durations[patternData.patternStep] > 0 ? 1 : 3;
+                SetExtraData(npc, extraData);
                 break;
+        }
 
-            case KingSlimeAI.Jumping:
-                if (stateTimer >= JUMP_DURATION || npc.velocity.Y == 0f)
-                {
-                    stateTimer = 0f;
+        npc.netUpdate = true;
+    }
 
-                    if (currentJumps >= 3)
-                    {
-                        currentJumps = 0;
-                    }
+    private bool IsCurrentAttackComplete(NPC npc)
+    {
+        var extraData = GetExtraData(npc);
+        ref float timer = ref GetTimer(npc);
 
-                    if (previousState == KingSlimeAI.PrepareSlamAttack ||
-                        (healthPercentage <= PHASE_2_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) <= 9))
-                    {
-                        ChangeState(KingSlimeAI.PrepareSlamAttack);
-                        currentJumps++;
-                    }
-                    else if (healthPercentage <= CONSUME_HEALTH_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) > 3
-                        && Main.rand.NextBool(3))
-                    {
-                        ChangeState(KingSlimeAI.ConsumingSlimes);
-                    }
-                    else if (Main.rand.NextBool(2))
-                    {
-                        ChangeState(KingSlimeAI.PrepareSlamAttack);
-                        currentJumps++;
-                    }
-                    else
-                    {
-                        ChangeState(KingSlimeAI.Strolling);
-                    }
-                }
-                break;
+        switch (GetState(npc))
+        {
+            case AIState.Jumping:
+                return GetJumpPhase(npc) == 1 && npc.velocity.Y == 0f && timer > 30;
 
-            case KingSlimeAI.PrepareSlamAttack:
-                if (HandleSlamSetup(npc))
-                {
-                    ChangeState(KingSlimeAI.SlamAttack);
-                }
-                break;
+            case AIState.GroundPound:
+                return GetJumpPhase(npc) == 3 && timer >= 90f && extraData.groundPoundCount >= extraData.targetGroundPounds;
 
-            case KingSlimeAI.SlamAttack:
-                if (HandleSlam(npc))
-                {
-                    consecutiveSlams++;
-                    if (consecutiveSlams >= MAX_CONSECUTIVE_SLAMS)
-                    {
-                        ChangeState(KingSlimeAI.Idle);
-                    }
-                    else
-                        ChangeState(KingSlimeAI.PrepareSlamAttack);       
-                }
-                break;
+            case AIState.BounceHouse:
+                return extraData.bounceHouseSlams >= extraData.targetBounceSlams && npc.velocity.Y == 0f && timer > 60;
 
-            case KingSlimeAI.ConsumingSlimes:
-                if (stateTimer >= CONSUME_SLIMES_DURATION)
-                {   
-                    if (Main.rand.NextBool(2))
-                        ChangeState(KingSlimeAI.Jumping);      
-                    else
-                        ChangeState(KingSlimeAI.Strolling);   
-                }
-                break;
+            case AIState.ConsumingSlimes:
+                return timer >= 450f || !HasNearbySlimes(npc);
 
-            case KingSlimeAI.Strolling:         
-                if (stateTimer >= 2f * 60f)
-                {
-                    if (ShouldTeleport(npc))
-                    {
-                        ChangeState(KingSlimeAI.Teleporting);
-                    }
-                    if (healthPercentage <= CONSUME_HEALTH_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) > 3
-                         && Main.rand.NextBool(3))
-                    {
-                        ChangeState(KingSlimeAI.ConsumingSlimes);
-                    }
-                    else if (healthPercentage <= PHASE_2_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) <= 9)
-                    {
-                        consecutiveSlams = 0;
-                        ChangeState(KingSlimeAI.PrepareSlamAttack);
-                    }
-                    else if (Main.rand.NextBool(2))
-                        ChangeState(KingSlimeAI.Shooting);
-                    else
-                        ChangeState(KingSlimeAI.Jumping);
-                }
-                break;
+            case AIState.Strolling:
+                return GetStrollCount(npc) >= extraData.targetStrolls;
 
-            case KingSlimeAI.Teleporting:
-                if (HandleTeleporting(npc))
-                {
-                    ChangeState(KingSlimeAI.Idle);
-                }
-                break;
+            case AIState.Teleporting:
+                return extraData.teleportPhase == TeleportPhase.Prepare && timer >= 25f;
+
+            default:
+                return true;
         }
     }
 
-    private void ChangeState(KingSlimeAI newState)
+    private void HandlePatternTeleport(NPC npc, Player target)
     {
-        previousState = currentState;
-        currentState = newState;
-        stateTimer = 0f;
+        var patternData = GetPatternData(npc);
+        var extraData = GetExtraData(npc);
+
+        if (patternData.patternOverride || GetState(npc) == AIState.Teleporting || GetState(npc) == AIState.ConsumingSlimes ||
+            GetState(npc) == AIState.BounceHouse ||
+            GetState(npc) == AIState.GroundPound && GetJumpPhase(npc) != 0 ||
+            GetState(npc) == AIState.Jumping && npc.velocity.Y != 0f)
+            return;
+
+        var distToPlayer = Vector2.Distance(npc.Center, target.Center);
+        var shouldTeleport = false;
+
+        if (distToPlayer > 1000f && extraData.teleportTimer >= TELEPORT_COOLDOWN * 0.8f)
+            shouldTeleport = true;
+
+        if (extraData.stuckTimer >= STUCK_TIMEOUT)
+            shouldTeleport = true;
+
+        if (extraData.lineOfSightTimer >= LINE_OF_SIGHT_TIMEOUT * 1.5f)
+            shouldTeleport = true;
+
+        if (shouldTeleport && Main.netMode != NetmodeID.MultiplayerClient)
+        {
+            patternData.patternOverride = true;
+            SetPatternData(npc, patternData);
+            BeginTeleport(npc, target);
+        }
     }
+
+    private void HandlePatternConsume(NPC npc, Player target)
+    {
+        var patternData = GetPatternData(npc);
+        var extraData = GetExtraData(npc);
+
+        if (patternData.patternOverride || GetState(npc) == AIState.Teleporting || GetState(npc) == AIState.ConsumingSlimes ||
+            GetState(npc) == AIState.GroundPound && GetJumpPhase(npc) != 0 ||
+            GetState(npc) == AIState.Jumping && npc.velocity.Y != 0f ||
+            GetState(npc) == AIState.BounceHouse && GetJumpPhase(npc) != 0)
+            return;
+
+        // Only override if we're NOT in phase 1
+        var currentPhase = GetCurrentPhase(npc);
+        if (currentPhase == PatternType.Phase1)
+            return;
+
+        // Check cooldown
+        if (Main.GameUpdateCount - extraData.lastConsumeTime < CONSUME_COOLDOWN)
+            return;
+
+        var nearbySlimes = CountNearbySlimes(npc);
+        var shouldOverride = false;
+
+        if (nearbySlimes >= 5)
+        {
+            shouldOverride = true;
+        }
+        else if (nearbySlimes >= 3)
+        {
+            var healthPercentage = (float)npc.life / npc.lifeMax;
+            if (healthPercentage <= 0.4f)
+                shouldOverride = true;
+            else if (healthPercentage <= 0.7f && Main.rand.NextBool(3))
+                shouldOverride = true;
+        }
+
+        if (shouldOverride && Main.netMode != NetmodeID.MultiplayerClient)
+        {
+            patternData.patternOverride = true;
+            SetPatternData(npc, patternData);
+            SetState(npc, AIState.ConsumingSlimes);
+            GetTimer(npc) = 0;
+            npc.netUpdate = true;
+        }
+    }
+
+    private void ResumeBattlePattern(NPC npc)
+    {
+        var patternData = GetPatternData(npc);
+        patternData.patternOverride = false;
+        SetPatternData(npc, patternData);
+
+        var pattern = AttackPatterns[patternData.currentPattern];
+        StartPatternAttack(npc, pattern.States[patternData.patternStep], Main.player[npc.target]);
+    }
+
     #endregion
 
-    #region Attack Handlers
-    private void HandleState(NPC npc)
+    #region State Methods
+    public override bool CheckDead(NPC npc)
     {
-        switch (currentState)
+        var extraData = GetExtraData(npc);
+
+        if (!extraData.deathAnimationStarted)
         {
-            case KingSlimeAI.Strolling:
-                HandleStrolling(npc);
-                break;
-            case KingSlimeAI.Jumping:
-                HandleJumping(npc);
-                break;
-            case KingSlimeAI.Shooting:
-                HandleShooting(npc);
-                break;
-            case KingSlimeAI.ConsumingSlimes:
-                HandleConsumingSlimes(npc);
-                break;
+            extraData.deathAnimationStarted = true;
+            extraData.deathAnimationPhase = 0;
+            extraData.deathScale = npc.scale;
+            SetExtraData(npc, extraData);
+
+            SetState(npc, AIState.DeathAnimation);
+            GetTimer(npc) = 0;
+
+            npc.life = 1;
+            npc.dontTakeDamage = true;
+
+            Main.StopSlimeRain();
+
+            SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}KingSlimeDeath") with
+            {
+                Volume = 0.8f,
+                PitchVariance = 0.1f
+            }, npc.Center);
+
+            return false;
         }
-        UpdateVisualEffects(npc);
+
+        return true;
     }
 
-    private void HandleStrolling(NPC npc)
+    private void DoDeathAnimation(NPC npc, Player target)
     {
-        if (npc.target < 0 || npc.target == 255 || Main.player[npc.target].dead)
-            npc.TargetClosest();
+        var extraData = GetExtraData(npc);
+        ref float timer = ref GetTimer(npc);
 
-        Player target = Main.player[npc.target];
+        npc.velocity *= 0.92f;
 
-        npc.direction = npc.spriteDirection = npc.Center.X < target.Center.X ? 1 : -1;
-
-        if (currentState == KingSlimeAI.ConsumingSlimes)
-            STROLL_SPEED = 0.85f; 
-        else
-            STROLL_SPEED = 0.65f;
-        
-
-        if (npc.velocity.X < -STROLL_SPEED || npc.velocity.X > STROLL_SPEED)
+        switch (extraData.deathAnimationPhase)
         {
-            if (npc.velocity.Y == 0f)
-            {
-                npc.velocity *= 0.76f;
-            }
-        }
-        else
-        {
-            if (npc.velocity.X < STROLL_SPEED && npc.direction == 1)
-            {
-                npc.velocity.X += 0.03f;
-            }
-            if (npc.velocity.X > -STROLL_SPEED && npc.direction == -1)
-            {
-                npc.velocity.X -= 0.03f;
-            }
-            npc.velocity.X = MathHelper.Clamp(npc.velocity.X, -STROLL_SPEED, STROLL_SPEED);
-        }
-    }
-
-    private void HandleConsumingSlimes(NPC npc)
-    {
-        if (stateTimer == 1)
-        {
-            CameraSystem.shake = 8;
-            SoundEngine.PlaySound(SoundID.Roar, npc.Center);
-
-            for (int i = 0; i < 20; i++)
-            {
-                Vector2 dustVel = Vector2.One.RotatedBy(MathHelper.ToRadians(i * 18)) * 5f;
-                int dust = Dust.NewDust(npc.Center, 0, 0, DustID.t_Slime, dustVel.X, dustVel.Y,
-                    newColor: new Color(78, 136, 255, 150));
-                Main.dust[dust].noGravity = true;
-                Main.dust[dust].scale = 1.8f;
-            }
-        }
-
-        if (stateTimer % 15 == 0)
-        {
-            for (int i = 0; i < Main.maxNPCs; i++)
-            {
-                NPC target = Main.npc[i];
-
-                if (target.active && target.aiStyle == NPCAIStyleID.Slime
-                    && target.type != NPCID.KingSlime && !target.boss)
+            case 0:
+                if (timer <= 120f)
                 {
-                    if (Vector2.Distance(npc.Center, target.Center) <= CONSUME_DETECTION_RANGE)
+                    var shrinkProgress = timer / 120f;
+                    extraData.deathScale = MathHelper.Lerp(npc.scale, 0.45f, EaseFunction.EaseQuadIn.Ease(shrinkProgress));
+
+                    if (timer % 8 == 0)
                     {
-                        if (!npc.Hitbox.Intersects(target.Hitbox))
+                        for (var i = 0; i < 5; i++)
                         {
-                            Vector2 toKingSlime = npc.Center - target.Center;
-                            toKingSlime.Normalize();
-                            target.velocity = toKingSlime * 4f;
-
-                            if (Main.rand.NextBool(3))
-                            {
-                                Dust.NewDust(target.position, target.width, target.height,
-                                    DustID.t_Slime, toKingSlime.X, toKingSlime.Y,
-                                    150, new Color(78, 136, 255, 150), 1.2f);
-                            }
-                        }
-                        else if (npc.Hitbox.Intersects(target.Hitbox))
-                        {
-                            for (int d = 0; d < 15; d++)
-                            {
-                                Vector2 velocity = new Vector2(Main.rand.NextFloat(-3f, 3f), Main.rand.NextFloat(-3f, 3f));
-                                int dust = Dust.NewDust(target.Center, 0, 0,
-                                    DustID.t_Slime, velocity.X, velocity.Y,
-                                    150, new Color(78, 136, 255, 200), 1.5f);
-                                Main.dust[dust].noGravity = true;
-                            }
-
-                            float newScale = npc.scale + SCALE_PER_SLIME;
-                            npc.scale = MathHelper.Min(newScale, MAX_CONSUME_SCALE);
-                            npc.life += target.life / 8;
-                            npc.HealEffect(target.life / 8);
-                            if (npc.life >= npc.lifeMax)
-                            {
-                                npc.life = npc.lifeMax;
-                            }
-
-                            SoundEngine.PlaySound(new SoundStyle(
-                                $"{SFX_DIRECTORY}SlimeConsume")
-                                {
-                                    PitchVariance = 0.3f,
-                                    MaxInstances = 3
-                                }, target.Center);
-
-                            target.life = 0;
-                            target.HitEffect();
-                            target.active = false;
-
-                            UpdateHitbox(npc);
-                        }
-                    }
-                }
-            }
-        }
-
-        float pulse = (float)Math.Sin(stateTimer * 0.05f) * 0.1f;
-        squishScale = new Vector2(1f + pulse, 1f - pulse);
-
-        if (Main.rand.NextBool(10))
-        {
-            Vector2 offset = new Vector2(Main.rand.NextFloat(-npc.width * 0.5f, npc.width * 0.5f),
-                Main.rand.NextFloat(-npc.height * 0.5f, npc.height * 0.5f));
-            Vector2 position = npc.Center + offset;
-
-            int dust = Dust.NewDust(position, 0, 0, DustID.t_Slime, 0f, 0f,
-                150, new Color(78, 136, 255, 150), 1.3f);
-            Main.dust[dust].noGravity = true;
-            Main.dust[dust].velocity = Vector2.Zero;
-            Main.dust[dust].fadeIn = 1.2f;
-        }
-    }
-
-    private void HandleSlimes(NPC npc)
-    {
-        if (NPC.CountNPCS(NPCAIStyleID.Slime) <= 9)
-        {
-            for (int slimes = 0; slimes < 3; slimes++)
-            {
-                NPC slime = Main.npc[NPC.NewNPC(default, (int)npc.Center.X + ((slimes * 33) * npc.direction), (int)npc.Center.Y, NPCID.BlueSlime)];
-                slime.active = true;
-                slime.life = 30;
-                slime.lifeMax = 30;
-                slime.timeLeft = 2400;
-                slime.defense = 0;
-                slime.velocity = npc.velocity;
-                for (int i = 0; i < 30; i++)
-                {
-                    Vector2 dustVel = Vector2.One.RotatedBy(MathHelper.ToRadians(i * 12)) * 8f;
-                    int dust = Dust.NewDust(slime.Center, 0, 0, DustID.t_Slime, dustVel.X, dustVel.Y, newColor: new Color(78, 136, 255, 150));
-                    Main.dust[dust].noGravity = true;
-                    Main.dust[dust].scale = 1.4f;
-                }
-            }
-        }
-    }
-
-    private static void ShootProjectiles(NPC npc)
-    {
-        Player player = Main.player[npc.target];
-        float projectileSpeed = 6.8f;
-        int projectileType = ProjectileID.SpikedSlimeSpike;
-        int damage = npc.damage / 4;
-
-        int numProjectiles = 5;
-        float arcSpread = 60f;
-        float startAngle = -arcSpread / 2f;
-        float angleStep = arcSpread / (numProjectiles - 1);
-
-        for (int i = 0; i < numProjectiles; i++)
-        {
-            float currentAngle = startAngle + (angleStep * i);
-            Vector2 velocity = new Vector2(projectileSpeed, 0f).RotatedBy(MathHelper.ToRadians(currentAngle));
-
-            Vector2 toPlayer = player.Center - npc.Center;
-            velocity = velocity.RotatedBy(toPlayer.ToRotation());
-
-            Projectile.NewProjectile(
-                npc.GetSource_FromAI(),
-                npc.Center,
-                velocity,
-                projectileType,
-                damage,
-                1f,
-                Main.myPlayer
-            );
-        }
-    }
-
-    private void MaintainSlimePopulation(NPC npc)
-    {
-        if (npc.ai[3]++ % 180 == 0)
-        {
-            float healthPercentage = (float)npc.life / npc.lifeMax;
-            if (healthPercentage <= CONSUME_HEALTH_THRESHOLD && NPC.CountNPCS(NPCAIStyleID.Slime) < 4)
-            {
-                int slimesToSpawn = Main.rand.Next(2, 4);
-                for (int i = 0; i < slimesToSpawn; i++)
-                {
-                    int spawnX = (int)npc.Center.X + Main.rand.Next(-400, 400);
-                    int spawnY = (int)npc.Center.Y;
-
-                    bool foundSurface = false;
-                    for (int y = 0; y < 200; y++)
-                    {
-                        int tileX = spawnX / 16;
-                        int tileY = (spawnY + y) / 16;
-
-                        Tile tile = Framing.GetTileSafely(tileX, tileY);
-                        if (tile.HasTile && Main.tileSolid[tile.TileType] && !Main.tileSolidTop[tile.TileType])
-                        {
-                            spawnY = (tileY * 16) - 24;
-                            foundSurface = true;
-                            break;
+                            var dustPos = npc.Center + Main.rand.NextVector2Circular(npc.width * 0.4f, npc.height * 0.4f);
+                            var dust = Dust.NewDustDirect(dustPos, 0, 0, DustID.t_Slime,
+                                Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(-3f, -1f),
+                                150, new Color(86, 162, 255, 150), 1.2f);
+                            dust.noGravity = true;
+                            dust.velocity *= 0.8f;
                         }
                     }
 
-                    if (foundSurface)
+                    if (timer % 15 == 0)
+                        CameraSystem.shake = (int)MathHelper.Lerp(2, 8, shrinkProgress);
+                }
+                else
+                {
+                    extraData.deathAnimationPhase = 1;
+                    timer = 0;
+                }
+                break;
+
+            case 1:
+                extraData.deathScale = 0.35f;
+
+                if (timer <= 60f)
+                {
+                    if (timer % 3 == 0)
                     {
-                        int slimeType = Main.rand.NextBool(2) ? NPCID.BlueSlime :
-                                      (Main.rand.NextBool() ? NPCID.GreenSlime : NPCID.PurpleSlime);
-
-                        for (int d = 0; d < 15; d++)
+                        for (var i = 0; i < 8; i++)
                         {
-                            Vector2 velocity = new Vector2(Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(-3f, -0.5f));
-                            int dust = Dust.NewDust(new Vector2(spawnX, spawnY), 16, 8,
-                                DustID.t_Slime, velocity.X, velocity.Y,
-                                150, new Color(78, 136, 255, 200), 1f);
-                            Main.dust[dust].noGravity = true;
-                            Main.dust[dust].fadeIn = 1.2f;
-                        }
-
-                        int newSlime = NPC.NewNPC(npc.GetSource_FromAI(), spawnX, spawnY, slimeType);
-                        if (newSlime >= 0 && newSlime < Main.maxNPCs)
-                        {
-                            Main.npc[newSlime].scale = 0.2f;
-                            Main.npc[newSlime].alpha = 125;
+                            var dustVel = Vector2.One.RotatedBy(MathHelper.ToRadians(i * 45)) * 4f;
+                            var dust = Dust.NewDustDirect(npc.Center, 0, 0, DustID.t_Slime,
+                                dustVel.X, dustVel.Y, 150, new Color(86, 162, 255, 200), 1.5f);
+                            dust.noGravity = true;
                         }
                     }
+
+                    if (timer % 5 == 0)
+                        CameraSystem.shake = (int)MathHelper.Lerp(3, 12, timer / 60f);
                 }
-            }
+                else
+                {
+                    extraData.deathAnimationPhase = 2;
+                    timer = 0;
+                }
+                break;
+
+            case 2: // big finish
+                for (var i = 0; i < 150; i++)
+                {
+                    var dustVel = Main.rand.NextVector2CircularEdge(12f, 12f);
+                    var dust = Dust.NewDustDirect(npc.Center, 0, 0, DustID.t_Slime,
+                        dustVel.X, dustVel.Y, 150, new Color(86, 162, 255, 150), 2f);
+                    dust.noGravity = true;
+                    dust.velocity = dustVel;
+                }
+
+                for (var i = 0; i < 30; i++)
+                {
+                    var angle = i / 30f * MathHelper.TwoPi;
+                    var velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) *
+                                      Main.rand.NextFloat(8f, 15f);
+
+                    var spawnPos = npc.Center + Main.rand.NextVector2Circular(20f, 20f);
+                    var projType = ModContent.ProjectileType<GelBallProjectile>();
+                    var proj = Main.projectile[Projectile.NewProjectile(npc.GetSource_FromAI(), spawnPos, velocity, projType, 0, 0f)];
+                    proj.friendly = true;
+                }
+
+                NPC.NewNPC(npc.GetSource_FromAI(), (int)npc.Center.X, (int)npc.Center.Y, NPCID.TownSlimeBlue);
+
+                CameraSystem.shake = 20;
+
+                SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}SlimeSlam") with
+                {
+                    Volume = 1f,
+                    Pitch = -0.3f
+                }, npc.Center);
+
+                SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}KingSlimeRoar") with
+                {
+                    Volume = 1f,
+                    Pitch = -0.25f
+                }, npc.Center);
+
+                timer = 0;
+
+                npc.life = 0;
+                npc.dontTakeDamage = false;
+                NPC.downedSlimeKing = true;
+                npc.checkDead();
+                break;
+        }
+
+        SetExtraData(npc, extraData);
+    }
+
+    private void DoStrolling(NPC npc, Player target)
+    {
+        ref float timer = ref GetTimer(npc);
+        var distToPlayer = Vector2.Distance(npc.Center, target.Center);
+        float dirToPlayer = Math.Sign(target.Center.X - npc.Center.X);
+        var strollDuration = 54f;
+        var progress = timer / strollDuration;
+
+        var easedProgress = EaseFunction.EaseCubicInOut.Ease(progress);
+        var velocityCurve = (float)Math.Sin(easedProgress * Math.PI);
+        var targetSpeed = velocityCurve * MathHelper.PiOver2 * 1.25f;
+
+        var glideStrength = 0.92f;
+        var accelStrength = 0.112f;
+
+        npc.velocity.X = npc.velocity.X * glideStrength + targetSpeed * dirToPlayer * accelStrength;
+
+        var maxVel = 5f;
+        if (Math.Abs(npc.velocity.X) > maxVel)
+            npc.velocity.X = maxVel * Math.Sign(npc.velocity.X);
+
+        if (Math.Abs(npc.velocity.X) > 0.1f)
+            npc.spriteDirection = -Math.Sign(npc.velocity.X);
+
+        if (timer >= strollDuration)
+        {
+            GetStrollCount(npc)++;
+            timer = 0;
         }
     }
 
-    private void HandleJumping(NPC npc)
+    private void DoJumping(NPC npc, Player target)
     {
+        ref float timer = ref GetTimer(npc);
+        var extraData = GetExtraData(npc);
+
+        float dirToPlayer = Math.Sign(target.Center.X - npc.Center.X);
+        npc.spriteDirection = -Math.Sign(dirToPlayer);
+
         if (npc.velocity.Y == 0f)
         {
-            npc.velocity.X *= 0.5f;
+            npc.velocity.X *= 0.96f;
             if (Math.Abs(npc.velocity.X) < 0.1f)
                 npc.velocity.X = 0f;
 
-            stateTimer += 2f;
-            if (npc.life < npc.lifeMax * 0.8f) stateTimer += 1f;
-            if (npc.life < npc.lifeMax * 0.6f) stateTimer += 1f;
-            if (npc.life < npc.lifeMax * 0.4f) stateTimer += 2f;
-            if (npc.life < npc.lifeMax * 0.2f) stateTimer += 3f;
-            if (npc.life < npc.lifeMax * 0.1f) stateTimer += 4f;
-
-            if (stateTimer >= 0f)
+            if (timer >= 40f)
             {
                 npc.netUpdate = true;
-                npc.TargetClosest();
-                npc.direction = npc.spriteDirection = npc.Center.X < Main.player[npc.target].Center.X ? 1 : -1;
 
-                // Cap the jump count
-                currentJumps = Math.Min(currentJumps, 3);
+                var baseJumpHeight = GetScaledJumpHeight(npc);
+                var baseXVelocity = 2.08f;
+                var overshoot = Main.rand.NextFloat() < 0.33f ? 1.3f : 1f;
+                npc.velocity.Y = baseJumpHeight;
+                npc.velocity.X = baseXVelocity * dirToPlayer * overshoot;
+                extraData.squishScale = new Vector2(0.8f, 1.2f);
+                SetExtraData(npc, extraData);
+                GetJumpPhase(npc) = 1;
+                timer = 0;
+            }
+        }
+        else
+        {
+            var maxSpeed = 4f;
+            if (dirToPlayer == 1 && npc.velocity.X < maxSpeed ||
+                dirToPlayer == -1 && npc.velocity.X > -maxSpeed)
+            {
+                npc.velocity.X += 0.15f * dirToPlayer;
+            }
 
-                // Limit base jump height to a maximum of -14f
-                float baseJumpHeight = Math.Max(-14f, -8f - (currentJumps * 2f));
-                float baseXVelocity = 2f + (currentJumps * 0.5f);
+            if (timer > 30 && npc.velocity.Y > 0)
+            {
+                // Let pattern system handle transitions
+                extraData.isWobbling = true;
+                extraData.wobbleTimer = 0f;
+                SetExtraData(npc, extraData);
+            }
+        }
+    }
 
-                if (currentState == KingSlimeAI.Jumping && stateTimer >= JUMP_DURATION * 0.8f)
-                {
-                    npc.velocity.Y = baseJumpHeight * 1.5f; // Reduced from 1.6f
-                    npc.velocity.X += baseXVelocity * 0.875f * npc.direction;
-                    stateTimer = -320f;
-                }
-                else if (currentState == KingSlimeAI.Jumping && stateTimer >= JUMP_DURATION * 0.5f)
-                {
-                    npc.velocity.Y = baseJumpHeight * 0.75f;
-                    npc.velocity.X += baseXVelocity * 1.125f * npc.direction;
-                    stateTimer = -320f;
-                }
+    private void DoGroundPound(NPC npc, Player target)
+    {
+        ref float timer = ref GetTimer(npc);
+        var extraData = GetExtraData(npc);
+        float dirToPlayer = Math.Sign(target.Center.X - npc.Center.X);
+
+        switch (GetJumpPhase(npc))
+        {
+            case 0:
+                npc.velocity.X *= 0.5f;
+                if (Math.Abs(npc.velocity.X) < 0.1f)
+                    npc.velocity.X = 0f;
+
+                float chargeTime;
+                if (extraData.targetGroundPounds > 1 && extraData.groundPoundCount > 0)
+                    chargeTime = 25f;
+                else if (timer < 0)
+                    chargeTime = 45f;
                 else
+                    chargeTime = 60f;
+
+                if (timer >= chargeTime)
                 {
-                    npc.velocity.Y = baseJumpHeight;
-                    npc.velocity.X = baseXVelocity * npc.direction;
-                    stateTimer = -320f;
+                    npc.netUpdate = true;
+                    npc.spriteDirection = -Math.Sign(dirToPlayer);
+                    SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}SlimeSlamCharge") with { PitchVariance = 0.2f }, npc.Center);
+
+                    npc.velocity.Y = -14f;
+                    npc.velocity.X = 2f * dirToPlayer;
+
+                    for (var i = 0; i < 10; i++)
+                    {
+                        var dust = Dust.NewDustDirect(npc.position, npc.width, npc.height,
+                            DustID.t_Slime, npc.velocity.X * 0.4f, npc.velocity.Y * 0.4f,
+                            150, new Color(86, 162, 255, 100), 1.5f);
+                        dust.noGravity = true;
+                        dust.velocity *= 0.4f;
+                    }
+
+                    GetJumpPhase(npc) = 1;
+                    timer = 0;
                 }
-
-                squishScale = new Vector2(0.8f, 1.2f);
-            }
-        }
-
-        else if (npc.target < 255)
-        {
-            float maxSpeed = Main.getGoodWorld ? 6f : 3f;
-
-            if ((npc.direction == 1 && npc.velocity.X < maxSpeed) ||
-                (npc.direction == -1 && npc.velocity.X > -maxSpeed))
-            {
-                if ((npc.direction == -1 && npc.velocity.X < 0.1f) ||
-                    (npc.direction == 1 && npc.velocity.X > -0.1f))
-                    npc.velocity.X += 0.2f * npc.direction;
-                else
-                    npc.velocity.X *= 0.93f;
-            }
-
-            if (npc.velocity.Y < 0)
-                squishScale = new Vector2(0.8f, 1.2f);
-            else if (npc.velocity.Y > 0)
-                squishScale = new Vector2(1.2f, 0.8f);
-        }
-
-        int dust = Dust.NewDust(npc.position, npc.width, npc.height,
-            DustID.t_Slime, npc.velocity.X, npc.velocity.Y, 255,
-            new Color(78, 136, 255, 150), npc.scale * 1.2f);
-        Main.dust[dust].noGravity = true;
-        Main.dust[dust].velocity *= 0.5f;
-    }
-
-    private void HandleShooting(NPC npc)
-    {
-        if (stateTimer % 60f == 0)
-        {
-            ShootProjectiles(npc);
-        }
-    }
-
-    private bool HandleSlamSetup(NPC npc)
-    {
-
-        if (npc.velocity.Y == 0f)
-        {
-            if (!npc.localAI[1].Equals(1f))
-            {
-                npc.localAI[1] = 1f;
-                SoundEngine.PlaySound(new SoundStyle(
-                $"{SFX_DIRECTORY}SlimeSlamCharge")
-                {
-                    PitchVariance = 0.2f
-                }, npc.Center);
-            }
-
-            npc.direction = npc.spriteDirection = npc.Center.X < Main.player[npc.target].Center.X ? 1 : -1;
-
-            npc.velocity.Y = -14f;
-            npc.velocity.X = 2f * npc.direction;
-
-            for (int i = 0; i < 10; i++)
-            {
-                int dust = Dust.NewDust(npc.position, npc.width, npc.height,
-                    DustID.t_Slime, npc.velocity.X * 0.4f, npc.velocity.Y * 0.4f,
-                    150, new Color(78, 136, 255, 150), 1.5f);
-                Main.dust[dust].noGravity = true;
-                Main.dust[dust].velocity *= 0.4f;
-            }
-        }
-        else // In air
-        {
-            npc.damage = npc.GetAttackDamage_ScaledByStrength(30);
-            npc.localAI[1] = 0f;
-            float maxSpeed = 3f;
-            if ((npc.direction == 1 && npc.velocity.X < maxSpeed) ||
-                (npc.direction == -1 && npc.velocity.X > -maxSpeed))
-            {
-                npc.velocity.X += 0.1f * npc.direction;
-            }
-            if (npc.velocity.Y > 0f)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private bool HandleSlam(NPC npc)
-    {
-        npc.knockBackResist = 0f;
-
-        if (stateTimer == 0)
-        {
-            Player target = Main.player[npc.target];
-            Vector2 toTarget = target.Center - npc.Center;
-            float targetAngle = toTarget.ToRotation();
-            npc.velocity = new Vector2(
-                target.Center.X > npc.Center.X ? 2f : -2f,
-                SLAM_SPEED
-            );
-        }
-
-        bool hitGround = false;
-        int tileX = (int)(npc.position.X / 16);
-        int tileEndX = (int)((npc.position.X + npc.width) / 16);
-        int tileY = (int)((npc.position.Y + npc.height) / 16);
-
-        for (int i = tileX; i <= tileEndX; i++)
-        {
-            Tile tile = Framing.GetTileSafely(i, tileY);
-            if (tile.HasTile && Main.tileSolid[tile.TileType] && !Main.tileSolidTop[tile.TileType])
-            {
-                hitGround = true;
                 break;
-            }
-        }
 
-        if (hitGround || npc.velocity.Y == 0f)
-        {
-            if (!npc.localAI[0].Equals(1f))
-            {
-                HandleSlimes(npc);
-                CameraSystem.shake = 15;
-                npc.localAI[0] = 1f;
-                npc.damage = npc.GetAttackDamage_ScaledByStrength(16);       
-                SoundEngine.PlaySound(new SoundStyle(
-                $"{SFX_DIRECTORY}SlimeSlam")
+            case 1:
+                npc.damage = 30;
+                var maxSpeed = 3f;
+                if (dirToPlayer == 1 && npc.velocity.X < maxSpeed ||
+                    dirToPlayer == -1 && npc.velocity.X > -maxSpeed)
                 {
-                    PitchVariance = 0.2f
-                }, npc.Center);
-
-                for (int i = 0; i < 30; i++)
-                {
-                    Vector2 dustVel = Vector2.One.RotatedBy(MathHelper.ToRadians(i * 12)) * 8f;
-                    int dust = Dust.NewDust(npc.Center, 0, 0, DustID.t_Slime, dustVel.X, dustVel.Y, newColor: new Color(78, 136, 255, 150));
-                    Main.dust[dust].noGravity = true;
-                    Main.dust[dust].scale = 2f;
+                    npc.velocity.X += 0.1f * dirToPlayer;
                 }
-            }
 
-            stateTimer++;
-            npc.velocity *= 0.8f;
+                if (Math.Abs(npc.velocity.X) > 0.1f)
+                    npc.spriteDirection = -Math.Sign(npc.velocity.X);
 
-            if (stateTimer > 10f)
-            {
-                npc.noTileCollide = false;
-                npc.noGravity = false;
-                npc.localAI[0] = 0f;
-                return true;
-            }
+                if (npc.velocity.Y > 0f)
+                {
+                    npc.velocity = new Vector2(
+                        target.Center.X > npc.Center.X ? 2f : -2f,
+                        12f
+                    );
+                    npc.spriteDirection = target.Center.X > npc.Center.X ? -1 : 1;
+                    GetJumpPhase(npc) = 2;
+                    timer = 0;
+                }
+                break;
+
+            case 2:
+                dirToPlayer = Math.Sign(target.Center.X - npc.Center.X);
+                if (timer % 10 == 0)
+                    npc.spriteDirection = -Math.Sign(dirToPlayer);
+
+                var hitGround = false;
+                var tileX = (int)(npc.position.X / 16);
+                var tileEndX = (int)((npc.position.X + npc.width) / 16);
+                var tileY = (int)((npc.position.Y + npc.height) / 16);
+
+                for (var i = tileX; i <= tileEndX; i++)
+                {
+                    var tile = Framing.GetTileSafely(i, tileY);
+                    if (tile.HasTile && Main.tileSolid[tile.TileType] && !Main.tileSolidTop[tile.TileType])
+                    {
+                        hitGround = true;
+                        break;
+                    }
+                }
+
+                if (hitGround || npc.velocity.Y == 0f)
+                {
+                    SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}SlimeSlam") with { PitchVariance = 0.2f }, npc.Center);
+                    CameraSystem.shake = 6;
+
+                    for (var i = 0; i < 30; i++)
+                    {
+                        var dustVel = Vector2.One.RotatedBy(MathHelper.ToRadians(i * 12)) * 8f;
+                        var dust = Dust.NewDustDirect(npc.Center, 0, 0, DustID.t_Slime, dustVel.X, dustVel.Y,
+                            newColor: new Color(86, 162, 255, 100));
+                        dust.noGravity = true;
+                        dust.scale = 2f;
+                    }
+
+                    var distToPlayer = Vector2.Distance(npc.Center, target.Center) / 16f;
+
+                    int gelBallCount;
+                    float baseVelocity;
+                    float velocityVariance;
+
+                    if (distToPlayer <= 20f)
+                    {
+                        gelBallCount = 10;
+                        baseVelocity = 7.5f;
+                        velocityVariance = 1.6f;
+                    }
+                    else if (distToPlayer <= 42f)
+                    {
+                        gelBallCount = 14;
+                        baseVelocity = 9f;
+                        velocityVariance = 2.1f;
+                    }
+                    else
+                    {
+                        gelBallCount = 18;
+                        baseVelocity = 11f;
+                        velocityVariance = 3f;
+                    }
+
+                    for (var i = 0; i < gelBallCount; i++)
+                    {
+                        var angle = MathHelper.Lerp(-MathHelper.PiOver2 - 0.8f, -MathHelper.PiOver2 + 0.8f, (float)i / (gelBallCount - 1));
+                        var velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) *
+                                          (baseVelocity + Main.rand.NextFloat(-velocityVariance, velocityVariance));
+
+                        var spawnPos = npc.Center + new Vector2(Main.rand.NextFloat(-20f, 20f), 0f);
+                        var projType = ModContent.ProjectileType<GelBallProjectile>();
+                        Projectile.NewProjectile(npc.GetSource_FromAI(), spawnPos, velocity, projType, 3, 0.5f);
+                    }
+
+                    if (extraData.targetGroundPounds > 1 && Main.rand.NextBool(2))
+                    {
+                        var spawnPos = npc.Center + new Vector2(0f, npc.height / 2f);
+                        var leftSlime = NPC.NewNPC(npc.GetSource_FromAI(), (int)spawnPos.X - 20, (int)spawnPos.Y, NPCID.BlueSlime);
+                        if (leftSlime < Main.maxNPCs)
+                        {
+                            Main.npc[leftSlime].velocity = new Vector2(-4f + Main.rand.NextFloat(-1f, 0f),
+                                                                       -3f + Main.rand.NextFloat(-1f, 1f));
+                            Main.npc[leftSlime].scale = 1.2f;
+                        }
+                        var rightSlime = NPC.NewNPC(npc.GetSource_FromAI(), (int)spawnPos.X + 20, (int)spawnPos.Y, NPCID.GreenSlime);
+                        if (rightSlime < Main.maxNPCs)
+                        {
+                            Main.npc[rightSlime].scale = 1.2f;
+                        }
+                    }
+                    GetJumpPhase(npc) = 3;
+                    timer = 0;
+                    extraData.isWobbling = true;
+                    extraData.wobbleTimer = 0f;
+                    SetExtraData(npc, extraData);
+                }
+                else
+                {
+                    var timeInPhase = timer;
+                    var accelCurve = MathHelper.Clamp(timeInPhase / 20f, 0.1f, 1f);
+                    var baseAccel = 0.25f;
+                    var currentAccel = baseAccel + accelCurve * 0.4f;
+
+                    npc.velocity.Y += currentAccel;
+
+                    if (npc.velocity.Y > 14f)
+                        npc.velocity.Y = 14f;
+
+                    if (Main.rand.NextBool(3))
+                    {
+                        var dust = Dust.NewDustDirect(npc.position, npc.width, npc.height,
+                            DustID.t_Slime, npc.velocity.X * 0.4f, npc.velocity.Y * 0.4f,
+                            150, new Color(86, 162, 255, 100), 1.5f);
+                        dust.noGravity = true;
+                        dust.velocity *= 0.4f;
+                    }
+                }
+                break;
+
+            case 3:
+                npc.damage = 12;
+                npc.velocity *= 0.8f;
+
+                var recoveryTime = extraData.targetGroundPounds > 1 ? 45f : 90f;
+
+                if (timer >= recoveryTime)
+                {
+                    extraData.groundPoundCount++;
+
+                    if (extraData.groundPoundCount < extraData.targetGroundPounds)
+                    {
+                        GetJumpPhase(npc) = 0;
+                        timer = -15f;
+                        extraData.isWobbling = false;
+                    }
+                    else
+                    {
+                        extraData.isWobbling = false;
+                    }
+                    SetExtraData(npc, extraData);
+                }
+                break;
         }
-        else
-        {
-            npc.velocity.Y += 0.5f;
-            if (npc.velocity.Y > SLAM_SPEED)
-                npc.velocity.Y = SLAM_SPEED;
-
-            for (int i = 0; i < 3; i++)
-            {
-                int dust = Dust.NewDust(npc.position, npc.width, npc.height,
-                    DustID.t_Slime, npc.velocity.X * 0.4f, npc.velocity.Y * 0.4f,
-                    150, new Color(78, 136, 255, 150), 1.5f);
-                Main.dust[dust].noGravity = true;
-                Main.dust[dust].velocity *= 0.4f;
-            }
-        }
-
-        return false;
     }
 
-    private bool HandleTeleporting(NPC npc)
+    private void DoBounceHouse(NPC npc, Player target)
     {
-        // Phase 1: Fade out and scale down (first 60 frames)
-        if (stateTimer < 60)
+        ref float timer = ref GetTimer(npc);
+        var extraData = GetExtraData(npc);
+
+        switch (GetJumpPhase(npc))
         {
-            // Calculate fade out progress (0 to 1)
-            float fadeOutProgress = stateTimer / 60f;
-            npc.alpha = (int)MathHelper.Lerp(35, 255, fadeOutProgress);
+            case 0: // Setup and launch
+                npc.velocity.X *= 0.5f;
+                if (Math.Abs(npc.velocity.X) < 0.1f)
+                    npc.velocity.X = 0f;
 
-            // Get current health-based scale that would normally apply
-            float healthPercentage = (float)npc.life / npc.lifeMax;
-            float baseScale = MathHelper.Lerp(0.65f, 1.35f, healthPercentage);
+                var chargeTime = extraData.bounceHouseSlams > 0 ? 5f : 45f;
 
-            // Scale down as we fade out (minimum 0.3f)
-            float scaleReduction = 1f - (fadeOutProgress * 0.7f); // At most reduce to 30% of original
-            npc.scale = baseScale * scaleReduction;
-            npc.scale = Math.Max(npc.scale, 0.3f); // Safety minimum
-
-            // Update hitbox for new scale
-            UpdateHitbox(npc);
-
-            // Slow down movement while vanishing
-            npc.velocity *= 0.95f;
-
-            // Create dust effects while fading out
-            if (stateTimer % 5 == 0)
-            {
-                for (int i = 0; i < 2; i++)
+                if (timer >= chargeTime)
                 {
-                    Vector2 dustPos = npc.position + new Vector2(Main.rand.Next(npc.width), Main.rand.Next(npc.height));
-                    int dust = Dust.NewDust(dustPos, 4, 4, DustID.t_Slime, 0f, 0f,
-                        150, new Color(78, 136, 255, 80), 2f);
-                    Main.dust[dust].noGravity = true;
-                    Main.dust[dust].velocity *= 0.5f;
+                    npc.netUpdate = true;
+
+                    // Sound effect
+                    SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}SlimeSlamCharge") with { PitchVariance = 0.2f }, npc.Center);
+
+                    npc.velocity.Y = BOUNCE_HOUSE_JUMP_HEIGHT;
+                    npc.velocity.X = 0f;
+
+                    for (var i = 0; i < 12; i++)
+                    {
+                        var dust = Dust.NewDustDirect(npc.position, npc.width, npc.height,
+                            DustID.t_Slime, 0f, npc.velocity.Y * 0.4f,
+                            150, new Color(86, 162, 255, 100), 1.8f);
+                        dust.noGravity = true;
+                        dust.velocity *= 0.5f;
+                    }
+
+                    GetJumpPhase(npc) = 1;
+                    timer = 0;
+                }
+                break;
+
+            case 1: // Airborne
+                npc.damage = 40;
+                npc.velocity.X *= 0.95f;
+
+                if (npc.velocity.Y > 0f)
+                {
+                    npc.velocity = new Vector2(0f, BOUNCE_HOUSE_SLAM_SPEED);
+                    GetJumpPhase(npc) = 2;
+                    timer = 0;
+                }
+                break;
+
+            case 2: // Slamming down
+                var hitGround = false;
+                var tileX = (int)(npc.position.X / 16);
+                var tileEndX = (int)((npc.position.X + npc.width) / 16);
+                var tileY = (int)((npc.position.Y + npc.height) / 16);
+
+                for (var i = tileX; i <= tileEndX; i++)
+                {
+                    var tile = Framing.GetTileSafely(i, tileY);
+                    if (tile.HasTile && Main.tileSolid[tile.TileType] && !Main.tileSolidTop[tile.TileType])
+                    {
+                        hitGround = true;
+                        break;
+                    }
+                }
+
+                if (hitGround || npc.velocity.Y == 0f)
+                {
+                    SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}SlimeSlam") with { PitchVariance = 0.2f }, npc.Center);
+                    CameraSystem.shake = 8;
+
+                    for (var i = 0; i < 25; i++)
+                    {
+                        var dustVel = Vector2.One.RotatedBy(MathHelper.ToRadians(i * 14.4f)) * 9f;
+                        var dust = Dust.NewDustDirect(npc.Center, 0, 0, DustID.t_Slime, dustVel.X, dustVel.Y,
+                            newColor: new Color(86, 162, 255, 100));
+                        dust.noGravity = true;
+                        dust.scale = 2.2f;
+                    }
+
+                    BounceHouseProjectiles(npc);
+
+                    if (Main.rand.NextBool(3))
+                    {
+                        var spawnPos = npc.Center + new Vector2(0f, npc.height / 2f);
+                        var leftSlime = NPC.NewNPC(npc.GetSource_FromAI(), (int)spawnPos.X - 25, (int)spawnPos.Y, NPCID.BlueSlime);
+                        if (leftSlime < Main.maxNPCs)
+                        {
+                            Main.npc[leftSlime].velocity = new Vector2(-5f + Main.rand.NextFloat(-1.5f, 0f),
+                                                                       -4f + Main.rand.NextFloat(-1f, 1f));
+                            Main.npc[leftSlime].scale = 1.3f;
+                        }
+                        var rightSlime = NPC.NewNPC(npc.GetSource_FromAI(), (int)spawnPos.X + 25, (int)spawnPos.Y, NPCID.GreenSlime);
+                        if (rightSlime < Main.maxNPCs)
+                        {
+                            Main.npc[rightSlime].velocity = new Vector2(5f + Main.rand.NextFloat(0f, 1.5f),
+                                                                        -4f + Main.rand.NextFloat(-1f, 1f));
+                            Main.npc[rightSlime].scale = 1.3f;
+                        }
+                    }
+
+                    GetJumpPhase(npc) = 3;
+                    timer = 0;
+                    extraData.isWobbling = true;
+                    extraData.wobbleTimer = 0f;
+                    extraData.bounceHouseSlams++;
+                    SetExtraData(npc, extraData);
+                }
+                else
+                {
+                    var timeInPhase = timer;
+                    var accelCurve = MathHelper.Clamp(timeInPhase / 15f, 0.1f, 1f);
+                    var baseAccel = 0.4f;
+                    var currentAccel = baseAccel + accelCurve * 0.6f;
+
+                    npc.velocity.Y += currentAccel;
+
+                    if (npc.velocity.Y > BOUNCE_HOUSE_SLAM_SPEED)
+                        npc.velocity.Y = BOUNCE_HOUSE_SLAM_SPEED;
+
+                    if (Main.rand.NextBool(2))
+                    {
+                        var dust = Dust.NewDustDirect(npc.position, npc.width, npc.height,
+                            DustID.t_Slime, 0f, npc.velocity.Y * 0.3f,
+                            150, new Color(86, 162, 255, 100), 1.6f);
+                        dust.noGravity = true;
+                        dust.velocity *= 0.5f;
+                    }
+                }
+                break;
+
+            case 3: // Brief recovery
+                npc.damage = 12;
+                npc.velocity *= 0.85f;
+
+                var recoveryTime = 10f;
+
+                if (timer >= recoveryTime)
+                {
+                    if (extraData.bounceHouseSlams < extraData.targetBounceSlams)
+                    {
+                        GetJumpPhase(npc) = 0;
+                        timer = 0;
+                        extraData.isWobbling = false;
+                        SetExtraData(npc, extraData);
+                    }
+                    else
+                    {
+                        extraData.isWobbling = false;
+                        SetExtraData(npc, extraData);
+                    }
+                }
+                break;
+        }
+    }
+
+    private void BounceHouseProjectiles(NPC npc)
+    {
+        var gelBallCount = 24;
+        var baseVelocity = 8f;
+        var velocityVariance = 3f;
+
+        for (var i = 0; i < gelBallCount; i++)
+        {
+            var angle = (float)i / gelBallCount * MathHelper.TwoPi;
+            var velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) *
+                              (baseVelocity + Main.rand.NextFloat(-velocityVariance, velocityVariance));
+
+            var spawnPos = npc.Center + new Vector2(Main.rand.NextFloat(-25f, 25f), -5f);
+            var projType = ModContent.ProjectileType<GelBallProjectile>();
+            Projectile.NewProjectile(npc.GetSource_FromAI(), spawnPos, velocity, projType, 4, 0.7f);
+        }
+
+        for (var i = 0; i < 12; i++)
+        {
+            var angle = MathHelper.Lerp(-MathHelper.PiOver2 - 1f, -MathHelper.PiOver2 + 1f, i / 11f);
+            var velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) *
+                              (10f + Main.rand.NextFloat(-2f, 3f));
+
+            var spawnPos = npc.Center + new Vector2(Main.rand.NextFloat(-30f, 30f), -10f);
+            var projType = ModContent.ProjectileType<GelBallProjectile>();
+            Projectile.NewProjectile(npc.GetSource_FromAI(), spawnPos, velocity, projType, 5, 0.8f);
+        }
+    }
+
+    private void DoTeleporting(NPC npc, Player target)
+    {
+        ref float timer = ref GetTimer(npc);
+        var extraData = GetExtraData(npc);
+
+        switch (extraData.teleportPhase)
+        {
+            case TeleportPhase.Prepare:
+                npc.aiAction = 1;
+
+                if (timer <= 20f)
+                {
+                    var fadeProgress = MathHelper.Clamp((20f - timer) / 20f, 0f, 1f);
+                    extraData.teleportScaleMultiplier = 0.5f + fadeProgress * 0.5f;
+
+                    if (timer >= 20f)
+                    {
+                        extraData.isInvulnerable = true;
+                        npc.dontTakeDamage = true;
+                        npc.hide = true;
+                    }
+
+                    if (timer == 20f)
+                    {
+                        Gore.NewGore(npc.GetSource_FromAI(),
+                                    npc.Center + new Vector2(-40f, -npc.height / 2),
+                                    npc.velocity, 734);
+                    }
+                }
+                else if (timer <= 35f)
+                {
+                    npc.hide = true;
+                    extraData.isInvulnerable = true;
+                    npc.dontTakeDamage = true;
+                    extraData.teleportScaleMultiplier = 0.5f;
+                }
+                else if (timer >= 35f && Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    // Execute teleport - use vanilla approach
+                    npc.Bottom = new Vector2(npc.localAI[1], npc.localAI[2]);
+                    extraData.teleportPhase = TeleportPhase.Execute;
+                    timer = 0;
+                    npc.netUpdate = true;
+                }
+
+                TeleportDust(npc, 1f);
+                break;
+
+            case TeleportPhase.Execute:
+                npc.aiAction = 0;
+
+                if (timer <= 10f)
+                {
+                    npc.hide = true;
+                    extraData.isInvulnerable = true;
+                    npc.dontTakeDamage = true;
+                    extraData.teleportScaleMultiplier = 0.5f;
+
+                    var windUpProgress = timer / 10f;
+                    var dustIntensity = 1f + windUpProgress * 2f;
+                    TeleportDust(npc, dustIntensity);
+
+                    if (timer == 5f)
+                    {
+                        SoundEngine.PlaySound(SoundID.QueenSlime with { PitchVariance = 0.2f }, npc.Center);
+                    }
+
+                    if (timer > 5f && timer % 2 == 0)
+                    {
+                        CameraSystem.shake = (int)(3 + windUpProgress * 4);
+                    }
+                }
+                else if (timer <= 25f)
+                {
+                    var fadeInProgress = MathHelper.Clamp((timer - 10f) / 15f, 0f, 1f);
+                    extraData.teleportScaleMultiplier = 0.5f + fadeInProgress * 0.5f;
+
+                    if (fadeInProgress >= 0.1f)
+                    {
+                        npc.hide = false;
+                        extraData.isInvulnerable = false;
+                        npc.dontTakeDamage = false;
+                    }
+                    else
+                    {
+                        npc.hide = true;
+                        extraData.isInvulnerable = true;
+                        npc.dontTakeDamage = true;
+                    }
+
+                    TeleportDust(npc, 3f - fadeInProgress * 2f);
+                }
+                else if (timer >= 25f && Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    CompleteTeleport(npc);
+                }
+                break;
+        }
+
+        SetExtraData(npc, extraData);
+    }
+
+
+    private void CompleteTeleport(NPC npc)
+    {
+        var extraData = GetExtraData(npc);
+
+        npc.TargetClosest();
+        npc.hide = false;
+        extraData.isInvulnerable = false;
+        npc.dontTakeDamage = false;
+        extraData.teleportScaleMultiplier = 1f;
+        extraData.teleportPhase = TeleportPhase.Prepare;
+        extraData.lastPosition = npc.Center;
+
+        SetExtraData(npc, extraData);
+        ResumeBattlePattern(npc);
+    }
+
+    private void DoConsumingSlimes(NPC npc, Player target)
+    {
+        ref float timer = ref GetTimer(npc);
+        var extraData = GetExtraData(npc);
+
+        if (timer == 1)
+        {
+            CameraSystem.shake = 15;
+            SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}KingSlimeRoar") with { Volume = 0.5f, }, npc.Center);
+
+            for (var i = 0; i < 20; i++)
+            {
+                var dustVel = Vector2.One.RotatedBy(MathHelper.ToRadians(i * 18)) * 5f;
+                var dust = Dust.NewDustDirect(npc.Center, 0, 0, DustID.t_Slime, dustVel.X, dustVel.Y,
+                    newColor: new Color(78, 136, 255, 150));
+                dust.noGravity = true;
+                dust.scale = 1.8f;
+            }
+        }
+
+        if (timer <= 90f && timer % 30 == 0 && timer > 1)
+            CameraSystem.shake = (int)MathHelper.Lerp(8, 3, timer / 90f);
+
+        npc.velocity *= 0.85f;
+
+        if (timer % 15 == 0)
+        {
+            for (var i = 0; i < Main.maxNPCs; i++)
+            {
+                var slime = Main.npc[i];
+
+                if (slime.active && slime.aiStyle == NPCAIStyleID.Slime
+                    && slime.type != NPCID.KingSlime && !slime.boss)
+                {
+                    var distance = Vector2.Distance(npc.Center, slime.Center);
+
+                    if (distance <= CONSUME_DETECTION_RANGE)
+                    {
+                        if (npc.Hitbox.Intersects(slime.Hitbox))
+                        {
+                            ConsumeSlime(npc, slime);
+                        }
+                    }
                 }
             }
 
-            // Dust burst at the end of fade out
-            if (stateTimer == 59)
+            if (timer % 30 == 0)
             {
-                SoundEngine.PlaySound(SoundID.Item8, npc.Center);
+                var healAmount = (int)(npc.lifeMax * 0.02f);
+                npc.life += healAmount;
+                npc.HealEffect(healAmount);
 
-                for (int i = 0; i < 50; i++)
-                {
-                    Vector2 velocity = Vector2.One.RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(2f, 8f);
-                    int dust = Dust.NewDust(npc.Center, 0, 0, DustID.t_Slime,
-                        velocity.X, velocity.Y, 150, new Color(78, 136, 255, 200), 2f);
-                    Main.dust[dust].noGravity = true;
-                }
-            }
-        }
-        // Phase 2: Teleport (frame 60)
-        else if (stateTimer == 60)
-        {
-            // Stay completely invisible and small
-            npc.alpha = 255;
-
-            // Get current health-based scale that would normally apply
-            float healthPercentage = (float)npc.life / npc.lifeMax;
-            float baseScale = MathHelper.Lerp(0.65f, 1.35f, healthPercentage);
-
-            // Maintain small scale during teleport
-            npc.scale = baseScale * 0.3f; // 30% of normal scale
-            UpdateHitbox(npc);
-
-            // Ensure target is valid before teleporting
-            if (npc.target < 0 || npc.target >= Main.maxPlayers || !Main.player[npc.target].active)
-                npc.TargetClosest(true);
-
-            // Get teleport position above the player
-            Player target = Main.player[npc.target];
-            Vector2 teleportPos = target.Center;
-            teleportPos.Y -= 580; // More consistent height
-            
-            teleportPos.X += Main.rand.Next(-40, 41); // Smaller horizontal variance
-
-            // Set position and reset velocity
-            npc.Center = teleportPos;
-            npc.velocity = Vector2.Zero;
-
-            // Always flag for immediate slam in Master Mode
-            if (Main.masterMode)
-            {
-                npc.localAI[3] = 1f; // Flag for slam attack after teleport
-            }
-            // 50% chance in Expert Mode
-            else if (Main.expertMode && Main.rand.NextBool())
-            {
-                npc.localAI[3] = 1f;
+                if (npc.life > npc.lifeMax)
+                    npc.life = npc.lifeMax;
             }
         }
 
-        // Phase 3: Fade in and scale up (frames 61-90)
-        else if (stateTimer < 90)
+        var pulse = (float)Math.Sin(timer * 0.05f) * 0.1f;
+        extraData.squishScale = new Vector2(1f + pulse, 1f - pulse);
+        SetExtraData(npc, extraData);
+
+        if (Main.rand.NextBool(10))
         {
-            // Calculate fade in progress (0 to 1)
-            float fadeInProgress = (stateTimer - 60) / 30f;
-            npc.alpha = (int)MathHelper.Lerp(255, 35, fadeInProgress);
+            var offset = new Vector2(Main.rand.NextFloat(-npc.width * 0.5f, npc.width * 0.5f),
+                Main.rand.NextFloat(-npc.height * 0.5f, npc.height * 0.5f));
+            var position = npc.Center + offset;
 
-            // Get current health-based scale that would normally apply
-            float healthPercentage = (float)npc.life / npc.lifeMax;
-            float baseScale = MathHelper.Lerp(0.65f, 1.35f, healthPercentage);
+            var dust = Dust.NewDustDirect(position, 0, 0, DustID.t_Slime, 0f, 0f,
+                150, new Color(78, 136, 255, 150), 1.3f);
+            dust.noGravity = true;
+            dust.velocity = Vector2.Zero;
+            dust.fadeIn = 1.2f;
+        }
 
-            // Scale back up as we fade in (from 30% to 100% of base scale)
-            float scaleIncrease = 0.3f + (fadeInProgress * 0.7f);
-            npc.scale = baseScale * scaleIncrease;
+        if (timer >= 450f || !HasNearbySlimes(npc))
+        {
+            extraData.lastConsumeTime = Main.GameUpdateCount;
+            SetExtraData(npc, extraData);
 
-            // Update hitbox for new scale
-            UpdateHitbox(npc);
-
-            // Create dust effects while fading in
-            if (stateTimer % 5 == 0)
+            var patternData = GetPatternData(npc);
+            if (patternData.patternOverride)
             {
-                for (int i = 0; i < 2; i++)
-                {
-                    Vector2 dustPos = npc.position + new Vector2(Main.rand.Next(npc.width), Main.rand.Next(npc.height));
-                    int dust = Dust.NewDust(dustPos, 4, 4, DustID.t_Slime, 0f, 0f,
-                        150, new Color(78, 136, 255, 80), 2f);
-                    Main.dust[dust].noGravity = true;
-                    Main.dust[dust].velocity *= 2f;
-                }
+                ResumeBattlePattern(npc);
             }
-
-            // Sound when reappearing
-            if (stateTimer == 61)
+            else
             {
-                SoundEngine.PlaySound(SoundID.Item8, npc.Center);
+                extraData.isWobbling = true;
+                extraData.wobbleTimer = 0f;
+                SetExtraData(npc, extraData);
             }
         }
-        // Phase 4: Teleport complete
-        else
+    }
+    #endregion
+
+    #region Helper Methods
+    public override void Load()
+    {
+        base.Load();
+        On_NPC.VanillaFindFrame += FindFrame;
+    }
+
+    public override void Unload()
+    {
+        base.Unload();
+        On_NPC.VanillaFindFrame -= FindFrame;
+    }
+
+    private void FindFrame(On_NPC.orig_VanillaFindFrame orig, NPC self, int num, bool isLikeATownNPC, int type)
+    {
+        if (self.type != NPCID.KingSlime)
         {
-            npc.TargetClosest();
-            npc.direction = npc.spriteDirection = npc.Center.X < Main.player[npc.target].Center.X ? 1 : -1;
+            orig(self, num, isLikeATownNPC, type);
+            return;
+        }
 
-            // Restore normal scale based on health
-            float healthPercentage = (float)npc.life / npc.lifeMax;
-            npc.scale = MathHelper.Lerp(0.65f, 1.35f, healthPercentage);
-            UpdateHitbox(npc);
+        HandleKingSlimeFrames(self, num);
+    }
 
-            teleportCooldown = TELEPORT_COOLDOWN;
+    private void HandleKingSlimeFrames(NPC npc, int frameHeight)
+    {
+        var extraData = GetExtraData(npc);
+        ref float timer = ref GetTimer(npc);
 
-            if (npc.localAI[3] == 1f)
+        if (GetState(npc) == AIState.Jumping)
+        {
+            if (npc.velocity.Y == 0f)
             {
-                npc.localAI[3] = 0f;
-                ChangeState(KingSlimeAI.SlamAttack);
-                npc.velocity.Y = SLAM_SPEED * 1.2f;
-
-                for (int i = 0; i < 20; i++)
+                var animSpeed = 4f;
+                npc.frameCounter++;
+                if (npc.frameCounter >= animSpeed)
                 {
-                    int dust = Dust.NewDust(npc.position, npc.width, npc.height,
-                        DustID.t_Slime, 0f, npc.velocity.Y * 0.4f,
-                        150, new Color(78, 136, 255, 150), 2f);
-                    Main.dust[dust].noGravity = true;
+                    npc.frameCounter = 0;
+                    npc.frame.Y += frameHeight;
+
+                    if (npc.frame.Y >= frameHeight * 4)
+                    {
+                        SoundEngine.PlaySound(SoundID.QueenSlime with { Volume = 0.25f }, npc.Center);
+                        npc.frame.Y = frameHeight;
+                    }
                 }
             }
             else
             {
-                ChangeState(KingSlimeAI.PrepareSlamAttack);
+                npc.frame.Y = frameHeight * 5;
             }
-
-            return true;
         }
-
-        if (stateTimer >= 60 && npc.Distance(Main.LocalPlayer.Center) > 10f)
+        else if (GetState(npc) == AIState.DeathAnimation)
         {
-            CameraSystem.shake = 3;
-           
-        }
-        return false;
-    }
-
-    private bool ShouldTeleport(NPC npc)
-    {
-        if (teleportCooldown > 0f || currentState == KingSlimeAI.Teleporting)
-            return false;
-
-        float healthPercentage = (float)npc.life / npc.lifeMax;
-        Player target = Main.player[npc.target];
-
-        // If player is dead or not active, don't teleport
-        if (target.dead || !target.active)
-            return false;
-
-        // Random chance based on health - MUCH more frequent
-        int teleportChance;
-        if (healthPercentage <= 0.3f)
-            teleportChance = 60; // 1.67% chance per frame
-        else if (healthPercentage <= 0.6f)
-            teleportChance = 90; // 1.11% chance per frame
-        else
-            teleportChance = 120; // 0.83% chance per frame
-
-        // Check trigger conditions (but don't use the extreme ones handled by ShouldForceTelepot)
-        bool playerFarAway = Vector2.Distance(npc.Center, target.Center) > 350f && Vector2.Distance(npc.Center, target.Center) <= 800f;
-        bool playerAbove = target.Center.Y < npc.Center.Y - 100f;
-
-        // If ANY of these are true, increase chance of teleport
-        if (playerFarAway || playerAbove)
-            teleportChance /= 2; // Double the chance
-
-        // Return true if we pass the random check
-        return Main.rand.NextBool(teleportChance);
-    }
-    #endregion
-
-    #region Animation
-    private int frame;
-    private float frameCounter;
-    private const int TOTAL_FRAMES = 5;
-    private const int FRAME_HEIGHT = 110;
-    private const int FRAME_WIDTH = 168;
-    private float ANIMATION_SPEED = 0.13f;
-
-    public override void FindFrame(NPC npc, int frameHeight)
-    {
-        if (npc.type == NPCID.KingSlime)
-        {
-            npc.frame.Width = FRAME_WIDTH;
-            npc.frame.Height = FRAME_HEIGHT;
-
-            frameCounter += ANIMATION_SPEED;
-            if (frameCounter >= 1f)
+            switch (extraData.deathAnimationPhase)
             {
-                frameCounter = 0;
-                frame++;
+                case 0:
+                    var animSpeed = 6f + timer / 120f * 10f;
+                    npc.frameCounter++;
+                    if (npc.frameCounter >= animSpeed)
+                    {
+                        npc.frameCounter = 0;
+                        npc.frame.Y += frameHeight;
 
-                if (frame >= TOTAL_FRAMES)
+                        if (npc.frame.Y >= frameHeight * 4)
+                            npc.frame.Y = frameHeight;
+                    }
+                    break;
+
+                case 1:
+                    var buildupSpeed = 3f;
+                    npc.frameCounter++;
+                    if (npc.frameCounter >= buildupSpeed)
+                    {
+                        npc.frameCounter = 0;
+                        npc.frame.Y += frameHeight;
+
+                        if (npc.frame.Y >= frameHeight * 4)
+                            npc.frame.Y = frameHeight;
+                    }
+                    break;
+
+                case 2:
+                case 3:
+                    npc.frame.Y = frameHeight * 5;
+                    break;
+            }
+            return;
+        }
+        else if (GetState(npc) == AIState.GroundPound)
+        {
+            if (GetJumpPhase(npc) == 0)
+            {
+                var animSpeed = 2.5f;
+                npc.frameCounter++;
+                if (npc.frameCounter >= animSpeed)
                 {
-                    frame = 0;
+                    npc.frameCounter = 0;
+                    npc.frame.Y += frameHeight;
+
+                    if (npc.frame.Y >= frameHeight * 4)
+                    {
+                        SoundEngine.PlaySound(SoundID.QueenSlime with { Volume = 0.25f }, npc.Center);
+                        npc.frame.Y = frameHeight;
+                    }
+                }
+            }
+            else if (GetJumpPhase(npc) == 3)
+            {
+                var animSpeed = 3f;
+                npc.frameCounter++;
+                if (npc.frameCounter >= animSpeed)
+                {
+                    npc.frameCounter = 0;
+                    npc.frame.Y += frameHeight;
+
+                    if (npc.frame.Y > frameHeight * 2)
+                        npc.frame.Y = 0;
+                }
+            }
+            else
+            {
+                npc.frame.Y = frameHeight * 5;
+            }
+        }
+        else if (GetState(npc) == AIState.BounceHouse)
+        {
+            if (GetJumpPhase(npc) == 0)
+            {
+                var animSpeed = 4f;
+                npc.frameCounter++;
+                if (npc.frameCounter >= animSpeed)
+                {
+                    npc.frameCounter = 0;
+                    npc.frame.Y += frameHeight;
+
+                    if (npc.frame.Y >= frameHeight * 3)
+                    {
+                        SoundEngine.PlaySound(SoundID.QueenSlime with { Volume = 0.35f }, npc.Center);
+                        npc.frame.Y = frameHeight;
+                    }
+                }
+            }
+            else if (GetJumpPhase(npc) == 1)
+            {
+                npc.frame.Y = frameHeight * 5;
+            }
+            else if (GetJumpPhase(npc) == 2)
+            {
+                npc.frame.Y = frameHeight * 4;
+            }
+            else
+            {
+                var animSpeed = 8f;
+                npc.frameCounter++;
+                if (npc.frameCounter >= animSpeed)
+                {
+                    npc.frameCounter = 0;
+                    npc.frame.Y += frameHeight;
+
+                    if (npc.frame.Y >= frameHeight * 4)
+                    {
+                        SoundEngine.PlaySound(SoundID.QueenSlime with { Volume = 0.35f }, npc.Center);
+                        npc.frame.Y = frameHeight;
+                    }
+                }
+            }
+        }
+        else if (GetState(npc) == AIState.Teleporting)
+        {
+            if (extraData.teleportPhase == TeleportPhase.Prepare)
+            {
+                var animSpeed = 4f;
+                npc.frameCounter++;
+                if (npc.frameCounter >= animSpeed)
+                {
+                    npc.frameCounter = 0;
+                    npc.frame.Y += frameHeight;
+
+                    if (npc.frame.Y >= frameHeight * 4)
+                        npc.frame.Y = frameHeight;
+                }
+            }
+            else
+            {
+                npc.frame.Y = frameHeight * 4;
+            }
+        }
+        else
+        {
+            var speed = Math.Abs(npc.velocity.X);
+            float animSpeed;
+            var isGliding = speed < 0.3f;
+
+            if (isGliding)
+            {
+                if (!extraData.wasGliding)
+                {
+                    SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}KingSlimeGlide") with { Pitch = -0.1f, Volume = 0.35f }, npc.Center);
+                }
+
+                animSpeed = 60f;
+                npc.frame.Y = frameHeight * 4;
+            }
+            else if (speed < 1f)
+            {
+                if (npc.frame.Y == frameHeight)
+                    npc.frame.Y = frameHeight;
+
+                animSpeed = MathHelper.Lerp(12f, 6f, speed);
+
+                npc.frameCounter++;
+                if (npc.frameCounter >= animSpeed)
+                {
+                    npc.frameCounter = 0;
+                    npc.frame.Y += frameHeight;
+
+                    if (npc.frame.Y >= frameHeight * 4)
+                        npc.frame.Y = frameHeight;
+                }
+            }
+            else
+            {
+                animSpeed = MathHelper.Lerp(6f, 3f, Math.Min(speed / 3f, 1f));
+
+                npc.frameCounter++;
+                if (npc.frameCounter >= animSpeed)
+                {
+                    npc.frameCounter = 0;
+                    npc.frame.Y += frameHeight;
+
+                    if (npc.frame.Y >= frameHeight * 4)
+                        npc.frame.Y = 0;
                 }
             }
 
-            npc.frame.Y = frame * FRAME_HEIGHT;
+            extraData.wasGliding = isGliding;
+            SetExtraData(npc, extraData);
         }
     }
 
-    private void UpdateVisualEffects(NPC npc)
+    private void UpdateLOS(NPC npc, Player target)
     {
-        HandleSquishScale(npc);
+        var extraData = GetExtraData(npc);
+
+        var hasLineOfSight = Collision.CanHitLine(npc.Center, 0, 0, target.Center, 0, 0);
+        var heightDifferenceOk = Math.Abs(npc.Top.Y - target.Bottom.Y) <= 160f;
+
+        var isAirborne = npc.velocity.Y != 0f;
+        var shouldIgnoreLineOfSight = isAirborne && (GetState(npc) == AIState.Jumping || GetState(npc) == AIState.GroundPound || GetState(npc) == AIState.BounceHouse);
+
+        if ((!hasLineOfSight || !heightDifferenceOk) && !shouldIgnoreLineOfSight)
+        {
+            extraData.teleportTimer += 2f;
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+                extraData.lineOfSightTimer += 1.5f;
+        }
+        else if (Main.netMode != NetmodeID.MultiplayerClient)
+        {
+            extraData.lineOfSightTimer -= 2f;
+            if (extraData.lineOfSightTimer < 0f)
+                extraData.lineOfSightTimer = 0f;
+        }
+
+        if (!isAirborne)
+        {
+            var distanceMoved = Vector2.Distance(npc.Center, extraData.lastPosition);
+            if (distanceMoved < MIN_MOVEMENT_THRESHOLD && npc.velocity.Y == 0f)
+            {
+                extraData.stuckTimer++;
+            }
+            else
+            {
+                extraData.stuckTimer = 0f;
+                extraData.lastPosition = npc.Center;
+            }
+        }
+        else
+        {
+            extraData.lastPosition = npc.Center;
+        }
+
+        SetExtraData(npc, extraData);
+    }
+
+    private void BeginTeleport(NPC npc, Player target)
+    {
+        var extraData = GetExtraData(npc);
+
+        SetState(npc, AIState.Teleporting);
+        extraData.teleportPhase = TeleportPhase.Prepare;
+        extraData.teleportTimer = 0f;
+        extraData.stuckTimer = 0f;
+        GetTimer(npc) = 0;
+
+        // Use vanilla-style teleport destination finding
+        if (Main.netMode != NetmodeID.MultiplayerClient)
+        {
+            FindTeleportSpot(npc, target);
+        }
+
+        SetExtraData(npc, extraData);
+        npc.netUpdate = true;
+    }
+
+    private void FindTeleportSpot(NPC npc, Player target)
+    {
+        var npcTile = npc.Center.ToTileCoordinates();
+        var targetTile = target.Center.ToTileCoordinates();
+
+        var searchRange = 10; // num240 in vanilla
+        var attempts = 0;
+        var foundSpot = false;
+
+        while (!foundSpot && attempts < 100)
+        {
+            attempts++;
+
+            // Pick random position within range of player
+            var testX = Main.rand.Next(targetTile.X - searchRange, targetTile.X + searchRange + 1);
+            var testY = Main.rand.Next(targetTile.Y - searchRange, targetTile.Y + 1);
+
+            // Skip if too close to player (7 tile exclusion zone) or if tile is occupied
+            if (testY >= targetTile.Y - 7 && testY <= targetTile.Y + 7 && testX >= targetTile.X - 7 && testX <= targetTile.X + 7 ||
+                !WorldGen.InWorld(testX, testY) ||
+                Main.tile[testX, testY].HasTile)
+                continue;
+
+            // Find ground level starting from testY
+            var groundY = testY;
+            var dropDistance = 0;
+
+            if (Main.tile[testX, groundY].HasTile && Main.tileSolid[Main.tile[testX, groundY].TileType] && !Main.tileSolidTop[Main.tile[testX, groundY].TileType])
+            {
+                dropDistance = 1;
+            }
+            else
+            {
+                // Search down for solid ground
+                for (; dropDistance < 150 && groundY + dropDistance < Main.maxTilesY; dropDistance++)
+                {
+                    var checkY = groundY + dropDistance;
+                    if (Main.tile[testX, checkY].HasTile && Main.tileSolid[Main.tile[testX, checkY].TileType] && !Main.tileSolidTop[Main.tile[testX, checkY].TileType])
+                    {
+                        dropDistance--;
+                        break;
+                    }
+                }
+            }
+
+            groundY += dropDistance;
+
+            // Validate the spot
+            var validSpot = true;
+
+            // Check for lava
+            if (validSpot && Main.tile[testX, groundY].LiquidType == LiquidID.Lava)
+                validSpot = false;
+
+            // Check line of sight (optional - vanilla does this but might be causing issues)
+            // if (validSpot && !Collision.CanHitLine(npc.Center, 0, 0, target.Center, 0, 0))
+            //     validSpot = false;
+
+            if (validSpot)
+            {
+                // Store teleport destination in world coordinates
+                npc.localAI[1] = testX * 16 + 8;    // X position (tile center)
+                npc.localAI[2] = groundY * 16 + 16; // Y position (bottom of tile)
+                foundSpot = true;
+                break;
+            }
+        }
+
+        // Fallback if no spot found - use player's position
+        if (!foundSpot)
+        {
+            var closestPlayer = Main.player[Player.FindClosest(npc.position, npc.width, npc.height)];
+            npc.localAI[1] = closestPlayer.Bottom.X;
+            npc.localAI[2] = closestPlayer.Bottom.Y;
+        }
+    }
+
+    private void TeleportDust(NPC npc, float velocityMultiplier)
+    {
+        var extraData = GetExtraData(npc);
+        if (extraData.isInvulnerable) return;
+
+        for (var i = 0; i < 10; i++)
+        {
+            var dustIndex = Dust.NewDust(
+                npc.position + Vector2.UnitX * -20f,
+                npc.width + 40,
+                npc.height,
+                DustID.t_Slime,
+                npc.velocity.X,
+                npc.velocity.Y,
+                150,
+                new Color(86, 162, 255, 100),
+                2f
+            );
+
+            Main.dust[dustIndex].noGravity = true;
+            Main.dust[dustIndex].velocity *= velocityMultiplier;
+        }
+    }
+
+    private void HandleRotation(NPC npc)
+    {
+        var extraData = GetExtraData(npc);
+        ref float timer = ref GetTimer(npc);
+
+        var isAirborne = npc.velocity.Y != 0f;
+        if (isAirborne)
+        {
+            var fallSpeed = Math.Max(npc.velocity.Y, 0f);
+            var swayIntensity = fallSpeed * 0.005f;
+
+            if (GetState(npc) == AIState.GroundPound && (GetJumpPhase(npc) == 1 || GetJumpPhase(npc) == 2))
+            {
+                var groundPoundIntensity = Math.Abs(npc.velocity.Y) * 0.006f;
+                swayIntensity = Math.Max(swayIntensity, groundPoundIntensity * 1.2f);
+            }
+
+            var swayFreq = 0.12f + Math.Abs(npc.velocity.Y) * 0.009f;
+            var sway = (float)Math.Sin(timer * swayFreq) * swayIntensity * 2.25f;
+            extraData.rotationSway = MathHelper.Lerp(extraData.rotationSway, sway, 0.08f);
+        }
+        else
+        {
+            extraData.rotationSway = MathHelper.Lerp(extraData.rotationSway, 0f, 0.15f);
+        }
+        npc.rotation = extraData.rotationSway;
+
+        SetExtraData(npc, extraData);
     }
 
     private void HandleSquishScale(NPC npc)
     {
-        const float MAX_STRETCH = 1.3f;
-        const float MIN_SQUISH = 0.9f;
+        var extraData = GetExtraData(npc);
+        ref float timer = ref GetTimer(npc);
 
-        float yVelocityFactor = MathHelper.Clamp(npc.velocity.Y / 16f, -1f, 1f);
-
-        if (npc.velocity.Y != 0)
+        var isAirborne = npc.velocity.Y != 0f;
+        if (isAirborne)
         {
-            if (npc.velocity.Y < 0)
+            var yVel = npc.velocity.Y;
+            var stretchIntensity = Math.Abs(yVel) * 0.06f;
+
+            if (GetState(npc) == AIState.GroundPound && GetJumpPhase(npc) == 2)
+                stretchIntensity *= 0.75f;
+
+            if (GetState(npc) == AIState.Jumping)
+                stretchIntensity *= 0.55f;
+
+            stretchIntensity = MathHelper.Clamp(stretchIntensity, 0f, 0.33f);
+            if (yVel < 0)
             {
-                squishScale.Y = MathHelper.Lerp(1f, MAX_STRETCH, -yVelocityFactor);
-                squishScale.X = MathHelper.Lerp(1f, MIN_SQUISH, -yVelocityFactor);
+                extraData.squishScale.Y = 1f + stretchIntensity;
+                extraData.squishScale.X = 1f - stretchIntensity * 0.18f;
             }
             else
             {
-                squishScale.Y = MathHelper.Lerp(1f, MIN_SQUISH, yVelocityFactor);
-                squishScale.X = MathHelper.Lerp(1f, MAX_STRETCH, yVelocityFactor);
+                extraData.squishScale.Y = 1f + stretchIntensity;
+                extraData.squishScale.X = 1f - stretchIntensity * 0.25f;
             }
+        }
+        else if (extraData.isWobbling)
+        {
+            extraData.wobbleTimer += 0.15f;
+            var wobbleIntensity = GetState(npc) == AIState.GroundPound && GetJumpPhase(npc) == 3 ? 0.06f : 0.085f;
+
+            var dampening = MathHelper.Clamp(1f - extraData.wobbleTimer * 0.05f, 0.1f, 1f);
+            wobbleIntensity *= dampening;
+            var wobbleY = (float)Math.Sin(extraData.wobbleTimer * 1.2f) * wobbleIntensity;
+            var wobbleX = (float)Math.Sin(extraData.wobbleTimer * 0.8f) * wobbleIntensity;
+            extraData.squishScale.Y = 1f + wobbleY;
+            extraData.squishScale.X = 1f + wobbleX;
+
+            if (dampening <= 0.3f)
+                extraData.isWobbling = false;
         }
         else
         {
-            squishScale = Vector2.Lerp(squishScale, Vector2.One, 0.15f);
+            extraData.squishScale = Vector2.Lerp(extraData.squishScale, Vector2.One, 0.15f);
         }
+        if (Math.Abs(npc.velocity.X) > 0.5f && !isAirborne)
+        {
+            var horizontalSquish = 0.995f;
+            extraData.squishScale.Y *= horizontalSquish;
+            extraData.squishScale.X *= 1.001f;
+        }
+
+        SetExtraData(npc, extraData);
+    }
+
+    private void HandleDustTrail(NPC npc)
+    {
+        if (Math.Abs(npc.velocity.X) > 0.3f && Math.Abs(npc.velocity.Y) < 2f)
+        {
+            var tileX = (int)(npc.Center.X / 16f);
+            var tileY = (int)((npc.position.Y + npc.height + 4) / 16f);
+
+            if (WorldGen.InWorld(tileX, tileY))
+            {
+                var tile = Framing.GetTileSafely(tileX, tileY);
+
+                if (tile.HasTile && Main.tileSolid[tile.TileType])
+                {
+                    var dustChance = Math.Abs(npc.velocity.X) * 0.4f;
+
+                    if (Main.rand.NextFloat() < dustChance)
+                    {
+                        var dustPos = new Vector2(
+                            npc.position.X + Main.rand.Next(npc.width),
+                            npc.position.Y + npc.height - 8
+                        );
+
+                        var dust = Dust.NewDustDirect(dustPos, 8, 8, DustID.t_Slime);
+                        dust.velocity.X = npc.velocity.X * 0.3f + Main.rand.NextFloat(-1f, 1f);
+                        dust.velocity.Y = Main.rand.NextFloat(-1f, 0.5f);
+                        dust.color = new Color(86, 162, 255, 100);
+                        dust.scale = Main.rand.NextFloat(0.8f, 1.3f);
+                        dust.alpha = Main.rand.Next(50, 150);
+                    }
+                }
+            }
+        }
+    }
+
+    private void HandleSlimeTrail(NPC npc)
+    {
+        if (Math.Abs(npc.velocity.X) > 0.3f && Math.Abs(npc.velocity.Y) < 2f)
+        {
+            var tileX = (int)(npc.Center.X / 16f);
+            var tileY = (int)((npc.position.Y + npc.height + 2) / 16f);
+
+            if (WorldGen.InWorld(tileX, tileY))
+            {
+                var tile = Framing.GetTileSafely(tileX, tileY);
+
+                if (tile.HasTile && Main.tileSolid[tile.TileType])
+                {
+                    var slimeChance = Math.Abs(npc.velocity.X) * 0.6f;
+
+                    if (Main.rand.NextFloat() < slimeChance)
+                    {
+                        SlimedTileSystem.AddSlimedTile(tileX, tileY);
+
+                        if (Main.rand.NextBool(3))
+                        {
+                            var offsetX = Main.rand.NextBool() ? -3 : 3;
+                            if (WorldGen.InWorld(tileX + offsetX, tileY))
+                            {
+                                var adjacentTile = Framing.GetTileSafely(tileX + offsetX, tileY);
+                                if (adjacentTile.HasTile && Main.tileSolid[adjacentTile.TileType])
+                                    SlimedTileSystem.AddSlimedTile(tileX + offsetX, tileY);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void ConsumeSlime(NPC npc, NPC slime)
+    {
+        for (var d = 0; d < 15; d++)
+        {
+            var velocity = new Vector2(Main.rand.NextFloat(-3f, 3f), Main.rand.NextFloat(-3f, 3f));
+            var dust = Dust.NewDustDirect(slime.Center, 0, 0, DustID.t_Slime, velocity.X, velocity.Y,
+                150, new Color(78, 136, 255, 200), 1.5f);
+            dust.noGravity = true;
+        }
+
+        var healthGain = slime.life * HP_PER_SLIME;
+        var newScale = npc.scale + SCALE_PER_SLIME;
+        npc.scale = MathHelper.Min(newScale, MAX_CONSUME_SCALE);
+
+        npc.life += (int)healthGain;
+        npc.HealEffect((int)healthGain);
+
+        if (npc.life > npc.lifeMax)
+            npc.life = npc.lifeMax;
+
+        SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}SlimeConsume")
+        {
+            PitchVariance = 0.3f,
+            MaxInstances = 3
+        }, slime.Center);
+
+        slime.life = 0;
+        slime.HitEffect();
+        slime.active = false;
+
+        UpdateHitbox(npc);
+    }
+
+    private bool HasNearbySlimes(NPC npc)
+    {
+        for (var i = 0; i < Main.maxNPCs; i++)
+        {
+            var slime = Main.npc[i];
+            if (slime.active && slime.aiStyle == NPCAIStyleID.Slime
+                && slime.type != NPCID.KingSlime && !slime.boss)
+            {
+                if (Vector2.Distance(npc.Center, slime.Center) <= CONSUME_DETECTION_RANGE)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private int CountNearbySlimes(NPC npc)
+    {
+        var count = 0;
+        for (var i = 0; i < Main.maxNPCs; i++)
+        {
+            var slime = Main.npc[i];
+            if (slime.active && slime.aiStyle == NPCAIStyleID.Slime
+                && slime.type != NPCID.KingSlime && !slime.boss)
+            {
+                if (Vector2.Distance(npc.Center, slime.Center) <= CONSUME_DETECTION_RANGE)
+                    count++;
+            }
+        }
+        return count;
     }
 
     public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        if (npc.type != NPCID.KingSlime) return base.PreDraw(npc, spriteBatch, screenPos, drawColor);
+        var extraData = GetExtraData(npc);
 
-        Texture2D texture = ModContent.Request<Texture2D>($"{TEXTURE_DIRECTORY}NPCs/Bosses/KingSlime/KingSlime").Value;
-        Rectangle sourceRectangle = new(0, frame * FRAME_HEIGHT, FRAME_WIDTH, FRAME_HEIGHT);
-        Vector2 drawPos = npc.Center - Main.screenPosition;
-        SpriteEffects spriteEffects = npc.spriteDirection == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+        var texture = TextureAssets.Npc[npc.type].Value;
+        var capeTexture = ModContent.Request<Texture2D>($"{TEXTURE_DIRECTORY}NPCs/Bosses/KingSlime/KingSlime_Cape").Value;
+        var origin = npc.frame.Size() / 2f;
 
-        float alpha = (255 - npc.alpha) / 255f;
-        Color finalColor = Color.White * alpha;
-        finalColor.A = (byte)(alpha * 255);
+        var groundOffset = npc.frame.Height * (1f - extraData.squishScale.Y) / 2f;
+        var drawPos = npc.Center - screenPos + new Vector2(0f, groundOffset + npc.gfxOffY);
 
-        Main.EntitySpriteDraw(
-            texture,
-            drawPos,
-            sourceRectangle,
-            finalColor,
-            0,
-            sourceRectangle.Size() * 0.5f,
-            squishScale * npc.scale,
-            spriteEffects
-        );
+        var effects = npc.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+
+        spriteBatch.Draw(texture, drawPos, npc.frame, npc.GetAlpha(drawColor * 0.75f), npc.rotation, origin, npc.scale * extraData.squishScale, effects, 0f);
+        spriteBatch.Draw(capeTexture, drawPos, npc.frame, npc.GetAlpha(drawColor), npc.rotation, origin, npc.scale * extraData.squishScale, effects, 0f);
 
         return false;
+    }
+
+    public override void OnSpawn(NPC npc, IEntitySource source)
+    {
+        base.OnSpawn(npc, source);
+
+        Main.StartSlimeRain();
+
+        Main.slimeRain = true;
+    }
+    public override void OnKill(NPC npc)
+    {
+        if (npcPatternData.ContainsKey(npc.whoAmI))
+            npcPatternData.Remove(npc.whoAmI);
+
+        if (npcExtraData.ContainsKey(npc.whoAmI))
+            npcExtraData.Remove(npc.whoAmI);
+    }
+
+    public override bool CheckActive(NPC npc)
+    {
+        // Clean up data if NPC is becoming inactive
+        if (!npc.active)
+        {
+            if (npcPatternData.ContainsKey(npc.whoAmI))
+                npcPatternData.Remove(npc.whoAmI);
+
+            if (npcExtraData.ContainsKey(npc.whoAmI))
+                npcExtraData.Remove(npc.whoAmI);
+        }
+
+        return true; // Allow normal despawn logic
     }
     #endregion
 }

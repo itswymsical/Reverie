@@ -61,7 +61,7 @@ public class SlimeGlobal : GlobalNPC
         {
             NPC kingSlime = Main.npc[i];
 
-            if (kingSlime.active && kingSlime.type == ModContent.NPCType<Content.NPCs.Bosses.KingSlime.KinguSlime>())
+            if (kingSlime.active && kingSlime.type == NPCID.KingSlime)
             {
                 // Check if king slime is in consuming state and slime is in range
                 if (kingSlime.ai[0] == 5f) // ConsumingSlimes state
