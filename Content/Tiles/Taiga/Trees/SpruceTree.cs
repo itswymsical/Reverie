@@ -37,6 +37,11 @@ public class SpruceTree : CustomTree
         Small
     }
 
+    // Branch sprite regions on the sheet
+    private static readonly Rectangle LargeBranchRegion = new(194, 0, 158, 238);
+    private static readonly Rectangle MediumBranchRegion = new(354, 0, 126, 190);
+    private static readonly Rectangle SmallBranchRegion = new(482, 0, 78, 118);
+
     private TrunkType GetTrunkTypeForHeight(int heightFromBase, int totalHeight)
     {
         if (totalHeight <= 1) return TrunkType.Large;
@@ -55,7 +60,6 @@ public class SpruceTree : CustomTree
 
         if (heightFromBase == 0)
         {
-            // Center stump with both roots as default during creation
             frameX = 3 + variant;
             frameY = 4;
         }
@@ -85,6 +89,33 @@ public class SpruceTree : CustomTree
         return new Point(frameX, frameY);
     }
 
+    private bool IsBranchFrame(int frameX, int frameY)
+    {
+        // Branches are placed at frameY 7+ (beyond normal trunk frames)
+        return frameY >= 7;
+    }
+
+    private bool IsTrunkFrame(int frameX, int frameY)
+    {
+        // Large trunk
+        if (frameY == 2 && frameX < 3) return true;
+        // Medium trunk
+        if (frameY == 1 && frameX < 3) return true;
+        // Small trunk
+        if (frameY == 1 && frameX >= 3 && frameX < 6) return true;
+
+        return false;
+    }
+
+    private TrunkType? GetTrunkType(int frameX, int frameY)
+    {
+        if (frameY == 2 && frameX < 3) return TrunkType.Large;
+        if (frameY == 1 && frameX < 3) return TrunkType.Medium;
+        if (frameY == 1 && frameX >= 3 && frameX < 6) return TrunkType.Small;
+
+        return null;
+    }
+
     public override void PostDraw(int i, int j, SpriteBatch spriteBatch)
     {
         var tile = Framing.GetTileSafely(i, j);
@@ -94,20 +125,102 @@ public class SpruceTree : CustomTree
         int frameX = tile.TileFrameX / FrameWidth;
         int frameY = tile.TileFrameY / FrameHeight;
 
-        TrunkType? trunkType = null;
+        // Only draw branches for branch frames
+        if (!IsBranchFrame(frameX, frameY))
+            return;
 
-        if (frameY == 2 && frameX < 3)
-            trunkType = TrunkType.Large;
-        else if (frameY == 1 && frameX < 3)
-            trunkType = TrunkType.Medium;
-        else if (frameY == 1 && frameX >= 3 && frameX < 6)
-            trunkType = TrunkType.Small;
+        DrawBranch(i, j, spriteBatch, tile);
+    }
 
-        // Check if we're too close to the base
-        if (trunkType.HasValue && (i + j) % 3 == 0 && !IsTooCloseToBase(i, j))
+    private void DrawBranch(int i, int j, SpriteBatch spriteBatch, Tile tile)
+    {
+        int frameX = tile.TileFrameX / FrameWidth;
+        int frameY = tile.TileFrameY / FrameHeight;
+
+        // Decode branch info from frame
+        // frameY 7 = Large, 8 = Medium, 9 = Small
+        // frameX 0-2 = left variants, 3-5 = right variants
+
+        TrunkType branchSize;
+        bool isRight;
+        int variant;
+
+        switch (frameY)
         {
-            DrawFoliage(i, j, spriteBatch, trunkType.Value);
+            case 7:
+                branchSize = TrunkType.Large;
+                break;
+            case 8:
+                branchSize = TrunkType.Medium;
+                break;
+            case 9:
+                branchSize = TrunkType.Small;
+                break;
+            default:
+                return;
         }
+
+        if (frameX < 3)
+        {
+            isRight = false;
+            variant = frameX;
+        }
+        else
+        {
+            isRight = true;
+            variant = frameX - 3;
+        }
+
+        Color color = Lighting.GetColor(i, j);
+        if (!TileDrawing.IsVisible(tile))
+            return;
+
+        float rotation = GetSway(i, j) * 0.3f;
+        var tileCenterScreen = new Vector2(i * 16 + 8, j * 16 + 8) - Main.screenPosition;
+
+        var texture = ModContent.Request<Texture2D>("Reverie/Content/Tiles/Taiga/Trees/SpruceTree").Value;
+
+        Rectangle sourceRect;
+        Vector2 origin;
+        Vector2 drawPos;
+
+        switch (branchSize)
+        {
+            case TrunkType.Large:
+                sourceRect = new Rectangle(
+                    194 + (isRight ? 78 : 0),
+                    variant * 60,
+                    78, 60
+                );
+                origin = isRight ? new Vector2(6, 30) : new Vector2(72, 30);
+                drawPos = tileCenterScreen;
+                break;
+
+            case TrunkType.Medium:
+                sourceRect = new Rectangle(
+                    354 + (isRight ? 62 : 0),
+                    variant * 40,
+                    62, 40
+                );
+                origin = isRight ? new Vector2(6, 20) : new Vector2(56, 20);
+                drawPos = tileCenterScreen;
+                break;
+
+            case TrunkType.Small:
+                sourceRect = new Rectangle(
+                    482 + (isRight ? 38 : 0),
+                    variant * 32,
+                    38, 32
+                );
+                origin = isRight ? new Vector2(6, 16) : new Vector2(32, 16);
+                drawPos = tileCenterScreen;
+                break;
+
+            default:
+                return;
+        }
+
+        spriteBatch.Draw(texture, drawPos, sourceRect, color, rotation, origin, 1f, SpriteEffects.None, 0f);
     }
 
     private bool IsTooCloseToBase(int i, int j)
@@ -120,77 +233,10 @@ public class SpruceTree : CustomTree
         int belowFrameY = below.TileFrameY / FrameHeight;
 
         bool isCenterStump = belowFrameY >= 2 && belowFrameY <= 5 && belowFrameX >= 3;
-
         bool isRootStump = belowFrameY >= 5;
 
         return isCenterStump || isRootStump;
     }
-
-    private void DrawFoliage(int i, int j, SpriteBatch spriteBatch, TrunkType trunkType)
-    {
-        var tile = Framing.GetTileSafely(i, j);
-
-        Color color = Lighting.GetColor(i, j);
-
-        if (!TileDrawing.IsVisible(tile))
-            return;
-
-        float rotation = GetSway(i, j) * .3f;
-
-        var tileCenterScreen = new Vector2(i * 16 + 8, j * 16 + 4) - Main.screenPosition;
-
-        var samplerState = Main.graphics.GraphicsDevice.SamplerStates[0];
-        spriteBatch.End();
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp,
-            DepthStencilState.None, Main.Rasterizer);
-
-        Texture2D foliageTexture;
-        int leftOffset, rightOffset;
-
-        int variant = (i + j) % 2;
-
-        switch (trunkType)
-        {
-            case TrunkType.Large:
-                foliageTexture = ModContent.Request<Texture2D>($"Reverie/Content/Tiles/Taiga/Trees/BranchesLarge_{variant}").Value;
-                leftOffset = -12;
-                rightOffset = 76;
-                break;
-
-            case TrunkType.Medium:
-                foliageTexture = ModContent.Request<Texture2D>($"Reverie/Content/Tiles/Taiga/Trees/BranchesMedium_{variant}").Value;
-                leftOffset = 12;
-                rightOffset = 72;
-                break;
-
-            case TrunkType.Small:
-                foliageTexture = ModContent.Request<Texture2D>($"Reverie/Content/Tiles/Taiga/Trees/BranchesSmall_{variant}").Value;
-                leftOffset = 36;
-                rightOffset = 70;
-                break;
-
-            default:
-                foliageTexture = ModContent.Request<Texture2D>("Reverie/Content/Tiles/Taiga/Trees/BranchesSmall_0").Value;
-                leftOffset = 36;
-                rightOffset = 70;
-                break;
-        }
-
-        // idk how or why this works but DO NOT TAMPER WITH IT!!!!
-        int width = Main.screenWidth / 16;
-        int height = (Main.screenHeight / 16) + 118;
-
-        var leftPos = tileCenterScreen + new Vector2(width + leftOffset, height);
-        spriteBatch.Draw(foliageTexture, leftPos, null, color , -rotation, Vector2.Zero, 1f, SpriteEffects.None, 0f);
-
-        var rightPos = tileCenterScreen + new Vector2(width + rightOffset, height);
-        spriteBatch.Draw(foliageTexture, rightPos, null, color, -rotation, Vector2.Zero, 1f, SpriteEffects.FlipHorizontally, 0f);
-
-        spriteBatch.End();
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, samplerState,
-            DepthStencilState.None, Main.Rasterizer, null);
-    }
-
 
     private static readonly HashSet<Point> ValidatingTiles = new();
 
@@ -202,7 +248,6 @@ public class SpruceTree : CustomTree
 
         var pos = new Point(i, j);
 
-        // Prevent recursive validation
         if (ValidatingTiles.Contains(pos))
             return false;
 
@@ -210,14 +255,12 @@ public class SpruceTree : CustomTree
 
         try
         {
-            // Check if tile needs to break
             if (!ValidateAnchor(i, j))
             {
                 WorldGen.KillTile(i, j);
                 return false;
             }
 
-            // Update frame for soft-cut
             UpdateFrameForSoftCut(i, j);
         }
         finally
@@ -230,7 +273,6 @@ public class SpruceTree : CustomTree
 
     private void UpdateNeighborFrames(int i, int j)
     {
-        // Update tiles above and below, but skip if already validating
         for (int dy = -1; dy <= 1; dy += 2)
         {
             if (WorldGen.InWorld(i, j + dy))
@@ -252,23 +294,26 @@ public class SpruceTree : CustomTree
     {
         var tile = Framing.GetTileSafely(i, j);
 
-        // Check if this is a center stump
+        int frameX = tile.TileFrameX / FrameWidth;
+        int frameY = tile.TileFrameY / FrameHeight;
+
+        // Skip branches
+        if (IsBranchFrame(frameX, frameY))
+            return;
+
         bool isCenterStump = tile.TileFrameY >= 2 * FrameHeight &&
                            tile.TileFrameY <= 5 * FrameHeight &&
                            tile.TileFrameX >= 3 * FrameWidth;
 
         if (isCenterStump)
         {
-            // Update center stump based on current root configuration
             UpdateCenterStumpFrame(i, j);
             return;
         }
 
-        // Don't update other stumps (left/right roots)
         bool isRootStump = tile.TileFrameY >= 5 * FrameHeight;
         if (isRootStump) return;
 
-        // Check neighbors for soft-cut requirement
         var above = Framing.GetTileSafely(i, j - 1);
         var below = Framing.GetTileSafely(i, j + 1);
 
@@ -277,7 +322,6 @@ public class SpruceTree : CustomTree
 
         if (!needsSoftCut) return;
 
-        // Determine current trunk type from frame
         TrunkType currentType;
         if (tile.TileFrameY == 2 * FrameHeight && tile.TileFrameX < 3 * FrameWidth)
             currentType = TrunkType.Large;
@@ -286,9 +330,8 @@ public class SpruceTree : CustomTree
         else if (tile.TileFrameY == 1 * FrameHeight && tile.TileFrameX >= 3 * FrameWidth)
             currentType = TrunkType.Small;
         else
-            return; // Already soft-cut or unknown
+            return;
 
-        // Apply soft-cut frame
         int variant = tile.TileFrameX / FrameWidth % 3;
 
         switch (currentType)
@@ -314,7 +357,6 @@ public class SpruceTree : CustomTree
     {
         var tile = Framing.GetTileSafely(i, j);
 
-        // Check current state of roots and above
         var leftTile = Framing.GetTileSafely(i - 1, j);
         var rightTile = Framing.GetTileSafely(i + 1, j);
         var aboveTile = Framing.GetTileSafely(i, j - 1);
@@ -325,62 +367,52 @@ public class SpruceTree : CustomTree
                            rightTile.TileFrameY == 6 * FrameHeight;
         bool hasAbove = aboveTile.HasTile && aboveTile.TileType == Type;
 
-        // Keep variant consistent
         int variant = tile.TileFrameX / FrameWidth % 3;
 
-        // Update frame based on current configuration
         if (!hasAbove)
         {
-            // No tiles above - use soft-cut variants (cols 6-8)
+            // Soft-cut variants
             if (hasLeftRoot && hasRightRoot)
             {
-                // Both roots soft-cut - row 4, cols 6-8
                 tile.TileFrameX = (short)((6 + variant) * FrameWidth);
                 tile.TileFrameY = (short)(4 * FrameHeight);
             }
             else if (!hasLeftRoot && hasRightRoot)
             {
-                // Right side connects to root (left is open) - row 2, cols 6-8
                 tile.TileFrameX = (short)((6 + variant) * FrameWidth);
                 tile.TileFrameY = (short)(2 * FrameHeight);
             }
             else if (hasLeftRoot && !hasRightRoot)
             {
-                // Left side connects to root (right is open) - row 3, cols 6-8
                 tile.TileFrameX = (short)((6 + variant) * FrameWidth);
                 tile.TileFrameY = (short)(3 * FrameHeight);
             }
             else
             {
-                // No roots soft-cut - row 5, cols 6-8
                 tile.TileFrameX = (short)((6 + variant) * FrameWidth);
                 tile.TileFrameY = (short)(5 * FrameHeight);
             }
         }
         else
         {
-            // Has tiles above - use normal variants (cols 3-5)
+            // Normal variants
             if (hasLeftRoot && hasRightRoot)
             {
-                // Both roots - row 4, cols 3-5
                 tile.TileFrameX = (short)((3 + variant) * FrameWidth);
                 tile.TileFrameY = (short)(4 * FrameHeight);
             }
             else if (!hasLeftRoot && hasRightRoot)
             {
-                // Right side connects to root (left is open) - row 2, cols 3-5
                 tile.TileFrameX = (short)((3 + variant) * FrameWidth);
                 tile.TileFrameY = (short)(2 * FrameHeight);
             }
             else if (hasLeftRoot && !hasRightRoot)
             {
-                // Left side connects to root (right is open) - row 3, cols 3-5
                 tile.TileFrameX = (short)((3 + variant) * FrameWidth);
                 tile.TileFrameY = (short)(3 * FrameHeight);
             }
             else
             {
-                // No roots - row 5, cols 3-5
                 tile.TileFrameX = (short)((3 + variant) * FrameWidth);
                 tile.TileFrameY = (short)(5 * FrameHeight);
             }
@@ -397,22 +429,28 @@ public class SpruceTree : CustomTree
         if (!fail)
         {
             var tile = Framing.GetTileSafely(i, j);
+
+            int frameX = tile.TileFrameX / FrameWidth;
+            int frameY = tile.TileFrameY / FrameHeight;
+
+            // Don't drop wood from branches
+            if (!IsBranchFrame(frameX, frameY))
+            {
+                Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 16, 16,
+                           WoodType, Main.rand.Next(1, 3));
+            }
+
             bool isCenterStump = tile.TileFrameY >= 2 * FrameHeight &&
                                tile.TileFrameY <= 5 * FrameHeight &&
                                tile.TileFrameX >= 3 * FrameWidth;
             bool isLeftRoot = tile.TileFrameY == 5 * FrameHeight && tile.TileFrameX < 3 * FrameWidth;
             bool isRightRoot = tile.TileFrameY == 6 * FrameHeight && tile.TileFrameX < 3 * FrameWidth;
 
-            Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 16, 16,
-                       WoodType, Main.rand.Next(1, 3));
-
-            // If center stump destroyed, kill adjacent root stumps
             if (isCenterStump)
             {
                 KillAdjacentRoots(i, j);
             }
 
-            // If root destroyed, update center stump
             if (isLeftRoot || isRightRoot)
             {
                 int centerX = isLeftRoot ? i + 1 : i - 1;
@@ -426,16 +464,30 @@ public class SpruceTree : CustomTree
                 }
             }
 
-            // Update neighbors for soft-cut
             UpdateNeighborFrames(i, j);
         }
     }
 
     public override bool CanKillTile(int i, int j, ref bool blockDamaged)
     {
+        var tile = Framing.GetTileSafely(i, j);
+        int frameX = tile.TileFrameX / FrameWidth;
+        int frameY = tile.TileFrameY / FrameHeight;
+
+        // Branches can always be killed
+        if (IsBranchFrame(frameX, frameY))
+            return true;
+
         var above = Framing.GetTileSafely(i, j - 1);
         if (above.HasTile && above.TileType == Type)
         {
+            int aboveFrameX = above.TileFrameX / FrameWidth;
+            int aboveFrameY = above.TileFrameY / FrameHeight;
+
+            // Skip branch check
+            if (IsBranchFrame(aboveFrameX, aboveFrameY))
+                return true;
+
             bool isLeftRoot = above.TileFrameY == 5 * FrameHeight && above.TileFrameX < 3 * FrameWidth;
             bool isRightRoot = above.TileFrameY == 6 * FrameHeight && above.TileFrameX < 3 * FrameWidth;
             bool isCenterStump = above.TileFrameY >= 2 * FrameHeight &&
@@ -451,9 +503,24 @@ public class SpruceTree : CustomTree
 
     public override bool CanExplode(int i, int j)
     {
+        var tile = Framing.GetTileSafely(i, j);
+        int frameX = tile.TileFrameX / FrameWidth;
+        int frameY = tile.TileFrameY / FrameHeight;
+
+        // Branches can explode
+        if (IsBranchFrame(frameX, frameY))
+            return true;
+
         var above = Framing.GetTileSafely(i, j - 1);
         if (above.HasTile && above.TileType == Type)
         {
+            int aboveFrameX = above.TileFrameX / FrameWidth;
+            int aboveFrameY = above.TileFrameY / FrameHeight;
+
+            // Skip branch check
+            if (IsBranchFrame(aboveFrameX, aboveFrameY))
+                return true;
+
             bool isLeftRoot = above.TileFrameY == 5 * FrameHeight && above.TileFrameX < 3 * FrameWidth;
             bool isRightRoot = above.TileFrameY == 6 * FrameHeight && above.TileFrameX < 3 * FrameWidth;
             bool isCenterStump = above.TileFrameY >= 2 * FrameHeight &&
@@ -487,6 +554,35 @@ public class SpruceTree : CustomTree
         var tile = Framing.GetTileSafely(i, j);
         if (!tile.HasTile || tile.TileType != Type)
             return false;
+
+        int frameX = tile.TileFrameX / FrameWidth;
+        int frameY = tile.TileFrameY / FrameHeight;
+
+        // Branches need adjacent trunk
+        if (IsBranchFrame(frameX, frameY))
+        {
+            // Check left for trunk
+            var leftTile = Framing.GetTileSafely(i - 1, j);
+            if (leftTile.HasTile && leftTile.TileType == Type)
+            {
+                int leftFrameX = leftTile.TileFrameX / FrameWidth;
+                int leftFrameY = leftTile.TileFrameY / FrameHeight;
+                if (IsTrunkFrame(leftFrameX, leftFrameY))
+                    return true;
+            }
+
+            // Check right for trunk
+            var rightTile = Framing.GetTileSafely(i + 1, j);
+            if (rightTile.HasTile && rightTile.TileType == Type)
+            {
+                int rightFrameX = rightTile.TileFrameX / FrameWidth;
+                int rightFrameY = rightTile.TileFrameY / FrameHeight;
+                if (IsTrunkFrame(rightFrameX, rightFrameY))
+                    return true;
+            }
+
+            return false;
+        }
 
         bool isLeftStump = tile.TileFrameY == 5 * FrameHeight && tile.TileFrameX < 3 * FrameWidth;
         bool isRightStump = tile.TileFrameY == 6 * FrameHeight && tile.TileFrameX < 3 * FrameWidth;
@@ -540,7 +636,6 @@ public class SpruceTree : CustomTree
 
     private void KillAdjacentRoots(int i, int j)
     {
-        // Check left
         var leftTile = Framing.GetTileSafely(i - 1, j);
         if (leftTile.HasTile && leftTile.TileType == Type &&
             leftTile.TileFrameY == 5 * FrameHeight && leftTile.TileFrameX < 3 * FrameWidth)
@@ -548,7 +643,6 @@ public class SpruceTree : CustomTree
             WorldGen.KillTile(i - 1, j);
         }
 
-        // Check right
         var rightTile = Framing.GetTileSafely(i + 1, j);
         if (rightTile.HasTile && rightTile.TileType == Type &&
             rightTile.TileFrameY == 6 * FrameHeight && rightTile.TileFrameX < 3 * FrameWidth)
@@ -559,9 +653,13 @@ public class SpruceTree : CustomTree
 
     protected override void CreateTree(int i, int j, int height)
     {
-        var treeTiles = new List<Point>();
+        Main.NewText($"[DEBUG] Creating tree at ({i}, {j}) with height {height}", Color.Yellow);
 
-        // Create center stump with frame based on available space
+        var treeTiles = new List<Point>();
+        int branchesPlaced = 0;
+        int branchAttempts = 0;
+
+        // Create center stump
         bool canPlaceLeft = WorldGen.InWorld(i - 1, j) && !Framing.GetTileSafely(i - 1, j).HasTile;
         bool canPlaceRight = WorldGen.InWorld(i + 1, j) && !Framing.GetTileSafely(i + 1, j).HasTile;
 
@@ -573,25 +671,21 @@ public class SpruceTree : CustomTree
 
             if (canPlaceLeft && canPlaceRight)
             {
-                // Both roots
                 centerTile.TileFrameX = (short)((3 + variant) * FrameWidth);
                 centerTile.TileFrameY = (short)(4 * FrameHeight);
             }
             else if (!canPlaceLeft && canPlaceRight)
             {
-                // Right side connects to root (left is blocked)
                 centerTile.TileFrameX = (short)((3 + variant) * FrameWidth);
                 centerTile.TileFrameY = (short)(2 * FrameHeight);
             }
             else if (canPlaceLeft && !canPlaceRight)
             {
-                // Left side connects to root (right is blocked)
                 centerTile.TileFrameX = (short)((3 + variant) * FrameWidth);
                 centerTile.TileFrameY = (short)(3 * FrameHeight);
             }
             else
             {
-                // No roots - only use this if absolutely no space
                 centerTile.TileFrameX = (short)((3 + variant) * FrameWidth);
                 centerTile.TileFrameY = (short)(5 * FrameHeight);
             }
@@ -626,7 +720,7 @@ public class SpruceTree : CustomTree
             }
         }
 
-        // Create trunk using base GetTrunkFrame logic
+        // Create trunk with branches
         for (var h = 1; h < height; h++)
         {
             var currentY = j - h;
@@ -647,9 +741,90 @@ public class SpruceTree : CustomTree
                     tile.TileFrameY = (short)(frame.Y * FrameHeight);
 
                     treeTiles.Add(new Point(i, currentY));
+
+                    Main.NewText($"[DEBUG] Placed trunk at height {h}: Frame ({frame.X}, {frame.Y})", Color.Green);
+
+                    // Determine trunk type for branch size
+                    var trunkType = GetTrunkTypeForHeight(h, height);
+
+                    // Try to place branches (skip first 2 heights)
+                    if (h > 2)
+                    {
+                        branchAttempts++;
+                        bool shouldPlaceBranch = WorldGen.genRand.NextBool(3); // 33% chance
+
+                        Main.NewText($"[DEBUG] Height {h}: TrunkType={trunkType}, RollForBranch={shouldPlaceBranch}", Color.Cyan);
+
+                        if (shouldPlaceBranch)
+                        {
+                            // Check placement for branches
+                            bool canPlaceBranchLeft = WorldGen.InWorld(i - 1, currentY) &&
+                                                     !Framing.GetTileSafely(i - 1, currentY).HasTile;
+                            bool canPlaceBranchRight = WorldGen.InWorld(i + 1, currentY) &&
+                                                      !Framing.GetTileSafely(i + 1, currentY).HasTile;
+
+                            Main.NewText($"[DEBUG] Can place: Left={canPlaceBranchLeft}, Right={canPlaceBranchRight}", Color.Orange);
+
+                            // Randomly decide which side(s) to place branches
+                            bool placeLeft = canPlaceBranchLeft && WorldGen.genRand.NextBool();
+                            bool placeRight = canPlaceBranchRight && (placeLeft ? WorldGen.genRand.NextBool(3) : WorldGen.genRand.NextBool());
+
+                            Main.NewText($"[DEBUG] Will place: Left={placeLeft}, Right={placeRight}", Color.Magenta);
+
+                            if (placeLeft)
+                            {
+                                WorldGen.PlaceTile(i - 1, currentY, Type, true);
+                                var leftBranch = Framing.GetTileSafely(i - 1, currentY);
+                                if (leftBranch.HasTile && leftBranch.TileType == Type)
+                                {
+                                    int branchVariant = WorldGen.genRand.Next(3);
+                                    int branchFrameY = trunkType switch
+                                    {
+                                        TrunkType.Large => 7,
+                                        TrunkType.Medium => 8,
+                                        TrunkType.Small => 9,
+                                        _ => 7
+                                    };
+
+                                    leftBranch.TileFrameX = (short)(branchVariant * FrameWidth);
+                                    leftBranch.TileFrameY = (short)(branchFrameY * FrameHeight);
+                                    treeTiles.Add(new Point(i - 1, currentY));
+                                    branchesPlaced++;
+
+                                    Main.NewText($"[DEBUG] LEFT BRANCH PLACED: Frame ({branchVariant}, {branchFrameY})", Color.Lime);
+                                }
+                            }
+
+                            if (placeRight)
+                            {
+                                WorldGen.PlaceTile(i + 1, currentY, Type, true);
+                                var rightBranch = Framing.GetTileSafely(i + 1, currentY);
+                                if (rightBranch.HasTile && rightBranch.TileType == Type)
+                                {
+                                    int branchVariant = WorldGen.genRand.Next(3);
+                                    int branchFrameY = trunkType switch
+                                    {
+                                        TrunkType.Large => 7,
+                                        TrunkType.Medium => 8,
+                                        TrunkType.Small => 9,
+                                        _ => 7
+                                    };
+
+                                    rightBranch.TileFrameX = (short)((3 + branchVariant) * FrameWidth);
+                                    rightBranch.TileFrameY = (short)(branchFrameY * FrameHeight);
+                                    treeTiles.Add(new Point(i + 1, currentY));
+                                    branchesPlaced++;
+
+                                    Main.NewText($"[DEBUG] RIGHT BRANCH PLACED: Frame ({3 + branchVariant}, {branchFrameY})", Color.Lime);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
+
+        Main.NewText($"[DEBUG] Tree creation complete. Branches placed: {branchesPlaced}/{branchAttempts} attempts", Color.Gold);
 
         // Network sync
         if (Main.netMode != NetmodeID.SinglePlayer && treeTiles.Count > 0)
