@@ -613,6 +613,11 @@ Items: {
 		DisplayName: Oxidized Copper Plating
 		Tooltip: ""
 	}
+
+	SaplingMakerItem: {
+		DisplayName: Sapling Maker
+		Tooltip: Deals hefty knockback and can be charged up to blast several acorns 
+	}
 }
 
 Projectiles: {
@@ -648,6 +653,7 @@ Projectiles: {
 	TumbleweedProjectile.DisplayName: Tumbleweed
 	GelBall.DisplayName: Gel Ball
 	GelBallProjectile.DisplayName: Gel Ball
+	SaplingMakerProj.DisplayName: Sapling Maker Proj
 }
 
 Configs: {
