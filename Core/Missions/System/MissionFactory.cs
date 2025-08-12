@@ -5,7 +5,7 @@ using Reverie.Utilities;
 using System.Collections.Generic;
 using Terraria.ModLoader.IO;
 
-namespace Reverie.Core.Missions.System;
+namespace Reverie.Core.Missions.SystemClasses;
 
 public class MissionFactory : ModSystem
 {

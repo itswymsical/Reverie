@@ -1,4 +1,4 @@
-﻿using Reverie.Core.Missions.System;
+﻿using Reverie.Core.Missions.SystemClasses;
 
 namespace Reverie.Content.Items.Mycology;
 

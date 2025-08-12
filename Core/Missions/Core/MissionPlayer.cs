@@ -1,7 +1,7 @@
 ﻿using Reverie.Common.UI.Missions;
 using Reverie.Core.Indicators;
 using Reverie.Core.Missions.Core;
-using Reverie.Core.Missions.System;
+using Reverie.Core.Missions.SystemClasses;
 using Reverie.Utilities;
 using Reverie.Utilities.Extensions;
 
@@ -32,6 +32,11 @@ public partial class MissionPlayer : ModPlayer
 
     private TagCompound savedMissionData = null;
     private bool hasDeferredLoadRun = false;
+
+    // Deferred state cloning to avoid timing conflicts
+    private bool needsStateClone = false;
+    private int stateCloneDelay = 0;
+    private const int STATE_CLONE_DELAY_FRAMES = 60; // 1 second delay
 
     #endregion
 
@@ -451,6 +456,114 @@ public partial class MissionPlayer : ModPlayer
 
     #endregion
 
+    #region Networking & State Cloning
+
+    /// <summary>
+    /// Requests a complete mission state clone from the server when joining.
+    /// Much simpler than trying to sync individual missions!
+    /// </summary>
+    private void RequestMissionStateCloneFromServer()
+    {
+        try
+        {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                // Request authoritative mission state from server
+                Reverie.RequestMissionStateClone();
+                ModContent.GetInstance<Reverie>().Logger.Info($"Requested mission state clone from server for {Player.name}");
+            }
+            else if (Main.netMode == NetmodeID.Server)
+            {
+                // Server/Host player - unlock Journey's Begin locally
+                var journeysBegin = GetMission(MissionID.JourneysBegin);
+                if (journeysBegin != null && journeysBegin.Status == MissionStatus.Locked)
+                {
+                    UnlockMissionLocal(MissionID.JourneysBegin, broadcast: false);
+                    ModContent.GetInstance<Reverie>().Logger.Info($"Unlocked Journey's Begin for host player {Player.name}");
+                }
+            }
+            else
+            {
+                // Single player - just unlock Journey's Begin locally
+                var journeysBegin = GetMission(MissionID.JourneysBegin);
+                if (journeysBegin != null && journeysBegin.Status == MissionStatus.Locked)
+                {
+                    UnlockMissionLocal(MissionID.JourneysBegin, broadcast: false);
+                    ModContent.GetInstance<Reverie>().Logger.Info($"Unlocked Journey's Begin for {Player.name} (single player)");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error requesting mission state clone: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Receives and applies a complete mission state clone from the server.
+    /// This completely replaces the player's mission state with the server's authoritative state.
+    /// </summary>
+    public void ReceiveMissionStateClone(BinaryReader reader)
+    {
+        try
+        {
+            int missionCount = reader.ReadInt32();
+            ModContent.GetInstance<Reverie>().Logger.Info($"Receiving mission state clone: {missionCount} missions");
+
+            // Clear current mission state to start fresh
+            missionDict.Clear();
+
+            for (int i = 0; i < missionCount; i++)
+            {
+                int missionId = reader.ReadInt32();
+
+                try
+                {
+                    // Use ModPacket's built-in TagCompound reading
+                    var serializedTag = TagIO.Read(reader);
+                    var stateContainer = MissionDataContainer.Deserialize(serializedTag);
+
+                    if (stateContainer != null)
+                    {
+                        // Get mission instance and apply the cloned state
+                        var mission = MissionFactory.Instance.GetMissionData(missionId);
+                        if (mission != null)
+                        {
+                            mission.LoadState(stateContainer);
+                            missionDict[missionId] = mission;
+
+                            // Register active missions
+                            if (mission.Progress == MissionProgress.Ongoing)
+                            {
+                                MissionManager.Instance.RegisterMission(mission);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModContent.GetInstance<Reverie>().Logger.Error($"Error deserializing mission {missionId} state: {ex.Message}");
+                }
+            }
+
+            ModContent.GetInstance<Reverie>().Logger.Info($"Applied mission state clone for {Player.name}: {missionDict.Count} missions loaded");
+        }
+        catch (Exception ex)
+        {
+            ModContent.GetInstance<Reverie>().Logger.Error($"Error receiving mission state clone: {ex}");
+
+            // Fallback: just unlock Journey's Begin
+            var journeysBegin = GetMission(MissionID.JourneysBegin);
+            if (journeysBegin != null && journeysBegin.Status == MissionStatus.Locked)
+            {
+                UnlockMissionLocal(MissionID.JourneysBegin, broadcast: false);
+                ModContent.GetInstance<Reverie>().Logger.Info($"Fallback: Unlocked Journey's Begin for {Player.name}");
+            }
+        }
+    }
+
+    #endregion
+
     #region Mission Access
     public Mission GetMission(int missionId)
     {
@@ -658,174 +771,8 @@ public partial class MissionPlayer : ModPlayer
         ProcessDeferredLoad();
         notifiedMissions.Clear();
 
-        // Handle mainline mission syncing for new players
-        SyncMainlineMissionsOnWorldJoin();
-    }
-
-    /// <summary>
-    /// Syncs mainline missions when a player joins the world.
-    /// Unlocks Journey's Begin, and requests sync data from server for multiplayer.
-    /// </summary>
-    private void SyncMainlineMissionsOnWorldJoin()
-    {
-        try
-        {
-            // Always unlock Journey's Begin for new/returning players
-            var journeysBegin = GetMission(MissionID.JourneysBegin);
-            if (journeysBegin != null && journeysBegin.Status == MissionStatus.Locked)
-            {
-                UnlockMissionLocal(MissionID.JourneysBegin, broadcast: false);
-                ModContent.GetInstance<Reverie>().Logger.Info($"Unlocked Journey's Begin for {Player.name}");
-            }
-
-            // In multiplayer, request sync data from server instead of reading other players directly
-            if (Main.netMode == NetmodeID.MultiplayerClient)
-            {
-                // Request server to send mainline mission progress
-                Reverie.RequestMainlineMissionSync();
-                ModContent.GetInstance<Reverie>().Logger.Info($"Requested mainline mission sync from server for {Player.name}");
-            }
-            // Single player doesn't need syncing
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error syncing mainline missions on world join: {ex.Message}");
-        }
-    }
-
-    /// <summary>
-    /// Receives mainline mission sync data from the server and applies it to catch up this player.
-    /// Called by networking system when server sends sync data.
-    /// </summary>
-    public void ReceiveMainlineMissionSyncData(BinaryReader reader)
-    {
-        try
-        {
-            int missionCount = reader.ReadInt32();
-            ModContent.GetInstance<Reverie>().Logger.Info($"Receiving mainline mission sync data: {missionCount} missions");
-
-            for (int i = 0; i < missionCount; i++)
-            {
-                int missionId = reader.ReadInt32();
-                int currentIndex = reader.ReadInt32();
-                int progress = reader.ReadInt32();
-                bool isUnlocked = reader.ReadBoolean();
-                bool isStarted = reader.ReadBoolean();
-
-                var missionProgress = (MissionProgress)progress;
-                SyncPlayerToMainlineMissionProgress(missionId, currentIndex, missionProgress, isUnlocked, isStarted);
-            }
-
-            ModContent.GetInstance<Reverie>().Logger.Info($"Applied mainline mission sync data for {Player.name}");
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error receiving mainline mission sync data: {ex}");
-        }
-    }
-
-    /// <summary>
-    /// Syncs this player's progress on a specific mainline mission to match the server's furthest progress.
-    /// </summary>
-    private void SyncPlayerToMainlineMissionProgress(int missionId, int targetIndex, MissionProgress targetProgress, bool isUnlocked, bool shouldStart)
-    {
-        var mission = GetMission(missionId);
-        if (mission == null || !mission.IsMainline)
-            return;
-
-        try
-        {
-            // Handle completed missions
-            if (targetProgress == MissionProgress.Completed && mission.Progress != MissionProgress.Completed)
-            {
-                // Mark as completed
-                mission.Progress = MissionProgress.Completed;
-                mission.Status = MissionStatus.Completed;
-
-                // Complete all objective sets
-                foreach (var set in mission.Objective)
-                {
-                    foreach (var objective in set.Objectives)
-                    {
-                        objective.CurrentCount = objective.RequiredCount;
-                        objective.IsCompleted = true;
-                    }
-                }
-
-                mission.CurrentIndex = mission.Objective.Count - 1;
-                SyncMissionState(mission);
-
-                ModContent.GetInstance<Reverie>().Logger.Info($"Auto-completed mainline mission {mission.Name} for {Player.name} to sync with server");
-                return;
-            }
-
-            // Handle unlocked/started missions
-            if (isUnlocked && mission.Status == MissionStatus.Locked)
-            {
-                UnlockMissionLocal(missionId, broadcast: false);
-                ModContent.GetInstance<Reverie>().Logger.Info($"Auto-unlocked mainline mission {mission.Name} for {Player.name} to sync with server");
-            }
-
-            if (shouldStart && mission.Progress == MissionProgress.Inactive && mission.Status == MissionStatus.Unlocked)
-            {
-                StartMissionLocal(missionId);
-                ModContent.GetInstance<Reverie>().Logger.Info($"Auto-started mainline mission {mission.Name} for {Player.name} to sync with server");
-            }
-
-            // Catch up to the target objective set if mission is ongoing
-            if (mission.Progress == MissionProgress.Ongoing)
-            {
-                CatchUpMissionProgress(mission, targetIndex);
-            }
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error syncing mission {missionId} progress: {ex.Message}");
-        }
-    }
-
-    /// <summary>
-    /// Catches up a mission's progress to a target objective set index.
-    /// Instantly completes all previous objective sets so the player is on the same set as others.
-    /// IMPORTANT: This performs LOCAL-ONLY updates to avoid triggering multiplayer progress for all players.
-    /// </summary>
-    private void CatchUpMissionProgress(Mission mission, int targetIndex)
-    {
-        if (targetIndex <= mission.CurrentIndex)
-            return; // Already at or past target
-
-        try
-        {
-            // CRITICAL: Direct local updates only - bypass UpdateProgress() to avoid multiplayer triggers
-
-            // Complete all objective sets up to (but not including) the target index
-            for (int setIndex = 0; setIndex < targetIndex && setIndex < mission.Objective.Count; setIndex++)
-            {
-                var objectiveSet = mission.Objective[setIndex];
-
-                foreach (var objective in objectiveSet.Objectives)
-                {
-                    if (!objective.IsCompleted)
-                    {
-                        // Direct local update - no UpdateProgress() call to avoid multiplayer sync
-                        objective.CurrentCount = objective.RequiredCount;
-                        objective.IsCompleted = true;
-                    }
-                }
-            }
-
-            // Set the current index to match the target (direct assignment, no progress system)
-            mission.CurrentIndex = Math.Min(targetIndex, mission.Objective.Count - 1);
-
-            // Local sync only - this won't trigger multiplayer updates
-            SyncMissionState(mission);
-
-            ModContent.GetInstance<Reverie>().Logger.Info($"Caught up mission {mission.Name} progress for {Player.name}: skipped to objective set {targetIndex} (LOCAL ONLY)");
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Error catching up mission progress: {ex.Message}");
-        }
+        // Simple approach: request complete mission state clone from server
+        RequestMissionStateCloneFromServer();
     }
 
     public override void PostUpdate()

@@ -1,7 +1,7 @@
 ﻿using Reverie.Core.Missions.Core;
 using System.Collections.Generic;
 
-namespace Reverie.Core.Missions.System;
+namespace Reverie.Core.Missions.SystemClasses;
 
 public partial class MissionManager
 {

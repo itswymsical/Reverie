@@ -1,12 +1,13 @@
 ﻿using Reverie.Common.Players;
 using Reverie.Core.Missions;
-using Reverie.Core.Missions.Core;
+using Terraria.ModLoader.IO;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Reverie.Core.Missions.Core;
 
 namespace Reverie;
 
@@ -18,8 +19,8 @@ public sealed partial class Reverie : Mod
         ClassStatPlayerSync,
         UnlockMainlineMission,
         StartMainlineMission,
-        RequestMainlineMissionSync,
-        SendMainlineMissionSync
+        RequestMissionStateClone,
+        SendMissionStateClone
     }
 
     public override void HandlePacket(BinaryReader reader, int whoAmI)
@@ -44,7 +45,7 @@ public sealed partial class Reverie : Mod
                 int unlockMissionID = reader.ReadInt32();
                 bool broadcast = reader.ReadBoolean();
 
-                if (unlockPlayerID == -1)
+                if (unlockPlayerID == -1) // All players (for mainline missions)
                 {
                     for (int i = 0; i < Main.maxPlayers; i++)
                     {
@@ -66,7 +67,7 @@ public sealed partial class Reverie : Mod
                 int startPlayerID = reader.ReadInt32();
                 int startMissionID = reader.ReadInt32();
 
-                if (startPlayerID == -1)
+                if (startPlayerID == -1) // All players (for mainline missions)
                 {
                     for (int i = 0; i < Main.maxPlayers; i++)
                     {
@@ -84,20 +85,22 @@ public sealed partial class Reverie : Mod
                 }
                 break;
 
-            case MessageType.RequestMainlineMissionSync:
+            case MessageType.RequestMissionStateClone:
                 int requestingPlayer = reader.ReadInt32();
 
+                // Only server handles clone requests
                 if (Main.netMode == NetmodeID.Server)
                 {
-                    SendMainlineMissionSyncToPlayer(requestingPlayer);
+                    SendMissionStateCloneToPlayer(requestingPlayer);
                 }
                 break;
 
-            case MessageType.SendMainlineMissionSync:
+            case MessageType.SendMissionStateClone:
+                // Only clients receive clone data
                 if (Main.netMode == NetmodeID.MultiplayerClient)
                 {
                     var localMissionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-                    localMissionPlayer.ReceiveMainlineMissionSyncData(reader);
+                    localMissionPlayer.ReceiveMissionStateClone(reader);
                 }
                 break;
 
@@ -110,16 +113,14 @@ public sealed partial class Reverie : Mod
     /// <summary>
     /// Sends a packet to unlock a mainline mission for all players
     /// </summary>
-    /// <param name="missionId">ID of the mission to unlock</param>
-    /// <param name="broadcast">Whether to show notification</param>
     public static void SendUnlockMainlineMission(int missionId, bool broadcast = false)
     {
         if (Main.netMode == NetmodeID.SinglePlayer)
-            return; // No networking needed in single player
+            return;
 
         ModPacket packet = Instance.GetPacket();
         packet.Write((byte)MessageType.UnlockMainlineMission);
-        packet.Write(-1);
+        packet.Write(-1); // -1 means all players
         packet.Write(missionId);
         packet.Write(broadcast);
         packet.Send();
@@ -128,46 +129,46 @@ public sealed partial class Reverie : Mod
     /// <summary>
     /// Sends a packet to start a mainline mission for all players
     /// </summary>
-    /// <param name="missionId">ID of the mission to start</param>
     public static void SendStartMainlineMission(int missionId)
     {
         if (Main.netMode == NetmodeID.SinglePlayer)
-            return; // No networking needed in single player
+            return;
 
         ModPacket packet = Instance.GetPacket();
         packet.Write((byte)MessageType.StartMainlineMission);
-        packet.Write(-1);
+        packet.Write(-1); // -1 means all players
         packet.Write(missionId);
         packet.Send();
     }
 
     /// <summary>
-    /// Requests mainline mission sync data from the server (client only)
+    /// Requests a complete mission state clone from the server (client only)
     /// </summary>
-    public static void RequestMainlineMissionSync()
+    public static void RequestMissionStateClone()
     {
         if (Main.netMode != NetmodeID.MultiplayerClient)
             return;
 
         ModPacket packet = Instance.GetPacket();
-        packet.Write((byte)MessageType.RequestMainlineMissionSync);
+        packet.Write((byte)MessageType.RequestMissionStateClone);
         packet.Write(Main.LocalPlayer.whoAmI);
         packet.Send();
     }
 
     /// <summary>
-    /// Server method: Collects mainline mission progress and sends to requesting player
+    /// Server method: Creates authoritative mission state and sends to requesting player
     /// </summary>
-    private static void SendMainlineMissionSyncToPlayer(int targetPlayer)
+    private static void SendMissionStateCloneToPlayer(int targetPlayer)
     {
         if (Main.netMode != NetmodeID.Server)
             return;
 
         try
         {
-            var syncData = new Dictionary<int, (int CurrentIndex, int Progress, bool IsUnlocked, bool IsStarted)>();
+            // Create authoritative mission state by aggregating all players' progress
+            var authoritativeState = new Dictionary<int, (int Progress, int Status, bool Unlocked, int CurrentIndex, bool IsMainline)>();
 
-            // Collect mainline mission progress from all active players
+            // Scan all active players to build authoritative state
             for (int i = 0; i < Main.maxPlayers; i++)
             {
                 var player = Main.player[i];
@@ -175,50 +176,62 @@ public sealed partial class Reverie : Mod
                 {
                     var missionPlayer = player.GetModPlayer<MissionPlayer>();
 
-                    foreach (var mission in missionPlayer.missionDict.Values.Where(m => m.IsMainline))
+                    foreach (var mission in missionPlayer.missionDict.Values)
                     {
                         var missionId = mission.ID;
+                        var currentData = ((int)mission.Progress, (int)mission.Status, mission.Unlocked, mission.CurrentIndex, mission.IsMainline);
 
-                        if (!syncData.ContainsKey(missionId))
+                        if (!authoritativeState.ContainsKey(missionId))
                         {
-                            syncData[missionId] = (mission.CurrentIndex, (int)mission.Progress, mission.Unlocked, mission.Progress == MissionProgress.Ongoing);
+                            // First time seeing this mission - use this state
+                            authoritativeState[missionId] = currentData;
                         }
                         else
                         {
-                            var current = syncData[missionId];
+                            // Merge with existing state - keep furthest progress for mainline missions
+                            var existing = authoritativeState[missionId];
 
-                            if (mission.CurrentIndex > current.CurrentIndex ||
-                                (mission.CurrentIndex == current.CurrentIndex && mission.Progress == MissionProgress.Ongoing && !current.IsStarted))
+                            if (mission.IsMainline)
                             {
-                                syncData[missionId] = (mission.CurrentIndex, (int)mission.Progress,
-                                    current.IsUnlocked || mission.Unlocked,
-                                    current.IsStarted || mission.Progress == MissionProgress.Ongoing);
+                                if (currentData.Item1 > existing.Item1 ||
+                                    (currentData.Item1 == existing.Item1 && currentData.Item4 > existing.Item4))
+                                {
+                                    authoritativeState[missionId] = currentData;
+                                }
                             }
                         }
                     }
                 }
             }
 
-            ModPacket packet = Instance.GetPacket();
-            packet.Write((byte)MessageType.SendMainlineMissionSync);
-            packet.Write(syncData.Count);
+            // Always ensure Journey's Begin is unlocked in the authoritative state
+            if (!authoritativeState.ContainsKey(MissionID.JourneysBegin))
+            {
+                authoritativeState[MissionID.JourneysBegin] = ((int)MissionProgress.Inactive, (int)MissionStatus.Unlocked, true, 0, true);
+            }
 
-            foreach (var (missionId, (currentIndex, progress, isUnlocked, isStarted)) in syncData)
+            // Send the simplified state data to the requesting player
+            ModPacket packet = Instance.GetPacket();
+            packet.Write((byte)MessageType.SendMissionStateClone);
+            packet.Write(authoritativeState.Count);
+
+            foreach (var (missionId, (progress, status, unlocked, currentIndex, isMainline)) in authoritativeState)
             {
                 packet.Write(missionId);
-                packet.Write(currentIndex);
                 packet.Write(progress);
-                packet.Write(isUnlocked);
-                packet.Write(isStarted);
+                packet.Write(status);
+                packet.Write(unlocked);
+                packet.Write(currentIndex);
+                packet.Write(isMainline);
             }
 
             packet.Send(targetPlayer);
 
-            Instance.Logger.Info($"Sent mainline mission sync data to player {targetPlayer}: {syncData.Count} missions");
+            Instance.Logger.Info($"Sent mission state clone to player {targetPlayer}: {authoritativeState.Count} missions");
         }
         catch (Exception ex)
         {
-            Instance.Logger.Error($"Error sending mainline mission sync: {ex}");
+            Instance.Logger.Error($"Error sending mission state clone: {ex}");
         }
     }
 }
