@@ -39,6 +39,7 @@
 	  </Reference>
 	</ItemGroup>
 	<ItemGroup>
+	  <Folder Include="Content\Missions\Merchant\" />
 	  <Folder Include="Content\NPCs\Special\WorldNPCs\" />
 	</ItemGroup>
 

@@ -48,16 +48,17 @@ public class MissionJourneysBegin : Mission
         DialogueManager.Instance.StartDialogue("JourneysBegin.Tutorial", 7, zoomIn: false, true);
     }
 
-    public override void OnMissionComplete(bool giveRewards = true)
+    public override void OnMissionComplete(Player player, bool giveRewards = true)
     {
-        base.OnMissionComplete(giveRewards);
+        base.OnMissionComplete(player, giveRewards);
 
+        MissionPlayer missionPlayer = player.GetModPlayer<MissionPlayer>();
+        missionPlayer.UnlockMission(MissionID.ForgottenAges);
 
-        MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        player.UnlockMission(MissionID.ForgottenAges);
-
-        DialogueManager.Instance.StartDialogue("JourneysBegin.MissionEnd", 2, zoomIn: false, false);
-
+        if (player == Main.LocalPlayer)
+        {
+            DialogueManager.Instance.StartDialogue("JourneysBegin.MissionEnd", 2, zoomIn: false, false);
+        }
     }
 
     public override void Update()
@@ -94,10 +95,9 @@ public class MissionJourneysBegin : Mission
         OnNPCChat -= OnNPCChatHandler;
         OnItemUse -= OnItemUseHandler;
         OnItemPickup -= OnItemPickupHandler;
-        OnTileInteract += TileInteractHandler;
+        OnTileInteract -= TileInteractHandler;
         OnDialogueEnd -= OnDialogueEndHandler;
         OnTileBreak -= OnTileBreakHandler;
-
 
         ModContent.GetInstance<Reverie>().Logger.Debug($"Mission [Journey's Begin] Unregistered event handlers");
         base.UnregisterEventHandlers();
@@ -115,9 +115,15 @@ public class MissionJourneysBegin : Mission
             case Objectives.TalkToGuide:
                 if (dialogueKey == "JourneysBegin.Tutorial")
                 {
-                    UpdateProgress(objective: 0);
-                    player.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.MagicMirror, 1);
-                    DialogueManager.Instance.StartDialogue("JourneysBegin.MirrorGiven", 1, zoomIn: false, letterbox: true);
+                    // Simple call - Mission handles mainline logic automatically
+                    UpdateProgress(objective: 0, triggeringPlayer: Main.LocalPlayer);
+
+                    // Give mirror only to local player to prevent duplication
+                    if (Main.LocalPlayer.active)
+                    {
+                        Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.MagicMirror, 1);
+                        DialogueManager.Instance.StartDialogue("JourneysBegin.MirrorGiven", 1, zoomIn: false, letterbox: true);
+                    }
                 }
                 break;
         }
@@ -148,14 +154,20 @@ public class MissionJourneysBegin : Mission
             case Objectives.UseMirror:
                 if (item.type == ItemID.MagicMirror)
                 {
-                    UpdateProgress(0);
-                    DialogueManager.Instance.StartDialogue("JourneysBegin.Mirror", 6);
+                    // Simple call - Mission handles mainline logic automatically
+                    UpdateProgress(objective: 0, triggeringPlayer: player);
+
+                    // Only show dialogue to local player
+                    if (player == Main.LocalPlayer)
+                    {
+                        DialogueManager.Instance.StartDialogue("JourneysBegin.Mirror", 6);
+                    }
                 }
                 break;
         }
     }
 
-    private void TileInteractHandler(int i, int j, int type)
+    private void TileInteractHandler(int i, int j, int type, Player interactingPlayer)
     {
         if (Progress != MissionProgress.Ongoing) return;
 
@@ -184,13 +196,13 @@ public class MissionJourneysBegin : Mission
                         }
                     }
 
-                    UpdateProgress(objective: 0);
+                    UpdateProgress(objective: 0, triggeringPlayer: interactingPlayer);
                 }
                 break;
         }
     }
 
-    private void OnTileBreakHandler(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
+    private void OnTileBreakHandler(int i, int j, int type, Player breakingPlayer, ref bool fail, ref bool effectOnly, ref bool noItem)
     {
         if (Progress != MissionProgress.Ongoing) return;
 
@@ -212,12 +224,11 @@ public class MissionJourneysBegin : Mission
 
                     interactedTiles.Add(originPos);
 
-                    UpdateProgress(objective: 2);
-
+                    UpdateProgress(objective: 2, triggeringPlayer: breakingPlayer);
                 }
                 if (TileID.Sets.Ore[type])
                 {
-                    UpdateProgress(objective: 1);
+                    UpdateProgress(objective: 1, triggeringPlayer: breakingPlayer);
                 }
                 break;
         }

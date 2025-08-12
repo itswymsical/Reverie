@@ -1,6 +1,5 @@
 ﻿using Reverie.Content.Missions;
 using Reverie.Content.Missions.Argie;
-using Reverie.Content.Missions.Merchant;
 using Reverie.Core.Missions.Core;
 using Reverie.Utilities;
 using System.Collections.Generic;
@@ -74,10 +73,7 @@ public class MissionFactory : ModSystem
 
             #region Missions
             missionTypes[MissionID.JourneysBegin] = typeof(MissionJourneysBegin);
-            missionTypes[MissionID.ForgottenAges] = typeof(MissionForgottenAges);
             missionTypes[MissionID.SporeSplinter] = typeof(MissionSporeSplinter);
-            missionTypes[MissionID.CopperStandard] = typeof(MissionCopperStandard);
-            //missionTypes[MissionID.LightEmUp] = typeof(LightEmUp);
             #endregion
 
             Reverie.Instance.Logger.Info($"Registered {missionTypes.Count} mission types");

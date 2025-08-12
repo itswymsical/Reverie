@@ -30,10 +30,9 @@ public class ObjectiveEventItem : GlobalItem
 
     public override bool OnPickup(Item item, Player player)
     {
-        // Only fire the event if the item hasn't contributed yet and might be relevant
+        // Use the new mission utils method that handles mainline vs regular missions
         if (MissionUtils.TryUpdateProgressForItem(item, player))
         {
-            // The item is relevant and hasn't contributed yet, so fire the event
             OnItemPickup?.Invoke(item, player);
         }
 
@@ -45,6 +44,7 @@ public class ObjectiveEventItem : GlobalItem
         OnItemUse?.Invoke(item, player);
         return base.UseItem(item, player);
     }
+
     public override void UpdateEquip(Item item, Player player)
     {
         base.UpdateEquip(item, player);
@@ -79,8 +79,8 @@ public class ObjectiveEventItem : GlobalItem
 public class ObjectiveEventNPC : GlobalNPC
 {
     public delegate void NPCChatHandler(NPC npc, ref string chat);
-    public delegate void NPCKillHandler(NPC npc);
-    public delegate void NPCHitHandler(NPC npc, int damage);
+    public delegate void NPCKillHandler(NPC npc, Player killingPlayer);
+    public delegate void NPCHitHandler(NPC npc, Player hittingPlayer, int damage);
     public delegate void NPCSpawnHandler(NPC npc);
     public delegate void NPCCatchHandler(NPC npc, Player player, Item item, bool failed);
 
@@ -89,6 +89,7 @@ public class ObjectiveEventNPC : GlobalNPC
     public static event NPCHitHandler OnNPCHit;
     public static event NPCSpawnHandler OnNPCSpawn;
     public static event NPCCatchHandler OnNPCCatch;
+
     public override bool InstancePerEntity => true;
 
     public override bool? CanChat(NPC npc)
@@ -108,8 +109,6 @@ public class ObjectiveEventNPC : GlobalNPC
 
         if (npc.isLikeATownNPC)
         {
-            //npc.ForceBubbleChatState();
-
             var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
 
             if (missionPlayer.NPCHasAvailableMission(npc.type) && npc.active)
@@ -133,19 +132,43 @@ public class ObjectiveEventNPC : GlobalNPC
         base.OnKill(npc);
 
         if (!npc.immortal)
-            OnNPCKill?.Invoke(npc);
+        {
+            // Find the player who killed the NPC
+            Player killingPlayer = Main.LocalPlayer; // Default fallback
+
+            // Try to find the actual killing player (this is simplified - you might need better logic)
+            for (int i = 0; i < Main.maxPlayers; i++)
+            {
+                var player = Main.player[i];
+                if (player.active && Vector2.Distance(player.Center, npc.Center) < 1000f)
+                {
+                    killingPlayer = player;
+                    break;
+                }
+            }
+
+            OnNPCKill?.Invoke(npc, killingPlayer);
+        }
     }
 
     public override void OnHitByItem(NPC npc, Player player, Item item, NPC.HitInfo hit, int damageDone)
     {
         base.OnHitByItem(npc, player, item, hit, damageDone);
-        OnNPCHit?.Invoke(npc, damageDone);
+        OnNPCHit?.Invoke(npc, player, damageDone);
     }
 
     public override void OnHitByProjectile(NPC npc, Projectile projectile, NPC.HitInfo hit, int damageDone)
     {
         base.OnHitByProjectile(npc, projectile, hit, damageDone);
-        OnNPCHit?.Invoke(npc, damageDone);
+
+        // Try to find the player who owns the projectile
+        Player owner = Main.LocalPlayer; // Default fallback
+        if (projectile.owner >= 0 && projectile.owner < Main.maxPlayers)
+        {
+            owner = Main.player[projectile.owner];
+        }
+
+        OnNPCHit?.Invoke(npc, owner, damageDone);
     }
 
     public override void OnCaughtBy(NPC npc, Player player, Item item, bool failed)
@@ -163,34 +186,77 @@ public class ObjectiveEventNPC : GlobalNPC
 
 public class ObjectiveEventTile : GlobalTile
 {
-    public delegate void TileBreakHandler(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem);
-    public delegate void TilePlaceHandler(int i, int j, int type);
+    public delegate void TileBreakHandler(int i, int j, int type, Player breakingPlayer, ref bool fail, ref bool effectOnly, ref bool noItem);
+    public delegate void TilePlaceHandler(int i, int j, int type, Player placingPlayer);
     public delegate void TileContactHandler(int type, Player player);
-    public delegate void TileInteractHandler(int i, int j, int type);
+    public delegate void TileInteractHandler(int i, int j, int type, Player interactingPlayer);
 
     public static event TileBreakHandler OnTileBreak;
     public static event TilePlaceHandler OnTilePlace;
     public static event TileContactHandler OnTileContact;
     public static event TileInteractHandler OnTileInteract;
+
     public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
     {
         base.KillTile(i, j, type, ref fail, ref effectOnly, ref noItem);
-        OnTileBreak?.Invoke(i, j, type, ref fail, ref effectOnly, ref noItem);
+
+        // Find the player who broke the tile (this is simplified)
+        Player breakingPlayer = Main.LocalPlayer;
+        for (int p = 0; p < Main.maxPlayers; p++)
+        {
+            var player = Main.player[p];
+            if (player.active && Vector2.Distance(player.Center, new Vector2(i * 16, j * 16)) < 200f)
+            {
+                breakingPlayer = player;
+                break;
+            }
+        }
+
+        OnTileBreak?.Invoke(i, j, type, breakingPlayer, ref fail, ref effectOnly, ref noItem);
     }
+
     public override void PlaceInWorld(int i, int j, int type, Item item)
     {
         base.PlaceInWorld(i, j, type, item);
-        OnTilePlace?.Invoke(i, j, type);
+
+        // Find the player who placed the tile
+        Player placingPlayer = Main.LocalPlayer;
+        for (int p = 0; p < Main.maxPlayers; p++)
+        {
+            var player = Main.player[p];
+            if (player.active && Vector2.Distance(player.Center, new Vector2(i * 16, j * 16)) < 200f)
+            {
+                placingPlayer = player;
+                break;
+            }
+        }
+
+        OnTilePlace?.Invoke(i, j, type, placingPlayer);
     }
+
     public override void FloorVisuals(int type, Player player)
     {
         base.FloorVisuals(type, player);
         OnTileContact?.Invoke(type, player);
     }
+
     public override void RightClick(int i, int j, int type)
     {
         base.RightClick(i, j, type);
-        OnTileInteract?.Invoke(i, j, type);
+
+        // Find the player who interacted with the tile
+        Player interactingPlayer = Main.LocalPlayer;
+        for (int p = 0; p < Main.maxPlayers; p++)
+        {
+            var player = Main.player[p];
+            if (player.active && Vector2.Distance(player.Center, new Vector2(i * 16, j * 16)) < 100f)
+            {
+                interactingPlayer = player;
+                break;
+            }
+        }
+
+        OnTileInteract?.Invoke(i, j, type, interactingPlayer);
     }
 }
 
@@ -220,14 +286,12 @@ public class ObjectiveEventPlayer : ModPlayer
     {
         BiomeType? playerBiome = GetCurrentBiome();
 
-        // Reset timer if player changed biomes or left all biomes
         if (currentBiome != playerBiome)
         {
             ResetAllTimers();
             currentBiome = playerBiome;
         }
 
-        // If player is in a biome, increment its timer
         if (currentBiome.HasValue)
         {
             if (!biomeTimers.ContainsKey(currentBiome.Value))
@@ -235,12 +299,10 @@ public class ObjectiveEventPlayer : ModPlayer
 
             biomeTimers[currentBiome.Value]++;
 
-            // Check all active time requirements
             foreach (int timeReq in activeTimeRequirements)
             {
                 if (biomeTimers[currentBiome.Value] == timeReq)
                 {
-                    // Ensure we only fire once per time requirement
                     if (!triggeredTimeRequirements.ContainsKey(currentBiome.Value))
                         triggeredTimeRequirements[currentBiome.Value] = new HashSet<int>();
 

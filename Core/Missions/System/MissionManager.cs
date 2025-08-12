@@ -86,13 +86,20 @@ public partial class MissionManager
         Reverie.Instance.Logger.Info("All active missions reset");
     }
 
-    public void OnObjectiveComplete(Mission mission, int objectiveIndex)
+    /// <summary>
+    /// Called when an objective is completed for a mission.
+    /// Now includes player parameter for multiplayer support.
+    /// </summary>
+    /// <param name="mission">The mission with the completed objective</param>
+    /// <param name="objectiveIndex">Index of the completed objective</param>
+    /// <param name="player">The player who completed the objective</param>
+    public void OnObjectiveComplete(Mission mission, int objectiveIndex, Player player)
     {
         try
         {
             if (activeMissions.TryGetValue(mission.ID, out var activeMission))
             {
-                activeMission.HandleObjectiveCompletion(objectiveIndex);
+                activeMission.HandleObjectiveCompletion(objectiveIndex, player);
             }
         }
         catch (Exception ex)
@@ -100,5 +107,4 @@ public partial class MissionManager
             Reverie.Instance.Logger.Error($"Error in HandleObjectiveCompletion: {ex.Message}");
         }
     }
-
 }
