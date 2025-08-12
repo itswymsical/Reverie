@@ -1,11 +1,16 @@
-﻿using Reverie.Content.NPCs.Bosses.KingSlime;
+﻿using Reverie.Content.Items.KingSlime;
+using Reverie.Content.NPCs.Bosses.KingSlime;
 using Reverie.Core.Cinematics;
 using Reverie.Core.Cinematics.Camera;
 using Reverie.Utilities;
 using System.Collections.Generic;
+using System.Linq;
+using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.GameContent;
+using Terraria.GameContent.ItemDropRules;
+using Terraria.ModLoader;
 
 namespace Reverie.Common.NPCs;
 
@@ -366,7 +371,10 @@ public class KingSlimeGlobalNPC : GlobalNPC
 
     public override void ModifyNPCLoot(NPC npc, NPCLoot npcLoot)
     {
-        // Add loot modifications here if needed
+        if (npc.type == ItemID.KingSlimeBossBag)
+        {
+            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<GelatinousBlasterItem>(), 2));
+        }
     }
 
     #region Pattern System Implementation

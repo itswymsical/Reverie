@@ -7,6 +7,7 @@ using Reverie.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria.Audio;
+using Terraria.DataStructures;
 using Terraria.GameContent;
 
 namespace Reverie.Content.Items.Sharpnut;
@@ -15,11 +16,11 @@ public class SaplingMakerItem : ModItem
 {
     public override void SetDefaults()
     {
-        Item.damage = 7;
+        Item.damage = 10;
         Item.width = Item.height = 38;
         Item.useTime = Item.useAnimation = 38;
         Item.knockBack = 7.8f;
-        Item.crit = -2;
+        Item.crit = -4;
         Item.value = Item.sellPrice(silver: 14);
         Item.rare = ItemRarityID.Blue;
 
@@ -615,8 +616,8 @@ public class SaplingMakerProj : ModProjectile, IDrawPrimitive
         CameraSystem.shake = 15;
         SoundEngine.PlaySound(SoundID.Item14, position);
 
-        const int acornCount = 7;
-        const float arcSpread = MathHelper.Pi * 0.6f;
+        const int acornCount = 5;
+        const float arcSpread = MathHelper.Pi * 0.2f;
 
         var baseDir = Projectile.velocity.Length() > 1f ?
             Vector2.Normalize(Projectile.velocity) :
@@ -625,13 +626,148 @@ public class SaplingMakerProj : ModProjectile, IDrawPrimitive
         for (int i = 0; i < acornCount; i++)
         {
             float angle = MathHelper.Lerp(-arcSpread * 0.5f, arcSpread * 0.5f, i / (float)(acornCount - 1));
-            var velocity = Vector2.Transform(baseDir, Matrix.CreateRotationZ(angle)) * Main.rand.NextFloat(8f, 14f);
+            var velocity = Vector2.Transform(baseDir, Matrix.CreateRotationZ(angle)) * Main.rand.NextFloat(3f, 9f);
 
             Projectile.NewProjectile(Projectile.GetSource_FromThis(), position, velocity,
-                ModContent.ProjectileType<AcornProj>(), (int)(Projectile.damage * 0.8f),
+                ModContent.ProjectileType<SaplingProj>(), (int)(Projectile.damage * 0.2f),
                 Projectile.knockBack * 0.6f, Projectile.owner);
         }
     }
 
     #endregion
+}
+
+public class SaplingProj : ModProjectile, IDrawPrimitive
+{
+    private List<Vector2> cache;
+    private Trail trail;
+    private Trail trail2;
+
+    public override string Texture => $"{TEXTURE_DIRECTORY}Projectiles/Sharpnut/AcornProj";
+
+    public override void SetStaticDefaults()
+    {
+        ProjectileID.Sets.TrailCacheLength[Projectile.type] = 3;
+        ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+    }
+
+    public override void SetDefaults()
+    {
+        Projectile.width = Projectile.height = 16;
+        Projectile.aiStyle = Projectile.extraUpdates = 1;
+        Projectile.friendly = Projectile.tileCollide = true;
+        Projectile.DamageType = DamageClass.Ranged;
+        Projectile.timeLeft = 600;
+        Projectile.usesLocalNPCImmunity = true;
+
+        Projectile.localNPCHitCooldown = 900;
+        AIType = ProjectileID.WoodenArrowFriendly;
+    }
+    public override bool PreAI()
+    {
+        UpdateTrails();
+        return base.PreAI();
+    }
+
+    private void UpdateTrails()
+    {
+        cache ??= Enumerable.Repeat(Projectile.Center, 15).ToList();
+
+        cache.Add(Projectile.Center);
+        if (cache.Count > 15)
+            cache.RemoveAt(0);
+
+        var color = new Color(70, 70, 70);
+
+        trail ??= new Trail(Main.instance.GraphicsDevice, 15,
+            new RoundedTip(8),
+            factor => factor * 10,
+            factor => GetTrailColor(factor, color, 0.15f));
+
+        trail.Positions = [.. cache];
+        trail.NextPosition = Projectile.Center;
+    }
+
+    private Color GetTrailColor(Vector2 factor, Color baseColor, float baseIntensity)
+    {
+        if (factor.X >= 0.98f) return Color.Transparent;
+        float intensity = (baseIntensity) * MathF.Pow(factor.X, 2);
+        return baseColor * intensity;
+    }
+
+    public void DrawPrimitives()
+    {
+        var effect = ShaderLoader.GetShader("LightningTrail").Value;
+        if (effect == null) return;
+
+        var transform = Matrix.CreateTranslation(-Main.screenPosition.ToVector3()) *
+                       Main.GameViewMatrix.TransformationMatrix *
+                       Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
+
+        effect.Parameters["time"]?.SetValue(Main.GameUpdateCount * 0.04f);
+        effect.Parameters["repeats"]?.SetValue(8f);
+        effect.Parameters["pixelation"]?.SetValue(12f);
+        effect.Parameters["resolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
+        effect.Parameters["transformMatrix"]?.SetValue(transform);
+        effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}BeamTrail").Value);
+        trail?.Render(effect);
+
+        effect.Parameters["pixelation"]?.SetValue(6f);
+        trail2?.Render(effect);
+    }
+
+    public override bool PreDraw(ref Color lightColor)
+    {
+        Main.instance.LoadProjectile(Projectile.type);
+        var texture = TextureAssets.Projectile[Projectile.type].Value;
+
+        Vector2 drawOrigin = new(texture.Width * 0.5f, Projectile.height * 0.5f);
+        for (var k = 0; k < Projectile.oldPos.Length; k++)
+        {
+            var drawPos = Projectile.oldPos[k] - Main.screenPosition + drawOrigin + new Vector2(0f, Projectile.gfxOffY);
+            var color = Projectile.GetAlpha(lightColor) * ((Projectile.oldPos.Length - k) / (float)Projectile.oldPos.Length);
+            Main.EntitySpriteDraw(texture, drawPos, null, color, Projectile.rotation, drawOrigin, Projectile.scale, SpriteEffects.None, 0);
+        }
+
+        return true;
+    }
+
+    public override void OnKill(int timeLeft)
+    {
+        TryPlantSapling(Projectile.Center);
+        Collision.HitTiles(Projectile.position + Projectile.velocity, Projectile.velocity, Projectile.width, Projectile.height);
+        SoundEngine.PlaySound(SoundID.Item10, Projectile.position);
+    }
+
+    public override bool OnTileCollide(Vector2 oldVelocity)
+    {
+        TryPlantSapling(Projectile.Center);
+        return true;
+    }
+
+    private void TryPlantSapling(Vector2 position)
+    {
+        var tilePos = position.ToTileCoordinates();
+
+        if (Main.tile[tilePos.X, tilePos.Y].HasTile || !Main.tile[tilePos.X, tilePos.Y + 1].HasTile)
+            return;
+
+        if (!WorldGen.SolidTile(tilePos.X, tilePos.Y + 1))
+            return;
+
+        if (WorldGen.PlaceTile(tilePos.X, tilePos.Y, TileID.Saplings))
+        {
+            if (Main.netMode != NetmodeID.SinglePlayer)
+                NetMessage.SendTileSquare(-1, tilePos.X, tilePos.Y, 1);
+
+            SoundEngine.PlaySound(SoundID.Dig, position);
+
+            for (int i = 0; i < 4; i++)
+            {
+                Dust.NewDust(position, 16, 16, DustID.Grass,
+                    Main.rand.NextFloat(-2f, 2f),
+                    Main.rand.NextFloat(-2f, 0f));
+            }
+        }
+    }
 }

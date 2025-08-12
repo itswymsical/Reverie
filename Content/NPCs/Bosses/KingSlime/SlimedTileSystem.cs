@@ -5,17 +5,23 @@ namespace Reverie.Content.NPCs.Bosses.KingSlime;
 public class SlimedTileSystem : ModSystem
 {
     private static Dictionary<Point, float> slimedTiles = new Dictionary<Point, float>();
-    private const float SLIME_DURATION = 7 * 60f;
+    private static Dictionary<Point, float> npcSlimedTiles = new Dictionary<Point, float>();
+    private const float SLIME_DURATION = 3.5f * 60f;
 
     public override void PostUpdateWorld()
     {
-        // Update slimed tile timers
+        UpdateSlimedTiles(slimedTiles);
+        UpdateSlimedTiles(npcSlimedTiles);
+    }
+
+    private void UpdateSlimedTiles(Dictionary<Point, float> tiles)
+    {
         var tilesToRemove = new List<Point>();
-        var tilesToUpdate = new List<Point>(slimedTiles.Keys);
+        var tilesToUpdate = new List<Point>(tiles.Keys);
 
         foreach (Point tilePos in tilesToUpdate)
         {
-            float timeLeft = slimedTiles[tilePos] - 1f;
+            float timeLeft = tiles[tilePos] - 1f;
 
             if (timeLeft <= 0f)
             {
@@ -23,14 +29,13 @@ public class SlimedTileSystem : ModSystem
             }
             else
             {
-                slimedTiles[tilePos] = timeLeft;
+                tiles[tilePos] = timeLeft;
             }
         }
 
-        // Remove expired tiles
         foreach (Point tilePos in tilesToRemove)
         {
-            slimedTiles.Remove(tilePos);
+            tiles.Remove(tilePos);
         }
     }
 
@@ -38,6 +43,8 @@ public class SlimedTileSystem : ModSystem
     {
         Point tilePos = new Point(i, j);
         slimedTiles[tilePos] = SLIME_DURATION;
+        npcSlimedTiles[tilePos] = SLIME_DURATION;
+
     }
 
     public static bool IsSlimed(int i, int j)
@@ -45,12 +52,26 @@ public class SlimedTileSystem : ModSystem
         return slimedTiles.ContainsKey(new Point(i, j));
     }
 
+    public static bool IsNPCSlimed(int i, int j)
+    {
+        return npcSlimedTiles.ContainsKey(new Point(i, j));
+    }
+
     public static float GetSlimeIntensity(int i, int j)
     {
+        return GetIntensityFromDictionary(slimedTiles, i, j);
+    }
+
+    public static float GetNPCSlimeIntensity(int i, int j)
+    {
+        return GetIntensityFromDictionary(npcSlimedTiles, i, j);
+    }
+
+    private static float GetIntensityFromDictionary(Dictionary<Point, float> tiles, int i, int j)
+    {
         Point tilePos = new Point(i, j);
-        if (slimedTiles.TryGetValue(tilePos, out float timeLeft))
+        if (tiles.TryGetValue(tilePos, out float timeLeft))
         {
-            // Fade out over time
             float intensity = timeLeft / SLIME_DURATION;
             return MathHelper.Clamp(intensity, 0.2f, 1f);
         }
@@ -60,5 +81,6 @@ public class SlimedTileSystem : ModSystem
     public override void ClearWorld()
     {
         slimedTiles.Clear();
+        npcSlimedTiles.Clear();
     }
 }

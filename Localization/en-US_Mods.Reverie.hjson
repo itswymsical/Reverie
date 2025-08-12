@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Experience Bar
+UI.ExperienceTracker: Experience Bar
 
 Conditions: {
 	CopperStandardComplete: After Mission, (Copper Standard)
@@ -616,7 +616,82 @@ Items: {
 
 	SaplingMakerItem: {
 		DisplayName: Sapling Maker
-		Tooltip: Deals hefty knockback and can be charged up to blast several acorns 
+		Tooltip: Deals hefty knockback and can be charged up to blast several acorns
+	}
+
+	SpruceBathtubItem: {
+		DisplayName: Spruce Wood Bathtub
+		Tooltip: ""
+	}
+
+	SpruceBedItem: {
+		DisplayName: Spruce Wood Bed
+		Tooltip: ""
+	}
+
+	SpruceBookcaseItem: {
+		DisplayName: Spruce Wood Bookcase
+		Tooltip: ""
+	}
+
+	SpruceCandelabraItem: {
+		DisplayName: Spruce Wood Candelabra
+		Tooltip: ""
+	}
+
+	SpruceChairItem: {
+		DisplayName: Spruce Wood Chair
+		Tooltip: ""
+	}
+
+	SpruceDresserItem: {
+		DisplayName: Spruce Wood Dresser
+		Tooltip: ""
+	}
+
+	SprucePianoItem: {
+		DisplayName: Spruce Wood Piano
+		Tooltip: ""
+	}
+
+	SpruceSinkItem: {
+		DisplayName: Spruce Wood Sink
+		Tooltip: ""
+	}
+
+	SpruceSofaItem: {
+		DisplayName: Spruce Wood Sofa
+		Tooltip: ""
+	}
+
+	SpruceTableItem: {
+		DisplayName: Spruce Wood Table
+		Tooltip: ""
+	}
+
+	SpruceWorkbenchItem: {
+		DisplayName: Spruce Wood Workbench
+		Tooltip: ""
+	}
+
+	GelatinousBlasterItem: {
+		DisplayName: Gelatinous Blaster
+		Tooltip:
+			'''
+			Fires gel balls that stick to enemies and tiles.
+			When the gel ball collides on a tile, it creates a sticky gel puddle that slows enemies.
+			Requires gel as ammo
+			'''
+	}
+
+	SpruceWoodHammerItem: {
+		DisplayName: Spruce Wood Hammer
+		Tooltip: ""
+	}
+
+	SpruceWoodSwordItem: {
+		DisplayName: Spruce Wood Sword
+		Tooltip: ""
 	}
 }
 
@@ -653,7 +728,10 @@ Projectiles: {
 	TumbleweedProjectile.DisplayName: Tumbleweed
 	GelBall.DisplayName: Gel Ball
 	GelBallProjectile.DisplayName: Gel Ball
+	GelBallProj.DisplayName: Gel Ball Proj
 	SaplingMakerProj.DisplayName: Sapling Maker Proj
+	SaplingProj.DisplayName: Sapling Proj
+	GelatinousBlasterProj.DisplayName: Gelatinous Blaster Proj
 }
 
 Configs: {
@@ -901,6 +979,7 @@ Tiles: {
 	MagnoliaTile.MapEntry: Magnolia
 	BirchChestTile.MapEntry: Birch Wood Chest
 	BirchDresserTile.MapEntry: Birch Dresser Tile
+	SpruceDresserTile.MapEntry: Spruce Dresser Tile
 }
 
 Buffs: {
