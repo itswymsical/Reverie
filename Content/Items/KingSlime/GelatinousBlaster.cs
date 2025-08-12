@@ -70,7 +70,6 @@ public class GelBallProj : ModProjectile
         Projectile.penetrate = 1;
         Projectile.alpha = 190;
         Projectile.timeLeft = 300;
-        Projectile.scale = 1.25f;
     }
 
     public override bool OnTileCollide(Vector2 oldVelocity)
