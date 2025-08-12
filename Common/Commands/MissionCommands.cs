@@ -6,6 +6,7 @@ using Terraria.ModLoader;
 using Reverie.Core.Missions;
 using System.Linq;
 using Reverie.Core.Missions.Core;
+using Reverie.Utilities;
 
 namespace Reverie.Common.Commands;
 
@@ -59,16 +60,14 @@ public class UnlockMissionCommand : ModCommand
             return;
         }
 
-        var missionPlayer = caller.Player.GetModPlayer<MissionPlayer>();
-        var mission = missionPlayer.GetMission(missionId);
-
+        var mission = MissionUtils.GetMission(caller.Player, missionId);
         if (mission == null)
         {
             caller.Reply($"Mission with ID {missionId} does not exist.", Color.Red);
             return;
         }
 
-        missionPlayer.UnlockMission(missionId, true);
+        MissionUtils.UnlockMission(caller.Player, missionId, true);
         caller.Reply($"Mission '{mission.Name}' (ID: {missionId}) unlocked successfully!", Color.Green);
     }
 }
@@ -95,9 +94,7 @@ public class StartMissionCommand : ModCommand
             return;
         }
 
-        var missionPlayer = caller.Player.GetModPlayer<MissionPlayer>();
-        var mission = missionPlayer.GetMission(missionId);
-
+        var mission = MissionUtils.GetMission(caller.Player, missionId);
         if (mission == null)
         {
             caller.Reply($"Mission with ID {missionId} does not exist.", Color.Red);
@@ -106,50 +103,15 @@ public class StartMissionCommand : ModCommand
 
         if (mission.Status != MissionStatus.Unlocked)
         {
-            caller.Reply($"Mission '{mission.Name}' is not unlocked yet. Use /unlockmission first.", Color.Yellow);
+            caller.Reply($"Mission '{mission.Name}' is not unlocked yet. Use /unlockm first.", Color.Yellow);
             return;
         }
 
-        missionPlayer.StartMission(missionId);
+        MissionUtils.StartMission(caller.Player, missionId);
         caller.Reply($"Mission '{mission.Name}' (ID: {missionId}) started successfully!", Color.Green);
     }
 }
 
-public class ResetMissionCommand : ModCommand
-{
-    public override string Command => "resetm";
-    public override CommandType Type => CommandType.Chat | CommandType.World;
-    public override string Usage => "/resetm <missionID or name>";
-    public override string Description => "Resets the specified mission (e.g., 1 or 'JourneysBegin').";
-
-    public override void Action(CommandCaller caller, string input, string[] args)
-    {
-        if (args.Length < 1)
-        {
-            caller.Reply("Usage: " + Usage, Color.Red);
-            return;
-        }
-
-        var missionId = MissionCommandHelper.TryParseMissionIdentifier(args[0]);
-        if (missionId == -1)
-        {
-            caller.Reply($"Could not find mission with identifier '{args[0]}'.", Color.Red);
-            return;
-        }
-
-        var missionPlayer = caller.Player.GetModPlayer<MissionPlayer>();
-        var mission = missionPlayer.GetMission(missionId);
-
-        if (mission == null)
-        {
-            caller.Reply($"Mission with ID {missionId} does not exist.", Color.Red);
-            return;
-        }
-
-        missionPlayer.ResetMission(missionId);
-        caller.Reply($"Mission '{mission.Name}' (ID: {missionId}) reset successfully!", Color.Green);
-    }
-}
 
 public class CompleteMissionCommand : ModCommand
 {
@@ -173,83 +135,15 @@ public class CompleteMissionCommand : ModCommand
             return;
         }
 
-        var missionPlayer = caller.Player.GetModPlayer<MissionPlayer>();
-        var mission = missionPlayer.GetMission(missionId);
-
+        var mission = MissionUtils.GetMission(caller.Player, missionId);
         if (mission == null)
         {
             caller.Reply($"Mission with ID {missionId} does not exist.", Color.Red);
             return;
         }
 
-        missionPlayer.CompleteMission(missionId);
+        MissionUtils.CompleteMission(caller.Player, missionId);
         caller.Reply($"Mission '{mission.Name}' (ID: {missionId}) completed successfully!", Color.Green);
-    }
-}
-
-public class ResetSideMissionsCommand : ModCommand
-{
-    public override string Command => "resetsides";
-    public override CommandType Type => CommandType.Chat | CommandType.World;
-    public override string Usage => "/resetsides [missionID or name]";
-    public override string Description => "Resets all side missions or a specific side mission.";
-
-    public override void Action(CommandCaller caller, string input, string[] args)
-    {
-        var missionPlayer = caller.Player.GetModPlayer<MissionPlayer>();
-
-        // If a specific mission is specified
-        if (args.Length > 0)
-        {
-            int missionId = MissionCommandHelper.TryParseMissionIdentifier(args[0]);
-            if (missionId == -1)
-            {
-                caller.Reply($"Could not find mission with identifier '{args[0]}'.", Color.Red);
-                return;
-            }
-
-            var mission = missionPlayer.GetMission(missionId);
-            if (mission == null)
-            {
-                caller.Reply($"Mission with ID {missionId} does not exist.", Color.Red);
-                return;
-            }
-
-            // Check if this is a side mission
-            if (mission.IsMainline)
-            {
-                caller.Reply($"Mission '{mission.Name}' is a mainline mission, not a side mission. Use /resetmission instead.", Color.Yellow);
-                return;
-            }
-
-            // Reset the specific side mission
-            missionPlayer.ResetMission(missionId);
-            caller.Reply($"Side mission '{mission.Name}' (ID: {missionId}) reset successfully!", Color.Green);
-            return;
-        }
-
-        // Reset all side missions if no specific one is provided
-        int resetCount = 0;
-
-        // Get all missions from the player's dictionary
-        var sideMissions = missionPlayer.missionDict.Values
-            .Where(m => !m.IsMainline)
-            .ToList();
-
-        if (sideMissions.Count == 0)
-        {
-            caller.Reply("No side missions found to reset.", Color.Yellow);
-            return;
-        }
-
-        // Reset each side mission
-        foreach (var mission in sideMissions)
-        {
-            missionPlayer.ResetMission(mission.ID);
-            resetCount++;
-        }
-
-        caller.Reply($"Reset {resetCount} side missions successfully!", Color.Green);
     }
 }
 
@@ -289,8 +183,9 @@ public class ListSideMissionsCommand : ModCommand
     private void ListSideMissionsByState(CommandCaller caller, MissionPlayer missionPlayer,
         MissionProgress progress, MissionStatus? availability)
     {
-        var missions = missionPlayer.missionDict.Values
-            .Where(m => !m.IsMainline && m.Progress == progress &&
+        // Only check sideline missions
+        var missions = missionPlayer.sidelineMissions.Values
+            .Where(m => m.Progress == progress &&
                        (availability == null || m.Status == availability))
             .ToList();
 
@@ -341,6 +236,96 @@ public class ListSideMissionsCommand : ModCommand
         else if (progress == MissionProgress.Completed)
         {
             caller.Reply("No completed side missions.", Color.Gray);
+        }
+    }
+}
+
+public class ListMainlineMissionsCommand : ModCommand
+{
+    public override string Command => "listmainline";
+    public override CommandType Type => CommandType.Chat | CommandType.World;
+    public override string Usage => "/listmainline [available|active|completed|all]";
+    public override string Description => "Lists mainline missions by category. Defaults to all mainline missions.";
+
+    public override void Action(CommandCaller caller, string input, string[] args)
+    {
+        string filter = args.Length > 0 ? args[0].ToLower() : "all";
+
+        switch (filter)
+        {
+            case "available":
+                ListMainlineMissionsByState(caller, MissionProgress.Inactive, MissionStatus.Unlocked);
+                break;
+            case "active":
+                ListMainlineMissionsByState(caller, MissionProgress.Ongoing, null);
+                break;
+            case "completed":
+                ListMainlineMissionsByState(caller, MissionProgress.Completed, null);
+                break;
+            case "all":
+            default:
+                caller.Reply("=== All Mainline Missions ===", Color.LightGreen);
+                ListMainlineMissionsByState(caller, MissionProgress.Inactive, MissionStatus.Unlocked);
+                ListMainlineMissionsByState(caller, MissionProgress.Ongoing, null);
+                ListMainlineMissionsByState(caller, MissionProgress.Completed, null);
+                break;
+        }
+    }
+
+    private void ListMainlineMissionsByState(CommandCaller caller, MissionProgress progress, MissionStatus? availability)
+    {
+        var missions = WorldMissionSystem.Instance.GetAllMainlineMissions()
+            .Where(m => m.Progress == progress &&
+                       (availability == null || m.Status == availability))
+            .ToList();
+
+        if (missions.Count > 0)
+        {
+            string title = progress switch
+            {
+                MissionProgress.Inactive => "=== Available Mainline Missions ===",
+                MissionProgress.Ongoing => "=== Ongoing Mainline Missions ===",
+                MissionProgress.Completed => "=== Completed Mainline Missions ===",
+                _ => "=== Mainline Missions ==="
+            };
+
+            Color titleColor = progress switch
+            {
+                MissionProgress.Inactive => Color.LightBlue,
+                MissionProgress.Ongoing => Color.Yellow,
+                MissionProgress.Completed => Color.Green,
+                _ => Color.White
+            };
+
+            caller.Reply(title, titleColor);
+
+            foreach (var mission in missions)
+            {
+                if (progress == MissionProgress.Ongoing)
+                {
+                    var currentSet = mission.Objective[mission.CurrentIndex];
+                    int completedObjectives = currentSet.Objectives.Count(o => o.IsCompleted);
+                    int totalObjectives = currentSet.Objectives.Count;
+
+                    caller.Reply($"ID: {mission.ID} - {mission.Name} - Progress: {completedObjectives}/{totalObjectives}", Color.White);
+                }
+                else
+                {
+                    caller.Reply($"ID: {mission.ID} - {mission.Name}", Color.White);
+                }
+            }
+        }
+        else if (progress == MissionProgress.Inactive)
+        {
+            caller.Reply("No available mainline missions.", Color.Gray);
+        }
+        else if (progress == MissionProgress.Ongoing)
+        {
+            caller.Reply("No active mainline missions.", Color.Gray);
+        }
+        else if (progress == MissionProgress.Completed)
+        {
+            caller.Reply("No completed mainline missions.", Color.Gray);
         }
     }
 }

@@ -3,16 +3,19 @@ using Reverie.Common.Items.Components;
 using Reverie.Core.Missions;
 using System.Linq;
 using Reverie.Core.Missions.Core;
+using System.Collections.Generic;
 
 namespace Reverie.Utilities;
 
 /// <summary>
-///     Helper class for handling mission progress updates while preventing duplicate progress from the same items.
+/// Helper class for handling mission progress updates while preventing duplicate progress from the same items.
+/// Uses direct calls to WorldMissionSystem for mainline missions - no packets needed!
 /// </summary>
 public static class MissionUtils
 {
     /// <summary>
-    ///     Checks if an item should update progress for a mission.
+    /// Checks if an item should update progress for missions.
+    /// Handles both mainline (world-level) and sideline (player-level) missions.
     /// </summary>
     /// <param name="item">The item to process.</param>
     /// <param name="player">The player who picked up or has the item.</param>
@@ -27,17 +30,32 @@ public static class MissionUtils
         var missionPlayer = player.GetModPlayer<MissionPlayer>();
         var progressUpdated = false;
 
+        // Check all active missions (both mainline and sideline)
         foreach (var mission in missionPlayer.ActiveMissions())
         {
             if (mission.Progress != MissionProgress.Ongoing)
                 continue;
 
             var currentSet = mission.Objective[mission.CurrentIndex];
-
             if (currentSet.IsCompleted)
                 continue;
 
-            progressUpdated = true;
+            // If this item contributes to any objective in the current set, mark as updated
+            // The specific mission logic will determine if this item actually triggers progress
+            foreach (var objective in currentSet.Objectives.Where(o => !o.IsCompleted))
+            {
+                // This is a simplified check - specific missions should override this logic
+                // For now, we just check if the item type name appears in the objective description
+                if (objective.Description.Contains(item.Name, StringComparison.OrdinalIgnoreCase) ||
+                    objective.Description.Contains(item.type.ToString()))
+                {
+                    progressUpdated = true;
+                    break;
+                }
+            }
+
+            if (progressUpdated)
+                break;
         }
 
         if (progressUpdated)
@@ -48,6 +66,9 @@ public static class MissionUtils
         return progressUpdated;
     }
 
+    /// <summary>
+    /// Removes items from a player's inventory for mission requirements.
+    /// </summary>
     public static void RetrieveItemsFromPlayer(Player player, int itemType, int amount)
     {
         var remainingAmount = amount;
@@ -69,105 +90,160 @@ public static class MissionUtils
         }
     }
 
-    public static MissionDataContainer ToState(this Mission mission)
+    /// <summary>
+    /// Updates mission progress using direct calls - no packets needed!
+    /// Automatically handles mainline vs sideline missions.
+    /// </summary>
+    /// <param name="player">The player triggering the progress update</param>
+    /// <param name="missionId">The mission to update</param>
+    /// <param name="objectiveIndex">The objective index to update</param>
+    /// <param name="amount">Amount of progress to add</param>
+    /// <returns>True if progress was updated</returns>
+    public static bool UpdateMissionProgress(Player player, int missionId, int objectiveIndex, int amount = 1)
     {
-        return new MissionDataContainer
+        var mission = GetMission(player, missionId);
+
+        if (mission?.Progress == MissionProgress.Ongoing)
         {
-            ID = mission.ID,
-            Progress = mission.Progress,
-            Availability = mission.Status,
-            Unlocked = mission.Unlocked,
-            CurObjectiveIndex = mission.CurrentIndex,
-            ObjectiveIndex = mission.Objective
-                .Select(set => new ObjectiveIndexState
-                {
-                    Objectives = set.Objectives
-                        .Select(obj => new ObjectiveState
-                        {
-                            Description = obj.Description,
-                            IsCompleted = obj.IsCompleted,
-                            RequiredCount = obj.RequiredCount,
-                            CurrentCount = obj.CurrentCount
-                        }).ToList()
-                }).ToList(),
-            NextMissionID = mission.NextMissionID
-        };
+            if (mission.IsMainline)
+            {
+                // Direct call to world system - world data sync handles multiplayer automatically
+                return WorldMissionSystem.Instance.UpdateMissionProgress(missionId, objectiveIndex, amount, player);
+            }
+            else
+            {
+                // Sideline missions are handled locally
+                var missionPlayer = player.GetModPlayer<MissionPlayer>();
+                return missionPlayer.UpdateMissionProgress(missionId, objectiveIndex, amount);
+            }
+        }
+
+        return false;
     }
 
-    public static void LoadState(this Mission mission, MissionDataContainer state)
+    /// <summary>
+    /// Starts a mission using direct calls - no packets needed!
+    /// Automatically handles mainline vs sideline missions.
+    /// </summary>
+    public static void StartMission(Player player, int missionId)
     {
-        if (state == null)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Warn($"Null state provided for mission {mission.ID}");
-            return;
-        }
+        var mission = GetMission(player, missionId);
 
-        mission.Progress = state.Progress;
-        mission.Status = state.Availability;
-        mission.Unlocked = state.Unlocked;
-
-        // Validate current index is within bounds
-        if (state.CurObjectiveIndex >= 0 && state.CurObjectiveIndex < mission.Objective.Count)
+        if (mission?.Status == MissionStatus.Unlocked)
         {
-            mission.CurrentIndex = state.CurObjectiveIndex;
-        }
-        else
-        {
-            ModContent.GetInstance<Reverie>().Logger.Warn($"Invalid CurrentIndex {state.CurObjectiveIndex} for mission {mission.ID}, resetting to 0");
-            mission.CurrentIndex = 0;
-        }
-
-        // If objective counts don't match, log a warning
-        if (mission.Objective.Count != state.ObjectiveIndex.Count)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Warn(
-                $"Mission {mission.ID} objective set count mismatch: Expected {mission.Objective.Count}, got {state.ObjectiveIndex.Count}");
-        }
-
-        // Process each objective set with improved matching by description
-        for (var i = 0; i < Math.Min(mission.Objective.Count, state.ObjectiveIndex.Count); i++)
-        {
-            var savedSet = state.ObjectiveIndex[i];
-            var currentSet = mission.Objective[i];
-
-            // If objective counts within a set don't match, log a warning
-            if (currentSet.Objectives.Count != savedSet.Objectives.Count)
+            if (mission.IsMainline)
             {
-                ModContent.GetInstance<Reverie>().Logger.Warn(
-                    $"Mission {mission.ID} set {i} objective count mismatch: Expected {currentSet.Objectives.Count}, got {savedSet.Objectives.Count}");
+                // Direct call to world system - world data sync handles multiplayer automatically
+                WorldMissionSystem.Instance.StartMission(missionId);
             }
-
-            // Process each objective, using description matching to handle potential reordering
-            foreach (var currentObj in currentSet.Objectives)
+            else
             {
-                var matchingObj = savedSet.Objectives.FirstOrDefault(obj =>
-                    obj.Description.Equals(currentObj.Description, StringComparison.OrdinalIgnoreCase));
-
-                if (matchingObj != null)
-                {
-                    currentObj.IsCompleted = matchingObj.IsCompleted;
-                    currentObj.CurrentCount = Math.Min(matchingObj.CurrentCount, currentObj.RequiredCount);
-
-                    if (currentObj.IsCompleted && currentObj.CurrentCount < currentObj.RequiredCount)
-                    {
-                        currentObj.CurrentCount = currentObj.RequiredCount;
-                    }
-                }
-                else
-                {
-                    ModContent.GetInstance<Reverie>().Logger.Warn(
-                        $"Mission {mission.ID} set {i} couldn't find saved state for objective '{currentObj.Description}'");
-                }
+                // Sideline missions are handled locally
+                var missionPlayer = player.GetModPlayer<MissionPlayer>();
+                missionPlayer.StartMission(missionId);
             }
         }
+    }
 
-        // Ensure mission index is valid if mission is active
-        if (mission.Progress == MissionProgress.Ongoing &&
-            (mission.CurrentIndex < 0 || mission.CurrentIndex >= mission.Objective.Count))
+    /// <summary>
+    /// Unlocks a mission using direct calls - no packets needed!
+    /// Automatically handles mainline vs sideline missions.
+    /// </summary>
+    public static void UnlockMission(Player player, int missionId, bool broadcast = false)
+    {
+        var mission = GetMission(player, missionId);
+
+        if (mission?.Status == MissionStatus.Locked)
         {
-            ModContent.GetInstance<Reverie>().Logger.Warn(
-                $"Ongoing mission {mission.ID} has invalid current index {mission.CurrentIndex}, resetting to 0");
-            mission.CurrentIndex = 0;
+            if (mission.IsMainline)
+            {
+                // Direct call to world system - world data sync handles multiplayer automatically
+                WorldMissionSystem.Instance.UnlockMission(missionId, broadcast);
+            }
+            else
+            {
+                // Sideline missions are handled locally
+                var missionPlayer = player.GetModPlayer<MissionPlayer>();
+                missionPlayer.UnlockMission(missionId, broadcast);
+            }
         }
+    }
+
+    /// <summary>
+    /// Completes a mission using direct calls - no packets needed!
+    /// Automatically handles mainline vs sideline missions.
+    /// </summary>
+    public static void CompleteMission(Player player, int missionId)
+    {
+        var mission = GetMission(player, missionId);
+
+        if (mission?.Progress == MissionProgress.Ongoing)
+        {
+            if (mission.IsMainline)
+            {
+                // Direct call to world system - world data sync handles multiplayer automatically
+                WorldMissionSystem.Instance.CompleteMission(missionId, player);
+            }
+            else
+            {
+                // Sideline missions are handled locally
+                var missionPlayer = player.GetModPlayer<MissionPlayer>();
+                missionPlayer.CompleteMission(missionId);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets a mission from the appropriate source (world for mainline, player for sideline).
+    /// </summary>
+    public static Mission GetMission(Player player, int missionId)
+    {
+        var missionPlayer = player.GetModPlayer<MissionPlayer>();
+        return missionPlayer.GetMission(missionId);
+    }
+
+    /// <summary>
+    /// Gets all active missions for a player (combines mainline and sideline).
+    /// </summary>
+    public static IEnumerable<Mission> GetActiveMissions(Player player)
+    {
+        var missionPlayer = player.GetModPlayer<MissionPlayer>();
+        return missionPlayer.ActiveMissions();
+    }
+
+    /// <summary>
+    /// Gets all available missions for a player (combines mainline and sideline).
+    /// </summary>
+    public static IEnumerable<Mission> GetAvailableMissions(Player player)
+    {
+        var missionPlayer = player.GetModPlayer<MissionPlayer>();
+        return missionPlayer.AvailableMissions();
+    }
+
+    /// <summary>
+    /// Checks if a player has completed a specific mission.
+    /// </summary>
+    public static bool HasCompletedMission(Player player, int missionId)
+    {
+        var mission = GetMission(player, missionId);
+        return mission?.Progress == MissionProgress.Completed;
+    }
+
+    /// <summary>
+    /// Checks if a mission is currently active for a player.
+    /// </summary>
+    public static bool IsMissionActive(Player player, int missionId)
+    {
+        var mission = GetMission(player, missionId);
+        return mission?.Progress == MissionProgress.Ongoing;
+    }
+
+    /// <summary>
+    /// Checks if a mission is available (unlocked but not started) for a player.
+    /// </summary>
+    public static bool IsMissionAvailable(Player player, int missionId)
+    {
+        var mission = GetMission(player, missionId);
+        return mission?.Status == MissionStatus.Unlocked && mission.Progress == MissionProgress.Inactive;
     }
 }

@@ -7,6 +7,7 @@ using System.Linq;
 
 using Terraria.Audio;
 using Terraria.DataStructures;
+using Terraria.ID;
 using Terraria.ModLoader.IO;
 using Terraria.UI;
 
@@ -31,17 +32,13 @@ public enum MissionStatus
 /// Objectives are grouped into sets and must be completed in order.
 /// </summary>
 /// <remarks>
+/// Mainline missions are stored in world data and shared across all players.
+/// Sideline missions are stored in individual player data.
 /// When all objective sets are complete, the mission finishes and rewards are given.
 /// </remarks>
 public abstract class Mission
 {
-
     #region Fields
-    /// <summary>
-    /// A "dirty" mission has changed state and needs to be saved, updated, or synced.
-    /// The dirty flag helps track when mission data is out of date.
-    /// </summary>
-    protected bool isDirty = false;
     protected bool eventsRegistered = false;
     protected HashSet<Point> interactedTiles = new HashSet<Point>();
     protected HashSet<int> interactedItems = new HashSet<int>();
@@ -61,7 +58,6 @@ public abstract class Mission
     public MissionStatus Status { get; set; } = MissionStatus.Locked;
     public bool Unlocked { get; set; } = false;
     public int CurrentIndex { get; set; } = 0;
-    public bool IsDirty => isDirty;
     #endregion
 
     #region Initialization
@@ -83,7 +79,6 @@ public abstract class Mission
     #endregion
 
     #region Event Registration
-
     /// <summary>
     /// Registers event handlers specific to this mission
     /// </summary>
@@ -105,7 +100,6 @@ public abstract class Mission
 
         ModContent.GetInstance<Reverie>().Logger.Info($"Mission {Name} unregistered event handlers");
     }
-
     #endregion
 
     #region Virtual Event Handlers
@@ -157,8 +151,8 @@ public abstract class Mission
     #region Core Mission Logic
     /// <summary>
     /// Updates the progress of an objective in the current set.
-    /// For mainline missions, updates progress for ALL players who have this mission active.
-    /// For regular missions, updates only for the triggering player.
+    /// For mainline missions, uses direct call to WorldMissionSystem (updates once, not per player).
+    /// For sideline missions, updates only for the triggering player.
     /// </summary>
     /// <param name="objective">the objective index</param>
     /// <param name="amount">amount to add</param>
@@ -171,34 +165,21 @@ public abstract class Mission
 
         if (IsMainline)
         {
-            bool anyUpdated = false;
-            for (int i = 0; i < Main.maxPlayers; i++)
-            {
-                var player = Main.player[i];
-                if (player.active)
-                {
-                    var missionPlayer = player.GetModPlayer<MissionPlayer>();
-                    if (missionPlayer.missionDict.TryGetValue(ID, out var playerMission) &&
-                        playerMission.Progress == MissionProgress.Ongoing)
-                    {
-                        if (UpdateProgressInternal(objective, amount, player))
-                            anyUpdated = true;
-                    }
-                }
-            }
-            return anyUpdated;
+            // For mainline missions, delegate to world system to prevent double updates
+            return WorldMissionSystem.Instance.UpdateMissionProgress(ID, objective, amount, triggeringPlayer);
         }
         else
         {
-            // For regular missions, update only for the triggering player
+            // For sideline missions, update locally
             return UpdateProgressInternal(objective, amount, triggeringPlayer);
         }
     }
 
     /// <summary>
-    /// Internal method that actually updates progress for a specific player
+    /// Internal method that updates progress for sideline missions only.
+    /// Mainline missions use WorldMissionSystem.UpdateMissionProgressInternal instead.
     /// </summary>
-    private bool UpdateProgressInternal(int objective, int amount, Player player)
+    public bool UpdateProgressInternal(int objective, int amount, Player player)
     {
         if (Progress != MissionProgress.Ongoing)
             return false;
@@ -211,13 +192,17 @@ public abstract class Mission
             {
                 var wasCompleted = obj.UpdateProgress(amount);
 
+                // Notify the specific player about the update
                 var missionPlayer = player.GetModPlayer<MissionPlayer>();
                 missionPlayer.NotifyMissionUpdate(this);
 
                 if (wasCompleted && amount > 0)
                 {
                     HandleObjectiveCompletion(objective, player);
-                    SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ObjectiveComplete") with { Volume = 0.75f }, player.position);
+                    if (player == Main.LocalPlayer)
+                    {
+                        SoundEngine.PlaySound(SoundID.MenuTick, player.position);
+                    }
                 }
 
                 if (currentSet.IsCompleted)
@@ -258,7 +243,6 @@ public abstract class Mission
             UnregisterEventHandlers();
             Progress = MissionProgress.Completed;
             Status = MissionStatus.Completed;
-            isDirty = true;
 
             OnMissionComplete(player);
         }
@@ -316,8 +300,6 @@ public abstract class Mission
         }
     }
 
-    public void ClearDirtyFlag() => isDirty = false;
-
     /// <summary>
     /// makes an objective visible on the indicator.
     /// </summary>
@@ -357,7 +339,6 @@ public abstract class Mission
     }
     #endregion
 }
-
 /// <summary>
 /// A container class that stores mission state data.
 /// Maintains progress, completion status, and objective states of a mission
