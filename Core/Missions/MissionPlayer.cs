@@ -1,6 +1,4 @@
 ﻿using Reverie.Common.UI.Missions;
-using Reverie.Core.Indicators;
-using Reverie.Core.Missions.Core;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria.ModLoader.IO;

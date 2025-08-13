@@ -1,8 +1,4 @@
-﻿using Reverie.Core.Missions.Core;
-using Reverie.Core.Missions;
-using System.Collections.Generic;
-
-namespace Reverie.Content.Items.Mycology;
+﻿namespace Reverie.Content.Items.Mycology;
 
 public class ClusterclotCapItem : ModItem
 {
