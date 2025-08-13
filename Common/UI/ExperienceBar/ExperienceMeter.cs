@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
 
-namespace Reverie.Common.UI.LevelUI;
+namespace Reverie.Common.UI.ExperienceBar;
 
 internal class ExperienceMeter : UIState
 {
@@ -17,32 +17,32 @@ internal class ExperienceMeter : UIState
     {
 
         area = new UIElement();
-        area.Left.Set(-area.Width.Pixels - 472, 1f);
-        area.Top.Set(14, 0f);
-        area.Width.Set(182, 0f);
-        area.Height.Set(60, 0f);
+        area.Top.Set(16, 0f);
+        area.Width.Set(154, 0f);
+        area.Height.Set(74, 0f);
+        area.Left.Set(-area.Width.Pixels * 3.15f, 1f);
 
-        barFrame = new UIImage(ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}LevelSystem/XP_Panel_Empty"));
-        barFrame.Left.Set(22, 0f);
+        barFrame = new UIImage(ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Experience/ExperienceBar"));
+        barFrame.Left.Set(16, 0f);
         barFrame.Top.Set(0, 0f);
-        barFrame.Width.Set(142, 0f);
-        barFrame.Height.Set(40, 0f);
+        barFrame.Width.Set(154, 0f);
+        barFrame.Height.Set(74, 0f);
 
         text = new UIText("0/0", 0.92f);
-        text.Width.Set(142, 0f);
-        text.Height.Set(40, 0f);
-        text.Top.Set(-8, 0f);
-        text.Left.Set(16.75f, 0f);
-        area.Append(text);
+        text.Width.Set(154, 0f);
+        text.Height.Set(74, 0f);
+        text.Top.Set(44, 0f);
+        text.Left.Set(0f, 0f);
 
         level = new UIText("0", 0.75f);
-        level.Width.Set(142, 0f);
-        level.Height.Set(41.5f, 0f);
-        level.Top.Set(9.65f, 0f);
+        level.Width.Set(154, 0f);
+        level.Height.Set(73.25f, 0f);
+        level.Top.Set(4f, 0f);
         level.Left.Set(78f, 0f);         
 
         area.Append(barFrame);
         area.Append(level);
+        area.Append(text);
         Append(area);
     }
 
@@ -57,28 +57,33 @@ internal class ExperienceMeter : UIState
         xpPercentage = MathHelper.Clamp(xpPercentage, 0f, 1f);
         var hitbox = barFrame.GetInnerDimensions().ToRectangle();
 
+        level.Width.Set(154, 0f);
+        level.Height.Set(74f, 0f);
+        level.Top.Set(11.5f, 0f);
+        level.Left.Set(72f, 0f);
+
         spriteBatch.Draw(
-            ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}LevelSystem/XP_Fill_Empty").Value,
+            ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Experience/ExperienceBar_Empty").Value,
             hitbox,
             config.BarColor
         );
 
-        int fillableWidth = hitbox.Width - 20;
-        int fillableHeight = 12;
-        int fillWidth = (int)(fillableWidth * xpPercentage);
+        var fillableWidth = hitbox.Width - 20;
+        var fillableHeight = 12;
+        var fillWidth = (int)(fillableWidth * xpPercentage);
 
-        int xOffset = 6;
-        int yOffset = hitbox.Height - fillableHeight - 16;
+        var xOffset = 6;
+        var yOffset = hitbox.Height - fillableHeight - 18;
 
-        Rectangle fillRect = new Rectangle(hitbox.X + xOffset, hitbox.Y + yOffset, fillWidth, fillableHeight);
+        var fillRect = new Rectangle(hitbox.X + xOffset, hitbox.Y + yOffset, fillWidth, fillableHeight);
 
-        for (int i = 0; i < fillWidth; i += 12)
+        for (var i = 0; i < fillWidth; i += 12)
         {
-            int segmentWidth = Math.Min(12, fillWidth - i);
-            Rectangle sourceRect = new Rectangle(0, 0, segmentWidth, 12);
-            Rectangle destRect = new Rectangle(hitbox.X + xOffset + i, hitbox.Y + yOffset, segmentWidth, 12);
+            var segmentWidth = Math.Min(12, fillWidth - i);
+            var sourceRect = new Rectangle(0, 0, segmentWidth, 12);
+            var destRect = new Rectangle(hitbox.X + xOffset + i, hitbox.Y + yOffset, segmentWidth, 12);
             spriteBatch.Draw(
-                ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}LevelSystem/XP_Fill").Value,
+                ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Experience/ExperienceBar_Fill").Value,
                 destRect,
                 sourceRect,
                 config.BarColor
@@ -86,7 +91,7 @@ internal class ExperienceMeter : UIState
         }
 
         spriteBatch.Draw(
-            ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}LevelSystem/XP_Star").Value,
+            ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Experience/ExperienceBar_Moon").Value,
             hitbox,
             config.BarColor
         );
@@ -95,8 +100,8 @@ internal class ExperienceMeter : UIState
     public override void Update(GameTime gameTime)
     {
         var modPlayer = Main.LocalPlayer.GetModPlayer<ExperiencePlayer>();
-        text.SetText($"Experience: {modPlayer.expValue} / {ExperiencePlayer.GetNextExperienceThreshold(modPlayer.expLevel)}", 0.7f, false);
-        level.SetText($"{modPlayer.expLevel}", 0.72f, false);
+        text.SetText($"{modPlayer.expValue} / {ExperiencePlayer.GetNextExperienceThreshold(modPlayer.expLevel)}", 0.6f, false);
+        level.SetText($"{modPlayer.expLevel}", 1f, false);
 
         base.Update(gameTime);
     }
