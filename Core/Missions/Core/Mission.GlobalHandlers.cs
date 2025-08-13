@@ -244,18 +244,37 @@ public class ObjectiveEventTile : GlobalTile
     {
         base.RightClick(i, j, type);
 
-        // Find the player who interacted with the tile
-        Player interactingPlayer = Main.LocalPlayer;
-        for (int p = 0; p < Main.maxPlayers; p++)
+        // Send packet to notify all players about the interaction
+        if (Main.netMode == NetmodeID.MultiplayerClient || Main.netMode == NetmodeID.SinglePlayer)
         {
-            var player = Main.player[p];
-            if (player.active && Vector2.Distance(player.Center, new Vector2(i * 16, j * 16)) < 100f)
-            {
-                interactingPlayer = player;
-                break;
-            }
+            // Send to server (which will broadcast to all clients)
+            SendTileInteractPacket(i, j, type, Main.LocalPlayer.whoAmI);
         }
 
+        // Handle locally as well
+        HandleTileInteract(i, j, type, Main.LocalPlayer);
+    }
+
+    private void SendTileInteractPacket(int i, int j, int type, int playerWhoAmI)
+    {
+        if (Main.netMode == NetmodeID.SinglePlayer)
+        {
+            // Single player - just handle directly
+            HandleTileInteract(i, j, type, Main.LocalPlayer);
+            return;
+        }
+
+        ModPacket packet = ModContent.GetInstance<Reverie>().GetPacket();
+        packet.Write((byte)MessageType.TileInteract); // Add this to your MessageType enum
+        packet.Write(i);
+        packet.Write(j);
+        packet.Write(type);
+        packet.Write(playerWhoAmI);
+        packet.Send();
+    }
+
+    public static void HandleTileInteract(int i, int j, int type, Player interactingPlayer)
+    {
         OnTileInteract?.Invoke(i, j, type, interactingPlayer);
     }
 }
