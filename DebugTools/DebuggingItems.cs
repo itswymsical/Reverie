@@ -5,8 +5,6 @@ using Reverie.Core.Dialogue;
 using Reverie.Core.Indicators;
 using Reverie.Core.Missions;
 using Terraria.UI;
-using Terraria.WorldBuilding;
-using static Terraria.WorldBuilding.Shapes;
 
 namespace Reverie.DebugTools;
 

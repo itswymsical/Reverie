@@ -1,8 +1,11 @@
-﻿using Reverie.Core.Missions.Core;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace Reverie.Core.Missions.System;
+namespace Reverie.Core.Missions;
 
+/// <summary>
+/// Manages active missions for single player.
+/// Tracks which missions are currently running and need event handling.
+/// </summary>
 public partial class MissionManager
 {
     #region Properties and Fields
@@ -45,8 +48,6 @@ public partial class MissionManager
     {
         try
         {
-            Reverie.Instance.Logger.Debug($"Ongoing mission count before registration: {activeMissions.Count}");
-
             if (activeMissions.ContainsKey(mission.ID))
             {
                 Reverie.Instance.Logger.Debug($"Mission already registered: {mission.ID}");
@@ -55,8 +56,6 @@ public partial class MissionManager
 
             activeMissions[mission.ID] = mission;
             Reverie.Instance.Logger.Info($"Registered mission: {mission.Name}");
-            Reverie.Instance.Logger.Debug($"Ongoing mission count after registration: {activeMissions.Count}");
-            Reverie.Instance.Logger.Debug($"Current active missions: {string.Join(", ", activeMissions.Keys)}");
         }
         catch (Exception ex)
         {
@@ -78,14 +77,42 @@ public partial class MissionManager
 
         RegisterMissionInternal(mission);
     }
+
+    public void UnregisterMission(int missionId)
+    {
+        if (activeMissions.Remove(missionId))
+        {
+            Reverie.Instance.Logger.Info($"Unregistered mission: {missionId}");
+        }
+    }
     #endregion
 
+    #region Mission Management
     public void Reset()
     {
         activeMissions.Clear();
         Reverie.Instance.Logger.Info("All active missions reset");
     }
 
+    public Mission GetActiveMission(int missionId)
+    {
+        return activeMissions.TryGetValue(missionId, out var mission) ? mission : null;
+    }
+
+    public IEnumerable<Mission> GetAllActiveMissions()
+    {
+        return activeMissions.Values;
+    }
+
+    public bool IsRegistered(int missionId)
+    {
+        return activeMissions.ContainsKey(missionId);
+    }
+
+    /// <summary>
+    /// Called when an objective is completed for a mission.
+    /// Single player version - no need for player parameter.
+    /// </summary>
     public void OnObjectiveComplete(Mission mission, int objectiveIndex)
     {
         try
@@ -101,4 +128,22 @@ public partial class MissionManager
         }
     }
 
+    /// <summary>
+    /// Updates all active missions. Called during world update.
+    /// </summary>
+    public void UpdateActiveMissions()
+    {
+        foreach (var mission in activeMissions.Values)
+        {
+            try
+            {
+                mission.Update();
+            }
+            catch (Exception ex)
+            {
+                Reverie.Instance.Logger.Error($"Error updating mission {mission.Name}: {ex.Message}");
+            }
+        }
+    }
+    #endregion
 }

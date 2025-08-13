@@ -1,9 +1,8 @@
 ﻿using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
-using Reverie.Core.Missions.Core;
 using Reverie.Utilities;
-using static Reverie.Core.Missions.Core.ObjectiveEventItem;
-using static Reverie.Core.Missions.Core.ObjectiveEventNPC;
+using static Reverie.Core.Missions.ObjectiveEventItem;
+using static Reverie.Core.Missions.ObjectiveEventNPC;
 
 namespace Reverie.Content.Missions.Argie;
 
@@ -17,17 +16,13 @@ public class MissionSporeSplinter : Mission
 
     public MissionSporeSplinter() : base(MissionID.SporeSplinter,
         name: "Spore & Splinter",
-
         description: @"""Every spore needs a floor! Help me stake my claim on this flat!.""",
-
         objectiveList:
         [
             [("Greet Argie", 1)],
             [("Gather Glowing Mushrooms", 30), ("Gather Rope", 30), ("Gather Wood", 75)],
         ],
-
         rewards: [new Item(ItemID.GoldCoin, Main.rand.Next(4, 6))],
-
         isMainline: false,
         providerNPC: ModContent.NPCType<NPCs.Special.Argie>(), xpReward: 150)
     {
@@ -37,23 +32,18 @@ public class MissionSporeSplinter : Mission
     public override void OnMissionStart()
     {
         base.OnMissionStart();
-
-        DialogueManager.Instance.StartDialogue("Argie.Intro", 9, letterbox: true, 
+        DialogueManager.Instance.StartDialogue("Argie.Intro", 9, letterbox: true,
             music: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}ArgiesTheme"));
     }
 
     public override void OnMissionComplete(bool giveRewards = true)
     {
         base.OnMissionComplete(giveRewards);
+
+        // Any additional completion logic for this sideline mission
+        // could unlock other sideline missions or trigger events
     }
 
-    public override void Update()
-    {
-        base.Update(); //prevent events from messing up the flow
-
-    }
-
-    #region Event Registration
     protected override void RegisterEventHandlers()
     {
         if (eventsRegistered) return;
@@ -63,7 +53,6 @@ public class MissionSporeSplinter : Mission
         OnItemPickup += OnItemPickupHandler;
 
         ModContent.GetInstance<Reverie>().Logger.Debug($"[{Name} - {ID}] Registered event handlers");
-
         eventsRegistered = true;
     }
 
@@ -78,8 +67,6 @@ public class MissionSporeSplinter : Mission
         base.UnregisterEventHandlers();
     }
 
-    #endregion
-
     private void OnNPCChatHandler(NPC npc, ref string chat)
     {
         if (Progress != MissionProgress.Ongoing) return;
@@ -90,7 +77,7 @@ public class MissionSporeSplinter : Mission
             case Objectives.GreetArgie:
                 if (npc.type == ProviderNPC)
                 {
-                    UpdateProgress(0);
+                    UpdateProgress(objective: 0);
                 }
                 break;
         }
@@ -104,15 +91,12 @@ public class MissionSporeSplinter : Mission
         switch (objective)
         {
             case Objectives.GatherResources:
-
                 if (item.type == ItemID.GlowingMushroom)
-                    UpdateProgress(objective: 0, item.stack);
+                    UpdateProgress(objective: 0, amount: item.stack);
                 else if (item.type == ItemID.Rope)
-                    UpdateProgress(objective: 1, item.stack);
+                    UpdateProgress(objective: 1, amount: item.stack);
                 else if (item.IsWood())
-                    UpdateProgress(objective: 2, item.stack);
-
-
+                    UpdateProgress(objective: 2, amount: item.stack);
                 break;
         }
     }

@@ -1,10 +1,6 @@
 ﻿using Reverie.Common.Players;
-using System;
-using System.Collections.Generic;
+using Reverie.Core.Missions;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Reverie;
 
@@ -13,7 +9,6 @@ public sealed partial class Reverie : Mod
     public enum MessageType : byte
     {
         AddExperience,
-        ClassStatPlayerSync
     }
 
     public override void HandlePacket(BinaryReader reader, int whoAmI)
@@ -38,4 +33,20 @@ public sealed partial class Reverie : Mod
                 break;
         }
     }
+
+    /// <summary>
+    /// Sends experience to a player via packet (if needed for networking).
+    /// </summary>
+    public static void SendExperience(int playerId, int experience)
+    {
+        if (Main.netMode == NetmodeID.SinglePlayer)
+            return;
+
+        ModPacket packet = Instance.GetPacket();
+        packet.Write((byte)MessageType.AddExperience);
+        packet.Write(playerId);
+        packet.Write(experience);
+        packet.Send();
+    }
+
 }

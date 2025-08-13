@@ -4,7 +4,7 @@ using System.Linq;
 
 using Terraria.ModLoader.IO;
 
-namespace Reverie.Core.Missions.Core;
+namespace Reverie.Core.Missions;
 
 public class Objective(string description, int requiredCount = 1)
 {

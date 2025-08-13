@@ -10,20 +10,25 @@
 	<ItemGroup>
 	  <AdditionalFiles Remove="Common\Items\Configs\**" />
 	  <AdditionalFiles Remove="Common\Projectiles\**" />
+	  <AdditionalFiles Remove="Content\Missions\Merchant\**" />
 	  <AdditionalFiles Remove="Content\Missions\Stylist\**" />
 	  <AdditionalFiles Remove="Dialouge\**" />
 	  <Compile Remove="Common\Items\Configs\**" />
 	  <Compile Remove="Common\Projectiles\**" />
+	  <Compile Remove="Content\Missions\Merchant\**" />
 	  <Compile Remove="Content\Missions\Stylist\**" />
 	  <Compile Remove="Dialouge\**" />
 	  <EmbeddedResource Remove="Common\Items\Configs\**" />
 	  <EmbeddedResource Remove="Common\Projectiles\**" />
+	  <EmbeddedResource Remove="Content\Missions\Merchant\**" />
 	  <EmbeddedResource Remove="Content\Missions\Stylist\**" />
 	  <EmbeddedResource Remove="Dialouge\**" />
 	  <None Remove="Common\Items\Configs\**" />
 	  <None Remove="Common\Projectiles\**" />
+	  <None Remove="Content\Missions\Merchant\**" />
 	  <None Remove="Content\Missions\Stylist\**" />
 	  <None Remove="Dialouge\**" />
+	  <ShaderFiles Remove="Content\Missions\Merchant\**" />
 	</ItemGroup>
 
 	<!-- References -->

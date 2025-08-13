@@ -1,18 +1,22 @@
-﻿using Terraria;
-using Reverie.Common.Items.Components;
-using Reverie.Core.Missions;
+﻿using Reverie.Common.Items.Components;
 using System.Linq;
-using Reverie.Core.Missions.Core;
 
-namespace Reverie.Utilities;
+namespace Reverie.Core.Missions;
 
 /// <summary>
-///     Helper class for handling mission progress updates while preventing duplicate progress from the same items.
+/// Helper class for handling mission progress updates while preventing duplicate progress from the same items.
+/// Single player only.
 /// </summary>
 public static class MissionUtils
 {
+    public static bool ValidateGameMode()
+    {
+        return Main.netMode == NetmodeID.SinglePlayer;
+    }
+
     /// <summary>
-    ///     Checks if an item should update progress for a mission.
+    /// Checks if an item should update progress for a mission.
+    /// Prevents duplicate progress from the same items.
     /// </summary>
     /// <param name="item">The item to process.</param>
     /// <param name="player">The player who picked up or has the item.</param>
@@ -48,6 +52,9 @@ public static class MissionUtils
         return progressUpdated;
     }
 
+    /// <summary>
+    /// Removes items from player inventory for mission consumption.
+    /// </summary>
     public static void RetrieveItemsFromPlayer(Player player, int itemType, int amount)
     {
         var remainingAmount = amount;
@@ -69,6 +76,9 @@ public static class MissionUtils
         }
     }
 
+    /// <summary>
+    /// Converts a mission to a data container for serialization.
+    /// </summary>
     public static MissionDataContainer ToState(this Mission mission)
     {
         return new MissionDataContainer
@@ -94,6 +104,9 @@ public static class MissionUtils
         };
     }
 
+    /// <summary>
+    /// Loads mission state from a data container.
+    /// </summary>
     public static void LoadState(this Mission mission, MissionDataContainer state)
     {
         if (state == null)
@@ -106,7 +119,6 @@ public static class MissionUtils
         mission.Status = state.Availability;
         mission.Unlocked = state.Unlocked;
 
-        // Validate current index is within bounds
         if (state.CurObjectiveIndex >= 0 && state.CurObjectiveIndex < mission.Objective.Count)
         {
             mission.CurrentIndex = state.CurObjectiveIndex;
@@ -117,7 +129,6 @@ public static class MissionUtils
             mission.CurrentIndex = 0;
         }
 
-        // If objective counts don't match, log a warning
         if (mission.Objective.Count != state.ObjectiveIndex.Count)
         {
             ModContent.GetInstance<Reverie>().Logger.Warn(
@@ -130,14 +141,12 @@ public static class MissionUtils
             var savedSet = state.ObjectiveIndex[i];
             var currentSet = mission.Objective[i];
 
-            // If objective counts within a set don't match, log a warning
             if (currentSet.Objectives.Count != savedSet.Objectives.Count)
             {
                 ModContent.GetInstance<Reverie>().Logger.Warn(
                     $"Mission {mission.ID} set {i} objective count mismatch: Expected {currentSet.Objectives.Count}, got {savedSet.Objectives.Count}");
             }
 
-            // Process each objective, using description matching to handle potential reordering
             foreach (var currentObj in currentSet.Objectives)
             {
                 var matchingObj = savedSet.Objectives.FirstOrDefault(obj =>
@@ -161,7 +170,6 @@ public static class MissionUtils
             }
         }
 
-        // Ensure mission index is valid if mission is active
         if (mission.Progress == MissionProgress.Ongoing &&
             (mission.CurrentIndex < 0 || mission.CurrentIndex >= mission.Objective.Count))
         {
@@ -169,5 +177,19 @@ public static class MissionUtils
                 $"Ongoing mission {mission.ID} has invalid current index {mission.CurrentIndex}, resetting to 0");
             mission.CurrentIndex = 0;
         }
+    }
+
+    /// <summary>
+    /// Checks if mainline missions should be blocked due to multiplayer.
+    /// Shows warning if needed.
+    /// </summary>
+    public static bool ShouldBlockMainlineMission(Mission mission)
+    {
+        if (mission.IsMainline && !ValidateGameMode())
+        {
+            Main.NewText("Story missions are only available in single player worlds.", Color.OrangeRed);
+            return true;
+        }
+        return false;
     }
 }

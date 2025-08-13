@@ -1,12 +1,15 @@
 ﻿using Reverie.Content.Missions;
 using Reverie.Content.Missions.Argie;
-using Reverie.Content.Missions.Merchant;
-using Reverie.Core.Missions.Core;
-using Reverie.Utilities;
 using System.Collections.Generic;
-using Terraria.ModLoader.IO;
 
-namespace Reverie.Core.Missions.System;
+namespace Reverie.Core.Missions;
+public static class MissionID
+{
+    public static int JourneysBegin = 1;
+    public static int ForgottenAges = 2;
+    public static int SporeSplinter = 3;
+    public static int CopperStandard = 4;
+}
 
 public class MissionFactory : ModSystem
 {
@@ -18,6 +21,7 @@ public class MissionFactory : ModSystem
     private static bool worldJustLoaded = false;
     private static int worldLoadCounter = 0;
     private const int LOAD_DELAY_FRAMES = 10;
+
     public static MissionFactory Instance
     {
         get
@@ -33,7 +37,6 @@ public class MissionFactory : ModSystem
             return instance;
         }
     }
-
     #endregion
 
     #region Initialization & Registration
@@ -56,7 +59,14 @@ public class MissionFactory : ModSystem
         worldJustLoaded = true;
         worldLoadCounter = 0;
 
-        ModContent.GetInstance<Reverie>().Logger.Info("MissionLoadingSystem: OnWorldLoad complete");
+        ModContent.GetInstance<Reverie>().Logger.Info("MissionFactory: OnWorldLoad complete");
+    }
+
+    public override void OnWorldUnload()
+    {
+        // Ensure complete cleanup when unloading world
+        missionCache.Clear();
+        Reverie.Instance.Logger.Info("MissionFactory: Cache cleared on world unload");
     }
 
     public override void Unload()
@@ -74,17 +84,13 @@ public class MissionFactory : ModSystem
 
             #region Missions
             missionTypes[MissionID.JourneysBegin] = typeof(MissionJourneysBegin);
-            missionTypes[MissionID.ForgottenAges] = typeof(MissionForgottenAges);
             missionTypes[MissionID.SporeSplinter] = typeof(MissionSporeSplinter);
-            missionTypes[MissionID.CopperStandard] = typeof(MissionCopperStandard);
-            //missionTypes[MissionID.LightEmUp] = typeof(LightEmUp);
             #endregion
 
             Reverie.Instance.Logger.Info($"Registered {missionTypes.Count} mission types");
 
             foreach (var (id, type) in missionTypes)
             {
-
                 Reverie.Instance.Logger.Debug($"Registered mission type: {id} -> {type.Name}");
             }
         }
@@ -95,6 +101,11 @@ public class MissionFactory : ModSystem
     }
     #endregion
 
+    #region Mission Creation
+    /// <summary>
+    /// Creates a new mission instance or returns cached instance.
+    /// With the new architecture, we don't need LoadState - missions are managed by WorldMissionSystem or MissionPlayer.
+    /// </summary>
     public Mission GetMissionData(int missionId)
     {
         try
@@ -124,17 +135,51 @@ public class MissionFactory : ModSystem
         }
     }
 
-    public void LoadMissionState(int missionId, MissionDataContainer state)
+    /// <summary>
+    /// Creates a fresh mission instance without caching.
+    /// Useful for when you need a clean mission state.
+    /// </summary>
+    public Mission CreateFreshMissionInstance(int missionId)
     {
-        var mission = GetMissionData(missionId);
-        if (mission != null)
+        try
         {
-            mission.LoadState(state);
-            missionCache[missionId] = mission;
+            if (missionTypes.TryGetValue(missionId, out var missionType))
+            {
+                Reverie.Instance.Logger.Debug($"Creating fresh instance of mission type: {missionType.Name}");
+                return (Mission)Activator.CreateInstance(missionType);
+            }
+
+            Reverie.Instance.Logger.Warn($"No mission type registered for ID: {missionId}");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Reverie.Instance.Logger.Error($"Error creating fresh mission instance: {ex}");
+            return null;
         }
     }
 
+    /// <summary>
+    /// Clears the mission cache. Useful for ensuring fresh instances.
+    /// </summary>
+    public void ClearCache()
+    {
+        missionCache.Clear();
+        Reverie.Instance.Logger.Debug("Mission cache cleared");
+    }
 
+    /// <summary>
+    /// Gets all registered mission IDs.
+    /// </summary>
+    public IEnumerable<int> GetRegisteredMissionIds() => missionTypes.Keys;
+
+    /// <summary>
+    /// Checks if a mission ID is registered.
+    /// </summary>
+    public bool IsMissionRegistered(int missionId) => missionTypes.ContainsKey(missionId);
+    #endregion
+
+    #region World Loading
     public override void PostUpdateWorld()
     {
         if (worldJustLoaded)
@@ -146,27 +191,9 @@ public class MissionFactory : ModSystem
                 MissionManager.Instance.OnWorldFullyLoaded();
                 worldJustLoaded = false;
 
-                ModContent.GetInstance<Reverie>().Logger.Info("MissionLoadingSystem: Deferred world load complete");
+                ModContent.GetInstance<Reverie>().Logger.Info("MissionFactory: Deferred world load complete");
             }
         }
     }
-    //public override void LoadWorldData(TagCompound tag)
-    //{
-    //    base.LoadWorldData(tag);
-    //    if (Main.netMode == NetmodeID.MultiplayerClient)
-    //    {
-    //        if (worldJustLoaded)
-    //        {
-    //            worldLoadCounter++;
-
-    //            if (worldLoadCounter >= LOAD_DELAY_FRAMES)
-    //            {
-    //                MissionManager.Instance.OnWorldFullyLoaded();
-    //                worldJustLoaded = false;
-
-    //                ModContent.GetInstance<Reverie>().Logger.Info("MissionLoadingSystem: Deferred world load complete");
-    //            }
-    //        }
-    //    }
-    //}
+    #endregion
 }

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Terraria.DataStructures;
 
-namespace Reverie.Core.Missions.Core;
+namespace Reverie.Core.Missions;
 
 public class ObjectiveEventItem : GlobalItem
 {
@@ -30,10 +30,8 @@ public class ObjectiveEventItem : GlobalItem
 
     public override bool OnPickup(Item item, Player player)
     {
-        // Only fire the event if the item hasn't contributed yet and might be relevant
         if (MissionUtils.TryUpdateProgressForItem(item, player))
         {
-            // The item is relevant and hasn't contributed yet, so fire the event
             OnItemPickup?.Invoke(item, player);
         }
 
@@ -45,6 +43,7 @@ public class ObjectiveEventItem : GlobalItem
         OnItemUse?.Invoke(item, player);
         return base.UseItem(item, player);
     }
+
     public override void UpdateEquip(Item item, Player player)
     {
         base.UpdateEquip(item, player);
@@ -69,11 +68,6 @@ public class ObjectiveEventItem : GlobalItem
         base.OnConsumeItem(item, player);
         OnItemConsume?.Invoke(item, player);
     }
-
-    public override void OnStack(Item destination, Item source, int numToTransfer)
-    {
-        base.OnStack(destination, source, numToTransfer);
-    }
 }
 
 public class ObjectiveEventNPC : GlobalNPC
@@ -89,11 +83,12 @@ public class ObjectiveEventNPC : GlobalNPC
     public static event NPCHitHandler OnNPCHit;
     public static event NPCSpawnHandler OnNPCSpawn;
     public static event NPCCatchHandler OnNPCCatch;
+
     public override bool InstancePerEntity => true;
 
     public override bool? CanChat(NPC npc)
     {
-        return ((npc.friendly && !npc.CountsAsACritter) || npc.CanBeTalkedTo || npc.townNPC) && !DialogueManager.Instance.IsAnyActive();
+        return (npc.friendly && !npc.CountsAsACritter || npc.CanBeTalkedTo || npc.townNPC) && !DialogueManager.Instance.IsAnyActive();
     }
 
     public override void GetChat(NPC npc, ref string chat)
@@ -108,8 +103,6 @@ public class ObjectiveEventNPC : GlobalNPC
 
         if (npc.isLikeATownNPC)
         {
-            //npc.ForceBubbleChatState();
-
             var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
 
             if (missionPlayer.NPCHasAvailableMission(npc.type) && npc.active)
@@ -133,7 +126,9 @@ public class ObjectiveEventNPC : GlobalNPC
         base.OnKill(npc);
 
         if (!npc.immortal)
+        {
             OnNPCKill?.Invoke(npc);
+        }
     }
 
     public override void OnHitByItem(NPC npc, Player player, Item item, NPC.HitInfo hit, int damageDone)
@@ -172,21 +167,25 @@ public class ObjectiveEventTile : GlobalTile
     public static event TilePlaceHandler OnTilePlace;
     public static event TileContactHandler OnTileContact;
     public static event TileInteractHandler OnTileInteract;
+
     public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
     {
         base.KillTile(i, j, type, ref fail, ref effectOnly, ref noItem);
         OnTileBreak?.Invoke(i, j, type, ref fail, ref effectOnly, ref noItem);
     }
+
     public override void PlaceInWorld(int i, int j, int type, Item item)
     {
         base.PlaceInWorld(i, j, type, item);
         OnTilePlace?.Invoke(i, j, type);
     }
+
     public override void FloorVisuals(int type, Player player)
     {
         base.FloorVisuals(type, player);
         OnTileContact?.Invoke(type, player);
     }
+
     public override void RightClick(int i, int j, int type)
     {
         base.RightClick(i, j, type);
@@ -199,9 +198,9 @@ public class ObjectiveEventPlayer : ModPlayer
     /// <summary>
     /// Delegate for when a player enters a biome and meets time requirements.
     /// </summary>
-    /// <param name="player">you</param>
-    /// <param name="biome">the current biome</param>
-    /// <param name="timeSpent">time in seconds</param>
+    /// <param name="player">The player</param>
+    /// <param name="biome">The current biome</param>
+    /// <param name="timeSpent">Time in seconds</param>
     public delegate void BiomeEnterHandler(Player player, BiomeType biome, int timeSpent);
     public static event BiomeEnterHandler OnBiomeEnter;
 
@@ -218,16 +217,14 @@ public class ObjectiveEventPlayer : ModPlayer
 
     private void TrackBiomeTime()
     {
-        BiomeType? playerBiome = GetCurrentBiome();
+        var playerBiome = GetCurrentBiome();
 
-        // Reset timer if player changed biomes or left all biomes
         if (currentBiome != playerBiome)
         {
             ResetAllTimers();
             currentBiome = playerBiome;
         }
 
-        // If player is in a biome, increment its timer
         if (currentBiome.HasValue)
         {
             if (!biomeTimers.ContainsKey(currentBiome.Value))
@@ -235,12 +232,10 @@ public class ObjectiveEventPlayer : ModPlayer
 
             biomeTimers[currentBiome.Value]++;
 
-            // Check all active time requirements
-            foreach (int timeReq in activeTimeRequirements)
+            foreach (var timeReq in activeTimeRequirements)
             {
                 if (biomeTimers[currentBiome.Value] == timeReq)
                 {
-                    // Ensure we only fire once per time requirement
                     if (!triggeredTimeRequirements.ContainsKey(currentBiome.Value))
                         triggeredTimeRequirements[currentBiome.Value] = new HashSet<int>();
 
@@ -274,7 +269,7 @@ public class ObjectiveEventPlayer : ModPlayer
 
     public int GetBiomeTime(BiomeType biome)
     {
-        return biomeTimers.TryGetValue(biome, out int time) ? time : 0;
+        return biomeTimers.TryGetValue(biome, out var time) ? time : 0;
     }
 
     public void AddTimeRequirement(int ticks)

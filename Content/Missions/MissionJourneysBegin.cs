@@ -1,14 +1,10 @@
-﻿using Reverie.Content.Items.Misc;
-using Reverie.Content.Projectiles.Misc;
-using Reverie.Core.Dialogue;
+﻿using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
-using Reverie.Core.Missions.Core;
-using Reverie.Utilities;
 using Terraria.DataStructures;
 using static Reverie.Core.Dialogue.DialogueManager;
-using static Reverie.Core.Missions.Core.ObjectiveEventItem;
-using static Reverie.Core.Missions.Core.ObjectiveEventNPC;
-using static Reverie.Core.Missions.Core.ObjectiveEventTile;
+using static Reverie.Core.Missions.ObjectiveEventItem;
+using static Reverie.Core.Missions.ObjectiveEventNPC;
+using static Reverie.Core.Missions.ObjectiveEventTile;
 
 namespace Reverie.Content.Missions;
 
@@ -52,18 +48,17 @@ public class MissionJourneysBegin : Mission
     {
         base.OnMissionComplete(giveRewards);
 
-
-        MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        player.UnlockMission(MissionID.ForgottenAges);
+        // Unlock next mission in the world system since this is mainline
+        MissionWorld.Instance.UnlockMission(MissionID.ForgottenAges);
 
         DialogueManager.Instance.StartDialogue("JourneysBegin.MissionEnd", 2, zoomIn: false, false);
-
     }
 
     public override void Update()
     {
         base.Update();
 
+        // Prevent certain events during tutorial
         Main.slimeRain = false;
         Main.slimeRainTime = 0;
         Main.bloodMoon = false;
@@ -94,10 +89,9 @@ public class MissionJourneysBegin : Mission
         OnNPCChat -= OnNPCChatHandler;
         OnItemUse -= OnItemUseHandler;
         OnItemPickup -= OnItemPickupHandler;
-        OnTileInteract += TileInteractHandler;
+        OnTileInteract -= TileInteractHandler;
         OnDialogueEnd -= OnDialogueEndHandler;
         OnTileBreak -= OnTileBreakHandler;
-
 
         ModContent.GetInstance<Reverie>().Logger.Debug($"Mission [Journey's Begin] Unregistered event handlers");
         base.UnregisterEventHandlers();
@@ -116,7 +110,9 @@ public class MissionJourneysBegin : Mission
                 if (dialogueKey == "JourneysBegin.Tutorial")
                 {
                     UpdateProgress(objective: 0);
-                    player.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.MagicMirror, 1);
+
+                    // Give mirror to the player
+                    Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.MagicMirror, 1);
                     DialogueManager.Instance.StartDialogue("JourneysBegin.MirrorGiven", 1, zoomIn: false, letterbox: true);
                 }
                 break;
@@ -130,13 +126,13 @@ public class MissionJourneysBegin : Mission
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
-
+            // Handle any NPC chat objectives here
         }
     }
 
     private void OnItemPickupHandler(Item item, Player player)
     {
-
+        // Handle any item pickup objectives here
     }
 
     private void OnItemUseHandler(Item item, Player player)
@@ -148,7 +144,7 @@ public class MissionJourneysBegin : Mission
             case Objectives.UseMirror:
                 if (item.type == ItemID.MagicMirror)
                 {
-                    UpdateProgress(0);
+                    UpdateProgress(objective: 0);
                     DialogueManager.Instance.StartDialogue("JourneysBegin.Mirror", 6);
                 }
                 break;
@@ -213,7 +209,6 @@ public class MissionJourneysBegin : Mission
                     interactedTiles.Add(originPos);
 
                     UpdateProgress(objective: 2);
-
                 }
                 if (TileID.Sets.Ore[type])
                 {
