@@ -1,6 +1,4 @@
-﻿using Reverie.Core.Missions.SystemClasses;
-
-namespace Reverie.Content.Items.Mycology;
+﻿namespace Reverie.Content.Items.Mycology;
 
 public class BloomcapItem : ModItem
 {

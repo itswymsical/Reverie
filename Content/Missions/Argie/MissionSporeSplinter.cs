@@ -1,9 +1,8 @@
 ﻿using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
-using Reverie.Core.Missions.Core;
 using Reverie.Utilities;
-using static Reverie.Core.Missions.Core.ObjectiveEventItem;
-using static Reverie.Core.Missions.Core.ObjectiveEventNPC;
+using static Reverie.Core.Missions.ObjectiveEventItem;
+using static Reverie.Core.Missions.ObjectiveEventNPC;
 
 namespace Reverie.Content.Missions.Argie;
 
@@ -37,9 +36,12 @@ public class MissionSporeSplinter : Mission
             music: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}ArgiesTheme"));
     }
 
-    public override void OnMissionComplete(Player player, bool giveRewards = true)
+    public override void OnMissionComplete(bool giveRewards = true)
     {
-        base.OnMissionComplete(player, giveRewards);
+        base.OnMissionComplete(giveRewards);
+
+        // Any additional completion logic for this sideline mission
+        // could unlock other sideline missions or trigger events
     }
 
     protected override void RegisterEventHandlers()
@@ -75,7 +77,7 @@ public class MissionSporeSplinter : Mission
             case Objectives.GreetArgie:
                 if (npc.type == ProviderNPC)
                 {
-                    UpdateProgress(objective: 0, triggeringPlayer: Main.LocalPlayer);
+                    UpdateProgress(objective: 0);
                 }
                 break;
         }
@@ -90,11 +92,11 @@ public class MissionSporeSplinter : Mission
         {
             case Objectives.GatherResources:
                 if (item.type == ItemID.GlowingMushroom)
-                    UpdateProgress(objective: 0, amount: item.stack, triggeringPlayer: player);
+                    UpdateProgress(objective: 0, amount: item.stack);
                 else if (item.type == ItemID.Rope)
-                    UpdateProgress(objective: 1, amount: item.stack, triggeringPlayer: player);
+                    UpdateProgress(objective: 1, amount: item.stack);
                 else if (item.IsWood())
-                    UpdateProgress(objective: 2, amount: item.stack, triggeringPlayer: player);
+                    UpdateProgress(objective: 2, amount: item.stack);
                 break;
         }
     }

@@ -1,4 +1,5 @@
 ﻿using Reverie.Core.Dialogue;
+using Reverie.Core.Missions;
 using Reverie.Core.Missions.Core;
 using System.Collections.Generic;
 using System.Linq;

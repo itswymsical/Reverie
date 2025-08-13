@@ -1,10 +1,6 @@
-﻿using Reverie.Core.Indicators;
-using Reverie.Core.Missions;
-using Reverie.Core.Missions.Core;
-using Reverie.Utilities;
+﻿using Reverie.Core.Missions;
 using System.Linq;
 using Terraria.GameContent;
-using Terraria.ID;
 
 namespace Reverie.Core.Indicators;
 
@@ -15,8 +11,6 @@ public class MissionIndicator : ScreenIndicator
 
     private const int PANEL_WIDTH = 220;
     private const int PADDING = 10;
-
-    public static bool ShowDebugHitbox = false;
 
     public override AnimationType AnimationStyle => AnimationType.Wag;
 
@@ -55,30 +49,25 @@ public class MissionIndicator : ScreenIndicator
 
     /// <summary>
     /// Determines if the indicator should be hidden based on mission state.
-    /// For mainline missions, hides if ANY player has started it.
-    /// For sideline missions, hides only if the local player has started it.
+    /// Single player only - hides when the mission is no longer available to start.
     /// </summary>
     private bool ShouldHideIndicator()
     {
         if (mission.IsMainline)
         {
-            var worldMission = WorldMissionSystem.Instance.GetMainlineMission(mission.ID);
+            var worldMission = MissionWorld.Instance.GetMainlineMission(mission.ID);
             return worldMission?.Progress != MissionProgress.Inactive || worldMission?.Status != MissionStatus.Unlocked;
         }
         else
         {
-            var localMissionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-            var localMission = localMissionPlayer.GetMission(mission.ID);
+            var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+            var localMission = missionPlayer.GetMission(mission.ID);
             return localMission?.Progress != MissionProgress.Inactive || localMission?.Status != MissionStatus.Unlocked;
         }
     }
 
     private void DrawIndicator(SpriteBatch spriteBatch, Vector2 screenPos, float opacity)
     {
-        if (ShowDebugHitbox)
-        {
-            DrawDebugHitbox(spriteBatch, screenPos, opacity);
-        }
 
         var scale = GetAnimationScale();
         var glowColor = IsHovering ? Color.White : Color.White * 0.8f;
@@ -101,38 +90,17 @@ public class MissionIndicator : ScreenIndicator
         }
     }
 
-    private void DrawDebugHitbox(SpriteBatch spriteBatch, Vector2 screenPos, float opacity)
-    {
-        var zoom = Main.GameViewMatrix.Zoom.X;
-        var scaledWidth = (int)(Width * zoom);
-        var scaledHeight = (int)(Height * zoom);
-
-        var hitboxRect = new Rectangle(
-            (int)screenPos.X - scaledWidth / 2,
-            (int)screenPos.Y - scaledHeight / 2,
-            scaledWidth,
-            scaledHeight
-        );
-
-        var pixel = TextureAssets.MagicPixel.Value;
-        var borderColor = IsHovering ? Color.Lime : Color.Red;
-        borderColor *= opacity * 0.8f;
-
-        // Draw border lines
-        spriteBatch.Draw(pixel, new Rectangle(hitboxRect.X, hitboxRect.Y, hitboxRect.Width, 2), borderColor);
-        spriteBatch.Draw(pixel, new Rectangle(hitboxRect.X, hitboxRect.Bottom - 2, hitboxRect.Width, 2), borderColor);
-        spriteBatch.Draw(pixel, new Rectangle(hitboxRect.X, hitboxRect.Y, 2, hitboxRect.Height), borderColor);
-        spriteBatch.Draw(pixel, new Rectangle(hitboxRect.Right - 2, hitboxRect.Y, 2, hitboxRect.Height), borderColor);
-
-        var fillColor = IsHovering ? Color.Lime : Color.Red;
-        fillColor *= opacity * 0.2f;
-        spriteBatch.Draw(pixel, hitboxRect, fillColor);
-    }
-
     private void DrawPanel(SpriteBatch spriteBatch, float opacity)
     {
         if (mission == null)
             return;
+
+        // Block mainline missions in multiplayer
+        if (mission.IsMainline && Main.netMode != NetmodeID.SinglePlayer)
+        {
+            DrawMultiplayerWarning(spriteBatch, opacity);
+            return;
+        }
 
         // Get proper screen position for UI panel positioning
         var screenPos = GetScreenPosition();
@@ -188,7 +156,7 @@ public class MissionIndicator : ScreenIndicator
 
         // Mission type indicator
         var missionTypeColor = mission.IsMainline ? new Color(255, 215, 0) : new Color(173, 216, 230);
-        var missionTypeText = mission.IsMainline ? "[Mainline]" : "[Sideline]";
+        var missionTypeText = mission.IsMainline ? "[Story Mission]" : "[Side Mission]";
 
         Utils.DrawBorderStringFourWay(
             spriteBatch,
@@ -270,7 +238,7 @@ public class MissionIndicator : ScreenIndicator
             DrawDynamicRewards(spriteBatch, mission, rewardLayout, panelRect.X + PADDING, textY, opacity);
         }
 
-        var clickText = mission.IsMainline ? "Click to accept" : "Click to accept";
+        var clickText = "Click to accept";
         var clickColor = mission.IsMainline ? new Color(255, 215, 0) : Color.Yellow;
 
         Utils.DrawBorderStringFourWay(
@@ -282,6 +250,61 @@ public class MissionIndicator : ScreenIndicator
             clickColor * opacity,
             Color.Black * opacity,
             default,
+            0.8f
+        );
+    }
+
+    private void DrawMultiplayerWarning(SpriteBatch spriteBatch, float opacity)
+    {
+        var screenPos = GetScreenPosition();
+        var warningWidth = 200;
+        var warningHeight = 80;
+
+        var panelX = screenPos.X + Width / 2 + 10;
+        var panelY = screenPos.Y - warningHeight / 2;
+
+        // Adjust if panel would go off screen
+        if (panelX + warningWidth > Main.screenWidth)
+        {
+            panelX = screenPos.X - Width / 2 - warningWidth - 10;
+        }
+
+        var warningRect = new Rectangle(
+            (int)panelX,
+            (int)panelY,
+            warningWidth,
+            warningHeight
+        );
+
+        // Draw warning background
+        spriteBatch.Draw(
+            TextureAssets.MagicPixel.Value,
+            warningRect,
+            Color.DarkRed * opacity * 0.8f
+        );
+
+        // Draw warning text
+        Utils.DrawBorderStringFourWay(
+            spriteBatch,
+            FontAssets.MouseText.Value,
+            "Story missions are only",
+            warningRect.X + 10,
+            warningRect.Y + 10,
+            Color.White * opacity,
+            Color.Black * opacity,
+            Vector2.Zero,
+            0.8f
+        );
+
+        Utils.DrawBorderStringFourWay(
+            spriteBatch,
+            FontAssets.MouseText.Value,
+            "available in single player!",
+            warningRect.X + 10,
+            warningRect.Y + 30,
+            Color.White * opacity,
+            Color.Black * opacity,
+            Vector2.Zero,
             0.8f
         );
     }
@@ -482,9 +505,16 @@ public class MissionIndicator : ScreenIndicator
     {
         try
         {
+            // Block mainline missions in multiplayer
+            if (mission.IsMainline && Main.netMode != NetmodeID.SinglePlayer)
+            {
+                Main.NewText("Story missions are only available in single player worlds.", Color.OrangeRed);
+                return;
+            }
+
             if (mission.IsMainline)
             {
-                WorldMissionSystem.Instance.StartMission(mission.ID);
+                MissionWorld.Instance.StartMission(mission.ID);
             }
             else
             {
@@ -494,8 +524,8 @@ public class MissionIndicator : ScreenIndicator
 
             IsVisible = false;
 
-            var missionType = mission.IsMainline ? "mainline" : "sideline";
-            ModContent.GetInstance<Reverie>().Logger.Info($"Player {Main.LocalPlayer.name} started {missionType} mission: {mission.Name}");
+            var missionType = mission.IsMainline ? "story" : "side";
+            ModContent.GetInstance<Reverie>().Logger.Info($"Player started {missionType} mission: {mission.Name}");
         }
         catch (Exception ex)
         {

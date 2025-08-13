@@ -1,5 +1,5 @@
 ﻿using Reverie.Common.Players;
-using Reverie.Core.Missions.Core;
+using Reverie.Core.Missions;
 using System.IO;
 
 namespace Reverie;
@@ -9,8 +9,6 @@ public sealed partial class Reverie : Mod
     public enum MessageType : byte
     {
         AddExperience,
-        ClassStatPlayerSync,
-        TileInteract
     }
 
     public override void HandlePacket(BinaryReader reader, int whoAmI)
@@ -28,20 +26,6 @@ public sealed partial class Reverie : Mod
                     ExperiencePlayer.AddExperience(player, experience);
                     CombatText.NewText(player.Hitbox, Color.LightGoldenrodYellow, $"+{experience} Exp", true);
                 }
-                break;
-
-            case MessageType.TileInteract:
-                int i = reader.ReadInt32();
-                int j = reader.ReadInt32();
-                int type = reader.ReadInt32();
-                int playerWhoAmI = reader.ReadInt32();
-
-                Player interactingPlayer = Main.LocalPlayer;
-                if (playerWhoAmI >= 0 && playerWhoAmI < Main.maxPlayers && Main.player[playerWhoAmI].active)
-                {
-                    interactingPlayer = Main.player[playerWhoAmI];
-                }
-                ObjectiveEventTile.HandleTileInteract(i, j, type, interactingPlayer);
                 break;
 
             default:

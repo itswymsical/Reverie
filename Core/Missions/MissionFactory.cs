@@ -1,10 +1,15 @@
 ﻿using Reverie.Content.Missions;
 using Reverie.Content.Missions.Argie;
-using Reverie.Core.Missions.Core;
-using Reverie.Utilities;
 using System.Collections.Generic;
 
-namespace Reverie.Core.Missions.SystemClasses;
+namespace Reverie.Core.Missions;
+public static class MissionID
+{
+    public static int JourneysBegin = 1;
+    public static int ForgottenAges = 2;
+    public static int SporeSplinter = 3;
+    public static int CopperStandard = 4;
+}
 
 public class MissionFactory : ModSystem
 {

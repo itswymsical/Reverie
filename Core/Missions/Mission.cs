@@ -1,20 +1,15 @@
 ﻿using Reverie.Common.Players;
 using Reverie.Common.UI.Missions;
-using Reverie.Utilities;
-
 using System.Collections.Generic;
 using System.Linq;
-
 using Terraria.Audio;
 using Terraria.DataStructures;
-using Terraria.ID;
 using Terraria.ModLoader.IO;
 using Terraria.UI;
 
-namespace Reverie.Core.Missions.Core;
+namespace Reverie.Core.Missions;
 
 public enum MissionProgress { Inactive, Ongoing, Completed }
-
 public enum MissionStatus { Locked, Unlocked, Completed }
 
 /// <summary>
@@ -22,8 +17,9 @@ public enum MissionStatus { Locked, Unlocked, Completed }
 /// Objectives are grouped into sets and must be completed in order.
 /// </summary>
 /// <remarks>
-/// Mainline missions are stored in world data and shared across all players.
+/// Mainline missions are stored in world data and shared across characters.
 /// Sideline missions are stored in individual player data.
+/// Single player only - no multiplayer support.
 /// </remarks>
 public abstract class Mission
 {
@@ -83,12 +79,11 @@ public abstract class Mission
     protected virtual void OnObjectiveIndexComplete(int setIndex, ObjectiveSet completedSet) { }
     protected virtual void OnObjectiveComplete(int objectiveIndexWithinCurrentSet) { }
 
-    public void HandleObjectiveCompletion(int objectiveIndex, Player player)
+    public void HandleObjectiveCompletion(int objectiveIndex)
     {
         try
         {
             var currentSet = Objective[CurrentIndex];
-            var objective = currentSet.Objectives[objectiveIndex];
             OnObjectiveComplete(objectiveIndex);
 
             if (currentSet.IsCompleted)
@@ -108,15 +103,14 @@ public abstract class Mission
     public bool WasItemInteracted(int type) => interactedItems.Contains(type);
     public void MarkItemInteracted(int type) => interactedItems.Add(type);
 
-    public bool UpdateProgress(int objective, int amount = 1, Player triggeringPlayer = null)
+    public bool UpdateProgress(int objective, int amount = 1)
     {
-        triggeringPlayer ??= Main.LocalPlayer;
         return IsMainline
-            ? WorldMissionSystem.Instance.UpdateProgress(ID, objective, amount, triggeringPlayer)
-            : UpdateProgressInternal(objective, amount, triggeringPlayer);
+            ? MissionWorld.Instance.UpdateProgress(ID, objective, amount)
+            : UpdateProgressInternal(objective, amount);
     }
 
-    public bool UpdateProgressInternal(int objective, int amount, Player player)
+    public bool UpdateProgressInternal(int objective, int amount)
     {
         if (Progress != MissionProgress.Ongoing)
             return false;
@@ -128,15 +122,12 @@ public abstract class Mission
             if (!obj.IsCompleted || amount < 0)
             {
                 var wasCompleted = obj.UpdateProgress(amount);
-                player.GetModPlayer<MissionPlayer>().NotifyMissionUpdate(this);
+                Main.LocalPlayer.GetModPlayer<MissionPlayer>().NotifyMissionUpdate(this);
 
                 if (wasCompleted && amount > 0)
                 {
-                    HandleObjectiveCompletion(objective, player);
-                    if (player == Main.LocalPlayer)
-                    {
-                        SoundEngine.PlaySound(SoundID.MenuTick, player.position);
-                    }
+                    HandleObjectiveCompletion(objective);
+                    SoundEngine.PlaySound(SoundID.MenuTick, Main.LocalPlayer.position);
                 }
 
                 if (currentSet.IsCompleted)
@@ -148,7 +139,7 @@ public abstract class Mission
                     }
                     if (Objective.All(set => set.IsCompleted))
                     {
-                        Complete(player);
+                        Complete();
                         return true;
                     }
                 }
@@ -170,28 +161,25 @@ public abstract class Mission
         }
     }
 
-    public void Complete(Player player)
+    public void Complete()
     {
         if (Progress == MissionProgress.Ongoing && Objective.All(set => set.IsCompleted))
         {
             UnregisterEventHandlers();
             Progress = MissionProgress.Completed;
             Status = MissionStatus.Completed;
-            OnMissionComplete(player);
+            OnMissionComplete();
         }
         interactedTiles.Clear();
         interactedItems.Clear();
     }
 
-    public virtual void OnMissionComplete(Player player, bool giveRewards = true)
+    public virtual void OnMissionComplete(bool giveRewards = true)
     {
         if (giveRewards)
-            GiveRewards(player);
+            GiveRewards();
 
-        if (player == Main.LocalPlayer)
-        {
-            InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(this));
-        }
+        InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(this));
     }
 
     public virtual void Update()
@@ -203,19 +191,16 @@ public abstract class Mission
         }
     }
 
-    private void GiveRewards(Player player)
+    private void GiveRewards()
     {
         foreach (var reward in Rewards)
         {
-            player.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), reward.type, reward.stack);
+            Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), reward.type, reward.stack);
         }
         if (Experience > 0)
         {
-            ExperiencePlayer.AddExperience(player, Experience);
-            if (player == Main.LocalPlayer)
-            {
-                Main.NewText($"{player.name} Gained [c/73d5ff:{Experience} Exp.] from completing [c/73d5ff:{Name}]!", Color.White);
-            }
+            ExperiencePlayer.AddExperience(Main.LocalPlayer, Experience);
+            Main.NewText($"{Main.LocalPlayer.name} Gained [c/73d5ff:{Experience} Exp.] from completing [c/73d5ff:{Name}]!", Color.White);
         }
     }
 
@@ -249,11 +234,7 @@ public abstract class Mission
         });
     }
 }
-/// <summary>
-/// A container class that stores mission state data.
-/// Maintains progress, completion status, and objective states of a mission
-/// without storing the full definition.
-/// </summary>
+
 public class MissionDataContainer
 {
     public int ID { get; set; }

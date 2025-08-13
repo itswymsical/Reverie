@@ -1,24 +1,19 @@
-﻿using Reverie.Core.Missions.Core;
-using Reverie.Core.Missions.SystemClasses;
-using Reverie.Common.UI.Missions;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using Terraria.ModLoader.IO;
-using Terraria.UI;
 using Terraria.Audio;
-using Terraria.ID;
+using Terraria.ModLoader.IO;
 
 namespace Reverie.Core.Missions;
 
 /// <summary>
-/// Container for mainline missions, it handles all mainline mission operations directly.
+/// Manages mainline missions at the world level for single player.
 /// </summary>
-public class WorldMissionSystem : ModSystem
+public class MissionWorld : ModSystem
 {
     #region Fields & Properties
     private readonly Dictionary<int, Mission> mainlineMissions = [];
-    private static WorldMissionSystem instance;
-    public static WorldMissionSystem Instance => instance ??= ModContent.GetInstance<WorldMissionSystem>();
+    private static MissionWorld instance;
+    public static MissionWorld Instance => instance ??= ModContent.GetInstance<MissionWorld>();
     #endregion
 
     #region Initialization
@@ -36,34 +31,30 @@ public class WorldMissionSystem : ModSystem
     public override void OnWorldLoad()
     {
         mainlineMissions.Clear();
-
         MissionFactory.Instance.ClearCache();
-
         MissionManager.Instance.Reset();
 
-        ModContent.GetInstance<Reverie>().Logger.Info("WorldMissionSystem: Cleared all mainline missions for new world");
+        ModContent.GetInstance<Reverie>().Logger.Info("MissionWorld: Cleared for new world");
 
+        // Always unlock the first mission for new worlds
         var journeysBegin = MissionFactory.Instance.GetMissionData(MissionID.JourneysBegin);
         if (journeysBegin?.IsMainline == true)
         {
             journeysBegin.Status = MissionStatus.Unlocked;
             journeysBegin.Unlocked = true;
             mainlineMissions[MissionID.JourneysBegin] = journeysBegin;
-            ModContent.GetInstance<Reverie>().Logger.Info("WorldMissionSystem: Journey's Begin unlocked for new world");
+            ModContent.GetInstance<Reverie>().Logger.Info("MissionWorld: Journey's Begin unlocked for new world");
         }
     }
 
     public override void OnWorldUnload()
     {
-        // Clean shutdown - clear data
-        // Event handlers will be cleaned up by missions themselves when they're destroyed
         mainlineMissions.Clear();
-        ModContent.GetInstance<Reverie>().Logger.Info("WorldMissionSystem: Cleaned up all mainline missions on world unload");
+        ModContent.GetInstance<Reverie>().Logger.Info("MissionWorld: Cleaned up on world unload");
     }
 
     public override void PostUpdateWorld()
     {
-        // Update all active mainline missions
         foreach (var mission in mainlineMissions.Values.Where(m => m.Progress == MissionProgress.Ongoing))
         {
             mission.Update();
@@ -90,34 +81,27 @@ public class WorldMissionSystem : ModSystem
     }
 
     public IEnumerable<Mission> GetAllMainlineMissions() => mainlineMissions.Values;
-
     public bool HasMainlineMission(int missionId) => mainlineMissions.ContainsKey(missionId);
     #endregion
 
-
-    public bool UpdateProgress(int missionId, int objectiveIndex, int amount = 1, Player triggeringPlayer = null)
+    #region Mission Operations
+    public bool UpdateProgress(int missionId, int objectiveIndex, int amount = 1)
     {
         var mission = GetMainlineMission(missionId);
         if (mission?.Progress == MissionProgress.Ongoing)
         {
-            triggeringPlayer ??= Main.LocalPlayer;
-
-            var progressUpdated = UpdateProgressInternal(mission, objectiveIndex, amount, triggeringPlayer);
-
+            var progressUpdated = UpdateProgressInternal(mission, objectiveIndex, amount);
             if (progressUpdated)
             {
-                NotifyUpdate(mission);
+                // Notify the local player's mission system
+                Main.LocalPlayer.GetModPlayer<MissionPlayer>().OnMainlineMissionUpdated(mission);
             }
-
             return progressUpdated;
         }
         return false;
     }
 
-    /// <summary>
-    /// Internal method that updates mission progress once at world level.
-    /// </summary>
-    private bool UpdateProgressInternal(Mission mission, int objectiveIndex, int amount, Player triggeringPlayer)
+    private bool UpdateProgressInternal(Mission mission, int objectiveIndex, int amount)
     {
         if (mission.Progress != MissionProgress.Ongoing)
             return false;
@@ -132,11 +116,8 @@ public class WorldMissionSystem : ModSystem
 
                 if (wasCompleted && amount > 0)
                 {
-                    mission.HandleObjectiveCompletion(objectiveIndex, triggeringPlayer);
-                    if (triggeringPlayer == Main.LocalPlayer)
-                    {
-                        SoundEngine.PlaySound(SoundID.MenuTick, triggeringPlayer.position);
-                    }
+                    mission.HandleObjectiveCompletion(objectiveIndex);
+                    SoundEngine.PlaySound(SoundID.MenuTick, Main.LocalPlayer.position);
                 }
 
                 if (currentSet.IsCompleted)
@@ -148,7 +129,7 @@ public class WorldMissionSystem : ModSystem
                     }
                     if (mission.Objective.All(set => set.IsCompleted))
                     {
-                        CompleteMission(mission.ID, triggeringPlayer);
+                        CompleteMission(mission.ID);
                         return true;
                     }
                 }
@@ -167,7 +148,8 @@ public class WorldMissionSystem : ModSystem
             MissionManager.Instance.RegisterMission(mission);
             mission.OnMissionStart();
 
-            NotifyStart(mission);
+            // Notify local player
+            Main.LocalPlayer.GetModPlayer<MissionPlayer>().OnStartedMainline(mission);
         }
     }
 
@@ -182,74 +164,25 @@ public class WorldMissionSystem : ModSystem
             if (broadcast && mission.ProviderNPC > 0)
             {
                 var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
-                Main.NewText($"{npcName} has a job opportunity!", Color.CornflowerBlue);
+                Main.NewText($"{npcName} has new information!", Color.CornflowerBlue);
             }
 
-            // Notify all players
-            NotifyUnlock(mission);
+            // Notify local player
+            Main.LocalPlayer.GetModPlayer<MissionPlayer>().OnUnlockedMainline(mission);
         }
     }
 
-    public void CompleteMission(int missionId, Player completingPlayer)
+    public void CompleteMission(int missionId)
     {
         var mission = GetMainlineMission(missionId);
         if (mission?.Progress == MissionProgress.Ongoing && mission.Objective.All(set => set.IsCompleted))
         {
             mission.Progress = MissionProgress.Completed;
             mission.Status = MissionStatus.Completed;
+            mission.OnMissionComplete();
 
-            mission.OnMissionComplete(completingPlayer);
-
-            NotifyComplete(mission);
-        }
-    }
-
-    #region Notifications (UI Updates)
-    private void NotifyUpdate(Mission mission)
-    {
-        for (int i = 0; i < Main.maxPlayers; i++)
-        {
-            if (Main.player[i].active)
-            {
-                var missionPlayer = Main.player[i].GetModPlayer<MissionPlayer>();
-                missionPlayer.OnMainlineMissionUpdated(mission);
-            }
-        }
-    }
-
-    private void NotifyStart(Mission mission)
-    {
-        for (int i = 0; i < Main.maxPlayers; i++)
-        {
-            if (Main.player[i].active)
-            {
-                var missionPlayer = Main.player[i].GetModPlayer<MissionPlayer>();
-                missionPlayer.OnStartedMainline(mission);
-            }
-        }
-    }
-
-    private void NotifyUnlock(Mission mission)
-    {
-        for (int i = 0; i < Main.maxPlayers; i++)
-        {
-            if (Main.player[i].active)
-            {
-                var missionPlayer = Main.player[i].GetModPlayer<MissionPlayer>();
-                missionPlayer.OnUnlockedMainline(mission);
-            }
-        }
-    }
-
-    private void NotifyComplete(Mission mission)
-    {
-        for (int i = 0; i < Main.maxPlayers; i++)
-        {
-            if (Main.player[i].active)
-            {
-                var missionPlayer = Main.player[i].GetModPlayer<MissionPlayer>();
-                missionPlayer.OnCompletedMainline(mission);
-            }
+            // Notify local player
+            Main.LocalPlayer.GetModPlayer<MissionPlayer>().OnCompletedMainline(mission);
         }
     }
     #endregion
@@ -291,13 +224,13 @@ public class WorldMissionSystem : ModSystem
             mainlineMissions.Clear();
 
             var mainlineMissionData = tag.GetList<TagCompound>("MainlineMissions");
-            int missionsLoaded = 0;
+            var missionsLoaded = 0;
 
             foreach (var missionTag in mainlineMissionData)
             {
                 try
                 {
-                    int missionId = missionTag.GetInt("ID");
+                    var missionId = missionTag.GetInt("ID");
                     var mission = MissionFactory.Instance.GetMissionData(missionId);
 
                     if (mission?.IsMainline == true)
@@ -375,7 +308,7 @@ public class WorldMissionSystem : ModSystem
 
     private static void LoadObjectiveSets(Mission mission, IList<TagCompound> serializedSets)
     {
-        for (int i = 0; i < Math.Min(mission.Objective.Count, serializedSets.Count); i++)
+        for (var i = 0; i < Math.Min(mission.Objective.Count, serializedSets.Count); i++)
         {
             var setTag = serializedSets[i];
             var currentSet = mission.Objective[i];
