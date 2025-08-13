@@ -127,7 +127,7 @@ public abstract class Mission
                 if (wasCompleted && amount > 0)
                 {
                     HandleObjectiveCompletion(objective);
-                    SoundEngine.PlaySound(SoundID.MenuTick, Main.LocalPlayer.position);
+                    SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ObjectiveComplete") with { Volume = 0.75f }, Main.LocalPlayer.position);
                 }
 
                 if (currentSet.IsCompleted)

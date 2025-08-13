@@ -1,6 +1,7 @@
 ﻿using Reverie.Common.UI.Missions;
 using System.Collections.Generic;
 using System.Linq;
+using Terraria.Audio;
 using Terraria.ModLoader.IO;
 using Terraria.UI;
 
@@ -490,7 +491,7 @@ public partial class MissionPlayer : ModPlayer
 
     public void OnMainlineMissionUpdated(Mission mission)
     {
-        // Refresh mission tracker UI
+        //SoundEngine.PlaySound(SoundID.MenuTick, Main.LocalPlayer.position);
     }
 
     public void OnStartedMainline(Mission mission)
