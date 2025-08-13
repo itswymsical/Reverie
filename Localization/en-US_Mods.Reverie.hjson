@@ -1,4 +1,4 @@
-UI.ExperienceTracker: Experience Bar
+﻿UI.ExperienceTracker: Experience Bar
 
 Conditions: {
 	CopperStandardComplete: After Mission, (Copper Standard)
@@ -692,6 +692,11 @@ Items: {
 	SpruceWoodSwordItem: {
 		DisplayName: Spruce Wood Sword
 		Tooltip: ""
+	}
+
+	VisionstoneItem: {
+		DisplayName: Visionstone
+		Tooltip: "Increases experience capacity by 500"
 	}
 }
 

@@ -55,8 +55,6 @@ public class ExperienceGlobalNPC : GlobalNPC
         if (isInstantKill || playerDamage.Count != 0 && npc.type != NPCID.TargetDummy)
         {
             var totalDamage = Math.Max(totalDamageDealt, npc.lifeMax);
-
-            // Calculate base XP using normalized values
             int baseXP = CalculateBaseXP(npc);
 
             foreach (var entry in playerDamage)
@@ -66,13 +64,10 @@ public class ExperienceGlobalNPC : GlobalNPC
                 var player = Main.player[playerID];
                 var modPlayer = player.GetModPlayer<ExperiencePlayer>();
 
-                if (player.active && !player.dead && modPlayer.expLevel <= 60)
+                if (player.active && !player.dead)
                 {
                     var damageRatio = (float)damageDealt / totalDamage;
                     var experiencePoints = (int)(baseXP * damageRatio);
-
-                    // Apply level scaling to prevent over-leveling on weak enemies
-                    experiencePoints = ApplyLevelScaling(experiencePoints, modPlayer.expLevel, npc);
 
                     if (isInstantKill && damageDealt == playerDamage.Values.Max())
                         experiencePoints = baseXP;
@@ -105,13 +100,12 @@ public class ExperienceGlobalNPC : GlobalNPC
     private int CalculateBaseXP(NPC npc)
     {
         int normalizedHealth = GetNormalizedHealth(npc);
-
-        int baseXP = normalizedHealth / 6;
+        int baseXP = normalizedHealth / 8; // Slightly reduced since XP is now a consumable resource
 
         float tierMultiplier = GetEnemyTierMultiplier(npc);
         baseXP = (int)(baseXP * tierMultiplier);
 
-        float difficultyMultiplier = Main.masterMode ? 1.4f : Main.expertMode ? 1.2f : 1f;
+        float difficultyMultiplier = Main.masterMode ? 1.3f : Main.expertMode ? 1.15f : 1f;
         baseXP = (int)(baseXP * difficultyMultiplier);
 
         if (npc.boss)
@@ -119,7 +113,7 @@ public class ExperienceGlobalNPC : GlobalNPC
             baseXP *= GetBossMultiplier(npc);
         }
 
-        return Math.Max(baseXP, 1);
+        return Math.Max(baseXP, 2); // Minimum 2 XP to make all kills meaningful
     }
 
     private int GetNormalizedHealth(NPC npc)
@@ -134,108 +128,52 @@ public class ExperienceGlobalNPC : GlobalNPC
 
     private float GetEnemyTierMultiplier(NPC npc)
     {
-        // Pre-Hardmode enemies
         if (!Main.hardMode)
         {
-            // Early game (surface/underground)
             if (npc.aiStyle == NPCAIStyleID.Slime ||
                 npc.type == NPCID.Zombie || npc.type == NPCID.DemonEye)
-                return 1.05f;
+                return 1f;
 
             if (npc.type == NPCID.ManEater || npc.type == NPCID.EaterofSouls)
                 return 1.2f;
 
-            return 1f;
+            return 1.1f;
         }
         else
         {
             if (npc.type == NPCID.Wraith || npc.type == NPCID.Pixie)
-                return 2f;
+                return 1.8f;
 
             if (npc.type == NPCID.IcyMerman || npc.type == NPCID.PigronCorruption)
-                return 2.5f;
+                return 2.2f;
 
             if (npc.type == NPCID.Lihzahrd || npc.type == NPCID.CultistDragonHead)
-                return 3f;
+                return 2.8f;
 
-            return 2.2f;
+            return 2f;
         }
     }
 
     private int GetBossMultiplier(NPC npc)
     {
-        if (npc.type == NPCID.KingSlime) return 3;
-        if (npc.type == NPCID.EyeofCthulhu) return 4;
-        if (npc.type == NPCID.EaterofWorldsHead || npc.type == NPCID.BrainofCthulhu) return 5;
-        if (npc.type == NPCID.QueenBee) return 5;
-        if (npc.type == NPCID.SkeletronHead) return 6;
-        if (npc.type == NPCID.WallofFlesh) return 8;
+        // Simplified boss multipliers since XP is now a resource
+        if (npc.type == NPCID.KingSlime) return 8;
+        if (npc.type == NPCID.EyeofCthulhu) return 12;
+        if (npc.type == NPCID.EaterofWorldsHead || npc.type == NPCID.BrainofCthulhu) return 15;
+        if (npc.type == NPCID.QueenBee) return 15;
+        if (npc.type == NPCID.SkeletronHead) return 18;
+        if (npc.type == NPCID.WallofFlesh) return 25;
 
-        if (npc.type == NPCID.QueenSlimeBoss) return 8;
-        if (npc.type == NPCID.Spazmatism || npc.type == NPCID.Retinazer) return 10;
-        if (npc.type == NPCID.TheDestroyer) return 10;
-        if (npc.type == NPCID.SkeletronPrime) return 10;
-        if (npc.type == NPCID.Plantera) return 15;
-        if (npc.type == NPCID.Golem) return 18;
-        if (npc.type == NPCID.DukeFishron) return 20;
-        if (npc.type == NPCID.CultistBoss) return 22;
-        if (npc.type == NPCID.MoonLordCore) return 30;
+        if (npc.type == NPCID.QueenSlimeBoss) return 25;
+        if (npc.type == NPCID.Spazmatism || npc.type == NPCID.Retinazer) return 30;
+        if (npc.type == NPCID.TheDestroyer) return 30;
+        if (npc.type == NPCID.SkeletronPrime) return 30;
+        if (npc.type == NPCID.Plantera) return 40;
+        if (npc.type == NPCID.Golem) return 45;
+        if (npc.type == NPCID.DukeFishron) return 50;
+        if (npc.type == NPCID.CultistBoss) return 55;
+        if (npc.type == NPCID.MoonLordCore) return 80;
 
-        return 7;
-    }
-
-    private int ApplyLevelScaling(int baseXP, int playerLevel, NPC npc)
-    {
-        int enemyLevel = EstimateEnemyLevel(npc);
-
-        int levelDifference = playerLevel - enemyLevel;
-
-        if (levelDifference > 10)
-        {
-            float penalty = Math.Max(0.1f, 1f - (levelDifference - 10) * 0.05f);
-            baseXP = (int)(baseXP * penalty);
-        }
-        else if (levelDifference < -5)
-        {
-            float bonus = 1f + Math.Abs(levelDifference + 5) * 0.1f;
-            baseXP = (int)(baseXP * Math.Min(bonus, 2f));
-        }
-
-        return baseXP;
-    }
-
-    private int EstimateEnemyLevel(NPC npc)
-    {
-        if (!Main.hardMode)
-        {
-            if (npc.boss) return Math.Min(20, npc.type switch
-            {
-                NPCID.KingSlime => 5,
-                NPCID.EyeofCthulhu => 8,
-                NPCID.EaterofWorldsHead or NPCID.BrainofCthulhu => 12,
-                NPCID.QueenBee => 14,
-                NPCID.SkeletronHead => 16,
-                NPCID.WallofFlesh => 20,
-                _ => 10
-            });
-
-            return 1 + (int)(npc.lifeMax / 50f);
-        }
-        else
-        {
-            if (npc.boss) return npc.type switch
-            {
-                NPCID.QueenSlimeBoss => 25,
-                NPCID.Spazmatism or NPCID.Retinazer or NPCID.TheDestroyer or NPCID.SkeletronPrime => 30,
-                NPCID.Plantera => 40,
-                NPCID.Golem => 45,
-                NPCID.DukeFishron => 50,
-                NPCID.CultistBoss => 55,
-                NPCID.MoonLordCore => 60,
-                _ => 35
-            };
-
-            return 20 + (int)(npc.lifeMax / 200f); // Hardmode enemy estimate
-        }
+        return 20;
     }
 }

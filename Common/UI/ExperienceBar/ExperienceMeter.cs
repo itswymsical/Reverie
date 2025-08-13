@@ -9,13 +9,12 @@ namespace Reverie.Common.UI.ExperienceBar;
 internal class ExperienceMeter : UIState
 {
     private UIText text;
-    private UIText level;
+    private UIText capacity;
     private UIElement area;
     private UIImage barFrame;
 
     public override void OnInitialize()
     {
-
         area = new UIElement();
         area.Top.Set(16, 0f);
         area.Width.Set(154, 0f);
@@ -32,16 +31,16 @@ internal class ExperienceMeter : UIState
         text.Width.Set(154, 0f);
         text.Height.Set(74, 0f);
         text.Top.Set(44, 0f);
-        text.Left.Set(0f, 0f);
+        text.Left.Set(-8f, 0f);
 
-        level = new UIText("0", 0.75f);
-        level.Width.Set(154, 0f);
-        level.Height.Set(73.25f, 0f);
-        level.Top.Set(4f, 0f);
-        level.Left.Set(78f, 0f);         
+        capacity = new UIText("0", 0.75f);
+        capacity.Width.Set(154, 0f);
+        capacity.Height.Set(73.25f, 0f);
+        capacity.Top.Set(4f, 0f);
+        capacity.Left.Set(78f, 0f);
 
         area.Append(barFrame);
-        area.Append(level);
+        area.Append(capacity);
         area.Append(text);
         Append(area);
     }
@@ -53,14 +52,17 @@ internal class ExperienceMeter : UIState
         base.DrawSelf(spriteBatch);
         var modPlayer = Main.LocalPlayer.GetModPlayer<ExperiencePlayer>();
         var config = ModContent.GetInstance<ExperienceMeterConfig>();
-        var xpPercentage = (float)modPlayer.expValue / ExperiencePlayer.GetNextExperienceThreshold(modPlayer.expLevel);
+
+        // Calculate fill percentage based on current exp vs max capacity
+        var xpPercentage = modPlayer.MaxExperience > 0 ? (float)modPlayer.curExp / modPlayer.MaxExperience : 0f;
         xpPercentage = MathHelper.Clamp(xpPercentage, 0f, 1f);
+
         var hitbox = barFrame.GetInnerDimensions().ToRectangle();
 
-        level.Width.Set(154, 0f);
-        level.Height.Set(74f, 0f);
-        level.Top.Set(11.5f, 0f);
-        level.Left.Set(72f, 0f);
+        capacity.Width.Set(154, 0f);
+        capacity.Height.Set(74f, 0f);
+        capacity.Top.Set(11.5f, 0f);
+        capacity.Left.Set(72f, 0f);
 
         spriteBatch.Draw(
             ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Experience/ExperienceBar_Empty").Value,
@@ -68,7 +70,7 @@ internal class ExperienceMeter : UIState
             config.BarColor
         );
 
-        var fillableWidth = hitbox.Width - 20;
+        var fillableWidth = hitbox.Width / 2 + 20;
         var fillableHeight = 12;
         var fillWidth = (int)(fillableWidth * xpPercentage);
 
@@ -77,6 +79,7 @@ internal class ExperienceMeter : UIState
 
         var fillRect = new Rectangle(hitbox.X + xOffset, hitbox.Y + yOffset, fillWidth, fillableHeight);
 
+        // Draw the experience fill bar
         for (var i = 0; i < fillWidth; i += 12)
         {
             var segmentWidth = Math.Min(12, fillWidth - i);
@@ -100,8 +103,12 @@ internal class ExperienceMeter : UIState
     public override void Update(GameTime gameTime)
     {
         var modPlayer = Main.LocalPlayer.GetModPlayer<ExperiencePlayer>();
-        text.SetText($"{modPlayer.expValue} / {ExperiencePlayer.GetNextExperienceThreshold(modPlayer.expLevel)}", 0.6f, false);
-        level.SetText($"{modPlayer.expLevel}", 1f, false);
+
+        // Display current exp / max exp
+        text.SetText($"{modPlayer.curExp} / {modPlayer.MaxExperience}", 0.6f, false);
+
+        // Display capacity level instead of character level
+        capacity.SetText($"{modPlayer.expCapacity}", 1f, false);
 
         base.Update(gameTime);
     }
@@ -121,7 +128,7 @@ internal class ExperienceUISystem : ModSystem
     }
 
     public override void UpdateUI(GameTime gameTime) => ExperienceMeterUserInterface?.Update(gameTime);
-    
+
     public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
     {
         var resourceBarIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Resource Bars"));
