@@ -11,13 +11,7 @@ using Terraria.ID;
 namespace Reverie.Core.Missions;
 
 /// <summary>
-/// "Open container" for mainline missions - handles all mainline mission operations directly.
-/// World data is automatically synced by tModLoader, eliminating the need for custom packets.
-/// 
-/// Architecture:
-/// - WorldMissionSystem (ModSystem): "Open container" for mainline missions (shared across all players)
-/// - MissionPlayer (ModPlayer): "Local container" for sideline missions (individual player progression)
-/// - No custom networking needed - leverages tModLoader's built-in world data synchronization
+/// Container for mainline missions, it handles all mainline mission operations directly.
 /// </summary>
 public class WorldMissionSystem : ModSystem
 {
@@ -41,17 +35,30 @@ public class WorldMissionSystem : ModSystem
 
     public override void OnWorldLoad()
     {
-        // Ensure Journey's Begin is always unlocked in new worlds
-        if (!mainlineMissions.ContainsKey(MissionID.JourneysBegin))
+        mainlineMissions.Clear();
+
+        MissionFactory.Instance.ClearCache();
+
+        MissionManager.Instance.Reset();
+
+        ModContent.GetInstance<Reverie>().Logger.Info("WorldMissionSystem: Cleared all mainline missions for new world");
+
+        var journeysBegin = MissionFactory.Instance.GetMissionData(MissionID.JourneysBegin);
+        if (journeysBegin?.IsMainline == true)
         {
-            var journeysBegin = MissionFactory.Instance.GetMissionData(MissionID.JourneysBegin);
-            if (journeysBegin?.IsMainline == true)
-            {
-                journeysBegin.Status = MissionStatus.Unlocked;
-                journeysBegin.Unlocked = true;
-                mainlineMissions[MissionID.JourneysBegin] = journeysBegin;
-            }
+            journeysBegin.Status = MissionStatus.Unlocked;
+            journeysBegin.Unlocked = true;
+            mainlineMissions[MissionID.JourneysBegin] = journeysBegin;
+            ModContent.GetInstance<Reverie>().Logger.Info("WorldMissionSystem: Journey's Begin unlocked for new world");
         }
+    }
+
+    public override void OnWorldUnload()
+    {
+        // Clean shutdown - clear data
+        // Event handlers will be cleaned up by missions themselves when they're destroyed
+        mainlineMissions.Clear();
+        ModContent.GetInstance<Reverie>().Logger.Info("WorldMissionSystem: Cleaned up all mainline missions on world unload");
     }
 
     public override void PostUpdateWorld()
@@ -87,25 +94,19 @@ public class WorldMissionSystem : ModSystem
     public bool HasMainlineMission(int missionId) => mainlineMissions.ContainsKey(missionId);
     #endregion
 
-    #region Direct Mission Operations (No Packets Needed)
-    /// <summary>
-    /// Directly updates mainline mission progress ONCE (not per player).
-    /// World data sync handles multiplayer automatically.
-    /// </summary>
-    public bool UpdateMissionProgress(int missionId, int objectiveIndex, int amount = 1, Player triggeringPlayer = null)
+
+    public bool UpdateProgress(int missionId, int objectiveIndex, int amount = 1, Player triggeringPlayer = null)
     {
         var mission = GetMainlineMission(missionId);
         if (mission?.Progress == MissionProgress.Ongoing)
         {
             triggeringPlayer ??= Main.LocalPlayer;
 
-            // Update progress ONCE at the world level (not per player)
-            var progressUpdated = UpdateMissionProgressInternal(mission, objectiveIndex, amount, triggeringPlayer);
+            var progressUpdated = UpdateProgressInternal(mission, objectiveIndex, amount, triggeringPlayer);
 
             if (progressUpdated)
             {
-                // Notify all active players of the update (for UI refresh, etc.)
-                NotifyAllPlayersOfMissionUpdate(mission);
+                NotifyUpdate(mission);
             }
 
             return progressUpdated;
@@ -115,9 +116,8 @@ public class WorldMissionSystem : ModSystem
 
     /// <summary>
     /// Internal method that updates mission progress once at world level.
-    /// This prevents the multiplayer cascading issue.
     /// </summary>
-    private bool UpdateMissionProgressInternal(Mission mission, int objectiveIndex, int amount, Player triggeringPlayer)
+    private bool UpdateProgressInternal(Mission mission, int objectiveIndex, int amount, Player triggeringPlayer)
     {
         if (mission.Progress != MissionProgress.Ongoing)
             return false;
@@ -133,7 +133,6 @@ public class WorldMissionSystem : ModSystem
                 if (wasCompleted && amount > 0)
                 {
                     mission.HandleObjectiveCompletion(objectiveIndex, triggeringPlayer);
-                    // Play sound for the triggering player
                     if (triggeringPlayer == Main.LocalPlayer)
                     {
                         SoundEngine.PlaySound(SoundID.MenuTick, triggeringPlayer.position);
@@ -159,9 +158,6 @@ public class WorldMissionSystem : ModSystem
         return false;
     }
 
-    /// <summary>
-    /// Directly starts a mainline mission. World data sync handles multiplayer automatically.
-    /// </summary>
     public void StartMission(int missionId)
     {
         var mission = GetMainlineMission(missionId);
@@ -171,14 +167,10 @@ public class WorldMissionSystem : ModSystem
             MissionManager.Instance.RegisterMission(mission);
             mission.OnMissionStart();
 
-            // Notify all players
-            NotifyAllPlayersOfMissionStart(mission);
+            NotifyStart(mission);
         }
     }
 
-    /// <summary>
-    /// Directly unlocks a mainline mission. World data sync handles multiplayer automatically.
-    /// </summary>
     public void UnlockMission(int missionId, bool broadcast = false)
     {
         var mission = GetMainlineMission(missionId);
@@ -194,13 +186,10 @@ public class WorldMissionSystem : ModSystem
             }
 
             // Notify all players
-            NotifyAllPlayersOfMissionUnlock(mission);
+            NotifyUnlock(mission);
         }
     }
 
-    /// <summary>
-    /// Directly completes a mainline mission. World data sync handles multiplayer automatically.
-    /// </summary>
     public void CompleteMission(int missionId, Player completingPlayer)
     {
         var mission = GetMainlineMission(missionId);
@@ -211,14 +200,12 @@ public class WorldMissionSystem : ModSystem
 
             mission.OnMissionComplete(completingPlayer);
 
-            // Notify all players
-            NotifyAllPlayersOfMissionComplete(mission);
+            NotifyComplete(mission);
         }
     }
-    #endregion
 
-    #region Player Notifications (UI Updates)
-    private void NotifyAllPlayersOfMissionUpdate(Mission mission)
+    #region Notifications (UI Updates)
+    private void NotifyUpdate(Mission mission)
     {
         for (int i = 0; i < Main.maxPlayers; i++)
         {
@@ -230,44 +217,44 @@ public class WorldMissionSystem : ModSystem
         }
     }
 
-    private void NotifyAllPlayersOfMissionStart(Mission mission)
+    private void NotifyStart(Mission mission)
     {
         for (int i = 0; i < Main.maxPlayers; i++)
         {
             if (Main.player[i].active)
             {
                 var missionPlayer = Main.player[i].GetModPlayer<MissionPlayer>();
-                missionPlayer.OnMainlineMissionStarted(mission);
+                missionPlayer.OnStartedMainline(mission);
             }
         }
     }
 
-    private void NotifyAllPlayersOfMissionUnlock(Mission mission)
+    private void NotifyUnlock(Mission mission)
     {
         for (int i = 0; i < Main.maxPlayers; i++)
         {
             if (Main.player[i].active)
             {
                 var missionPlayer = Main.player[i].GetModPlayer<MissionPlayer>();
-                missionPlayer.OnMainlineMissionUnlocked(mission);
+                missionPlayer.OnUnlockedMainline(mission);
             }
         }
     }
 
-    private void NotifyAllPlayersOfMissionComplete(Mission mission)
+    private void NotifyComplete(Mission mission)
     {
         for (int i = 0; i < Main.maxPlayers; i++)
         {
             if (Main.player[i].active)
             {
                 var missionPlayer = Main.player[i].GetModPlayer<MissionPlayer>();
-                missionPlayer.OnMainlineMissionCompleted(mission);
+                missionPlayer.OnCompletedMainline(mission);
             }
         }
     }
     #endregion
 
-    #region Serialization (Automatic World Data Sync)
+    #region Serialization
     public override void SaveWorldData(TagCompound tag)
     {
         try
@@ -396,7 +383,6 @@ public class WorldMissionSystem : ModSystem
 
             currentSet.HasCheckedInitialInventory = setTag.GetBool("HasCheckedInventory");
 
-            // Match objectives by description to handle potential reordering
             foreach (var currentObj in currentSet.Objectives)
             {
                 var matchingObjTag = objectiveTags.FirstOrDefault(tag =>

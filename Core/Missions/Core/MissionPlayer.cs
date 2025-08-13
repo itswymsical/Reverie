@@ -33,13 +33,10 @@ public partial class MissionPlayer : ModPlayer
         {
             if (mission.IsMainline)
             {
-                // Mainline missions are handled by WorldMissionSystem
-                // This is just a notification that progress was updated
                 ModContent.GetInstance<Reverie>().Logger.Debug($"Mainline mission {mission.Name} progress updated");
             }
             else
             {
-                // Store sideline mission in player data
                 sidelineMissions[mission.ID] = mission;
                 ModContent.GetInstance<Reverie>().Logger.Debug($"Sideline mission {mission.Name} progress updated");
             }
@@ -58,7 +55,7 @@ public partial class MissionPlayer : ModPlayer
             if (mission.IsMainline)
             {
                 // Direct call - world data sync handles multiplayer automatically
-                return WorldMissionSystem.Instance.UpdateMissionProgress(missionId, objectiveIndex, amount, Player);
+                return WorldMissionSystem.Instance.UpdateProgress(missionId, objectiveIndex, amount, Player);
             }
             else
             {
@@ -82,14 +79,13 @@ public partial class MissionPlayer : ModPlayer
     }
     #endregion
 
-    #region Serialization (Sideline Missions Only)
+    #region Serialization
     public override void SaveData(TagCompound tag)
     {
         try
         {
             var sidelineMissionData = new List<TagCompound>();
 
-            // Only save sideline missions - mainline missions are saved in WorldMissionSystem
             foreach (var mission in sidelineMissions.Values.Where(m => !m.IsMainline))
             {
                 var missionData = new TagCompound
@@ -134,7 +130,6 @@ public partial class MissionPlayer : ModPlayer
         {
             ModContent.GetInstance<Reverie>().Logger.Info("Loading player sideline mission data");
 
-            // Load completed sideline missions
             var completedMissionIds = savedMissionData.GetList<int>("CompletedSidelineMissionIDs");
             foreach (var missionId in completedMissionIds)
             {
@@ -148,7 +143,6 @@ public partial class MissionPlayer : ModPlayer
                 }
             }
 
-            // Load active sideline missions
             var sidelineMissionData = savedMissionData.GetList<TagCompound>("SidelineMissions");
             foreach (var missionTag in sidelineMissionData)
             {
@@ -162,7 +156,6 @@ public partial class MissionPlayer : ModPlayer
                 }
             }
 
-            // Load notification history
             try
             {
                 notifiedMissions.UnionWith([.. savedMissionData.GetList<int>("NotifiedMissions")]);
@@ -172,7 +165,6 @@ public partial class MissionPlayer : ModPlayer
                 ModContent.GetInstance<Reverie>().Logger.Error($"Failed to load notification history: {ex}");
             }
 
-            // Register active sideline missions
             foreach (var mission in ActiveSidelineMissions())
             {
                 try
@@ -202,7 +194,7 @@ public partial class MissionPlayer : ModPlayer
             var missionId = missionTag.GetInt("ID");
             var mission = MissionFactory.Instance.GetMissionData(missionId);
 
-            if (mission?.IsMainline == false) // Only load sideline missions here
+            if (mission?.IsMainline == false)
             {
                 mission.Progress = (MissionProgress)missionTag.GetInt("Progress");
                 mission.Status = (MissionStatus)missionTag.GetInt("Status");
@@ -291,7 +283,7 @@ public partial class MissionPlayer : ModPlayer
     }
     #endregion
 
-    #region Mission Access (Unified Interface)
+    #region Mission Access
     /// <summary>
     /// Gets a mission from either world data (mainline) or player data (sideline).
     /// </summary>
@@ -332,12 +324,11 @@ public partial class MissionPlayer : ModPlayer
         {
             if (mission.IsMainline)
             {
-                // Direct call - world data sync handles multiplayer automatically
                 WorldMissionSystem.Instance.StartMission(missionId);
             }
             else
             {
-                StartSidelineMissionLocal(missionId);
+                StartMissionLocal(missionId);
             }
         }
     }
@@ -349,7 +340,6 @@ public partial class MissionPlayer : ModPlayer
         {
             if (mission.IsMainline)
             {
-                // Direct call - world data sync handles multiplayer automatically
                 WorldMissionSystem.Instance.UnlockMission(missionId, broadcast);
             }
             else
@@ -366,17 +356,16 @@ public partial class MissionPlayer : ModPlayer
         {
             if (mission.IsMainline)
             {
-                // Direct call - world data sync handles multiplayer automatically
                 WorldMissionSystem.Instance.CompleteMission(missionId, Player);
             }
             else
             {
-                CompleteSidelineMissionLocal(missionId);
+                CompleteMissionLocal(missionId);
             }
         }
     }
 
-    private void StartSidelineMissionLocal(int missionId)
+    private void StartMissionLocal(int missionId)
     {
         var mission = GetMission(missionId);
         if (mission?.IsMainline == false)
@@ -412,7 +401,7 @@ public partial class MissionPlayer : ModPlayer
         }
     }
 
-    private void CompleteSidelineMissionLocal(int missionId)
+    private void CompleteMissionLocal(int missionId)
     {
         var mission = GetMission(missionId);
         if (mission?.IsMainline == false && mission.Progress == MissionProgress.Ongoing)
@@ -429,7 +418,6 @@ public partial class MissionPlayer : ModPlayer
         {
             if (mission.IsMainline)
             {
-                // Reset mainline mission in world system
                 var worldMission = WorldMissionSystem.Instance.GetMainlineMission(missionId);
                 if (worldMission != null)
                 {
@@ -439,7 +427,6 @@ public partial class MissionPlayer : ModPlayer
             }
             else
             {
-                // Reset sideline mission locally
                 mission.Reset();
                 mission.Status = MissionStatus.Unlocked;
                 sidelineMissions[missionId] = mission;
@@ -449,7 +436,6 @@ public partial class MissionPlayer : ModPlayer
 
     public IEnumerable<Mission> AvailableMissions()
     {
-        // Combine mainline and sideline available missions
         var mainlineAvailable = WorldMissionSystem.Instance.GetAllMainlineMissions()
             .Where(m => m.Status == MissionStatus.Unlocked && m.Progress == MissionProgress.Inactive);
 
@@ -461,7 +447,6 @@ public partial class MissionPlayer : ModPlayer
 
     public IEnumerable<Mission> ActiveMissions()
     {
-        // Combine mainline and sideline active missions
         var mainlineActive = WorldMissionSystem.Instance.GetAllMainlineMissions()
             .Where(m => m.Progress == MissionProgress.Ongoing);
 
@@ -496,7 +481,6 @@ public partial class MissionPlayer : ModPlayer
     {
         bool hasAvailableMission = false;
 
-        // Check both mainline and sideline missions
         foreach (var mission in AvailableMissions().Where(m => m.ProviderNPC == npcType))
         {
             hasAvailableMission = true;
@@ -514,22 +498,16 @@ public partial class MissionPlayer : ModPlayer
     #endregion
 
     #region Mainline Mission Callbacks
-    /// <summary>
-    /// Called when a mainline mission is updated by any player.
-    /// </summary>
+
     public void OnMainlineMissionUpdated(Mission mission)
     {
-        // Update UI or other systems as needed
         if (Player == Main.LocalPlayer)
         {
             // Refresh mission tracker UI, etc.
         }
     }
 
-    /// <summary>
-    /// Called when a mainline mission is started.
-    /// </summary>
-    public void OnMainlineMissionStarted(Mission mission)
+    public void OnStartedMainline(Mission mission)
     {
         if (Player == Main.LocalPlayer)
         {
@@ -537,20 +515,19 @@ public partial class MissionPlayer : ModPlayer
         }
     }
 
-    /// <summary>
-    /// Called when a mainline mission is unlocked.
-    /// </summary>
-    public void OnMainlineMissionUnlocked(Mission mission)
+    public void OnUnlockedMainline(Mission mission)
     {
-        // Handle any player-specific logic for mission unlocks
+        var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
+        Main.NewText($"{npcName} has new information!", Color.CornflowerBlue);
+        notifiedMissions.Add(mission.ID);
     }
 
-    /// <summary>
-    /// Called when a mainline mission is completed.
-    /// </summary>
-    public void OnMainlineMissionCompleted(Mission mission)
+    public void OnCompletedMainline(Mission mission)
     {
-        // Handle any player-specific completion logic
+        if (Player == Main.LocalPlayer) // might play twice, check the mission for additional calls
+        {
+            InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(mission));
+        }
     }
     #endregion
 
@@ -559,6 +536,8 @@ public partial class MissionPlayer : ModPlayer
     {
         ProcessDeferredLoad();
         notifiedMissions.Clear();
+
+        ModContent.GetInstance<Reverie>().Logger.Info($"Player {Player.name} entered world with {sidelineMissions.Count} sideline missions");
     }
 
     public override void PostUpdate()

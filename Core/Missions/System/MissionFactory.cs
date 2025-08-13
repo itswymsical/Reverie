@@ -57,6 +57,13 @@ public class MissionFactory : ModSystem
         ModContent.GetInstance<Reverie>().Logger.Info("MissionFactory: OnWorldLoad complete");
     }
 
+    public override void OnWorldUnload()
+    {
+        // Ensure complete cleanup when unloading world
+        missionCache.Clear();
+        Reverie.Instance.Logger.Info("MissionFactory: Cache cleared on world unload");
+    }
+
     public override void Unload()
     {
         missionTypes.Clear();
