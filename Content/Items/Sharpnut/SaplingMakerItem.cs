@@ -312,7 +312,9 @@ public class SaplingMakerProj : ModProjectile, IDrawPrimitive
     {
         cache ??= Enumerable.Repeat(Projectile.Center, TRAIL_LENGTH).ToList();
 
-        cache.Add(Projectile.Center);
+        Vector2 behindProjectile = Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.Zero);
+        cache.Add(behindProjectile);
+
         if (cache.Count > TRAIL_LENGTH)
             cache.RemoveAt(0);
     }

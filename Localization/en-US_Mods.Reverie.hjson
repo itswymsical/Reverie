@@ -696,7 +696,7 @@ Items: {
 
 	VisionstoneItem: {
 		DisplayName: Visionstone
-		Tooltip: "Increases experience capacity by 500"
+		Tooltip: Increases experience capacity by 500
 	}
 }
 
@@ -939,39 +939,19 @@ Biomes: {
 		TownNPCDialogueName: the Emberite Caverns
 	}
 
-	LowerCanopyBiome: {
-		DisplayName: Lower Canopy
-		TownNPCDialogueName: the Lower Canopy
-	}
-
-	WoodlandCanopyBiome: {
-		DisplayName: Woodland Canopy
-		TownNPCDialogueName: the Woodland Canopy
-	}
-
-	SylvanOverworldDayBiome: {
-		DisplayName: Sylvan Overworld
-		TownNPCDialogueName: the Sylvan Overworld
-	}
-
-	SylvanOverworldNightBiome: {
-		DisplayName: Sylvan Overworld
-		TownNPCDialogueName: the Sylvan Overworld
-	}
-
 	SurfaceCanopyBiome: {
-		DisplayName: Surface Canopy Biome
-		TownNPCDialogueName: the Surface Canopy Biome
+		DisplayName: Surface Canopy
+		TownNPCDialogueName: the Surface Canopy
 	}
 
 	UndergroundCanopyBiome: {
-		DisplayName: Underground Canopy Biome
-		TownNPCDialogueName: the Underground Canopy Biome
+		DisplayName: Underground Canopy
+		TownNPCDialogueName: the Underground Canopy
 	}
 
 	TaigaBiome: {
-		DisplayName: Taiga Biome
-		TownNPCDialogueName: the Taiga Biome
+		DisplayName: Taiga
+		TownNPCDialogueName: the Taiga
 	}
 }
 
@@ -983,14 +963,14 @@ Keybinds: {
 Tiles: {
 	MagnoliaTile.MapEntry: Magnolia
 	BirchChestTile.MapEntry: Birch Wood Chest
-	BirchDresserTile.MapEntry: Birch Dresser Tile
-	SpruceDresserTile.MapEntry: Spruce Dresser Tile
+	BirchDresserTile.MapEntry: Birch Dresser
+	SpruceDresserTile.MapEntry: Spruce Dresser
 }
 
 Buffs: {
 	BarkskinPotionBuff: {
-		DisplayName: Barkskin Potion Buff
-		Description: Mods.Reverie.Buffs.BarkskinPotionBuff.Description
+		DisplayName: Barkskin Potion
+		Description: I forgor
 	}
 
 	WaterleafSlowness: {

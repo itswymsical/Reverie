@@ -2,7 +2,7 @@
 	Argie: {
 		Intro: {
 			Line1: {
-				Text: You there!!
+				Text: You there!
 				Speaker: Argie
 				Emote: "0"
 				Speed: "1.5"
@@ -16,35 +16,35 @@
 			}
 
 			Line3: {
-				Text: Terrarian!!!
+				Text: ...
 				Speaker: Argie
 				Emote: "0"
-				Speed: "1.5"
+				Speed: "0.5"
 			}
 
 			Line4: {
-				Text: I am Argie,<pause:11> the most esteemed and prestigious mycologist.
+				Text: I am Argie,<pause:11> a <sine>prestigious</sine> mycologist!
 				Speaker: Argie
 				Emote: "0"
 				Speed: "1.5"
 			}
 
 			Line5: {
-				Text: And I have a proposition for you!
+				Text: I have a proposition for you!
 				Speaker: Argie
 				Emote: "0"
 				Speed: "1.5"
 			}
 
 			Line6: {
-				Text: You see, I am studying the local flora and fauna, particularly the mushrooms.
+				Text: You see,<pause:16> I am studying the local flora and fauna,<pause:16> particularly the mycelium.
 				Speaker: Argie
 				Emote: "0"
 				Speed: "1.5"
 			}
 
 			Line7: {
-				Text: But before I can continue, I need you to gather some materials for housing.
+				Text: before I can proceed,<pause:16> I require materials for my headquarters!
 				Speaker: Argie
 				Emote: "0"
 				Speed: "1.5"

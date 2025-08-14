@@ -3,6 +3,7 @@ using Reverie.Core.Graphics.Interfaces;
 using Reverie.Core.Loaders;
 using Reverie.Utilities;
 using System.Collections.Generic;
+using System.Linq;
 using Terraria.GameContent;
 
 namespace Reverie.Content.Projectiles.Sharpnut;
@@ -263,22 +264,13 @@ public class SharpnutDaggerProj : ModProjectile, IDrawPrimitive
 
     private void ManageCaches()
     {
-        var pos = Projectile.Center;
+        cache ??= Enumerable.Repeat(Projectile.Center, 15).ToList();
 
-        if (cache == null)
-        {
-            cache = [];
-            for (var i = 0; i < 15; i++)
-            {
-                cache.Add(pos);
-            }
-        }
+        Vector2 behindProjectile = Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.Zero);
+        cache.Add(behindProjectile);
 
-        cache.Add(pos);
-        while (cache.Count > 15)
-        {
+        if (cache.Count > 15)
             cache.RemoveAt(0);
-        }
     }
 
     private void ManageTrail()
@@ -287,19 +279,16 @@ public class SharpnutDaggerProj : ModProjectile, IDrawPrimitive
         if (stickingToNPC)
             return;
 
-        var pos = Projectile.Center;
 
-        Color color = fallOffStarted ? Color.DimGray * 0.25f : Color.Black * 0.45f;
+        Color color = fallOffStarted ? Color.DimGray * 0.15f : Color.Black * 0.35f;
 
-        trail ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(5), factor => factor * 50, factor =>
-        {
-            if (factor.X >= 0.98f)
-                return Color.DarkGray * 0;
-            return color * 0.6f * (float)Math.Pow(factor.X, 2);
-        });
+        trail ??= new Trail(Main.instance.GraphicsDevice, 15,
+            new RoundedTip(15),
+            factor => factor * 10,
+            factor => color * 0.6f * (float)Math.Pow(factor.X, 2));
+
         trail.Positions = [.. cache];
-
-        trail.NextPosition = pos;
+        trail.NextPosition = Projectile.Center;
     }
 
     public void DrawPrimitives()
@@ -307,7 +296,7 @@ public class SharpnutDaggerProj : ModProjectile, IDrawPrimitive
         if (stickingToNPC)
             return;
 
-        var effect = ShaderLoader.GetShader("pixelTrail").Value;
+        var effect = ShaderLoader.GetShader("LightningTrail").Value;
 
         if (effect != null)
         {
@@ -320,7 +309,7 @@ public class SharpnutDaggerProj : ModProjectile, IDrawPrimitive
             effect.Parameters["pixelation"]?.SetValue(4f);
             effect.Parameters["resolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
             effect.Parameters["transformMatrix"]?.SetValue(world * view * projection);
-            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}BeamTrail2").Value);
+            effect.Parameters["sampleTexture"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}BeamTrail").Value);
 
             trail?.Render(effect);
         }

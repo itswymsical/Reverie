@@ -3,7 +3,7 @@ using Reverie.Core.Graphics.Interfaces;
 using Reverie.Core.Loaders;
 using Reverie.Utilities;
 using System.Collections.Generic;
-
+using System.Linq;
 using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.Graphics.Effects;
@@ -299,53 +299,28 @@ public class BorealHewerProj : ModProjectile, IDrawPrimitive
 
     private void ManageCaches()
     {
-        // Get the actual projectile position without random offsets
-        var pos = Projectile.Center;
+        cache ??= Enumerable.Repeat(Projectile.Center, 15).ToList();
 
-        if (cache == null)
-        {
-            cache = [];
-            for (var i = 0; i < 15; i++)
-            {
-                cache.Add(pos);
-            }
-        }
+        Vector2 behindProjectile = Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.Zero);
+        cache.Add(behindProjectile);
 
-        cache.Add(pos);
-        while (cache.Count > 15)
-        {
+        if (cache.Count > 15)
             cache.RemoveAt(0);
-        }
     }
 
     private void ManageTrail()
     {
-        // Use the actual projectile position
         var pos = Projectile.Center;
 
-        // Change color to an ice blue
         Color iceColor = new Color(120, 200, 255);
 
-        trail ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(5), factor => factor * 50, factor =>
-        {
-            if (factor.X >= 0.98f)
-                return Color.White * 0;
-            // Use a blue ice color that fades out
-            return iceColor * 0.6f * (float)Math.Pow(factor.X, 2);
-        });
+        trail ??= new Trail(Main.instance.GraphicsDevice, 15,
+            new RoundedTip(12),
+            factor => factor * 60,
+            factor => iceColor * 0.6f * (float)Math.Pow(factor.X, 2));
+
         trail.Positions = [.. cache];
-
-        trail2 ??= new Trail(Main.instance.GraphicsDevice, 15, new RoundedTip(5), factor => factor * 30, factor =>
-        {
-            if (factor.X >= 0.98f)
-                return Color.White * 0;
-            // Create a whiter center for the ice trail
-            return Color.Lerp(iceColor, Color.White, 0.6f) * 0.7f * (float)Math.Pow(factor.X, 2);
-        });
-        trail2.Positions = [.. cache];
-
-        trail.NextPosition = pos;
-        trail2.NextPosition = pos;
+        trail.NextPosition = Projectile.Center;
     }
 
     public void DrawPrimitives()
