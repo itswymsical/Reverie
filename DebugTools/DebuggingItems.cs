@@ -108,7 +108,6 @@ public class SpawnDialogueIndicator : ModItem
 
                 Main.NewText($"Placed at position [X:{Main.MouseWorld.X} Y:{Main.MouseWorld.Y}]");
             }
-
         }
         else
         {

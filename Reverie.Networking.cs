@@ -24,7 +24,7 @@ public sealed partial class Reverie : Mod
                 {
                     Player player = Main.player[playerID];
                     ExperiencePlayer.AddExperience(player, experience);
-                    CombatText.NewText(player.Hitbox, Color.LightGoldenrodYellow, $"+{experience} Exp", true);
+                    CombatText.NewText(player.Hitbox, Color.CornflowerBlue, $"+{experience} Exp", true);
                 }
                 break;
 
