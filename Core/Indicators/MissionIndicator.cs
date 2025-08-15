@@ -109,9 +109,9 @@ public class MissionIndicator : ScreenIndicator
         var rewardLayout = CalculateRewardLayout(mission);
 
         var lineCount = 3; // Mission type, name, employer, description
-        if (mission.Objective.Count > 0)
+        if (mission.ObjectiveList.Count > 0)
         {
-            lineCount += mission.Objective[0].Objectives.Count;
+            lineCount += mission.ObjectiveList[0].Objective.Count;
         }
 
         // Add space for rewards if they exist

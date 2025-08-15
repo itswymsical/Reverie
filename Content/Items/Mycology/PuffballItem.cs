@@ -8,5 +8,6 @@ public class PuffballItem : ModItem
         Item.width = Item.height = 36;
         Item.rare = ItemRarityID.Quest;
         Item.maxStack = Item.CommonMaxStack;
+        Item.questItem = true;
     }
 }

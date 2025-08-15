@@ -11,7 +11,7 @@ public class Objective(string description, int requiredCount = 1)
     public string Description { get; set; } = description;
     public bool IsCompleted { get; set; } = false;
     public int RequiredCount { get; set; } = requiredCount;
-    public int CurrentCount { get; set; } = 0;
+    public int Count { get; set; } = 0;
     public bool IsVisible { get; set; } = true;
 
     public delegate bool VisibilityCondition(Mission mission);
@@ -26,11 +26,11 @@ public class Objective(string description, int requiredCount = 1)
     }
     public bool UpdateProgress(int amount = 1)
     {
-        CurrentCount += amount;
-        if (CurrentCount >= RequiredCount)
+        Count += amount;
+        if (Count >= RequiredCount)
         {
             IsCompleted = true;
-            CurrentCount = RequiredCount;
+            Count = RequiredCount;
             return true;
         }
         return false;
@@ -41,7 +41,7 @@ public class Objective(string description, int requiredCount = 1)
         writer.Write(Description);
         writer.Write(IsCompleted);
         writer.Write(RequiredCount);
-        writer.Write(CurrentCount);
+        writer.Write(Count);
         writer.Write(IsVisible);
     }
 
@@ -50,7 +50,7 @@ public class Objective(string description, int requiredCount = 1)
         Description = reader.ReadString();
         IsCompleted = reader.ReadBoolean();
         RequiredCount = reader.ReadInt32();
-        CurrentCount = reader.ReadInt32();
+        Count = reader.ReadInt32();
         IsVisible = reader.ReadBoolean();
     }
 
@@ -80,7 +80,7 @@ public class ObjectiveIndexState
     {
         return new TagCompound
         {
-            ["Objectives"] = Objectives.Select(obj => obj.Serialize()).ToList()
+            ["Objective"] = Objectives.Select(obj => obj.Serialize()).ToList()
         };
     }
 
@@ -90,7 +90,7 @@ public class ObjectiveIndexState
         {
             return new ObjectiveIndexState
             {
-                Objectives = tag.GetList<TagCompound>("Objectives")
+                Objectives = tag.GetList<TagCompound>("Objective")
                     .Select(t => ObjectiveState.Deserialize(t))
                     .Where(obj => obj != null)
                     .ToList()
@@ -117,7 +117,7 @@ public class ObjectiveState
             ["Description"] = Description,
             ["IsCompleted"] = IsCompleted,
             ["RequiredCount"] = RequiredCount,
-            ["CurrentCount"] = CurrentCount
+            ["Count"] = CurrentCount
         };
     }
 
@@ -130,7 +130,7 @@ public class ObjectiveState
                 Description = tag.GetString("Description"),
                 IsCompleted = tag.GetBool("IsCompleted"),
                 RequiredCount = tag.GetInt("RequiredCount"),
-                CurrentCount = tag.GetInt("CurrentCount")
+                CurrentCount = tag.GetInt("Count")
             };
         }
         catch
@@ -140,26 +140,33 @@ public class ObjectiveState
     }
 }
 
-public class ObjectiveSet(List<Objective> objectives)
+/// <summary>
+/// gets a list of objectives for a mission. Missions typically have serveral task lists that need to be completed.
+/// </summary>
+/// <param name="objectives"></param>
+public class ObjectiveList(List<Objective> objectives)
 {
-    public List<Objective> Objectives { get; } = objectives;
-    public bool IsCompleted => Objectives.All(o => o.IsCompleted);
+    /// <summary>
+    /// gets the current objective index.
+    /// </summary>
+    public List<Objective> Objective { get; } = objectives;
+    public bool IsCompleted => Objective.All(o => o.IsCompleted);
     public bool HasCheckedInitialInventory { get; set; } = false;
 
     public void Reset()
     {
-        foreach (var objective in Objectives)
+        foreach (var objective in Objective)
         {
             objective.IsCompleted = false;
-            objective.CurrentCount = 0;
+            objective.Count = 0;
         }
         HasCheckedInitialInventory = false;
     }
     public void WriteData(BinaryWriter writer)
     {
-        writer.Write(Objectives.Count);
+        writer.Write(Objective.Count);
         writer.Write(HasCheckedInitialInventory);
-        foreach (var objective in Objectives)
+        foreach (var objective in Objective)
         {
             objective.WriteData(writer);
         }
@@ -169,12 +176,12 @@ public class ObjectiveSet(List<Objective> objectives)
     {
         var count = reader.ReadInt32();
         HasCheckedInitialInventory = reader.ReadBoolean();
-        Objectives.Clear();
+        Objective.Clear();
         for (var i = 0; i < count; i++)
         {
             var objective = new Objective("", 1);
             objective.ReadData(reader);
-            Objectives.Add(objective);
+            Objective.Add(objective);
         }
     }
 

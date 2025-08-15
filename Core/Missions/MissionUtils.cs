@@ -36,7 +36,7 @@ public static class MissionUtils
             if (mission.Progress != MissionProgress.Ongoing)
                 continue;
 
-            var currentSet = mission.Objective[mission.CurrentIndex];
+            var currentSet = mission.ObjectiveList[mission.CurrentList];
 
             if (currentSet.IsCompleted)
                 continue;
@@ -87,17 +87,17 @@ public static class MissionUtils
             Progress = mission.Progress,
             Availability = mission.Status,
             Unlocked = mission.Unlocked,
-            CurObjectiveIndex = mission.CurrentIndex,
-            ObjectiveIndex = mission.Objective
+            CurObjectiveIndex = mission.CurrentList,
+            ObjectiveIndex = mission.ObjectiveList
                 .Select(set => new ObjectiveIndexState
                 {
-                    Objectives = set.Objectives
+                    Objectives = set.Objective
                         .Select(obj => new ObjectiveState
                         {
                             Description = obj.Description,
                             IsCompleted = obj.IsCompleted,
                             RequiredCount = obj.RequiredCount,
-                            CurrentCount = obj.CurrentCount
+                            CurrentCount = obj.Count
                         }).ToList()
                 }).ToList(),
             NextMissionID = mission.NextMissionID
@@ -119,35 +119,35 @@ public static class MissionUtils
         mission.Status = state.Availability;
         mission.Unlocked = state.Unlocked;
 
-        if (state.CurObjectiveIndex >= 0 && state.CurObjectiveIndex < mission.Objective.Count)
+        if (state.CurObjectiveIndex >= 0 && state.CurObjectiveIndex < mission.ObjectiveList.Count)
         {
-            mission.CurrentIndex = state.CurObjectiveIndex;
+            mission.CurrentList = state.CurObjectiveIndex;
         }
         else
         {
-            ModContent.GetInstance<Reverie>().Logger.Warn($"Invalid CurrentIndex {state.CurObjectiveIndex} for mission {mission.ID}, resetting to 0");
-            mission.CurrentIndex = 0;
+            ModContent.GetInstance<Reverie>().Logger.Warn($"Invalid CurrentList {state.CurObjectiveIndex} for mission {mission.ID}, resetting to 0");
+            mission.CurrentList = 0;
         }
 
-        if (mission.Objective.Count != state.ObjectiveIndex.Count)
+        if (mission.ObjectiveList.Count != state.ObjectiveIndex.Count)
         {
             ModContent.GetInstance<Reverie>().Logger.Warn(
-                $"Mission {mission.ID} objective set count mismatch: Expected {mission.Objective.Count}, got {state.ObjectiveIndex.Count}");
+                $"Mission {mission.ID} objective set count mismatch: Expected {mission.ObjectiveList.Count}, got {state.ObjectiveIndex.Count}");
         }
 
         // Process each objective set with improved matching by description
-        for (var i = 0; i < Math.Min(mission.Objective.Count, state.ObjectiveIndex.Count); i++)
+        for (var i = 0; i < Math.Min(mission.ObjectiveList.Count, state.ObjectiveIndex.Count); i++)
         {
             var savedSet = state.ObjectiveIndex[i];
-            var currentSet = mission.Objective[i];
+            var currentSet = mission.ObjectiveList[i];
 
-            if (currentSet.Objectives.Count != savedSet.Objectives.Count)
+            if (currentSet.Objective.Count != savedSet.Objectives.Count)
             {
                 ModContent.GetInstance<Reverie>().Logger.Warn(
-                    $"Mission {mission.ID} set {i} objective count mismatch: Expected {currentSet.Objectives.Count}, got {savedSet.Objectives.Count}");
+                    $"Mission {mission.ID} set {i} objective count mismatch: Expected {currentSet.Objective.Count}, got {savedSet.Objectives.Count}");
             }
 
-            foreach (var currentObj in currentSet.Objectives)
+            foreach (var currentObj in currentSet.Objective)
             {
                 var matchingObj = savedSet.Objectives.FirstOrDefault(obj =>
                     obj.Description.Equals(currentObj.Description, StringComparison.OrdinalIgnoreCase));
@@ -155,11 +155,11 @@ public static class MissionUtils
                 if (matchingObj != null)
                 {
                     currentObj.IsCompleted = matchingObj.IsCompleted;
-                    currentObj.CurrentCount = Math.Min(matchingObj.CurrentCount, currentObj.RequiredCount);
+                    currentObj.Count = Math.Min(matchingObj.CurrentCount, currentObj.RequiredCount);
 
-                    if (currentObj.IsCompleted && currentObj.CurrentCount < currentObj.RequiredCount)
+                    if (currentObj.IsCompleted && currentObj.Count < currentObj.RequiredCount)
                     {
-                        currentObj.CurrentCount = currentObj.RequiredCount;
+                        currentObj.Count = currentObj.RequiredCount;
                     }
                 }
                 else
@@ -171,11 +171,11 @@ public static class MissionUtils
         }
 
         if (mission.Progress == MissionProgress.Ongoing &&
-            (mission.CurrentIndex < 0 || mission.CurrentIndex >= mission.Objective.Count))
+            (mission.CurrentList < 0 || mission.CurrentList >= mission.ObjectiveList.Count))
         {
             ModContent.GetInstance<Reverie>().Logger.Warn(
-                $"Ongoing mission {mission.ID} has invalid current index {mission.CurrentIndex}, resetting to 0");
-            mission.CurrentIndex = 0;
+                $"Ongoing mission {mission.ID} has invalid current index {mission.CurrentList}, resetting to 0");
+            mission.CurrentList = 0;
         }
     }
 

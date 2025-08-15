@@ -67,7 +67,7 @@ DialogueLibrary: {
 
 		PuffballHunt: {
 			Line1: {
-				Text: Aha! You've made a wise decision, Indeed.
+				Text: Aha! You've made a wise decision, Indeed!
 				Speaker: Argie
 				Emote: "0"
 				Speed: "1.3"
@@ -89,6 +89,56 @@ DialogueLibrary: {
 
 			Line4: {
 				Text: Go forth and aquire them!
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.3"
+			}
+		}
+
+		Puffball: {
+			Line1: {
+				Text: Look around,<pause:10> there are puffballs nearby!
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.3"
+			}
+		}
+
+		PuffballCollected: {
+			Line1: {
+				Text: Excellent work!<pause:10> However,<pause:10> more are required for research.<pause:10> Continue your endeavors.
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.3"
+			}
+		}
+
+		PuffballHuntEnd: {
+			Line1: {
+				Text: This will suffice!<pause:10> You have done well, flesh husk.
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.3"
+			}
+
+			Line2: {
+				Text: Your efforts have been commendable, and I am grateful for your assistance.<pause:10> Your rewards await you.
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.5"
+			}
+		}
+
+		Scrunglepuff: {
+			Line1: {
+				Text: Oh!<pause:10> you found a scrunglepuff!<pause:20> Those sneaky little critters are quite elusive.
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.3"
+			}
+
+			Line2: {
+				Text: Chase them down and catch them! We need their puffballs!
 				Speaker: Argie
 				Emote: "0"
 				Speed: "1.3"

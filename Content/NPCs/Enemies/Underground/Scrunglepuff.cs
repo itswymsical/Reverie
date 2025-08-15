@@ -5,6 +5,7 @@ using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.ItemDropRules;
+using Terraria.ModLoader.Utilities;
 
 namespace Reverie.Content.NPCs.Enemies.Underground;
 public class Scrunglepuff : ModNPC
@@ -34,12 +35,11 @@ public class Scrunglepuff : ModNPC
         set => NPC.ai[2] = value;
     }
 
-    private const float TRIGGER_DIST = 120f;
-    private const float ATTACK_DIST = 100f;
-    private const float SETTLE_DIST = 320f;
-    private const float MAX_SPEED = 2.5f;
-    private const float FLEE_SPEED = 6f;
-    private const float ACCEL = 0.15f;
+    private const float TRIGGER_DIST = 180f;
+    private const float ATTACK_DIST = 120f;
+    private const float SETTLE_DIST = 300f;
+    private const float SPEED = 6f;
+    private const float ACCEL = 0.09f;
     private const float DECEL = 0.85f;
 
     public override void SetStaticDefaults()
@@ -48,9 +48,16 @@ public class Scrunglepuff : ModNPC
         NPCID.Sets.NPCBestiaryDrawModifiers drawModifiers = new()
         {
             Velocity = 0f,
-            Direction = 1
+            Direction = 1,
+            Frame = 6,
         };
         NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, drawModifiers);
+    }
+    public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
+    {
+        bestiaryEntry.Info.AddRange([BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Underground,
+            new FlavorTextBestiaryInfoElement("Mods.Reverie.BestiaryEntries.Scrunglepuff")
+        ]);
     }
 
     public override void SetDefaults()
@@ -60,28 +67,29 @@ public class Scrunglepuff : ModNPC
         NPC.damage = 8;
         NPC.defense = 16;
         NPC.lifeMax = 80;
-        NPC.HitSound = SoundID.NPCHit1;
-        NPC.DeathSound = SoundID.NPCDeath6;
-        NPC.knockBackResist = 1.25f;
+        NPC.HitSound = new SoundStyle($"{SFX_DIRECTORY}ScrunglepuffHit");
+        NPC.DeathSound = SoundID.NPCDeath53 with { Pitch = 0.6f};
+        NPC.knockBackResist = 0.7f;
+        NPC.value = Item.buyPrice(copper: 80);
         NPC.aiStyle = -1;
-        NPC.noGravity = false;
-        NPC.noTileCollide = false;
     }
 
     public override float SpawnChance(NPCSpawnInfo spawnInfo)
     {
-        if (spawnInfo.Player.ZoneDirtLayerHeight && !spawnInfo.Water)
-        {
-            var missionPlayer = spawnInfo.Player.GetModPlayer<MissionPlayer>();
-            var mission = missionPlayer.GetMission(MissionID.PuffballHunt);
+        if (spawnInfo.PlayerSafe || spawnInfo.Water)
+            return 0f;
 
-            if (mission?.Progress == MissionProgress.Ongoing)
-                return 0.3f;
+        bool validZone = spawnInfo.Player.ZoneDirtLayerHeight || spawnInfo.Player.ZoneRockLayerHeight;
+        if (!validZone)
+            return 0f;
 
-            else if (mission?.Progress == MissionProgress.Completed)
-                return 0.15f;
-        }
-        return 0f;
+        var missionPlayer = spawnInfo.Player.GetModPlayer<MissionPlayer>();
+        var mission = missionPlayer.GetMission(MissionID.PuffballHunt);
+
+        if (mission?.Status == MissionStatus.Locked || mission?.Progress == MissionProgress.Inactive)
+            return 0f;
+
+        return mission.Progress == MissionProgress.Ongoing ? 0.85f : 0.25f;
     }
 
     public override void OnSpawn(IEntitySource source)
@@ -94,12 +102,20 @@ public class Scrunglepuff : ModNPC
     public override void AI()
     {
         Player nearestPlayer = Main.player[NPC.target];
+
         NPC.TargetClosest(false);
         float distanceToPlayer = Vector2.Distance(NPC.Center, nearestPlayer.Center);
+
         NPCUtils.SlopedCollision(NPC);
         NPCUtils.CheckPlatform(NPC, nearestPlayer);
+
         Timer++;
 
+        if (NPC.justHit)
+        {
+            State = AIState.Active;
+            ActiveBehavior(nearestPlayer, distanceToPlayer);
+        }
         switch (State)
         {
             case AIState.Dormant:
@@ -149,7 +165,7 @@ public class Scrunglepuff : ModNPC
         if (fleeDirection != Vector2.Zero)
         {
             fleeDirection.Normalize();
-            float targetVelX = fleeDirection.X * FLEE_SPEED;
+            float targetVelX = fleeDirection.X * SPEED;
             NPC.velocity.X += (targetVelX - NPC.velocity.X) * ACCEL;
         }
 
@@ -219,21 +235,7 @@ public class Scrunglepuff : ModNPC
 
     public override void ModifyNPCLoot(NPCLoot npcLoot)
     {
-        var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        var mission = missionPlayer.GetMission(MissionID.PuffballHunt);
-
-        if (mission?.Progress == MissionProgress.Ongoing)
-            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<PuffballItem>(), 1));
-        else
-            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<PuffballItem>(), 1, 1, 3));
-    }
-
-    public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
-    {
-        bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[] {
-            BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Underground,
-            new FlavorTextBestiaryInfoElement("A crafty mushroom creature that disguises itself as an innocent puffball. When threatened, it releases a cloud of spores and flees.")
-        });
+        npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<PuffballItem>(), 1));
     }
 
     public override void FindFrame(int frameHeight)
@@ -243,20 +245,27 @@ public class Scrunglepuff : ModNPC
             case AIState.Dormant:
                 if (SubTimer > 0f)
                 {
-                    // Emerging animation
-                    int emergeFrame = (int)(SubTimer / 8f);
+                    if (SubTimer == 1f)
+                    {
+                        NPC.velocity.Y = -4f;
+                        SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ScrunglepuffEmerge"), NPC.position);
+                    }
+
+                    int emergeFrame = (int)(SubTimer / 4f);
                     emergeFrame = Math.Min(emergeFrame, 6);
                     NPC.frame.Y = frameHeight * emergeFrame;
+
+                    float swayAmount = 0.2f;
+                    NPC.rotation = MathF.Sin(SubTimer * 0.2f) * swayAmount * (emergeFrame / 6f);
                 }
                 else
                 {
-                    // Fully dormant
+                    // hiding
                     NPC.frame.Y = 0;
                 }
                 break;
 
             case AIState.Active:
-                // Active motion frames
                 NPC.frameCounter++;
                 if (NPC.frameCounter >= 6)
                 {
@@ -266,7 +275,6 @@ public class Scrunglepuff : ModNPC
                     NPC.frame.Y = frameHeight * (7 + currentFrame);
                 }
 
-                // Ensure we stay in active frame range
                 if (NPC.frame.Y < frameHeight * 7 || NPC.frame.Y > frameHeight * 15)
                 {
                     NPC.frame.Y = frameHeight * 7;
@@ -274,7 +282,6 @@ public class Scrunglepuff : ModNPC
                 break;
 
             case AIState.Settling:
-                // Reverse emerging animation
                 int settleFrame = 6 - (int)(SubTimer / 8f);
                 settleFrame = Math.Max(settleFrame, 0);
                 NPC.frame.Y = frameHeight * settleFrame;

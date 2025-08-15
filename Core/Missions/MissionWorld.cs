@@ -106,10 +106,10 @@ public class MissionWorld : ModSystem
         if (mission.Progress != MissionProgress.Ongoing)
             return false;
 
-        var currentSet = mission.Objective[mission.CurrentIndex];
-        if (objectiveIndex >= 0 && objectiveIndex < currentSet.Objectives.Count)
+        var currentSet = mission.ObjectiveList[mission.CurrentList];
+        if (objectiveIndex >= 0 && objectiveIndex < currentSet.Objective.Count)
         {
-            var obj = currentSet.Objectives[objectiveIndex];
+            var obj = currentSet.Objective[objectiveIndex];
             if (!obj.IsCompleted || amount < 0)
             {
                 var wasCompleted = obj.UpdateProgress(amount);
@@ -122,12 +122,12 @@ public class MissionWorld : ModSystem
 
                 if (currentSet.IsCompleted)
                 {
-                    if (mission.CurrentIndex < mission.Objective.Count - 1)
+                    if (mission.CurrentList < mission.ObjectiveList.Count - 1)
                     {
-                        mission.CurrentIndex++;
+                        mission.CurrentList++;
                         return true;
                     }
-                    if (mission.Objective.All(set => set.IsCompleted))
+                    if (mission.ObjectiveList.All(set => set.IsCompleted))
                     {
                         CompleteMission(mission.ID);
                         return true;
@@ -175,7 +175,7 @@ public class MissionWorld : ModSystem
     public void CompleteMission(int missionId)
     {
         var mission = GetMainlineMission(missionId);
-        if (mission?.Progress == MissionProgress.Ongoing && mission.Objective.All(set => set.IsCompleted))
+        if (mission?.Progress == MissionProgress.Ongoing && mission.ObjectiveList.All(set => set.IsCompleted))
         {
             mission.Progress = MissionProgress.Completed;
             mission.Status = MissionStatus.Completed;
@@ -202,8 +202,8 @@ public class MissionWorld : ModSystem
                     ["Progress"] = (int)mission.Progress,
                     ["Status"] = (int)mission.Status,
                     ["Unlocked"] = mission.Unlocked,
-                    ["CurrentIndex"] = mission.CurrentIndex,
-                    ["Objectives"] = SerializeObjectiveSets(mission.Objective)
+                    ["CurrentList"] = mission.CurrentList,
+                    ["Objective"] = SerializeObjectiveSets(mission.ObjectiveList)
                 };
                 mainlineMissionData.Add(missionData);
             }
@@ -238,9 +238,9 @@ public class MissionWorld : ModSystem
                         mission.Progress = (MissionProgress)missionTag.GetInt("Progress");
                         mission.Status = (MissionStatus)missionTag.GetInt("Status");
                         mission.Unlocked = missionTag.GetBool("Unlocked");
-                        mission.CurrentIndex = missionTag.GetInt("CurrentIndex");
+                        mission.CurrentList = missionTag.GetInt("CurrentList");
 
-                        LoadObjectiveSets(mission, missionTag.GetList<TagCompound>("Objectives"));
+                        LoadObjectiveSets(mission, missionTag.GetList<TagCompound>("Objective"));
 
                         mainlineMissions[missionId] = mission;
                         missionsLoaded++;
@@ -277,7 +277,7 @@ public class MissionWorld : ModSystem
         }
     }
 
-    private static List<TagCompound> SerializeObjectiveSets(List<ObjectiveSet> objectiveSets)
+    private static List<TagCompound> SerializeObjectiveSets(List<ObjectiveList> objectiveSets)
     {
         var serializedSets = new List<TagCompound>();
 
@@ -285,20 +285,20 @@ public class MissionWorld : ModSystem
         {
             var objectiveData = new List<TagCompound>();
 
-            foreach (var objective in set.Objectives)
+            foreach (var objective in set.Objective)
             {
                 objectiveData.Add(new TagCompound
                 {
                     ["Description"] = objective.Description,
                     ["IsCompleted"] = objective.IsCompleted,
                     ["RequiredCount"] = objective.RequiredCount,
-                    ["CurrentCount"] = objective.CurrentCount
+                    ["Count"] = objective.Count
                 });
             }
 
             serializedSets.Add(new TagCompound
             {
-                ["Objectives"] = objectiveData,
+                ["Objective"] = objectiveData,
                 ["HasCheckedInventory"] = set.HasCheckedInitialInventory
             });
         }
@@ -308,15 +308,15 @@ public class MissionWorld : ModSystem
 
     private static void LoadObjectiveSets(Mission mission, IList<TagCompound> serializedSets)
     {
-        for (var i = 0; i < Math.Min(mission.Objective.Count, serializedSets.Count); i++)
+        for (var i = 0; i < Math.Min(mission.ObjectiveList.Count, serializedSets.Count); i++)
         {
             var setTag = serializedSets[i];
-            var currentSet = mission.Objective[i];
-            var objectiveTags = setTag.GetList<TagCompound>("Objectives");
+            var currentSet = mission.ObjectiveList[i];
+            var objectiveTags = setTag.GetList<TagCompound>("Objective");
 
             currentSet.HasCheckedInitialInventory = setTag.GetBool("HasCheckedInventory");
 
-            foreach (var currentObj in currentSet.Objectives)
+            foreach (var currentObj in currentSet.Objective)
             {
                 var matchingObjTag = objectiveTags.FirstOrDefault(tag =>
                     tag.GetString("Description").Equals(currentObj.Description, StringComparison.OrdinalIgnoreCase));
@@ -324,11 +324,11 @@ public class MissionWorld : ModSystem
                 if (matchingObjTag != null)
                 {
                     currentObj.IsCompleted = matchingObjTag.GetBool("IsCompleted");
-                    currentObj.CurrentCount = Math.Min(matchingObjTag.GetInt("CurrentCount"), currentObj.RequiredCount);
+                    currentObj.Count = Math.Min(matchingObjTag.GetInt("Count"), currentObj.RequiredCount);
 
-                    if (currentObj.IsCompleted && currentObj.CurrentCount < currentObj.RequiredCount)
+                    if (currentObj.IsCompleted && currentObj.Count < currentObj.RequiredCount)
                     {
-                        currentObj.CurrentCount = currentObj.RequiredCount;
+                        currentObj.Count = currentObj.RequiredCount;
                     }
                 }
             }

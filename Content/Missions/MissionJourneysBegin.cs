@@ -103,7 +103,7 @@ public class MissionJourneysBegin : Mission
     {
         if (Progress != MissionProgress.Ongoing) return;
 
-        var objective = (Objectives)CurrentIndex;
+        var objective = (Objectives)CurrentList;
         switch (objective)
         {
             case Objectives.TalkToGuide:
@@ -123,7 +123,7 @@ public class MissionJourneysBegin : Mission
     {
         if (Progress != MissionProgress.Ongoing) return;
 
-        var objective = (Objectives)CurrentIndex;
+        var objective = (Objectives)CurrentList;
         switch (objective)
         {
             // Handle any NPC chat objectives here
@@ -138,7 +138,7 @@ public class MissionJourneysBegin : Mission
     private void OnItemUseHandler(Item item, Player player)
     {
         if (Progress != MissionProgress.Ongoing) return;
-        var objective = (Objectives)CurrentIndex;
+        var objective = (Objectives)CurrentList;
         switch (objective)
         {
             case Objectives.UseMirror:
@@ -155,7 +155,7 @@ public class MissionJourneysBegin : Mission
     {
         if (Progress != MissionProgress.Ongoing) return;
 
-        var objective = (Objectives)CurrentIndex;
+        var objective = (Objectives)CurrentList;
         switch (objective)
         {
             case Objectives.ExploreUnderground:
@@ -192,7 +192,7 @@ public class MissionJourneysBegin : Mission
 
         if (fail) return;
 
-        var objective = (Objectives)CurrentIndex;
+        var objective = (Objectives)CurrentList;
         switch (objective)
         {
             case Objectives.ExploreUnderground:

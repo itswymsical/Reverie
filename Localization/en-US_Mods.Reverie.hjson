@@ -247,21 +247,6 @@ Items: {
 		Tooltip: When sprayed on growing herbs, they advance to their next growth stage.
 	}
 
-	TileTemplateItem: {
-		DisplayName: Tile Template
-		Tooltip: Debugging Item - used to help spriters learn block tiling
-	}
-
-	KapokTreeDebugWand: {
-		DisplayName: Kapok Tree Debug Wand
-		Tooltip: ""
-	}
-
-	SmallTanglewoodTreeDebugWand: {
-		DisplayName: Small Tanglewood Tree Debug Wand
-		Tooltip: ""
-	}
-
 	SharpnutDaggerItem: {
 		DisplayName: Sharpnut Dagger
 		Tooltip:
@@ -549,11 +534,6 @@ Items: {
 		Tooltip: ""
 	}
 
-	GeodePlacer: {
-		DisplayName: Geode Placer
-		Tooltip: ""
-	}
-
 	MediumTanglewoodTreeWand: {
 		DisplayName: Medium Tanglewood Tree Wand
 		Tooltip: ""
@@ -700,13 +680,13 @@ Items: {
 	}
 
 	SpruceShinglesItem: {
-		DisplayName: Spruce Shingles
+		DisplayName: Spruce Wood Shingles
 		Tooltip: ""
 	}
 
 	PuffballItem: {
 		DisplayName: Puffball
-		Tooltip: ""
+		Tooltip: "'Scrunglicious'"
 	}
 }
 
@@ -935,6 +915,8 @@ NPCs: {
 
 	Scrunglepuff.DisplayName: Scrunglepuff
 }
+
+BestiaryEntries.Scrunglepuff: A crafty creature that disguises itself as an innocent puffball. When threatened, it releases a cloud of spores and flees.
 
 Biomes: {
 	ArchaeaDesertBiome: {

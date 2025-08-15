@@ -152,7 +152,7 @@ public class MissionSidebar
     {
         activeObjectives = new List<Objective>();
 
-        if (currentMission == null || currentMission.Objective.Count == 0 || showingAvailableMissions)
+        if (currentMission == null || currentMission.ObjectiveList.Count == 0 || showingAvailableMissions)
             return;
 
         HandleObjectiveProgression();
@@ -161,22 +161,22 @@ public class MissionSidebar
 
     private void HandleObjectiveProgression()
     {
-        bool isCurrentSetCompleted = currentMission.CurrentIndex < currentMission.Objective.Count &&
-                                   currentMission.Objective[currentMission.CurrentIndex].IsCompleted;
+        bool isCurrentSetCompleted = currentMission.CurrentList < currentMission.ObjectiveList.Count &&
+                                   currentMission.ObjectiveList[currentMission.CurrentList].IsCompleted;
 
-        if (isCurrentSetCompleted && currentMission.CurrentIndex < currentMission.Objective.Count - 1)
+        if (isCurrentSetCompleted && currentMission.CurrentList < currentMission.ObjectiveList.Count - 1)
         {
-            currentMission.CurrentIndex++;
+            currentMission.CurrentList++;
             Main.LocalPlayer.GetModPlayer<MissionPlayer>().NotifyMissionUpdate(currentMission);
         }
     }
 
     private void PopulateVisibleObjectives()
     {
-        if (currentMission.CurrentIndex >= currentMission.Objective.Count) return;
+        if (currentMission.CurrentList >= currentMission.ObjectiveList.Count) return;
 
-        var currentSet = currentMission.Objective[currentMission.CurrentIndex];
-        foreach (var objective in currentSet.Objectives)
+        var currentSet = currentMission.ObjectiveList[currentMission.CurrentList];
+        foreach (var objective in currentSet.Objective)
         {
             if (objective.ShouldBeVisible(currentMission))
                 activeObjectives.Add(objective);
@@ -557,7 +557,7 @@ public class MissionSidebar
         string status = objective.IsCompleted ? CHECKED_CHECKBOX : EMPTY_CHECKBOX;
 
         if (objective.RequiredCount > 1)
-            return $"{status} {objective.Description} [{objective.CurrentCount}/{objective.RequiredCount}]";
+            return $"{status} {objective.Description} [{objective.Count}/{objective.RequiredCount}]";
 
         return $"{status} {objective.Description}";
     }
@@ -728,8 +728,8 @@ public class MissionSidebar
 
         if (!showingAvailableMissions &&
             currentMission != null &&
-            currentMission.CurrentIndex < currentMission.Objective.Count &&
-            currentMission.Objective[currentMission.CurrentIndex].IsCompleted)
+            currentMission.CurrentList < currentMission.ObjectiveList.Count &&
+            currentMission.ObjectiveList[currentMission.CurrentList].IsCompleted)
         {
             UpdateActiveObjectives();
         }
@@ -792,8 +792,8 @@ public class MissionSidebar
     {
         if (showingAvailableMissions || currentMission == null) return;
 
-        if (currentMission.CurrentIndex < currentMission.Objective.Count &&
-            currentMission.Objective[currentMission.CurrentIndex].IsCompleted)
+        if (currentMission.CurrentList < currentMission.ObjectiveList.Count &&
+            currentMission.ObjectiveList[currentMission.CurrentList].IsCompleted)
         {
             UpdateActiveObjectives();
         }

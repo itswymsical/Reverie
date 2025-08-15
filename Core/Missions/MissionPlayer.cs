@@ -94,8 +94,8 @@ public partial class MissionPlayer : ModPlayer
                     ["Progress"] = (int)mission.Progress,
                     ["Status"] = (int)mission.Status,
                     ["Unlocked"] = mission.Unlocked,
-                    ["CurrentIndex"] = mission.CurrentIndex,
-                    ["Objectives"] = SerializeObjectives(mission.Objective)
+                    ["CurrentList"] = mission.CurrentList,
+                    ["Objective"] = SerializeObjectives(mission.ObjectiveList)
                 };
                 sidelineMissionData.Add(missionData);
             }
@@ -199,9 +199,9 @@ public partial class MissionPlayer : ModPlayer
                 mission.Progress = (MissionProgress)missionTag.GetInt("Progress");
                 mission.Status = (MissionStatus)missionTag.GetInt("Status");
                 mission.Unlocked = missionTag.GetBool("Unlocked");
-                mission.CurrentIndex = missionTag.GetInt("CurrentIndex");
+                mission.CurrentList = missionTag.GetInt("CurrentList");
 
-                LoadObjectiveSets(mission, missionTag.GetList<TagCompound>("Objectives"));
+                LoadObjectiveSets(mission, missionTag.GetList<TagCompound>("Objective"));
                 sidelineMissions[missionId] = mission;
 
                 ModContent.GetInstance<Reverie>().Logger.Info($"Loaded sideline mission {mission.Name}");
@@ -224,7 +224,7 @@ public partial class MissionPlayer : ModPlayer
         }
     }
 
-    private static List<TagCompound> SerializeObjectives(List<ObjectiveSet> objectiveSets)
+    private static List<TagCompound> SerializeObjectives(List<ObjectiveList> objectiveSets)
     {
         var serializedSets = new List<TagCompound>();
 
@@ -232,20 +232,20 @@ public partial class MissionPlayer : ModPlayer
         {
             var objectiveData = new List<TagCompound>();
 
-            foreach (var objective in set.Objectives)
+            foreach (var objective in set.Objective)
             {
                 objectiveData.Add(new TagCompound
                 {
                     ["Description"] = objective.Description,
                     ["IsCompleted"] = objective.IsCompleted,
                     ["RequiredCount"] = objective.RequiredCount,
-                    ["CurrentCount"] = objective.CurrentCount
+                    ["Count"] = objective.Count
                 });
             }
 
             serializedSets.Add(new TagCompound
             {
-                ["Objectives"] = objectiveData,
+                ["Objective"] = objectiveData,
                 ["HasCheckedInventory"] = set.HasCheckedInitialInventory
             });
         }
@@ -255,15 +255,15 @@ public partial class MissionPlayer : ModPlayer
 
     private static void LoadObjectiveSets(Mission mission, IList<TagCompound> serializedSets)
     {
-        for (var i = 0; i < Math.Min(mission.Objective.Count, serializedSets.Count); i++)
+        for (var i = 0; i < Math.Min(mission.ObjectiveList.Count, serializedSets.Count); i++)
         {
             var setTag = serializedSets[i];
-            var currentSet = mission.Objective[i];
-            var objectiveTags = setTag.GetList<TagCompound>("Objectives");
+            var currentSet = mission.ObjectiveList[i];
+            var objectiveTags = setTag.GetList<TagCompound>("Objective");
 
             currentSet.HasCheckedInitialInventory = setTag.GetBool("HasCheckedInventory");
 
-            foreach (var currentObj in currentSet.Objectives)
+            foreach (var currentObj in currentSet.Objective)
             {
                 var matchingObjTag = objectiveTags.FirstOrDefault(tag =>
                     tag.GetString("Description").Equals(currentObj.Description, StringComparison.OrdinalIgnoreCase));
@@ -271,11 +271,11 @@ public partial class MissionPlayer : ModPlayer
                 if (matchingObjTag != null)
                 {
                     currentObj.IsCompleted = matchingObjTag.GetBool("IsCompleted");
-                    currentObj.CurrentCount = Math.Min(matchingObjTag.GetInt("CurrentCount"), currentObj.RequiredCount);
+                    currentObj.Count = Math.Min(matchingObjTag.GetInt("Count"), currentObj.RequiredCount);
 
-                    if (currentObj.IsCompleted && currentObj.CurrentCount < currentObj.RequiredCount)
+                    if (currentObj.IsCompleted && currentObj.Count < currentObj.RequiredCount)
                     {
-                        currentObj.CurrentCount = currentObj.RequiredCount;
+                        currentObj.Count = currentObj.RequiredCount;
                     }
                 }
             }

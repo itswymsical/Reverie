@@ -1,6 +1,7 @@
 ﻿using Terraria.ModLoader.IO;
 using Reverie.Core.Items.Components;
 using Terraria.DataStructures;
+using System.Collections.Generic;
 
 namespace Reverie.Common.Items.Components;
 
@@ -15,6 +16,11 @@ public class MissionItemComponent : ItemComponent
     ///     Indicates whether this item has already contributed to mission progress.
     /// </summary>
     private bool hasContributed;
+
+    /// <summary>
+    ///     Indicates whether this item is marked for a mission.
+    /// </summary>
+    private bool markedForMission;
     #endregion
 
     #region Properties
@@ -25,6 +31,15 @@ public class MissionItemComponent : ItemComponent
     {
         get => hasContributed;
         set => hasContributed = value;
+    }
+
+    /// <summary>
+    /// Gets or sets whether this item is marked for a mission.
+    /// </summary>
+    public bool MarkedForMission
+    {
+        get => markedForMission;
+        set => markedForMission = value;
     }
     #endregion
 
@@ -40,17 +55,28 @@ public class MissionItemComponent : ItemComponent
     {
         var clone = (MissionItemComponent)base.Clone(from, to);
         clone.hasContributed = hasContributed;
+        clone.markedForMission = markedForMission;
         return clone;
     }
 
     public override void SaveData(Item item, TagCompound tag)
     {
         tag["hasContributed"] = hasContributed;
+        tag["markedForMission"] = markedForMission;
     }
 
     public override void LoadData(Item item, TagCompound tag)
     {
         hasContributed = tag.GetBool("hasContributed");
+        markedForMission = tag.GetBool("markedForMission");
+    }
+
+    public override void OnCreated(Item item, ItemCreationContext context)
+    {
+        // prevent pickup from triggering when you craft shit
+        base.OnCreated(item, context);
+        var component = GetOrCreate(item);
+        component.HasContributedToProgress = true;
     }
     #endregion
 
@@ -71,12 +97,17 @@ public class MissionItemComponent : ItemComponent
         var component = GetOrCreate(item);
         component.HasContributedToProgress = true;
     }
-    public override void OnCreated(Item item, ItemCreationContext context)
+
+    /// <summary>
+    ///     Marks an item for a mission, making it a protected quest item.
+    /// </summary>
+    public static void MarkForMission(Item item)
     {
-        // prevent pickup from triggering when you craft shit
-        base.OnCreated(item, context);
+        item.value = 0;
+        item.favorited = true;
+        item.questItem = true;
         var component = GetOrCreate(item);
-        component.HasContributedToProgress = true;
+        component.MarkedForMission = true;
     }
 
     /// <summary>
@@ -87,5 +118,37 @@ public class MissionItemComponent : ItemComponent
         var component = GetOrCreate(item);
         return component.HasContributedToProgress;
     }
+
+    /// <summary>
+    /// Checks if an item is marked for a mission.
+    /// </summary>
+    public static bool IsMarkedForMission(Item item)
+    {
+        var component = GetOrCreate(item);
+        return component.MarkedForMission;
+    }
+
+    /// <summary>
+    /// Removes mission marking from an item.
+    /// </summary>
+    public static void UnmarkForMission(Item item)
+    {
+        var component = GetOrCreate(item);
+        component.MarkedForMission = false;
+        item.questItem = false;
+        item.favorited = false;
+    }
     #endregion
+
+    public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
+    {
+        base.ModifyTooltips(item, tooltips);
+        //if (IsMarkedForMission(item))
+        //{
+        //    tooltips.Add(new TooltipLine(Mod, "Mission Item", "Mission Item")
+        //    {
+        //        OverrideColor = Color.Gold
+        //    });
+        //}
+    }
 }

@@ -33,7 +33,10 @@ public abstract class Mission
     public int ID { get; set; }
     public string Name { get; private set; }
     public string Description { get; private set; }
-    public List<ObjectiveSet> Objective { get; protected set; }
+    /// <summary>
+    /// List of objective sets for this mission.
+    /// </summary>
+    public List<ObjectiveList> ObjectiveList { get; protected set; }
     public List<Item> Rewards { get; private set; }
     public bool IsMainline { get; }
     public int ProviderNPC { get; set; }
@@ -42,7 +45,10 @@ public abstract class Mission
     public MissionProgress Progress { get; set; } = MissionProgress.Inactive;
     public MissionStatus Status { get; set; } = MissionStatus.Locked;
     public bool Unlocked { get; set; } = false;
-    public int CurrentIndex { get; set; } = 0;
+    /// <summary>
+    /// gets the current objective list
+    /// </summary>
+    public int CurrentList { get; set; } = 0;
     #endregion
 
     protected Mission(int id, string name, string description, List<List<(string, int)>> objectiveList,
@@ -51,8 +57,8 @@ public abstract class Mission
         ID = id;
         Name = name;
         Description = description;
-        Objective = objectiveList.Select(set =>
-            new ObjectiveSet(set.Select(o =>
+        ObjectiveList = objectiveList.Select(set =>
+            new ObjectiveList(set.Select(o =>
                 new Objective(o.Item1, o.Item2)).ToList())).ToList();
         Rewards = rewards;
         IsMainline = isMainline;
@@ -76,19 +82,19 @@ public abstract class Mission
     }
 
     public virtual void OnMissionStart() => RegisterEventHandlers();
-    protected virtual void OnObjectiveIndexComplete(int setIndex, ObjectiveSet completedSet) { }
+    protected virtual void OnObjectiveIndexComplete(int setIndex, ObjectiveList completedSet) { }
     protected virtual void OnObjectiveComplete(int objectiveIndexWithinCurrentSet) { }
 
     public void HandleObjectiveCompletion(int objectiveIndex)
     {
         try
         {
-            var currentSet = Objective[CurrentIndex];
+            var currentList = ObjectiveList[CurrentList];
             OnObjectiveComplete(objectiveIndex);
 
-            if (currentSet.IsCompleted)
+            if (currentList.IsCompleted)
             {
-                OnObjectiveIndexComplete(CurrentIndex, currentSet);
+                OnObjectiveIndexComplete(CurrentList, currentList);
             }
         }
         catch (Exception ex)
@@ -115,10 +121,10 @@ public abstract class Mission
         if (Progress != MissionProgress.Ongoing)
             return false;
 
-        var currentSet = Objective[CurrentIndex];
-        if (objective >= 0 && objective < currentSet.Objectives.Count)
+        var currentSet = ObjectiveList[CurrentList];
+        if (objective >= 0 && objective < currentSet.Objective.Count)
         {
-            var obj = currentSet.Objectives[objective];
+            var obj = currentSet.Objective[objective];
             if (!obj.IsCompleted || amount < 0)
             {
                 var wasCompleted = obj.UpdateProgress(amount);
@@ -132,12 +138,12 @@ public abstract class Mission
 
                 if (currentSet.IsCompleted)
                 {
-                    if (CurrentIndex < Objective.Count - 1)
+                    if (CurrentList < ObjectiveList.Count - 1)
                     {
-                        CurrentIndex++;
+                        CurrentList++;
                         return true;
                     }
-                    if (Objective.All(set => set.IsCompleted))
+                    if (ObjectiveList.All(set => set.IsCompleted))
                     {
                         Complete();
                         return true;
@@ -152,10 +158,10 @@ public abstract class Mission
     {
         UnregisterEventHandlers();
         Progress = MissionProgress.Inactive;
-        CurrentIndex = 0;
+        CurrentList = 0;
         interactedTiles.Clear();
         interactedItems.Clear();
-        foreach (var set in Objective)
+        foreach (var set in ObjectiveList)
         {
             set.Reset();
         }
@@ -163,7 +169,7 @@ public abstract class Mission
 
     public void Complete()
     {
-        if (Progress == MissionProgress.Ongoing && Objective.All(set => set.IsCompleted))
+        if (Progress == MissionProgress.Ongoing && ObjectiveList.All(set => set.IsCompleted))
         {
             UnregisterEventHandlers();
             Progress = MissionProgress.Completed;
@@ -206,20 +212,20 @@ public abstract class Mission
 
     public void SetObjectiveVisibility(int setIndex, int objectiveIndex, bool isVisible)
     {
-        if (setIndex >= 0 && setIndex < Objective.Count &&
-            objectiveIndex >= 0 && objectiveIndex < Objective[setIndex].Objectives.Count)
+        if (setIndex >= 0 && setIndex < ObjectiveList.Count &&
+            objectiveIndex >= 0 && objectiveIndex < ObjectiveList[setIndex].Objective.Count)
         {
-            Objective[setIndex].Objectives[objectiveIndex].IsVisible = isVisible;
+            ObjectiveList[setIndex].Objective[objectiveIndex].IsVisible = isVisible;
         }
     }
 
     public void SetObjectiveVisibilityCondition(int setIndex, int objectiveIndex,
         Objective.VisibilityCondition condition)
     {
-        if (setIndex >= 0 && setIndex < Objective.Count &&
-            objectiveIndex >= 0 && objectiveIndex < Objective[setIndex].Objectives.Count)
+        if (setIndex >= 0 && setIndex < ObjectiveList.Count &&
+            objectiveIndex >= 0 && objectiveIndex < ObjectiveList[setIndex].Objective.Count)
         {
-            Objective[setIndex].Objectives[objectiveIndex].VisibilityCheck = condition;
+            ObjectiveList[setIndex].Objective[objectiveIndex].VisibilityCheck = condition;
         }
     }
 
@@ -227,10 +233,10 @@ public abstract class Mission
     {
         SetObjectiveVisibilityCondition(setIndex, objectiveToShow, (mission) =>
         {
-            var set = mission.Objective[setIndex];
+            var set = mission.ObjectiveList[setIndex];
             return dependencyObjective >= 0 &&
-                   dependencyObjective < set.Objectives.Count &&
-                   set.Objectives[dependencyObjective].IsCompleted;
+                   dependencyObjective < set.Objective.Count &&
+                   set.Objective[dependencyObjective].IsCompleted;
         });
     }
 }
@@ -253,8 +259,8 @@ public class MissionDataContainer
             ["Progress"] = (int)Progress,
             ["Status"] = (int)Availability,
             ["Unlocked"] = Unlocked,
-            ["CurrentIndex"] = CurObjectiveIndex,
-            ["Objective"] = ObjectiveIndex.Select(set => set.Serialize()).ToList(),
+            ["CurrentList"] = CurObjectiveIndex,
+            ["ObjectiveList"] = ObjectiveIndex.Select(set => set.Serialize()).ToList(),
             ["NextMissionID"] = NextMissionID
         };
     }
@@ -269,8 +275,8 @@ public class MissionDataContainer
                 Progress = (MissionProgress)tag.GetInt("Progress"),
                 Availability = (MissionStatus)tag.GetInt("Status"),
                 Unlocked = tag.GetBool("Unlocked"),
-                CurObjectiveIndex = tag.GetInt("CurrentIndex"),
-                ObjectiveIndex = tag.GetList<TagCompound>("Objective")
+                CurObjectiveIndex = tag.GetInt("CurrentList"),
+                ObjectiveIndex = tag.GetList<TagCompound>("ObjectiveList")
                     .Select(t => ObjectiveIndexState.Deserialize(t))
                     .ToList(),
                 NextMissionID = tag.GetInt("NextMissionID")
