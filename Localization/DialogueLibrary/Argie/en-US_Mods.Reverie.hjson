@@ -1,46 +1,46 @@
-﻿DialogueLibrary: {
+DialogueLibrary: {
 	Argie: {
 		Intro: {
 			Line1: {
 				Text: You there!
 				Speaker: Argie
 				Emote: "0"
-				Speed: "1.5"
+				Speed: "1.3"
 			}
 
 			Line2: {
 				Text: Yes,<pause:8> the flesh husk—<pause:5>I mean...
 				Speaker: Argie
 				Emote: "0"
-				Speed: "1.5"
+				Speed: "1.3"
 			}
 
 			Line3: {
 				Text: ...
 				Speaker: Argie
 				Emote: "0"
-				Speed: "0.5"
+				Speed: "0.25"
 			}
 
 			Line4: {
 				Text: I am Argie,<pause:11> a <sine>prestigious</sine> mycologist!
 				Speaker: Argie
 				Emote: "0"
-				Speed: "1.5"
+				Speed: "1.3"
 			}
 
 			Line5: {
 				Text: I have a proposition for you!
 				Speaker: Argie
 				Emote: "0"
-				Speed: "1.5"
+				Speed: "1.3"
 			}
 
 			Line6: {
 				Text: You see,<pause:16> I am studying the local flora and fauna,<pause:16> particularly the mycelium.
 				Speaker: Argie
 				Emote: "0"
-				Speed: "1.5"
+				Speed: "1.3"
 			}
 
 			Line7: {
@@ -54,14 +54,44 @@
 				Text: This will allow me to set up a proper laboratory for my research.
 				Speaker: Argie
 				Emote: "0"
-				Speed: "1.5"
+				Speed: "1.3"
 			}
 
 			Line9: {
 				Text: Handsome rewards for your efforts, they will be!
 				Speaker: Argie
 				Emote: "0"
-				Speed: "1.5"
+				Speed: "1.3"
+			}
+		}
+
+		PuffballHunt: {
+			Line1: {
+				Text: Aha! You've made a wise decision, Indeed.
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.3"
+			}
+
+			Line2: {
+				Text: Now, let us begin with the first task.
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.3"
+			}
+
+			Line3: {
+				Text: I am quite marvelled by the puffball mushrooms in this area.<pause:8> For you see,<pause:15> they are quite unique and valuable to my research.
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.3"
+			}
+
+			Line4: {
+				Text: Go forth and aquire them!
+				Speaker: Argie
+				Emote: "0"
+				Speed: "1.3"
 			}
 		}
 	}

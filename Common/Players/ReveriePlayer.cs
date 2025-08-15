@@ -70,7 +70,10 @@ public class ReveriePlayer : ModPlayer
             notificationExists = false;
         }
 
-        DialogueManager.Instance.Update();
+        if (Player == Main.LocalPlayer)
+        {
+            DialogueManager.Instance.Update();
+        }
     }
 
     public override void SetControls()

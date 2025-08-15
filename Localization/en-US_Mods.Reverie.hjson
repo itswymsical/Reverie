@@ -698,6 +698,16 @@ Items: {
 		DisplayName: Visionstone
 		Tooltip: Increases experience capacity by 500
 	}
+
+	SpruceShinglesItem: {
+		DisplayName: Spruce Shingles
+		Tooltip: ""
+	}
+
+	PuffballItem: {
+		DisplayName: Puffball
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
@@ -733,10 +743,10 @@ Projectiles: {
 	TumbleweedProjectile.DisplayName: Tumbleweed
 	GelBall.DisplayName: Gel Ball
 	GelBallProjectile.DisplayName: Gel Ball
-	GelBallProj.DisplayName: Gel Ball Proj
-	SaplingMakerProj.DisplayName: Sapling Maker Proj
-	SaplingProj.DisplayName: Sapling Proj
-	GelatinousBlasterProj.DisplayName: Gelatinous Blaster Proj
+	GelBallProj.DisplayName: Gel Ball
+	SaplingMakerProj.DisplayName: Sapling Maker
+	SaplingProj.DisplayName: Sapling
+	GelatinousBlasterProj.DisplayName: Gelatinous Blaster
 }
 
 Configs: {
@@ -882,12 +892,12 @@ NPCs: {
 		DisplayName: Argie
 
 		TownNPCMood: {
-			Content: I am content.
-			NoHome: I hate not having a home.
-			FarFromHome: I am too far from home.
-			LoveSpace: I love having so much space.
-			DislikeCrowded: I dislike how crowded I am.
-			HateCrowded: I hate how crowded I am.
+			Content: Content? I am content, yes. I am content with my life, work, and friends!
+			NoHome: How can I be content without a home? I need a place to call my own.
+			FarFromHome: Husky Hero, I am too far away from home to perform my duties. Please, relocate me to a more suitable place.
+			LoveSpace: Oh yes, you've provided me with apt space. This is quite nice. Now, I'll be able to work on my inventions in peace.
+			DislikeCrowded: No, no, no... the flesh husk count is increasing at a rate that is unacceptable. Renovations are needed.
+			HateCrowded: Oh no... Too many flesh husks around me! Relocate me AT ONCE!
 			LikeNPC_Princess: I like {NPCName}.
 			Princess_LovesNPC: I like {NPCName}.
 		}
@@ -923,9 +933,7 @@ NPCs: {
 		}
 	}
 
-	NewKingSlime.DisplayName: New King Slime
-	KinguSlime.DisplayName: Kingu Slime
-	mKingSlime.DisplayName: m King Slime
+	Scrunglepuff.DisplayName: Scrunglepuff
 }
 
 Biomes: {

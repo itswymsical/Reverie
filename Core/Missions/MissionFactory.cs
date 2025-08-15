@@ -7,7 +7,7 @@ public static class MissionID
 {
     public static int JourneysBegin = 1;
     public static int ForgottenAges = 2;
-    public static int SporeSplinter = 3;
+    public static int PuffballHunt = 3;
     public static int CopperStandard = 4;
 }
 
@@ -84,7 +84,7 @@ public class MissionFactory : ModSystem
 
             #region Missions
             missionTypes[MissionID.JourneysBegin] = typeof(MissionJourneysBegin);
-            missionTypes[MissionID.SporeSplinter] = typeof(MissionSporeSplinter);
+            missionTypes[MissionID.PuffballHunt] = typeof(PuffballHunt);
             #endregion
 
             Reverie.Instance.Logger.Info($"Registered {missionTypes.Count} mission types");

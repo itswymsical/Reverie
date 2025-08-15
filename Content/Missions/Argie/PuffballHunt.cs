@@ -1,30 +1,33 @@
-﻿using Reverie.Core.Dialogue;
+﻿using Reverie.Content.Items.Mycology;
+using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
-using Reverie.Utilities;
 using static Reverie.Core.Missions.ObjectiveEventItem;
-using static Reverie.Core.Missions.ObjectiveEventNPC;
 
 namespace Reverie.Content.Missions.Argie;
 
-public class MissionSporeSplinter : Mission
+public class PuffballHunt : Mission
 {
     private enum Objectives
     {
-        GreetArgie = 0,
-        GatherResources = 1,
+        Introduction = 0,
+        SearchForPuffball = 1,
+        ChaseScrunglepuff = 2,
+        HarvestPuffballs = 3
     }
 
-    public MissionSporeSplinter() : base(MissionID.SporeSplinter,
+    public PuffballHunt() : base(MissionID.PuffballHunt,
         name: "Spore & Splinter",
-        description: @"""Every spore needs a floor! Help me stake my claim on this flat!.""",
+        description: @"""I am quite marvelled by the puffball mushrooms in this area...""",
         objectiveList:
         [
-            [("Greet Argie", 1)],
-            [("Gather Glowing Mushrooms", 30), ("Gather Rope", 30), ("Gather Wood", 75)],
+            [("Speak with Argie", 1)],
+            [("Search underground for Puffballs", 1)],
+            [("Chase down Scrunglepuffs", 1)],
+            [("Harvest Puffballs", 5)],
         ],
-        rewards: [new Item(ItemID.GoldCoin, Main.rand.Next(4, 6))],
+        rewards: [new Item(ItemID.GoldCoin, 3), new Item(ItemID.SpelunkerPotion, 3), new Item(ItemID.HerbBag, 5)],
         isMainline: false,
-        providerNPC: ModContent.NPCType<NPCs.Special.Argie>(), xpReward: 150)
+        providerNPC: ModContent.NPCType<NPCs.Special.Argie>(), xpReward: 100)
     {
         Instance.Logger.Info($"[{Name} - {ID}] constructed");
     }
@@ -32,16 +35,13 @@ public class MissionSporeSplinter : Mission
     public override void OnMissionStart()
     {
         base.OnMissionStart();
-        DialogueManager.Instance.StartDialogue("Argie.Intro", 9, letterbox: true,
+        DialogueManager.Instance.StartDialogue("Argie.PuffballHunt", 4, letterbox: true,
             music: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}ArgiesTheme"));
     }
 
     public override void OnMissionComplete(bool giveRewards = true)
     {
         base.OnMissionComplete(giveRewards);
-
-        // Any additional completion logic for this sideline mission
-        // could unlock other sideline missions or trigger events
     }
 
     protected override void RegisterEventHandlers()
@@ -49,7 +49,7 @@ public class MissionSporeSplinter : Mission
         if (eventsRegistered) return;
         base.RegisterEventHandlers();
 
-        OnNPCChat += OnNPCChatHandler;
+        DialogueManager.OnDialogueEnd += OnDialogueEndHandler;
         OnItemPickup += OnItemPickupHandler;
 
         ModContent.GetInstance<Reverie>().Logger.Debug($"[{Name} - {ID}] Registered event handlers");
@@ -60,22 +60,22 @@ public class MissionSporeSplinter : Mission
     {
         if (!eventsRegistered) return;
 
-        OnNPCChat -= OnNPCChatHandler;
         OnItemPickup -= OnItemPickupHandler;
+        DialogueManager.OnDialogueEnd -= OnDialogueEndHandler;
 
         ModContent.GetInstance<Reverie>().Logger.Debug($"[{Name} - {ID}] Unregistered event handlers");
         base.UnregisterEventHandlers();
     }
 
-    private void OnNPCChatHandler(NPC npc, ref string chat)
+    private void OnDialogueEndHandler(string dialogueKey)
     {
         if (Progress != MissionProgress.Ongoing) return;
 
         var objective = (Objectives)CurrentIndex;
         switch (objective)
         {
-            case Objectives.GreetArgie:
-                if (npc.type == ProviderNPC)
+            case Objectives.Introduction:
+                if (dialogueKey == "Argie.PuffballHunt")
                 {
                     UpdateProgress(objective: 0);
                 }
@@ -90,13 +90,11 @@ public class MissionSporeSplinter : Mission
 
         switch (objective)
         {
-            case Objectives.GatherResources:
-                if (item.type == ItemID.GlowingMushroom)
+            case Objectives.HarvestPuffballs:
+                if (item.type == ModContent.ItemType<PuffballItem>())
+                {
                     UpdateProgress(objective: 0, amount: item.stack);
-                else if (item.type == ItemID.Rope)
-                    UpdateProgress(objective: 1, amount: item.stack);
-                else if (item.IsWood())
-                    UpdateProgress(objective: 2, amount: item.stack);
+                }
                 break;
         }
     }

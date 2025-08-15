@@ -82,6 +82,6 @@ public class ArgieIntroCutscene : Cutscene
 
         DialogueManager.Instance.StartDialogue("Argie.Intro", 9, letterbox: true, music: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}ArgiesTheme"));
         MissionPlayer player = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        player.UnlockMission(MissionID.SporeSplinter);
+        player.UnlockMission(MissionID.PuffballHunt);
     }
 }

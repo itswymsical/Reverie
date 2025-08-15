@@ -62,7 +62,7 @@ public class SpawnMissionIndicator : ModItem
     public override bool? UseItem(Player player)
     {
         var mplayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        var mission = mplayer.GetMission(MissionID.SporeSplinter);
+        var mission = mplayer.GetMission(MissionID.PuffballHunt);
 
         if (player.altFunctionUse != 0)
         {

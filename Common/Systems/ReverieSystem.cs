@@ -33,13 +33,14 @@ public class ReverieSystem : ModSystem
         base.PostUpdateWorld();
         if (Main.LocalPlayer?.active == true && !Main.gameMenu)
         {
+            HarvestNotificationManager.UpdateNotifications();
+
             var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
             foreach (var mission in missionPlayer.ActiveMissions())
             {
                 mission.Update();
             }
         }
-        HarvestNotificationManager.UpdateNotifications();
     }
     public override void AddRecipes()
     {

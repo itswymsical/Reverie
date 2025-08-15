@@ -1,5 +1,6 @@
 ﻿using Reverie.Common.WorldGeneration.BiomeTypes;
 using Reverie.Common.WorldGeneration.Rainforest;
+using Reverie.Common.WorldGeneration.Structures;
 using Reverie.Common.WorldGeneration.Taiga;
 using Reverie.Common.WorldGeneration.TemperateForest;
 using System.Collections.Generic;
@@ -35,6 +36,11 @@ public class WorldGenSystem : ModSystem
         if (decorIndex != 1)
         {
             tasks.Insert(decorIndex + 1, new DecorPass());
+        }
+        var structIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Mushroom Patches"));
+        if (structIndex != 1)
+        {
+            tasks.Insert(structIndex + 1, new ArgieHousePass());
         }
 
         var biomeIndex = tasks.FindIndex(genPass => genPass.Name.Equals("Dungeon"));

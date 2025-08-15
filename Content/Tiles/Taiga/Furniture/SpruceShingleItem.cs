@@ -1,12 +1,20 @@
 ﻿namespace Reverie.Content.Tiles.Taiga.Furniture;
 
-public class SpruceWoodTile : ModTile
+public class SpruceShinglesItem : ModItem
+{
+    public override void SetDefaults()
+    {
+        base.SetDefaults();
+        Item.value = Item.sellPrice(0);
+        Item.DefaultToPlaceableTile(ModContent.TileType<SpruceShinglesTile>());
+    }
+}
+
+public class SpruceShinglesTile : ModTile
 {
     public override void SetStaticDefaults()
     {
         Main.tileSolid[Type] = true;
-
-        Main.tileMergeDirt[Type] = true;
 
         Merge(TileID.WoodBlock, Type,
             TileID.Shadewood, TileID.Ebonwood,
@@ -14,7 +22,8 @@ public class SpruceWoodTile : ModTile
             TileID.SpookyWood, TileID.DynastyWood,
             TileID.PalmWood, TileID.Pearlwood,
             TileID.LivingWood, TileID.RichMahogany, TileID.LivingMahogany,
-            TileID.BambooBlock, TileID.LargeBambooBlock, ModContent.TileType<PeatTile>());
+            TileID.BambooBlock, TileID.LargeBambooBlock, ModContent.TileType<SpruceWoodTile>());
+
         TileID.Sets.BlockMergesWithMergeAllBlockOverride[Type] = true;
         Main.tileBlockLight[Type] = true;
 
