@@ -35,48 +35,69 @@ public class MicrolithItem : ModItem
 
 public class MicrolithGlobalTile : GlobalTile
 {
-    public bool harvestApplied;
+    private bool bonusApplied;
 
     public override void Drop(int i, int j, int type)
     {
         base.Drop(i, j, type);
 
-        Player player = Main.player[Main.myPlayer];
-        int itemType = TileLoader.GetItemDropFromTypeAndStyle(type);
-        bool shinyOre = Main.tileSpelunker[type] && (type != TileID.Pots || type != TileID.Containers 
-            || type != TileID.Heart || type != TileID.LifeCrystalBoulder || type != TileID.LifeFruit || !(type >= 63 && type <= 68));
-
-        if (player.GetModPlayer<ReveriePlayer>().microlithEquipped)
+        Player player = Main.LocalPlayer;
+        if (!player.GetModPlayer<ReveriePlayer>().microlithEquipped)
         {
-            if ((TileID.Sets.Ore[type] || shinyOre) && Main.rand.NextFloat() < 0.15f)
-            {
-                int extraItems = Main.rand.Next(1, 3);
-                harvestApplied = true;
-
-                player.QuickSpawnItem(new EntitySource_TileBreak(i, j), itemType, extraItems);
-
-                HarvestNotificationManager.ShowHarvestNotification(itemType, extraItems);
-            }
-            else
-                harvestApplied = false;
+            bonusApplied = false;
+            return;
         }
+
+        bool isValidTile = Main.tileSolid[type] && (Main.tileSpelunker[type] || TileID.Sets.Ore[type]);
+
+        if (isValidTile && Main.rand.NextFloat() < 0.15f)
+        {
+            int itemType = GetGemOrOreItem(type);
+            int extraItems = Main.rand.Next(1, 3);
+
+            bonusApplied = true;
+            player.QuickSpawnItem(new EntitySource_TileBreak(i, j), itemType, extraItems);
+            HarvestNotificationManager.ShowHarvestNotification(itemType, extraItems);
+        }
+        else
+        {
+            bonusApplied = false;
+        }
+    }
+
+    private int GetGemOrOreItem(int tileType)
+    {
+        // gem blocks drop actual gems instead of blocks
+        return tileType switch
+        {
+            63 => ItemID.Sapphire,
+            64 => ItemID.Ruby,
+            65 => ItemID.Emerald,
+            66 => ItemID.Topaz,
+            67 => ItemID.Amethyst,
+            68 => ItemID.Diamond,
+            _ => TileLoader.GetItemDropFromTypeAndStyle(tileType)
+        };
     }
 
     public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
     {
         base.KillTile(i, j, type, ref fail, ref effectOnly, ref noItem);
 
-        Player player = Main.LocalPlayer;
+        if (!bonusApplied) return;
 
-        if (harvestApplied && TileID.Sets.Ore[type])
+        bonusApplied = false;
+
+        // sparkly harvest effects
+        Vector2 tilePos = new Vector2(i * 16, j * 16);
+        for (int dustCount = 0; dustCount < 30; dustCount++)
         {
-            harvestApplied = false;
-            for (int num = 0; num < 60; num += 2)
-            {
-                Dust.NewDust(new Vector2(i * 16, j * 16), 8, 8, DustID.SpelunkerGlowstickSparkle, Main.rand.NextFloat((float)num * 0.05f), -4f, Scale: 1f);
-            }
-            SoundEngine.PlaySound(SoundID.CoinPickup, new Vector2(i * 16, j * 16));
+            float velX = Main.rand.NextFloat(-2f, 2f);
+            float velY = Main.rand.NextFloat(-4f, -1f);
+            Dust.NewDust(tilePos, 16, 16, DustID.SpelunkerGlowstickSparkle, velX, velY, Scale: 1.2f);
         }
+
+        SoundEngine.PlaySound(SoundID.CoinPickup, tilePos);
     }
 }
 

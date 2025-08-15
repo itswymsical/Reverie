@@ -352,11 +352,11 @@ public class MissionSidebar
             pinTexture,
             pinPos,
             null,
-            pinColor * alpha * (isHoveringPinButton ? 1f : 0.8f),
-            isPinned ? MathHelper.ToRadians(45f) : 0f,
+            Color.White * alpha * (isHoveringPinButton ? 1f : 0.8f),
+            isPinned ? MathHelper.ToRadians(-45f) : 0f,
             new Vector2(pinTexture.Width / 2, pinTexture.Height / 2),
-            isHoveringPinButton ? 2f : 1.5f,
-            SpriteEffects.None,
+            isHoveringPinButton ? 1.15f : 1f,
+            SpriteEffects.FlipHorizontally,
             0f
         );
 
