@@ -51,6 +51,7 @@ public class MissionSidebar
     private int currentAvailablePage;
     private bool showingAvailableMissions;
     private bool wasInventoryOpen;
+    private bool isPinned;
 
     private readonly Dictionary<string, float> objFadeFinish = [];
 
@@ -58,6 +59,7 @@ public class MissionSidebar
     private bool isHoveringToggleButton;
     private bool isHoveringPrevButton;
     private bool isHoveringNextButton;
+    private bool isHoveringPinButton;
 
     private Vector2 iconPos;
 
@@ -65,6 +67,7 @@ public class MissionSidebar
     private Texture2D nextTexture;
     private Texture2D prevTexture;
     private Texture2D toggleTexture;
+    private Texture2D pinTexture;
     #endregion
 
     #region Properties
@@ -88,6 +91,7 @@ public class MissionSidebar
         nextTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/Next", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
         prevTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/Prev", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
         toggleTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/CycleMenu", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
+        pinTexture = ModContent.Request<Texture2D>("Reverie/Assets/Textures/UI/Missions/Pin", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
     }
 
     private void ResetFadeStates()
@@ -227,6 +231,7 @@ public class MissionSidebar
         isHoveringToggleButton = false;
         isHoveringPrevButton = false;
         isHoveringNextButton = false;
+        isHoveringPinButton = false;
     }
     #endregion
 
@@ -247,6 +252,7 @@ public class MissionSidebar
         var layout = CalculateLayout(currentList);
         DrawIcon(spriteBatch, layout);
         DrawTitle(spriteBatch, layout);
+        DrawPinButton(spriteBatch, layout);
         DrawToggle(spriteBatch, layout);
         DrawNavigationArrows(spriteBatch, layout, currentList);
         DrawContent(spriteBatch, layout, currentList);
@@ -318,6 +324,56 @@ public class MissionSidebar
             Vector2.Zero,
             0.9f
         );
+    }
+
+    private void DrawPinButton(SpriteBatch spriteBatch, PanelLayout layout)
+    {
+        spriteBatch.End();
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, default, Main.Rasterizer);
+
+        Vector2 pinPos = new Vector2(
+            layout.PosX - 32,
+            layout.PosY + PANEL_HEIGHT / TITLE_Y_DIVISOR + 10.5f
+        );
+
+        Rectangle pinRect = new Rectangle(
+            (int)pinPos.X - pinTexture.Width / 2,
+            (int)pinPos.Y - pinTexture.Height / 2,
+            pinTexture.Width,
+            pinTexture.Height
+        );
+
+        isHoveringPinButton = pinRect.Contains(Main.MouseScreen.ToPoint()) && PlayerInput.IgnoreMouseInterface == false;
+
+        Color pinColor = isPinned ? Color.Gold : Color.White;
+        if (isHoveringPinButton) pinColor = Color.LightGray;
+
+        spriteBatch.Draw(
+            pinTexture,
+            pinPos,
+            null,
+            pinColor * alpha * (isHoveringPinButton ? 1f : 0.8f),
+            isPinned ? MathHelper.ToRadians(45f) : 0f,
+            new Vector2(pinTexture.Width / 2, pinTexture.Height / 2),
+            isHoveringPinButton ? 2f : 1.5f,
+            SpriteEffects.None,
+            0f
+        );
+
+        if (isHoveringPinButton && Main.mouseLeft && Main.mouseLeftRelease && alpha > 0.9f)
+        {
+            Main.mouseLeftRelease = false;
+            isPinned = !isPinned;
+            SoundEngine.PlaySound(SoundID.MenuTick);
+            isHoveringPinButton = false;
+        }
+
+        if (isHoveringPinButton)
+        {
+            Main.LocalPlayer.mouseInterface = true;
+        }
+        spriteBatch.End();
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, default, default, default);
     }
 
     private void DrawToggle(SpriteBatch spriteBatch, PanelLayout layout)
@@ -399,7 +455,6 @@ public class MissionSidebar
         DrawButton(spriteBatch, prevTexture, prevPos, isHoveringPrevButton);
         DrawButton(spriteBatch, nextTexture, nextPos, isHoveringNextButton);
 
-        // Set mouse interface when hovering (this was missing!)
         if (isHoveringPrevButton || isHoveringNextButton)
         {
             Main.LocalPlayer.mouseInterface = true;
@@ -573,6 +628,9 @@ public class MissionSidebar
 
     private string GetHoverText()
     {
+        if (isHoveringPinButton)
+            return isPinned ? "Unpin Sidebar" : "Pin Sidebar";
+
         bool hasOtherMissionType = (showingAvailableMissions && activeMissions.Count > 0) ||
                                  (!showingAvailableMissions && availableMissions.Count > 0);
 
@@ -660,6 +718,7 @@ public class MissionSidebar
             SoundEngine.PlaySound(SoundID.MenuTick);
         }
     }
+
     private void HandleInput()
     {
         if (alpha <= 0.9f || PlayerInput.IgnoreMouseInterface) return;
@@ -673,13 +732,14 @@ public class MissionSidebar
     public void Update()
     {
         bool isInventoryOpen = Main.playerInventory;
+        bool shouldBeVisible = isInventoryOpen || isPinned;
 
         if (isInventoryOpen != wasInventoryOpen)
         {
-            if (isInventoryOpen)
+            if (shouldBeVisible)
             {
                 isFadingOut = false;
-                fadeInProgress = 0f; // Reset fade-in to start from beginning
+                fadeInProgress = 0f;
 
                 LoadMissions();
                 UpdateActiveObjectives();
@@ -690,7 +750,7 @@ public class MissionSidebar
                     SoundEngine.PlaySound(SoundID.MenuTick);
                 }
             }
-            else
+            else if (!isPinned)
             {
                 isFadingOut = true;
                 fadeoutProgress = 0f;
@@ -699,12 +759,13 @@ public class MissionSidebar
                 isHoveringToggleButton = false;
                 isHoveringPrevButton = false;
                 isHoveringNextButton = false;
+                isHoveringPinButton = false;
             }
 
             wasInventoryOpen = isInventoryOpen;
         }
 
-        if (isInventoryOpen && !isFadingOut)
+        if (shouldBeVisible && !isFadingOut)
         {
             fadeInProgress += FADE_IN_SPEED;
             fadeInProgress = Math.Min(fadeInProgress, 1.0f);
