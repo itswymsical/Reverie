@@ -62,7 +62,7 @@ public class Scrunglepuff : ModNPC
         NPC.lifeMax = 80;
         NPC.HitSound = SoundID.NPCHit1;
         NPC.DeathSound = SoundID.NPCDeath6;
-        NPC.knockBackResist = 0.25f;
+        NPC.knockBackResist = 1.25f;
         NPC.aiStyle = -1;
         NPC.noGravity = false;
         NPC.noTileCollide = false;
@@ -115,7 +115,6 @@ public class Scrunglepuff : ModNPC
                 break;
         }
 
-        // Apply gravity
         if (!NPC.noGravity)
         {
             NPC.velocity.Y += 0.1f;
@@ -140,13 +139,12 @@ public class Scrunglepuff : ModNPC
         }
         else
         {
-            SubTimer = 0f; // Reset if player moves away during emerging
+            SubTimer = 0f;
         }
     }
 
     private void ActiveBehavior(Player player, float distance)
     {
-        // Flee from player with smooth acceleration
         Vector2 fleeDirection = NPC.Center - player.Center;
         if (fleeDirection != Vector2.Zero)
         {
@@ -158,17 +156,15 @@ public class Scrunglepuff : ModNPC
         NPC.direction = NPC.velocity.X > 0 ? 1 : -1;
         NPC.spriteDirection = NPC.direction;
 
-        // Attack if player gets too close
         if (distance < ATTACK_DIST && SubTimer <= 0f)
         {
             SpraySpores(player);
-            SubTimer = 40f; // Cooldown before next attack
+            SubTimer = 40f;
         }
 
         if (SubTimer > 0f)
             SubTimer--;
 
-        // Start settling when far enough away
         if (distance > SETTLE_DIST)
         {
             State = AIState.Settling;
@@ -181,7 +177,6 @@ public class Scrunglepuff : ModNPC
     {
         SubTimer++;
 
-        // If player gets close again during settling, go back to active
         if (distance < TRIGGER_DIST)
         {
             State = AIState.Active;
@@ -190,7 +185,6 @@ public class Scrunglepuff : ModNPC
             return;
         }
 
-        // Settling phase - 48 ticks to fully settle (reverse of emerging)
         if (SubTimer >= 48f)
         {
             State = AIState.Dormant;
@@ -209,7 +203,6 @@ public class Scrunglepuff : ModNPC
             float angle = baseAngle + MathHelper.ToRadians(-30 + (60f / (sporeCount - 1)) * i);
             Vector2 velocity = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * 6f;
 
-            // You'll need to create a spore projectile
             // Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center, velocity, 
             //     ModContent.ProjectileType<SporeProjectile>(), 10, 1f);
         }
@@ -226,7 +219,13 @@ public class Scrunglepuff : ModNPC
 
     public override void ModifyNPCLoot(NPCLoot npcLoot)
     {
-        npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<PuffballItem>(), 1, 1, 3));
+        var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+        var mission = missionPlayer.GetMission(MissionID.PuffballHunt);
+
+        if (mission?.Progress == MissionProgress.Ongoing)
+            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<PuffballItem>(), 1));
+        else
+            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<PuffballItem>(), 1, 1, 3));
     }
 
     public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
