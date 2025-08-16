@@ -1,47 +1,16 @@
-﻿// Credits: Original code by Spirit Reforged (GabeHasWon)
-using Reverie.Content.Tiles.Taiga;
+﻿using Reverie.Common.Tiles;
+using Reverie.Content.Dusts;
 using Reverie.Content.Tiles.Taiga.Trees;
-using Reverie.Core.Tiles;
+using Reverie.Content.Tiles.TemperateForest;
 using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.GameContent.Metadata;
 using Terraria.Localization;
 using Terraria.ObjectData;
 
-namespace Reverie.Common.Tiles;
+namespace Reverie.Content.Tiles.Taiga;
 
-/// <summary> Applies the effects of fertilizer to <see cref="CustomTree"/> saplings. </summary>
-internal class FertilizerGlobalProjectile : GlobalProjectile
-{
-    public override bool AppliesToEntity(Projectile entity, bool lateInstantiation) => entity.type == ProjectileID.Fertilizer;
-
-    public override void AI(Projectile projectile)
-    {
-        Point start = projectile.TopLeft.ToTileCoordinates();
-        Point end = projectile.BottomRight.ToTileCoordinates();
-
-        for (int x = start.X; x < end.X + 1; x++)
-        {
-            for (int y = start.Y; y < end.Y + 1; y++)
-            {
-                if (!WorldGen.InWorld(x, y))
-                    continue;
-
-                var t = Main.tile[x, y];
-
-                if (TileLoader.GetTile(t.TileType) is SaplingTile)
-                {
-                    WorldGen.GrowTree(x, y);
-                }
-                if (TileLoader.GetTile(t.TileType) is SpruceSapling)
-                {
-                    SpruceTree.Grow(x, y);
-                }
-            }
-        }
-    }
-}
-public abstract class SaplingTile : ModTile
+public class SpruceSapling : ModTile
 {
     public override void SetStaticDefaults()
     {
@@ -64,11 +33,12 @@ public abstract class SaplingTile : ModTile
         TileObjectData.newTile.LavaDeath = true;
         TileObjectData.newTile.RandomStyleRange = 3;
         TileObjectData.newTile.StyleMultiplier = 3;
-        PreAddObjectData();
+        TileObjectData.newTile.AnchorValidTiles = [ModContent.TileType<TaigaGrassTile>()];
+
         TileObjectData.addTile(Type);
 
-        TileID.Sets.TreeSapling[Type] = true; //Will break on tile update if this is true
-        TileID.Sets.CommonSapling[Type] = true;
+        TileID.Sets.TreeSapling[Type] = true;
+
         TileID.Sets.SwaysInWindBasic[Type] = true;
         TileMaterials.SetForTileId(Type, TileMaterials._materialsByName["Plant"]);
 
@@ -78,16 +48,12 @@ public abstract class SaplingTile : ModTile
         AdjTiles = [TileID.Saplings];
     }
 
-    /// <summary> Called before <see cref="TileObjectData.addTile"/> is automatically called in <see cref="SetStaticDefaults"/>.<br/>
-    /// Use this to modify object data without needing to override SetStaticDefaults.<para/>
-    /// <see cref="TileObjectData.AnchorValidTiles"/> must be set here for the sapling to work. </summary>
-    public abstract void PreAddObjectData();
     public override void NumDust(int i, int j, bool fail, ref int num) => num = fail ? 1 : 3;
 
     public override void RandomUpdate(int i, int j)
     {
-        if (Main.rand.NextBool(8) && WorldGen.GrowTree(i, j) && WorldGen.PlayerLOS(i, j))
-            WorldGen.TreeGrowFXCheck(i, j);
+        if (Main.rand.NextBool(20))
+            SpruceTree.Grow(i, j);
     }
 
     public override void SetSpriteEffects(int i, int j, ref SpriteEffects effects)

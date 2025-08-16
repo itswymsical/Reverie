@@ -162,6 +162,12 @@ public class SlimeGlobal : GlobalNPC
         int frameCount = 2;
         int frameHeight = texture.Height / frameCount;
         int frameWidth = texture.Width;
+        if (npc.type == NPCID.SandSlime)
+        {
+            frameCount = 3;
+            frameHeight = texture.Height / frameCount;
+            frameWidth = texture.Width;
+        }
 
         if (npc.ai[0] == -999f)
         {
@@ -193,6 +199,11 @@ public class SlimeGlobal : GlobalNPC
             spriteRotation = MathHelper.Clamp(npc.velocity.X * 0.04f, -MathHelper.PiOver2, MathHelper.PiOver2);
         }
 
+        if (npc.type == NPCID.SandSlime)
+        {
+            finalColor = drawColor;
+        }
+
         Main.EntitySpriteDraw(
             texture,
             drawPos,
@@ -203,6 +214,7 @@ public class SlimeGlobal : GlobalNPC
             squishScale * npc.scale,
             spriteEffects
         );
+
 
         return false;
     }

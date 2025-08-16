@@ -202,8 +202,6 @@ public class HarvestNotification : IInGameNotification
     }
 }
 
-
-// Helper class to manage and prevent duplicates
 public static class HarvestNotificationManager
 {
     private static readonly List<HarvestNotification> ActiveNotifications = [];

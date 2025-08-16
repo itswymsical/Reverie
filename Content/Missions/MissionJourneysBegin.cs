@@ -41,15 +41,14 @@ public class MissionJourneysBegin : Mission
     {
         base.OnMissionStart();
 
-        DialogueManager.Instance.StartDialogue("JourneysBegin.Tutorial", 7, zoomIn: false, true);
+        DialogueManager.Instance.StartDialogue("JourneysBegin.Tutorial", 7, zoomIn: false, true, music: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}GuidesTheme"));
     }
 
     public override void OnMissionComplete(bool giveRewards = true)
     {
         base.OnMissionComplete(giveRewards);
 
-        // Unlock next mission in the world system since this is mainline
-        MissionWorld.Instance.UnlockMission(MissionID.ForgottenAges);
+        //MissionWorld.Instance.UnlockMission(MissionID.ForgottenAges);
 
         DialogueManager.Instance.StartDialogue("JourneysBegin.MissionEnd", 2, zoomIn: false, false);
     }
@@ -111,7 +110,6 @@ public class MissionJourneysBegin : Mission
                 {
                     UpdateProgress(objective: 0);
 
-                    // Give mirror to the player
                     Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.MagicMirror, 1);
                     DialogueManager.Instance.StartDialogue("JourneysBegin.MirrorGiven", 1, zoomIn: false, letterbox: true);
                 }

@@ -1,5 +1,6 @@
 ﻿using AnimatedModIconLib.Core;
 using Reverie.Common.Players;
+using Reverie.Common.Tiles;
 using Reverie.Core.Graphics.Interfaces;
 using Reverie.Core.Loaders;
 using System.Collections.Generic;
@@ -82,6 +83,7 @@ public sealed partial class Reverie : Mod
             loadCache[k].Load();
 
         }
+
         this.RegisterAnimatedModIcon(DrawModIcon);
     }
 

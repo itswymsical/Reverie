@@ -1,4 +1,4 @@
-﻿using Reverie.Core.Projectiles.Actors;
+﻿using Reverie.Core.Tiles.Projectiles.Actors;
 using Terraria.Audio;
 using Terraria.DataStructures;
 

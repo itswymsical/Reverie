@@ -3,7 +3,7 @@ using Reverie.Core.Graphics.Interfaces;
 using System;
 using System.Collections.Generic;
 
-namespace Reverie.Core.Projectiles.Actors
+namespace Reverie.Core.Tiles.Projectiles.Actors
 {
     public abstract class StickyProjectileActor : ModProjectile, IDrawPrimitive
     {
@@ -56,7 +56,7 @@ namespace Reverie.Core.Projectiles.Actors
 
                 oldRotation = Projectile.rotation;
 
-                offset = target.Center - Projectile.Center + (Projectile.velocity * 0.75f);
+                offset = target.Center - Projectile.Center + Projectile.velocity * 0.75f;
 
                 stickingToNPC = true;
 
@@ -85,11 +85,11 @@ namespace Reverie.Core.Projectiles.Actors
         protected void RemoveStackProjectiles()
         {
             var sticking = new Point[MaxStickies];
-            int index = 0;
+            var index = 0;
 
-            for (int i = 0; i < Main.maxProjectiles; i++)
+            for (var i = 0; i < Main.maxProjectiles; i++)
             {
-                Projectile currentProjectile = Main.projectile[i];
+                var currentProjectile = Main.projectile[i];
 
                 if (i != Projectile.whoAmI
                     && currentProjectile.active
@@ -108,9 +108,9 @@ namespace Reverie.Core.Projectiles.Actors
 
             if (index >= sticking.Length)
             {
-                int oldIndex = 0;
+                var oldIndex = 0;
 
-                for (int i = 1; i < sticking.Length; i++)
+                for (var i = 1; i < sticking.Length; i++)
                     if (sticking[i].Y < sticking[oldIndex].Y)
                         oldIndex = i;
 
@@ -120,14 +120,14 @@ namespace Reverie.Core.Projectiles.Actors
 
         private void ManageCaches()
         {
-            Player player = Main.LocalPlayer;
-            Vector2 pos = player.Center + (player.DirectionTo(Projectile.Center) * (Size.Length() * Main.rand.NextFloat(0.5f, 1.1f))) + (Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.0f, 4.0f));
+            var player = Main.LocalPlayer;
+            var pos = player.Center + player.DirectionTo(Projectile.Center) * (Size.Length() * Main.rand.NextFloat(0.5f, 1.1f)) + Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.0f, 4.0f);
 
             if (cache == null)
             {
                 cache = [];
 
-                for (int i = 0; i < 15; i++)
+                for (var i = 0; i < 15; i++)
                 {
                     cache.Add(pos);
                 }
@@ -143,8 +143,8 @@ namespace Reverie.Core.Projectiles.Actors
 
         private void ManageTrail()
         {
-            Player player = Main.LocalPlayer;
-            Vector2 pos = player.Center + (player.DirectionTo(Projectile.Center) * (Size.Length() * Main.rand.NextFloat(0.5f, 1.1f))) + (Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.0f, 4.0f));
+            var player = Main.LocalPlayer;
+            var pos = player.Center + player.DirectionTo(Projectile.Center) * (Size.Length() * Main.rand.NextFloat(0.5f, 1.1f)) + Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.0f, 4.0f);
 
             trail ??= new Trail(Main.instance.GraphicsDevice, 15, new TriangularTip(5), factor => factor * 16, factor =>
             {

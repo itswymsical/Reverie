@@ -1,4 +1,5 @@
 ﻿using Reverie.Common.Systems;
+using Reverie.Common.Tiles;
 using Reverie.Content.Tiles.Canopy;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace Reverie.Core.Tiles;
 /// <summary>
 /// Abstract base class for all custom trees in the mod
 /// </summary>
-public abstract class CustomTree : ModTile
+public abstract partial class CustomTree : ModTile
 {
     #region Virtual Properties - Override these in derived classes
 
@@ -267,6 +268,12 @@ public abstract class CustomTree : ModTile
         return true;
     }
 
+    public static bool GrowTree<T>(int i, int j) where T : CustomTree
+    {
+        var instance = ModContent.GetInstance<T>();
+        return instance?.GrowTree(i, j) ?? false;
+    }
+
     public bool GrowTree(int i, int j)
     {
         var height = TreeHeight;
@@ -274,7 +281,7 @@ public abstract class CustomTree : ModTile
         if (!CanGrowTree(i, j, height))
             return false;
 
-        // Find actual ground level
+        // find ground level and remove sapling if present
         var groundY = j;
         for (var check = 0; check < 10; check++)
         {
@@ -284,8 +291,19 @@ public abstract class CustomTree : ModTile
             groundY++;
         }
 
-        // Clear any existing tiles at the base
-        WorldGen.KillTile(i, groundY);
+        // remove sapling at growth location
+        var saplingTile = Framing.GetTileSafely(i, groundY);
+        if (saplingTile.HasTile && TileLoader.GetTile(saplingTile.TileType) is SaplingTile)
+        {
+            WorldGen.KillTile(i, groundY);
+        }
+
+        // remove any sapling above ground level too
+        var aboveTile = Framing.GetTileSafely(i, groundY - 1);
+        if (aboveTile.HasTile && TileLoader.GetTile(aboveTile.TileType) is SaplingTile)
+        {
+            WorldGen.KillTile(i, groundY - 1);
+        }
 
         CreateTree(i, groundY, height);
 
