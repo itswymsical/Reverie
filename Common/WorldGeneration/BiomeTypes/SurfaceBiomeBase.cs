@@ -26,7 +26,7 @@ public abstract class SurfaceBiomeBase : GenPass
         progress.Message = $"Locating {PassName} biome...";
 
         InitializeNoise();
-
+        
         if (!GetBiomeBounds(out _biomeBounds))
         {
             progress.Message = $"Failed to find suitable location for {PassName} - skipping";
@@ -136,7 +136,7 @@ public abstract class SurfaceBiomeBase : GenPass
         }
     }
 
-    protected int[] GenerateContouredHeights(int leftEdgeHeight, int rightEdgeHeight)
+    protected virtual int[] GenerateContouredHeights(int leftEdgeHeight, int rightEdgeHeight)
     {
         int width = _biomeBounds.Width;
         int[] heights = new int[width];

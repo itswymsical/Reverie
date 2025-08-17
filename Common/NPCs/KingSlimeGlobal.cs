@@ -274,6 +274,12 @@ public class KingSlimeGlobalNPC : GlobalNPC
     public override void SetStaticDefaults()
     {
         Main.npcFrameCount[NPCID.KingSlime] = 6;
+
+        NPCID.Sets.NPCBestiaryDrawModifiers drawModifiers = new()
+        {
+            Position = new Vector2(0f, -16f),
+        };
+        NPCID.Sets.NPCBestiaryDrawOffset.Add(NPCID.KingSlime, drawModifiers);
     }
 
     public override void SetDefaults(NPC npc)

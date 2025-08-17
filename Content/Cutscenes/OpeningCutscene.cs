@@ -335,11 +335,6 @@ public class OpeningCutscene : Cutscene
         {
             DrawStarField(spriteBatch);
         }
-
-        if (logoTexture != null && logoAlpha > 0f)
-        {
-            DrawLogo(spriteBatch);
-        }
     }
 
     private void DrawStarField(SpriteBatch spriteBatch)
@@ -393,60 +388,7 @@ public class OpeningCutscene : Cutscene
                          DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
     }
 
-    private void DrawLogo(SpriteBatch spriteBatch)
-    {
-        var logoDrawCenter = new Vector2(Main.screenWidth / 2f, Main.screenHeight / 14f);
-        var logoRenderPos = new Vector2(logoDrawCenter.X / 1.35f, logoDrawCenter.Y);
-        var logoWidth = logoTexture.Width * logoScale;
-        var logoHeight = logoTexture.Height * logoScale;
 
-        var dotOffset = new Vector2(logoWidth * 0.82f, logoHeight * 0.39f);
-        var galaxyWorldPos = logoRenderPos + dotOffset;
-        var galaxyShaderPos = new Vector2(
-            (galaxyWorldPos.X - Main.screenWidth * 0.5f) / (Main.screenWidth * 0.5f),
-            (galaxyWorldPos.Y - Main.screenHeight * 0.5f) / (Main.screenHeight * 0.5f)
-        );
-
-        spriteBatch.Draw(logoTexture, logoRenderPos, null, Color.White * logoAlpha,
-                       logoRotation, Vector2.Zero, logoScale, SpriteEffects.None, 0f);
-
-        spriteBatch.End();
-
-        var effect = ShaderLoader.GetShader("GalaxyShader").Value;
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp,
-                        DepthStencilState.None, Main.Rasterizer, effect, Main.UIScaleMatrix);
-
-        if (effect != null)
-        {
-            effect.Parameters["uTime"]?.SetValue((float)(Main.timeForVisualEffects * 0.0015f));
-            effect.Parameters["uScreenResolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
-            effect.Parameters["uSourceRect"]?.SetValue(new Vector4(0, 0, Main.screenWidth, Main.screenHeight));
-            effect.Parameters["uIntensity"]?.SetValue(.85f * logoAlpha);
-
-            effect.Parameters["uImage0"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}RibbonTrail", AssetRequestMode.ImmediateLoad).Value);
-            effect.Parameters["uImage1"]?.SetValue(ModContent.Request<Texture2D>($"{VFX_DIRECTORY}StormTrail", AssetRequestMode.ImmediateLoad).Value);
-
-            effect.Parameters["uCenter"]?.SetValue(galaxyShaderPos);
-            effect.Parameters["uScale"]?.SetValue(3.5f);
-
-            effect.Parameters["uRotation"]?.SetValue((float)(Main.timeForVisualEffects * 0.001f));
-            effect.Parameters["uArmCount"]?.SetValue(4.0f);
-
-            effect.Parameters["uColor"]?.SetValue(new Vector4(0.8f, 0.4f, 1.5f, .85f));
-        }
-
-        var perlinSpiral = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Perlin").Value;
-        spriteBatch.Draw(perlinSpiral, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight),
-                       Color.White * logoAlpha);
-
-        var pixelTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}EnergyTrail").Value;
-        spriteBatch.Draw(pixelTexture, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight),
-                       Color.White * logoAlpha);
-
-        spriteBatch.End();
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap,
-                        DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
-    }
 
     protected override void OnCutsceneEnd()
     {
@@ -455,7 +397,7 @@ public class OpeningCutscene : Cutscene
 
         CameraSystem.UnlockCamera();
         CameraSystem.ReturnCamera(1);
-
+        CameraSystem.Reset();
         ControlsON();
         InvisOFF();
         FallDamageON();

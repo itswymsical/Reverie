@@ -56,7 +56,7 @@ public class Scrunglepuff : ModNPC
     public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
     {
         bestiaryEntry.Info.AddRange([BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Underground,
-            new FlavorTextBestiaryInfoElement("Mods.Reverie.BestiaryEntries.Scrunglepuff")
+            new FlavorTextBestiaryInfoElement("Mods.Reverie.NPCs.Scrunglepuff.Bestiary")
         ]);
     }
 
@@ -65,11 +65,11 @@ public class Scrunglepuff : ModNPC
         NPC.width = 42;
         NPC.height = 30;
         NPC.damage = 8;
-        NPC.defense = 16;
+        NPC.defense = 5;
         NPC.lifeMax = 80;
         NPC.HitSound = new SoundStyle($"{SFX_DIRECTORY}ScrunglepuffHit");
         NPC.DeathSound = SoundID.NPCDeath53 with { Pitch = 0.6f};
-        NPC.knockBackResist = 0.7f;
+        NPC.knockBackResist = 1.5f;
         NPC.value = Item.buyPrice(copper: 80);
         NPC.aiStyle = -1;
     }

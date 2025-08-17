@@ -863,9 +863,18 @@ NPCs: {
 	WardenArm.DisplayName: Warden Arm
 	WoodenWarden.DisplayName: Wooden Warden
 	Fungore.DisplayName: Fungore
-	EchoKnight.DisplayName: Echo Knight
 	Shelledrake.DisplayName: Shelledrake
-	NullHerald.DisplayName: Null Herald
+
+	EchoKnight: {
+		DisplayName: EchoKnight
+		Bestiary: Clad in fractured pale-gold armor, these silent warriors phase between realms with lethal purpose.
+	}
+
+	NullHerald: {
+		DisplayName: Null Herald
+		Bestiary: Bearing glyphs that trail like smoke, these armored figures serve as harbingers of [REDACTED]'s reach.
+	}
+
 	ArchiverChronicleNPC.DisplayName: Archiver Chronicle
 
 	Argie: {
@@ -913,10 +922,11 @@ NPCs: {
 		}
 	}
 
-	Scrunglepuff.DisplayName: Scrunglepuff
+	Scrunglepuff: {
+		DisplayName: Scrunglepuff
+		Bestiary: A crafty creature that disguises itself as an innocent puffball. When threatened, it releases a cloud of spores and flees.
+	}
 }
-
-BestiaryEntries.Scrunglepuff: A crafty creature that disguises itself as an innocent puffball. When threatened, it releases a cloud of spores and flees.
 
 Biomes: {
 	ArchaeaDesertBiome: {

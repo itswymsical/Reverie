@@ -69,7 +69,6 @@ public class MissionJourneysBegin : Mission
         if (eventsRegistered) return;
         base.RegisterEventHandlers();
 
-        OnNPCChat += OnNPCChatHandler;
         OnItemUse += OnItemUseHandler;
         OnItemPickup += OnItemPickupHandler;
         OnTileInteract += TileInteractHandler;
@@ -85,7 +84,6 @@ public class MissionJourneysBegin : Mission
     {
         if (!eventsRegistered) return;
 
-        OnNPCChat -= OnNPCChatHandler;
         OnItemUse -= OnItemUseHandler;
         OnItemPickup -= OnItemPickupHandler;
         OnTileInteract -= TileInteractHandler;
@@ -111,20 +109,9 @@ public class MissionJourneysBegin : Mission
                     UpdateProgress(objective: 0);
 
                     Main.LocalPlayer.QuickSpawnItem(new EntitySource_Misc("Mission_Reward"), ItemID.MagicMirror, 1);
-                    DialogueManager.Instance.StartDialogue("JourneysBegin.MirrorGiven", 1, zoomIn: false, letterbox: true);
+                    DialogueManager.Instance.StartDialogue("JourneysBegin.MirrorGiven", 1, zoomIn: false, letterbox: true, music: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}GuidesTheme"));
                 }
                 break;
-        }
-    }
-
-    private void OnNPCChatHandler(NPC npc, ref string chat)
-    {
-        if (Progress != MissionProgress.Ongoing) return;
-
-        var objective = (Objectives)CurrentList;
-        switch (objective)
-        {
-            // Handle any NPC chat objectives here
         }
     }
 

@@ -6,6 +6,7 @@ using Reverie.Utilities;
 using System.Collections.Generic;
 using Terraria.Audio;
 using Terraria.GameContent;
+using Terraria.GameContent.Bestiary;
 
 namespace Reverie.Content.NPCs.Enemies.Assailants;
 
@@ -46,6 +47,20 @@ public class EchoKnight : FighterNPCActor, IDrawPrimitive
         NPCID.Sets.TrailCacheLength[NPC.type] = 7;
 
         Main.npcFrameCount[NPC.type] = 1;
+
+        NPCID.Sets.NPCBestiaryDrawModifiers drawModifiers = new()
+        {
+            Velocity = 0f,
+            Direction = 1
+        };
+        NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, drawModifiers);
+    }
+
+    public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
+    {
+        bestiaryEntry.Info.AddRange([BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.TheCorruption,
+            new FlavorTextBestiaryInfoElement("Mods.Reverie.NPCs.EchoKnight.Bestiary")
+        ]);
     }
 
     public override void SetDefaults()
@@ -59,7 +74,7 @@ public class EchoKnight : FighterNPCActor, IDrawPrimitive
         NPC.HitSound = SoundID.NPCHit1;
         NPC.DeathSound = SoundID.NPCDeath1;
         NPC.knockBackResist = 0.22f;
-        NPC.value = Item.sellPrice(copper: Main.rand.Next(92, 170));
+        NPC.value = Item.buyPrice(copper: Main.rand.Next(92, 170));
     }
     private List<Vector2> cache;
     private Trail trail;

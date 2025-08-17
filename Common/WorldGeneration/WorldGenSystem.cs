@@ -1,4 +1,5 @@
 ﻿using Reverie.Common.WorldGeneration.BiomeTypes;
+//using Reverie.Common.WorldGeneration.Corruption;
 using Reverie.Common.WorldGeneration.Rainforest;
 using Reverie.Common.WorldGeneration.Structures;
 using Reverie.Common.WorldGeneration.Taiga;
@@ -16,12 +17,14 @@ public class WorldGenSystem : ModSystem
     {
         WorldGen.DetourPass((PassLegacy)WorldGen.VanillaGenPasses["Shinies"], Detour_Ores);
     }
+
     private void Detour_Ores(WorldGen.orig_GenPassDetour orig, object self, GenerationProgress progress, GameConfiguration configuration)
     {
         var orePass = new OrePass();
 
         orePass.Apply(progress, configuration);
     }
+
 
     public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
     {

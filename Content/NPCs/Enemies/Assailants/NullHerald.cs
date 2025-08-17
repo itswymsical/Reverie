@@ -2,6 +2,7 @@
 using Reverie.Core.NPCs.Actors;
 using Terraria.Audio;
 using Terraria.GameContent;
+using Terraria.GameContent.Bestiary;
 
 namespace Reverie.Content.NPCs.Enemies.Assailants;
 
@@ -41,6 +42,20 @@ public class NullHerald : FighterNPCActor
         NPCID.Sets.TrailingMode[NPC.type] = 0;
         NPCID.Sets.TrailCacheLength[NPC.type] = 7;
         Main.npcFrameCount[NPC.type] = 1;
+
+        NPCID.Sets.NPCBestiaryDrawModifiers drawModifiers = new()
+        {
+            Velocity = 0f,
+            Direction = 1
+        };
+        NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, drawModifiers);
+    }
+
+    public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
+    {
+        bestiaryEntry.Info.AddRange([BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.TheCorruption,
+            new FlavorTextBestiaryInfoElement("Mods.Reverie.NPCs.NullHerald.Bestiary"),
+        ]);
     }
 
     public override void SetDefaults()

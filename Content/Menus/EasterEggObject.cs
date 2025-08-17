@@ -19,10 +19,18 @@ public partial class ReverieMenu
             Velocity = velocity;
             Rotation = Main.rand.NextFloat(0, MathHelper.TwoPi);
             Scale = scale;
-
             Alpha = 0f;
-            Type = Main.rand.Next(7);
-            if (Type == 6)
+
+            if (Main.rand.NextBool(1000000))
+            {
+                Type = 8;
+            }
+            else
+            {
+                Type = Main.rand.Next(8);
+            }
+
+            if (Type == 7)
             {
                 Scale = 0.2f;
             }
@@ -49,8 +57,10 @@ public partial class ReverieMenu
                 2 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}SpaceDolphin").Value,
                 3 => TextureAssets.Item[ItemID.FirstFractal].Value,
                 4 => TextureAssets.Item[ItemID.SDMG].Value,
-                5 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostTree").Value,
-                6 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}DeadEye").Value,
+                5 => TextureAssets.Item[ItemID.Bass].Value,
+                6 => TextureAssets.Item[ItemID.AtlanticCod].Value,
+                7 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostTree").Value,
+                8 => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}46").Value,
 
                 _ => ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}LostMartian").Value
             };

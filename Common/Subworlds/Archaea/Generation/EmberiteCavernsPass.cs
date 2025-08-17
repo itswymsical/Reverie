@@ -1,4 +1,6 @@
-﻿using Reverie.Utilities;
+﻿using Reverie.Content.Tiles.Misc;
+using Reverie.lib;
+using Reverie.Utilities;
 using System;
 using System.Linq;
 using Terraria;
@@ -16,7 +18,7 @@ namespace Reverie.Common.Subworlds.Archaea.Generation;
 //    public static int nestV = (int)(Main.maxTilesY * 0.175f);
 
 //    private int crystalsPlaced = 0;
-//    private readonly int[] validGroundTypes = [ModContent.TileType<Carbon>()];
+//    private readonly int[] validGroundTypes = [ModContent.TileType<LodestoneTile>()];
 
 //    private const float CrystalCoverage = 0.65f;
 //    private const int AverageCrystalWidth = 4;
