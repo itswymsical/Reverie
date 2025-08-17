@@ -44,7 +44,7 @@ public class ExperiencePlayer : ModPlayer
         }
     }
 
-    public bool TrySpendExperience(int amount)
+    public bool TrySpendExp(int amount)
     {
         if (curExp >= amount)
         {

@@ -1,4 +1,5 @@
-﻿using Reverie.Content.Items.Accessories;
+﻿using Reverie.Common.Systems.Elemental;
+using Reverie.Content.Items.Accessories;
 using Reverie.Content.Tiles.Taiga;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
@@ -15,11 +16,13 @@ public class ReverieSystem : ModSystem
     public static ReverieSystem Instance => ModContent.GetInstance<ReverieSystem>();
     public static ModKeybind FFDialogueKeybind { get; private set; }
     public static ModKeybind SkipCutsceneKeybind { get; private set; }
+    public static ModKeybind OpenElementalUI { get; private set; }
 
     public override void Load()
     {
         FFDialogueKeybind = KeybindLoader.RegisterKeybind(Mod, "Fast-Forward Dialogue", "V");
         SkipCutsceneKeybind = KeybindLoader.RegisterKeybind(Mod, "Skip Cutscene", "Q");
+        OpenElementalUI = KeybindLoader.RegisterKeybind(Mod, "Open Elemental UI", "E");
 
     }
     public override void Unload()

@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Experience Bar
+UI.ExperienceTracker: Experience Bar
 
 Conditions: {
 	CopperStandardComplete: After Mission, (Copper Standard)
@@ -958,6 +958,7 @@ Biomes: {
 Keybinds: {
 	"Fast-Forward Dialogue.DisplayName": Fast-Forward Dialogue
 	"Skip Cutscene.DisplayName": Skip Cutscene
+	"Open Elemental UI.DisplayName": Open  Elemental  U I
 }
 
 Tiles: {
