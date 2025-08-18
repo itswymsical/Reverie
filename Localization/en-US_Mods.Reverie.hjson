@@ -970,6 +970,7 @@ Tiles: {
 	BirchChestTile.MapEntry: Birch Wood Chest
 	BirchDresserTile.MapEntry: Birch Dresser
 	SpruceDresserTile.MapEntry: Spruce Dresser
+	CommandTent.MapEntry: Command Tent
 }
 
 Buffs: {

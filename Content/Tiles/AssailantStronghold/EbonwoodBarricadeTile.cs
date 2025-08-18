@@ -21,11 +21,8 @@ public class EbonwoodBarricadeTile : ModTile
         TileID.Sets.TouchDamageImmediate[Type] = 15;
         TileID.Sets.TouchDamageBleeding[Type] = true;
 
-        // Start with Style4x2 as base but modify for 4x4
         TileObjectData.newTile.CopyFrom(TileObjectData.Style4x2);
-        //TileObjectData.newTile.Width = 4;
-        //TileObjectData.newTile.Height = 2;
-        //TileObjectData.newTile.Origin = new Point16(2, 1);
+
         TileObjectData.newTile.CoordinateWidth = 18;
         TileObjectData.newTile.CoordinateHeights = new int[] { 18, 18 };
         TileObjectData.newTile.CoordinatePadding = 2;
@@ -35,7 +32,7 @@ public class EbonwoodBarricadeTile : ModTile
         TileObjectData.addTile(Type);
         MineResist = 2.5f;
 
-        AddMapEntry(new Color(194, 110, 45));
+        AddMapEntry(new Color(156, 87, 170), CreateMapEntryName());
         DustType = DustID.Ebonwood;
         HitSound = SoundID.Dig;
 

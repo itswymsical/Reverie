@@ -27,7 +27,7 @@ public class EbonwoodTallFenceTile : ModTile
 
     public override void SetStaticDefaults()
     {
-        Main.tileSolid[Type] = true; // idk why, cant place on top unless this is true
+        Main.tileSolid[Type] = true;
         Main.tileFrameImportant[Type] = true;
         Main.tileLavaDeath[Type] = true;
         Main.tileBlockLight[Type] = false;
@@ -37,7 +37,7 @@ public class EbonwoodTallFenceTile : ModTile
         TileObjectData.newTile.CoordinateHeights = [14];
         TileObjectData.newTile.UsesCustomCanPlace = true;
         TileObjectData.newTile.DrawYOffset = 2;
-        AddMapEntry(new Color(101, 67, 33), Language.GetText("MapObject.Fence"));
+        AddMapEntry(new Color(156, 87, 170), CreateMapEntryName());
         DustType = DustID.WoodFurniture;
         HitSound = SoundID.Dig;
 
@@ -171,13 +171,6 @@ public class EbonwoodTallFenceItem : ModItem
     public override string Texture => PLACEHOLDER;
     public override void SetDefaults()
     {
-        Item.width = 16;
-        Item.height = 16;
-        Item.maxStack = 999;
-        Item.useStyle = ItemUseStyleID.Swing;
-        Item.useTime = 10;
-        Item.useAnimation = 15;
-        Item.consumable = true;
-        Item.createTile = ModContent.TileType<EbonwoodTallFenceTile>();
+        Item.DefaultToPlaceableTile(ModContent.TileType<EbonwoodTallFenceTile>());
     }
 }
