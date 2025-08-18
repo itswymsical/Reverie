@@ -1669,8 +1669,6 @@ public class SpruceDresserItem : ModItem
 
 public class SpruceCandelabraItem : ModItem
 {
-    public override string Texture => PLACEHOLDER;
-
     public override void SetDefaults()
     {
         base.SetDefaults();
@@ -1689,8 +1687,6 @@ public class SpruceCandelabraItem : ModItem
 
 public class SpruceBookcaseItem : ModItem
 {
-    public override string Texture => PLACEHOLDER;
-
     public override void SetDefaults()
     {
         base.SetDefaults();
@@ -1709,8 +1705,6 @@ public class SpruceBookcaseItem : ModItem
 
 public class SpruceBathtubItem : ModItem
 {
-    public override string Texture => PLACEHOLDER;
-
     public override void SetDefaults()
     {
         base.SetDefaults();
@@ -1728,7 +1722,6 @@ public class SpruceBathtubItem : ModItem
 
 public class SprucePianoItem : ModItem
 {
-    public override string Texture => PLACEHOLDER;
     public override void SetDefaults()
     {
         base.SetDefaults();
