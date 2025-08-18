@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Experience Bar
+UI.ExperienceTracker: Experience Bar
 
 Conditions: {
 	CopperStandardComplete: After Mission, (Copper Standard)
@@ -687,6 +687,11 @@ Items: {
 	PuffballItem: {
 		DisplayName: Puffball
 		Tooltip: "'Scrunglicious'"
+	}
+
+	EbonwoodTallFenceItem: {
+		DisplayName: Ebonwood Tall Fence Item
+		Tooltip: ""
 	}
 }
 
