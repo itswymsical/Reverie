@@ -1,4 +1,4 @@
-UI.ExperienceTracker: Experience Bar
+﻿UI.ExperienceTracker: Experience Bar
 
 Conditions: {
 	CopperStandardComplete: After Mission, (Copper Standard)
@@ -690,7 +690,7 @@ Items: {
 	}
 
 	EbonwoodTallFenceItem: {
-		DisplayName: Ebonwood Tall Fence Item
+		DisplayName: Assailant Fence
 		Tooltip: ""
 	}
 }
@@ -971,6 +971,9 @@ Tiles: {
 	BirchDresserTile.MapEntry: Birch Dresser
 	SpruceDresserTile.MapEntry: Spruce Dresser
 	CommandTent.MapEntry: Command Tent
+	EbonwoodBarricadeTile.MapEntry: Ebonwood Barricade
+	EbonwoodTallFenceTile.MapEntry: Assailant Fence
+	GruntTent.MapEntry: Grunt Tent
 }
 
 Buffs: {
