@@ -245,7 +245,6 @@ public class ElementalGlobalItem : GlobalItem
     }
 }
 
-
 public class ElementalGlobalProjectile : GlobalProjectile
 {
     public override bool InstancePerEntity => true;
@@ -315,9 +314,15 @@ public class ElementalGlobalProjectile : GlobalProjectile
     private void DrawElementalOverlay(Projectile projectile)
     {
         Main.instance.LoadProjectile(projectile.type);
-        var texture = TextureAssets.Projectile[projectile.type].Value;
-        var origin = texture.Size() * 0.5f;
+        var projectileTexture = TextureAssets.Projectile[projectile.type].Value;
+        var bloomTexture = ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Bloom").Value;
 
+        // Calculate scale to match projectile sprite size to bloom texture
+        float scaleX = (float)projectileTexture.Width / bloomTexture.Width;
+        float scaleY = (float)projectileTexture.Height / bloomTexture.Height;
+        var spriteScale = new Vector2(scaleX, scaleY) * projectile.scale;
+
+        var bloomOrigin = bloomTexture.Size() * 0.5f;
         var glowColor = GetElementGlowColor(elementalData.element);
         var bloomColor = GetElementBloomColor(elementalData.element);
 
@@ -331,11 +336,13 @@ public class ElementalGlobalProjectile : GlobalProjectile
             {
                 float trailProgress = (float)i / (trailCache.Count - 1);
                 float intensity = 0.2f + (trailProgress * 0.8f);
-                float scale = 0.7f + (trailProgress * 0.3f);
+
+                // Apply sprite-aligned scaling to trail
+                var trailScale = spriteScale * (0.7f + (trailProgress * 0.3f));
 
                 var trailPos = trailCache[i] - Main.screenPosition;
-                Main.EntitySpriteDraw(texture, trailPos, null, glowColor * intensity, projectile.rotation,
-                    origin, projectile.scale * scale, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(bloomTexture, trailPos, null, glowColor * intensity, projectile.rotation,
+                    bloomOrigin, trailScale, SpriteEffects.None, 0);
             }
         }
 

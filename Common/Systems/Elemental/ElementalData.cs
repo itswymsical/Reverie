@@ -43,7 +43,7 @@ public struct ElementalData
     {
         return element switch
         {
-            ElementType.Fire => Math.Max(1, boundExp / 10),
+            ElementType.Fire => Math.Max(1, boundExp / 100),
             _ => 0
         };
     }
