@@ -57,6 +57,11 @@ public class MissionJourneysBegin : Mission
     {
         base.Update();
 
+        if (Main.LocalPlayer.ZoneForest)
+        {
+            Main.musicBox2 = MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}GuidesTheme");
+        }
+
         // Prevent certain events during tutorial
         Main.slimeRain = false;
         Main.slimeRainTime = 0;

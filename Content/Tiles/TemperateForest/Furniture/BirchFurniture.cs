@@ -2,6 +2,7 @@
 /// Some code structure adapted from Spirit Reforged: https://github.com/GabeHasWon/SpiritReforged/tree/master/Common/TileCommon/PresetTiles/Furniture
 /// </summary>
 using ReLogic.Content;
+using Reverie.Common.Systems;
 using Reverie.Content.Dusts;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -915,44 +916,135 @@ public class BirchCandelabraTile : ModTile
     public override void ModifyLight(int i, int j, ref float r, ref float g, ref float b)
     {
         var tile = Framing.GetTileSafely(i, j);
-        var color = Color.Orange;
+        var color = new Color(224, 255, 197);
 
         if (tile.TileFrameX == 18 && tile.TileFrameY == 0)
             (r, g, b) = (color.R / 255f, color.G / 255f, color.B / 255f);
     }
+}
 
-    //public virtual bool BlurGlowmask => true;
+public class BirchChandelierTile : ModTile
+{
+    public override void SetStaticDefaults()
+    {
+        Main.tileFrameImportant[Type] = true;
+        Main.tileNoAttach[Type] = true;
+        Main.tileLighted[Type] = true;
+        Main.tileLavaDeath[Type] = true;
+        TileID.Sets.SwaysInWindBasic[Type] = true;
+        
+        TileObjectData.newTile.CopyFrom(TileObjectData.Style3x3);
+        TileObjectData.newTile.AnchorTop = new AnchorData(AnchorType.SolidTile, 1, 1);
+        TileObjectData.newTile.AnchorBottom = AnchorData.Empty;
+        TileObjectData.newTile.Origin = new Point16(1, 0);
+        TileObjectData.addTile(Type);
 
-    //public override void PostDraw(int i, int j, SpriteBatch spriteBatch)
-    //{
-    //    var tile = Framing.GetTileSafely(i, j);
-    //    if (!TileDrawing.IsVisible(tile))
-    //        return;
+        AddToArray(ref TileID.Sets.RoomNeeds.CountsAsTorch);
+        AddMapEntry(new Color(100, 100, 60), Language.GetText("MapObject.Chandelier"));
+        AdjTiles = [TileID.Chandeliers];
+        DustType = -1;
+    }
 
-    //    var texture = GlowmaskTile.TileIdToGlowmask[Type].Glowmask.Value;
-    //    var data = TileObjectData.GetTileData(tile);
-    //    int height = data.CoordinateHeights[tile.TileFrameY / data.CoordinateFullHeight];
-    //    var source = new Rectangle(tile.TileFrameX, tile.TileFrameY, 16, height);
+    public override void HitWire(int i, int j)
+    {
+        var data = TileObjectData.GetTileData(Type, 0);
+        int width = data.CoordinateFullWidth;
 
-    //    if (BlurGlowmask)
-    //    {
-    //        ulong randSeed = Main.TileFrameSeed ^ (ulong)((long)j << 32 | (uint)i);
-    //        for (int c = 0; c < 7; c++) //Draw our glowmask with a randomized position
-    //        {
-    //            float shakeX = Utils.RandomInt(ref randSeed, -10, 11) * 0.15f;
-    //            float shakeY = Utils.RandomInt(ref randSeed, -10, 1) * 0.35f;
-    //            var offset = new Vector2(shakeX, shakeY);
+        j -= Framing.GetTileSafely(i, j).TileFrameY / 18; //Move to the multitile's top
 
-    //            var position = new Vector2(i, j) * 16 - Main.screenPosition + offset + TileExtensions.TileOffset;
-    //            spriteBatch.Draw(texture, position, source, new Color(100, 100, 100, 0), 0, Vector2.Zero, 1, SpriteEffects.None, 0f);
-    //        }
-    //    }
-    //    else
-    //    {
-    //        var position = new Vector2(i, j) * 16 - Main.screenPosition + TileExtensions.TileOffset;
-    //        spriteBatch.Draw(texture, position, source, Color.White, 0, Vector2.Zero, 1, SpriteEffects.None, 0);
-    //    }
-    //}
+        for (int h = 0; h < 2; h++)
+        {
+            var tile = Framing.GetTileSafely(i, j + h);
+            tile.TileFrameX += (short)((tile.TileFrameX < width) ? width : -width);
+
+            Wiring.SkipWire(i, j + h);
+        }
+
+        NetMessage.SendTileSquare(-1, i, j, data.Width, data.Height);
+    }
+
+    public override void ModifyLight(int i, int j, ref float r, ref float g, ref float b)
+    {
+        var tile = Framing.GetTileSafely(i, j);
+        var color = new Color(224, 255, 197);
+
+        if (tile.TileFrameX == 18 && tile.TileFrameY == 18)
+            (r, g, b) = (color.R / 255f, color.G / 255f, color.B / 255f);
+    }
+
+    public override void PostDraw(int i, int j, SpriteBatch spriteBatch)
+    {
+        Tile tile = Main.tile[i, j];
+        Vector2 zero = new Vector2(Main.offScreenRange, Main.offScreenRange);
+        var texture = TextureAssets.Tile[Type];
+        if (Main.drawToScreen)
+        {
+            zero = Vector2.Zero;
+        }
+        int height = tile.TileFrameY == 36 ? 18 : 16;
+        spriteBatch.Draw(ModContent.Request<Texture2D>($"{TEXTURE_DIRECTORY}Tiles/TemperateForest/Furniture/BirchChandelierTile_Glow").Value, new Vector2(i * 16 - (int)Main.screenPosition.X, j * 16 - (int)Main.screenPosition.Y) + zero, new Rectangle(tile.TileFrameX, tile.TileFrameY, 16, height), Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+    }
+}
+
+public class BirchLampTile : ModTile
+{
+    public override void SetStaticDefaults()
+    {
+        Main.tileFrameImportant[Type] = true;
+        Main.tileNoAttach[Type] = true;
+        Main.tileLighted[Type] = true;
+        Main.tileLavaDeath[Type] = true;
+
+        TileObjectData.newTile.CopyFrom(TileObjectData.Style1x2);
+        TileObjectData.newTile.Origin = new Point16(0, 2);
+        TileObjectData.newTile.Height = 3;
+        TileObjectData.newTile.CoordinateHeights = [16, 16, 18];
+        TileObjectData.addTile(Type);
+
+        AddToArray(ref TileID.Sets.RoomNeeds.CountsAsTorch);
+        AddMapEntry(new Color(100, 100, 60), Language.GetText("ItemName.LampPost"));
+        AdjTiles = [TileID.Lamps];
+        DustType = -1;
+    }
+
+    public override void HitWire(int i, int j)
+    {
+        var data = TileObjectData.GetTileData(Type, 0);
+        int width = data.CoordinateFullWidth;
+
+        j -= Framing.GetTileSafely(i, j).TileFrameY / 18; //Move to the multitile's top
+
+        for (int h = 0; h < 3; h++)
+        {
+            var tile = Framing.GetTileSafely(i, j + h);
+            tile.TileFrameX += (short)((tile.TileFrameX < width) ? width : -width);
+
+            Wiring.SkipWire(i, j + h);
+        }
+
+        NetMessage.SendTileSquare(-1, i, j, data.Width, data.Height);
+    }
+
+    public override void ModifyLight(int i, int j, ref float r, ref float g, ref float b)
+    {
+        var tile = Framing.GetTileSafely(i, j);
+        var color = new Color(224, 255, 197);
+
+        if (tile.TileFrameX < 18 && tile.TileFrameY == 0)
+            (r, g, b) = (color.R / 255f, color.G / 255f, color.B / 255f);
+    }
+
+    public override void PostDraw(int i, int j, SpriteBatch spriteBatch)
+    {
+        Tile tile = Main.tile[i, j];
+        Vector2 zero = new Vector2(Main.offScreenRange, Main.offScreenRange);
+        if (Main.drawToScreen)
+        {
+            zero = Vector2.Zero;
+        }
+        int height = tile.TileFrameY == 36 ? 18 : 16;
+        spriteBatch.Draw(ModContent.Request<Texture2D>($"{TEXTURE_DIRECTORY}Tiles/TemperateForest/Furniture/BirchLampTile_Glow").Value, new Vector2(i * 16 - (int)Main.screenPosition.X, j * 16 - (int)Main.screenPosition.Y) + zero, new Rectangle(tile.TileFrameX, tile.TileFrameY, 16, height), Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+    }
 }
 
 public class BirchChestTile : ModTile
@@ -1667,6 +1759,24 @@ public class BirchCandleItem : ModItem
     }
 }
 
+public class BirchLampItem : ModItem
+{
+    public override void SetDefaults()
+    {
+        base.SetDefaults();
+        Item.value = 150;
+        Item.DefaultToPlaceableTile(ModContent.TileType<BirchLampTile>());
+    }
+    public override void AddRecipes()
+    {
+        CreateRecipe()
+            .AddIngredient<BirchWoodItem>(3)
+            .AddIngredient(ItemID.Torch)
+            .AddTile(TileID.WorkBenches)
+            .Register();
+    }
+}
+
 public class BirchCandelabraItem : ModItem
 {
     public override void SetDefaults()
@@ -1681,6 +1791,25 @@ public class BirchCandelabraItem : ModItem
             .AddIngredient<BirchWoodItem>(5)
             .AddIngredient(ItemID.Torch, 5)
             .AddTile(TileID.WorkBenches)
+            .Register();
+    }
+}
+
+public class BirchChandelierItem : ModItem
+{
+    public override void SetDefaults()
+    {
+        base.SetDefaults();
+        Item.value = Item.sellPrice(silver: 3);
+        Item.DefaultToPlaceableTile(ModContent.TileType<BirchChandelierTile>());
+    }
+    public override void AddRecipes()
+    {
+        CreateRecipe()
+            .AddIngredient<BirchWoodItem>(4)
+            .AddIngredient(ItemID.Torch, 4)
+            .AddIngredient(ItemID.Chain)
+            .AddTile(TileID.Anvils)
             .Register();
     }
 }

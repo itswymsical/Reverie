@@ -693,6 +693,16 @@ Items: {
 		DisplayName: Assailant Fence
 		Tooltip: ""
 	}
+
+	BirchChandelierItem: {
+		DisplayName: Birch Wood Chandelier
+		Tooltip: ""
+	}
+
+	BirchLampItem: {
+		DisplayName: Birch Wood Lamp
+		Tooltip: ""
+	}
 }
 
 Projectiles: {

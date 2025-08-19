@@ -224,47 +224,47 @@ public static class DialogueBuilder
         {
             "guide" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Guide/Speech")
             {
-                Volume = 0.5f,
+                Volume = 0.7f,
                 MaxInstances = 0
             },
             "player" or "you" => SoundID.MenuTick with
             {
-                Volume = 0.5f,
+                Volume = 0.7f,
                 MaxInstances = 0
             },
             "merchant" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Merchant/Speech")
             {
-                Volume = 0.5f,
+                Volume = 0.7f,
                 MaxInstances = 0
             },
             "nurse" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Nurse/Speech")
             {
-                Volume = 0.5f,
+                Volume = 0.7f,
                 MaxInstances = 0
             },
             "demolitionist" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Demolitionist/Speech")
             {
-                Volume = 0.5f,
+                Volume = 0.7f,
                 MaxInstances = 0
             },
             "goblin tinkerer" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Gobblin")
             {
-                Volume = 0.5f,
+                Volume = 0.7f,
                 MaxInstances = 0
             },
             "mechanic" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Mechanic")
             {
-                Volume = 0.5f,
+                Volume = 0.7f,
                 MaxInstances = 0
             },
             "argie" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Argie/ArgieSpeech_{Main.rand.Next(3)}")
             {
-                Volume = 0.5f,
+                Volume = 0.7f,
                 MaxInstances = 0
             },
             _ => SoundID.MenuTick with
             {
-                Volume = 0.5f,
+                Volume = 0.7f,
                 MaxInstances = 0
             }
         };

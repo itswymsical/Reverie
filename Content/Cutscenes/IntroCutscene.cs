@@ -51,7 +51,7 @@ public class IntroCutscene : Cutscene
     {
         FadeAlpha = 1f;
         FadeColor = Color.Black;
-        logoTexture = ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}Logo", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
+        logoTexture = ModContent.Request<Texture2D>($"{LOGO_DIRECTORY}Logo_Outline", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
 
         var startPos = originalPlayerPosition - new Vector2(0, panDistance);
         CameraSystem.MoveCameraOut(1, startPos);
@@ -222,6 +222,6 @@ public class IntroCutscene : Cutscene
             Main.LocalPlayer.velocity = Vector2.Zero;
         }
 
-        DialogueManager.Instance.StartDialogue("JourneysBegin.Crash", 4, zoomIn: false, letterbox: false, music: MusicID.AltOverworldDay - 1);
+        DialogueManager.Instance.StartDialogue("JourneysBegin.Crash", 4, zoomIn: false, letterbox: true);
     }
 }
