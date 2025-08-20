@@ -650,7 +650,7 @@ Items: {
 	}
 
 	SpruceWorkbenchItem: {
-		DisplayName: Spruce Wood Workbench
+		DisplayName: Spruce Wood Work Bench
 		Tooltip: ""
 	}
 
@@ -706,6 +706,46 @@ Items: {
 
 	BirchLanternItem: {
 		DisplayName: Birch Wood Lantern
+		Tooltip: ""
+	}
+
+	SpruceChandelierItem: {
+		DisplayName: Spruce Wood Chandelier
+		Tooltip: ""
+	}
+
+	SpruceChestItem: {
+		DisplayName: Spruce Wood Chest
+		Tooltip: ""
+	}
+
+	SpruceDoorItem: {
+		DisplayName: Spruce Wood Door
+		Tooltip: ""
+	}
+
+	SpruceLampItem: {
+		DisplayName: Spruce Wood Lamp
+		Tooltip: ""
+	}
+
+	SpruceToiletItem: {
+		DisplayName: Spruce Wood Toilet
+		Tooltip: ""
+	}
+
+	SpruceWorkBenchItem: {
+		DisplayName: Spruce Wood Work Bench
+		Tooltip: ""
+	}
+
+	SprucePlatformItem: {
+		DisplayName: Spruce Wood Platform
+		Tooltip: ""
+	}
+
+	SpruceLanternItem: {
+		DisplayName: Spruce Wood Lantern
 		Tooltip: ""
 	}
 }
@@ -989,6 +1029,7 @@ Tiles: {
 	EbonwoodBarricadeTile.MapEntry: Ebonwood Barricade
 	EbonwoodTallFenceTile.MapEntry: Assailant Fence
 	GruntTent.MapEntry: Grunt Tent
+	SpruceChestTile.MapEntry: Spruce Wood Chest
 }
 
 Buffs: {

@@ -24,7 +24,7 @@ public class SpruceWoodTile : ModTile
             TileID.SpookyWood, TileID.DynastyWood,
             TileID.PalmWood, TileID.Pearlwood,
             TileID.LivingWood, TileID.RichMahogany, TileID.LivingMahogany,
-            TileID.BambooBlock, TileID.LargeBambooBlock, ModContent.TileType<PeatTile>());
+            TileID.BambooBlock, TileID.LargeBambooBlock, ModContent.TileType<PeatTile>(), TileID.GrayBrick);
         TileID.Sets.BlockMergesWithMergeAllBlockOverride[Type] = true;
         Main.tileBlockLight[Type] = true;
 

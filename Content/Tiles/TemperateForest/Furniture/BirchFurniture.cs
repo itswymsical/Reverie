@@ -191,9 +191,10 @@ public class BirchDoorOpenTile : ModTile
         player.cursorItemIconID = ModContent.ItemType<BirchDoorItem>();
     }
 }
-public class BirchDoorItem : DoorItem
+public class BirchDoorItem : FurnitureItem
 {
-    protected override int ClosedDoorType => ModContent.TileType<BirchDoorClosedTile>();
+    protected override FurnitureType FurnitureType => FurnitureType.ClosedDoor;
+    protected override int TileType => ModContent.TileType<BirchDoorClosedTile>();
     protected override int MaterialType => ModContent.ItemType<BirchWoodItem>();
 }
 

@@ -10,7 +10,7 @@ public class PeatTile : ModTile
         Main.tileMergeDirt[Type] = true;
 
         this.Merge(TileID.ClayBlock, TileID.Stone, TileID.Ebonstone, TileID.Crimstone, 
-            TileID.Slush, TileID.Grass, TileID.SnowBlock, ModContent.TileType<SnowTaigaGrassTile>());
+            TileID.Slush, TileID.Grass, TileID.SnowBlock, ModContent.TileType<SnowTaigaGrassTile>(), TileID.GrayBrick);
 
         Main.tileBlockLight[Type] = true;
         MineResist = 0.5f;

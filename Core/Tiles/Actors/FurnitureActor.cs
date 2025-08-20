@@ -34,12 +34,17 @@ public enum FurnitureType
     Candle,
     Torch,
     Campfire,
-    Platform
+    Platform,
+    OpenDoor,
+    ClosedDoor
 }
 
 public abstract class FurnitureActor : ModTile
 {
     public FurnitureType FurnitureType { get; set; }
+    public virtual bool IsOpen { get; }
+    public virtual int ClosedDoorType { get; }
+    public virtual int OpenDoorType { get; }
     public int DustID { get; set; }
     public Color LightColor { get; set; } = new Color(224, 255, 197); // Default warm light
     protected Asset<Texture2D> flameTexture;
@@ -56,6 +61,8 @@ public abstract class FurnitureActor : ModTile
     {
         FurnitureType.Dresser => true,
         FurnitureType.Chest => true,
+        FurnitureType.OpenDoor => true,
+        FurnitureType.ClosedDoor => true,
         _ => false
     };
 
@@ -217,7 +224,6 @@ public abstract class FurnitureActor : ModTile
                 AddMapEntry(new Color(100, 100, 60), Language.GetText("MapObject.Lantern"));
                 break;
 
-
             case FurnitureType.Candelabra:
                 Main.tileLighted[Type] = true;
                 AddToArray(ref TileID.Sets.RoomNeeds.CountsAsTorch);
@@ -263,6 +269,37 @@ public abstract class FurnitureActor : ModTile
                 AddToArray(ref TileID.Sets.RoomNeeds.CountsAsDoor);
                 AdjTiles = [TileID.Platforms];
                 AddMapEntry(new Color(200, 200, 200));
+                break;
+
+            case FurnitureType.OpenDoor:
+                DustType = DustID;
+                AddToArray(ref TileID.Sets.RoomNeeds.CountsAsDoor);
+                AddMapEntry(new Color(200, 200, 200), Language.GetText("MapObject.Door"));
+
+                Main.tileSolid[Type] = false;
+                Main.tileNoSunLight[Type] = true;
+
+                TileID.Sets.HousingWalls[Type] = true;
+                TileID.Sets.HasOutlines[Type] = true;
+                TileID.Sets.CloseDoorID[Type] = ClosedDoorType;
+
+                AdjTiles = [TileID.OpenDoor];
+                break;
+
+            case FurnitureType.ClosedDoor:
+                DustType = DustID;
+                AddToArray(ref TileID.Sets.RoomNeeds.CountsAsDoor);
+                AddMapEntry(new Color(200, 200, 200), Language.GetText("MapObject.Door"));
+
+                Main.tileBlockLight[Type] = true;
+                Main.tileSolid[Type] = true;
+
+                TileID.Sets.NotReallySolid[Type] = true;
+                TileID.Sets.DrawsWalls[Type] = true;
+                TileID.Sets.OpenDoorID[Type] = OpenDoorType; 
+                TileID.Sets.HasOutlines[Type] = true;
+
+                AdjTiles = [TileID.ClosedDoor];
                 break;
         }
     }
@@ -424,6 +461,51 @@ public abstract class FurnitureActor : ModTile
                 TileObjectData.newTile.StyleWrapLimit = 27;
                 TileObjectData.newTile.UsesCustomCanPlace = false;
                 TileObjectData.newTile.LavaDeath = true;
+                break;
+
+            case FurnitureType.OpenDoor:
+                TileObjectData.newTile.Width = 2;
+                TileObjectData.newTile.Height = 3;
+                TileObjectData.newTile.Origin = new Point16(0, 0);
+                TileObjectData.newTile.AnchorTop = new AnchorData(AnchorType.SolidTile, 1, 0);
+                TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile, 1, 0);
+                TileObjectData.newTile.UsesCustomCanPlace = true;
+                TileObjectData.newTile.LavaDeath = true;
+                TileObjectData.newTile.CoordinateHeights = new[] { 16, 16, 16 };
+                TileObjectData.newTile.CoordinateWidth = 16;
+                TileObjectData.newTile.CoordinatePadding = 2;
+                TileObjectData.newTile.StyleHorizontal = true;
+                TileObjectData.newTile.StyleMultiplier = 2;
+                TileObjectData.newTile.StyleWrapLimit = 2;
+                TileObjectData.newTile.Direction = TileObjectDirection.PlaceRight;
+                TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
+                TileObjectData.newAlternate.Origin = new Point16(0, 1);
+                TileObjectData.addAlternate(0);
+                TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
+                TileObjectData.newAlternate.Origin = new Point16(0, 2);
+                TileObjectData.addAlternate(0);
+                TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
+                TileObjectData.newAlternate.Origin = new Point16(1, 0);
+                TileObjectData.newAlternate.AnchorTop = new AnchorData(AnchorType.SolidTile, 1, 1);
+                TileObjectData.newAlternate.AnchorBottom = new AnchorData(AnchorType.SolidTile, 1, 1);
+                TileObjectData.newAlternate.Direction = TileObjectDirection.PlaceLeft;
+                TileObjectData.addAlternate(1);
+                TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
+                TileObjectData.newAlternate.Origin = new Point16(1, 1);
+                TileObjectData.newAlternate.AnchorTop = new AnchorData(AnchorType.SolidTile, 1, 1);
+                TileObjectData.newAlternate.AnchorBottom = new AnchorData(AnchorType.SolidTile, 1, 1);
+                TileObjectData.newAlternate.Direction = TileObjectDirection.PlaceLeft;
+                TileObjectData.addAlternate(1);
+                TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
+                TileObjectData.newAlternate.Origin = new Point16(1, 2);
+                TileObjectData.newAlternate.AnchorTop = new AnchorData(AnchorType.SolidTile, 1, 1);
+                TileObjectData.newAlternate.AnchorBottom = new AnchorData(AnchorType.SolidTile, 1, 1);
+                TileObjectData.newAlternate.Direction = TileObjectDirection.PlaceLeft;
+                TileObjectData.addAlternate(1);
+                break;
+
+            case FurnitureType.ClosedDoor:
+                TileObjectData.newTile.CopyFrom(TileObjectData.GetTileData(TileID.ClosedDoor, 0));
                 break;
         }
 
@@ -1075,119 +1157,6 @@ public abstract class FurnitureActor : ModTile
             if (WorldGen.SolidTile(i, j - 1))
                 offsetY = 4;
         }
-    }
-}
-
-
-public abstract class DoorActor : ModTile
-{
-    public int DustID { get; set; }
-    public abstract bool IsOpen { get; }
-    public abstract int ClosedDoorType { get; }
-    public abstract int OpenDoorType { get; }
-
-    public override void SetStaticDefaults()
-    {
-        SetupCommonProperties();
-        SetupDoorSpecificProperties();
-        SetupTileObjectData();
-    }
-
-    protected virtual void SetupCommonProperties()
-    {
-        Main.tileFrameImportant[Type] = true;
-        Main.tileNoAttach[Type] = true;
-        Main.tileLavaDeath[Type] = true;
-        TileID.Sets.HasOutlines[Type] = true;
-        TileID.Sets.DisableSmartCursor[Type] = true;
-        AddToArray(ref TileID.Sets.RoomNeeds.CountsAsDoor);
-        DustType = DustID;
-        AddMapEntry(new Color(200, 200, 200), Language.GetText("MapObject.Door"));
-    }
-
-    protected virtual void SetupDoorSpecificProperties()
-    {
-        if (IsOpen)
-        {
-            Main.tileSolid[Type] = false;
-            Main.tileNoSunLight[Type] = true;
-            TileID.Sets.HousingWalls[Type] = true;
-            TileID.Sets.CloseDoorID[Type] = ClosedDoorType;
-            AdjTiles = [TileID.OpenDoor];
-        }
-        else
-        {
-            Main.tileBlockLight[Type] = true;
-            Main.tileSolid[Type] = true;
-            TileID.Sets.NotReallySolid[Type] = true;
-            TileID.Sets.DrawsWalls[Type] = true;
-            TileID.Sets.OpenDoorID[Type] = OpenDoorType;
-            AdjTiles = [TileID.ClosedDoor];
-        }
-    }
-
-    protected virtual void SetupTileObjectData()
-    {
-        if (IsOpen)
-        {
-            TileObjectData.newTile.Width = 2;
-            TileObjectData.newTile.Height = 3;
-            TileObjectData.newTile.Origin = new Point16(0, 0);
-            TileObjectData.newTile.AnchorTop = new AnchorData(AnchorType.SolidTile, 1, 0);
-            TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile, 1, 0);
-            TileObjectData.newTile.UsesCustomCanPlace = true;
-            TileObjectData.newTile.LavaDeath = true;
-            TileObjectData.newTile.CoordinateHeights = new[] { 16, 16, 16 };
-            TileObjectData.newTile.CoordinateWidth = 16;
-            TileObjectData.newTile.CoordinatePadding = 2;
-            TileObjectData.newTile.StyleHorizontal = true;
-            TileObjectData.newTile.StyleMultiplier = 2;
-            TileObjectData.newTile.StyleWrapLimit = 2;
-            TileObjectData.newTile.Direction = TileObjectDirection.PlaceRight;
-
-            TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
-            TileObjectData.newAlternate.Origin = new Point16(0, 1);
-            TileObjectData.addAlternate(0);
-            TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
-            TileObjectData.newAlternate.Origin = new Point16(0, 2);
-            TileObjectData.addAlternate(0);
-            TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
-            TileObjectData.newAlternate.Origin = new Point16(1, 0);
-            TileObjectData.newAlternate.AnchorTop = new AnchorData(AnchorType.SolidTile, 1, 1);
-            TileObjectData.newAlternate.AnchorBottom = new AnchorData(AnchorType.SolidTile, 1, 1);
-            TileObjectData.newAlternate.Direction = TileObjectDirection.PlaceLeft;
-            TileObjectData.addAlternate(1);
-            TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
-            TileObjectData.newAlternate.Origin = new Point16(1, 1);
-            TileObjectData.newAlternate.AnchorTop = new AnchorData(AnchorType.SolidTile, 1, 1);
-            TileObjectData.newAlternate.AnchorBottom = new AnchorData(AnchorType.SolidTile, 1, 1);
-            TileObjectData.newAlternate.Direction = TileObjectDirection.PlaceLeft;
-            TileObjectData.addAlternate(1);
-            TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
-            TileObjectData.newAlternate.Origin = new Point16(1, 2);
-            TileObjectData.newAlternate.AnchorTop = new AnchorData(AnchorType.SolidTile, 1, 1);
-            TileObjectData.newAlternate.AnchorBottom = new AnchorData(AnchorType.SolidTile, 1, 1);
-            TileObjectData.newAlternate.Direction = TileObjectDirection.PlaceLeft;
-            TileObjectData.addAlternate(1);
-        }
-        else
-        {
-            TileObjectData.newTile.CopyFrom(TileObjectData.GetTileData(TileID.ClosedDoor, 0));
-        }
-
-        TileObjectData.addTile(Type);
-    }
-
-    public override bool HasSmartInteract(int i, int j, SmartInteractScanSettings settings) => true;
-
-    public override void NumDust(int i, int j, bool fail, ref int num) => num = 1;
-
-    public override void MouseOver(int i, int j)
-    {
-        Player player = Main.LocalPlayer;
-        player.noThrow = 2;
-        player.cursorItemIconEnabled = true;
-        player.cursorItemIconID = TileLoader.GetItemDropFromTypeAndStyle(ClosedDoorType);
     }
 }
 

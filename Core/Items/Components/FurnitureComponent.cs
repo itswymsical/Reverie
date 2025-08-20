@@ -129,28 +129,14 @@ public abstract class FurnitureItem : ModItem
                 recipe.AddIngredient(MaterialType);
                 recipe.AddIngredient(ItemID.Gel);
                 break;
+
+            case FurnitureType.ClosedDoor:
+                recipe = CreateRecipe();
+                recipe.AddIngredient(MaterialType, 6);
+                recipe.AddTile(TileID.WorkBenches);
+                break;
         }
 
         recipe.Register();
-    }
-}
-
-public abstract class DoorItem : ModItem
-{
-    protected abstract int ClosedDoorType { get; }
-    protected abstract int MaterialType { get; }
-
-    public override void SetDefaults()
-    {
-        Item.value = 150;
-        Item.DefaultToPlaceableTile(ClosedDoorType);
-    }
-
-    public override void AddRecipes()
-    {
-        CreateRecipe()
-            .AddIngredient(MaterialType, 6)
-            .AddTile(TileID.WorkBenches)
-            .Register();
     }
 }
