@@ -703,6 +703,11 @@ Items: {
 		DisplayName: Birch Wood Lamp
 		Tooltip: ""
 	}
+
+	BirchLanternItem: {
+		DisplayName: Birch Wood Lantern
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
