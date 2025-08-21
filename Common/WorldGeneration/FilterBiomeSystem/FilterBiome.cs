@@ -1,11 +1,8 @@
 ﻿using Terraria.WorldBuilding;
 
-namespace Reverie.Common.WorldGeneration.BiomeTypes;
+namespace Reverie.Common.WorldGeneration.FilterBiomeSystem;
 
-/// <summary>
-/// Example implementation for simple spawn-proximity biomes
-/// </summary>
-public abstract class FilterBiome : SurfaceBiomeBase
+public abstract class FilterBiome : FilterBiomeBase
 {
     protected FilterBiome(string name, float weight, BiomeConfiguration config = null)
         : base(name, weight, config) { }

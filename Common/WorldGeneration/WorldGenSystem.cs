@@ -1,4 +1,4 @@
-﻿using Reverie.Common.WorldGeneration.BiomeTypes;
+﻿using Reverie.Common.WorldGeneration.FilterBiomeSystem;
 //using Reverie.Common.WorldGeneration.Corruption;
 using Reverie.Common.WorldGeneration.Rainforest;
 using Reverie.Common.WorldGeneration.Structures;
@@ -50,7 +50,7 @@ public class WorldGenSystem : ModSystem
         if (biomeIndex != 1)
         {
            // tasks.Insert(biomeIndex + 1, new RainforestBiome());
-            tasks.Insert(biomeIndex + 2, new TaigaFilterBiome());
+            tasks.Insert(biomeIndex + 2, new TaigaPass());
             tasks.Insert(biomeIndex + 3, new TaigaDecorPass());
         }
     }

@@ -4,9 +4,9 @@ using System.Linq;
 using Terraria.IO;
 using Terraria.WorldBuilding;
 
-namespace Reverie.Common.WorldGeneration.BiomeTypes;
+namespace Reverie.Common.WorldGeneration.FilterBiomeSystem;
 
-public abstract class SurfaceBiomeBase : GenPass
+public abstract class FilterBiomeBase : GenPass
 {
     protected readonly BiomeConfiguration _config;
     protected FastNoiseLite _baseNoise;
@@ -16,7 +16,7 @@ public abstract class SurfaceBiomeBase : GenPass
 
     protected const ushort PRESERVE_AIR = ushort.MaxValue;
 
-    public SurfaceBiomeBase(string name, float weight, BiomeConfiguration config = null) : base(name, weight)
+    public FilterBiomeBase(string name, float weight, BiomeConfiguration config = null) : base(name, weight)
     {
         _config = config ?? new BiomeConfiguration();
     }

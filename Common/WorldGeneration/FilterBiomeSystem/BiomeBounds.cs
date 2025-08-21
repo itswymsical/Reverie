@@ -1,4 +1,4 @@
-﻿namespace Reverie.Common.WorldGeneration.BiomeTypes;
+﻿namespace Reverie.Common.WorldGeneration.FilterBiomeSystem;
 
 public struct BiomeBounds
 {

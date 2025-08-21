@@ -1,4 +1,4 @@
-﻿using Reverie.Common.WorldGeneration.BiomeTypes;
+﻿using Reverie.Common.WorldGeneration.FilterBiomeSystem;
 using Reverie.Content.Tiles.Canopy;
 using Reverie.Content.Tiles.Canopy.Trees;
 using Reverie.Content.Tiles.Taiga;

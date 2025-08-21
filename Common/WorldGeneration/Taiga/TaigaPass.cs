@@ -1,4 +1,4 @@
-﻿using Reverie.Common.WorldGeneration.BiomeTypes;
+﻿using Reverie.Common.WorldGeneration.FilterBiomeSystem;
 using Reverie.Content.Tiles.Canopy.Trees;
 using Reverie.Content.Tiles.Canopy;
 using Reverie.Content.Tiles.Taiga;
@@ -7,9 +7,9 @@ using Terraria.WorldBuilding;
 
 namespace Reverie.Common.WorldGeneration.Taiga;
 
-public class TaigaFilterBiome : FilterBiome
+public class TaigaPass : FilterBiome
 {
-    public TaigaFilterBiome() : base("[Reverie] Taiga Biome", 247.43f, new BiomeConfiguration
+    public TaigaPass() : base("[Reverie] Taiga Biome", 247.43f, new BiomeConfiguration
     {
         MinWidth = 100,
         MaxWidth = 300,
