@@ -76,8 +76,8 @@ public class Scrunglepuff : ModNPC
 
     public override float SpawnChance(NPCSpawnInfo spawnInfo)
     {
-        if (spawnInfo.PlayerSafe || spawnInfo.Water)
-            return 0f;
+        //if (spawnInfo.PlayerSafe || spawnInfo.Water)
+        //    return 0f;
 
         bool validZone = spawnInfo.Player.ZoneDirtLayerHeight || spawnInfo.Player.ZoneRockLayerHeight;
         if (!validZone)
@@ -89,7 +89,7 @@ public class Scrunglepuff : ModNPC
         if (mission?.Status == MissionStatus.Locked || mission?.Progress == MissionProgress.Inactive)
             return 0f;
 
-        return mission.Progress == MissionProgress.Ongoing ? 0.85f : 0.25f;
+        return mission.Progress == MissionProgress.Ongoing ? 0.95f : 0.25f;
     }
 
     public override void OnSpawn(IEntitySource source)

@@ -38,6 +38,7 @@ public class DialogueBox : IInGameNotification
 
     private static Texture2D ArrowTexture => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortaitButtonRight", AssetRequestMode.ImmediateLoad).Value;
     private static Texture2D PortraitFrameTexture => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortraitFrame", AssetRequestMode.ImmediateLoad).Value;
+    private static Texture2D PortraitFrameInnerTexture => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortraitFrame_Inner", AssetRequestMode.ImmediateLoad).Value;
 
     public string DialogueKey { get; private set; }
 
@@ -291,9 +292,9 @@ public class DialogueBox : IInGameNotification
         var panelRectangle = Utils.CenteredRectangle(panelPosition, panelSize);
 
         var isHovering = panelRectangle.Contains(Main.MouseScreen.ToPoint());
-        var panelColor = currentDialogue.SpeakerColor * (isHovering ? 0.75f : 0.5f) * Opacity;
+        var panelColor = currentDialogue.SpeakerColor * (isHovering ? 0.85f : 0.7f) * Opacity;
 
-        DrawUtils.DrawPanel(spriteBatch, panelRectangle, Color.White);
+        DrawUtils.DrawPanel(spriteBatch, panelRectangle, panelColor);
 
         if (isHovering) OnMouseOver();
     }
@@ -304,9 +305,13 @@ public class DialogueBox : IInGameNotification
         var panelPosition = CalculatePosition(panelSize);
         var panelRectangle = Utils.CenteredRectangle(panelPosition, panelSize);
 
+        var isHovering = panelRectangle.Contains(Main.MouseScreen.ToPoint());
+        var panelColor = currentDialogue.SpeakerColor * (isHovering ? 0.85f : 0.7f) * Opacity;
+
         Vector2 iconSize = new(92, 92);
 
         Vector2 iconPosition = new((panelRectangle.Left - iconSize.X) + 1, panelRectangle.Bottom - iconSize.Y - 9);
+
 
         var portraitTexture = GetPortrait(currentDialogue.SpeakerType);
 
@@ -315,6 +320,8 @@ public class DialogueBox : IInGameNotification
 
         if (currentDialogue.SpeakerType != "You")
         {
+            spriteBatch.Draw(PortraitFrameInnerTexture, framePosition, null, panelColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+
             if (portraitTexture != null)
             {
                 var sourceRect = GetFrameRect(currentDialogue.SpeakerType, currentDialogue.Emote, 92, 92);
@@ -331,7 +338,7 @@ public class DialogueBox : IInGameNotification
     {
         var speakerName = currentDialogue.Speaker;
         var nameTextSize = FontAssets.ItemStack.Value.MeasureString(speakerName);
-        Vector2 nameTextPosition = new((iconPosition.X + iconSize.X / 2 - nameTextSize.X / 2) - 6, iconPosition.Y + iconSize.Y + 16f);
+        Vector2 nameTextPosition = new((iconPosition.X + iconSize.X / 2 - nameTextSize.X / 2) - 18, iconPosition.Y + iconSize.Y + 18f);
 
         Utils.DrawBorderString(spriteBatch, speakerName, nameTextPosition, Color.White * Opacity, 1f, anchorx: 0f, anchory: 0.5f);
     }
@@ -419,6 +426,10 @@ public class DialogueBox : IInGameNotification
             "nurse" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Nurse"),
             "demolitionist" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Demolitionist"),
             "goblin tinkerer" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Goblin"),
+            "sophie" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Sophie"),
+            "fungore" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/FungoreReborn"),
+            "dalia" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Dalia"),
+            "eustace" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Eustace"),
             "mechanic" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Mechanic"),
             "argie" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Argie"),
             _ => null

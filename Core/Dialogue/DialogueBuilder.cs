@@ -170,14 +170,21 @@ public static class DialogueBuilder
     
     private static Color GetColor(string speaker)
     {
-        // Simple color mapping without complex registry
         return speaker.ToLower() switch
         {
-            "guide" => new Color(64, 109, 164),
-            "player" => new Color(100, 150, 200),
+            "guide" => new Color(100, 150, 200),
+            "merchant" => new Color(214, 131, 36),
+            "goblin tinkerer" => new Color(119, 183, 240),
+            "nurse" => new Color(255, 120, 136),
+            "demolitionist" => new Color(255, 190, 60),
+            "mechanic" => new Color(255, 82, 78),
+            "dalia" => new Color(233, 255, 116),
+            "eustace" => new Color(125, 65, 61),
+            "sophie" => new Color(121, 76, 158),
+            "fungore" => new Color(81, 82, 145),
             "you" => new Color(100, 150, 200),
             "argie" => new Color(66, 85, 206),
-            _ => new Color(180, 180, 180) // Default gray
+            _ => new Color(180, 180, 180)
         };
     }
 

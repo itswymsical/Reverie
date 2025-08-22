@@ -100,28 +100,28 @@
 		Mirror: {
 			Line1: {
 				Text: Nice!<pause:8> Now you can teleport back to the surface whenever you want.
-				Speaker: Guide
+				Speaker: Eustace
 				Emote: "1"
 				Speed: "1.5"
 			}
 
 			Line2: {
 				Text: You're mirror also allows you to see tasks lists for jobs you pick up.
-				Speaker: Guide
+				Speaker: Dalia
 				Emote: "0"
 				Speed: "1.5"
 			}
 
 			Line3: {
 				Text: If you look to your map while in inventory,<pause:8> you'll see a list of tasks.
-				Speaker: Guide
+				Speaker: Fungore
 				Emote: "0"
 				Speed: "1.5"
 			}
 
 			Line4: {
 				Text: With that,<pause:8> it's time to get started on your journey!
-				Speaker: Guide
+				Speaker: Sophie
 				Emote: "0"
 				Speed: "1.5"
 			}
