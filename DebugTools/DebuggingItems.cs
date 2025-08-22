@@ -111,8 +111,7 @@ public class SpawnDialogueIndicator : ModItem
         }
         else
         {
-            DialogueManager.Instance.StartDialogue("Argie.Intro", 9, letterbox: true,
-                music: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}ArgiesTheme"));
+            DialogueManager.Instance.StartDialogue("JourneysBegin.Mirror", 6, letterbox: true);
 
             Main.NewText($"[Cleared All Indicators] | Right-click to place an Indicator.");
             ScreenIndicatorManager.Instance.ClearAllIndicators();

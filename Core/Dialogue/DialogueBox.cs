@@ -14,7 +14,7 @@ public class DialogueBox : IInGameNotification
 {
     #region Constants and Fields
     private const float ANIMATION_DURATION = 30f;
-    private const float PANEL_WIDTH = 520f;
+    private const float PANEL_WIDTH = 480f;
     private const int AUTO_REMOVE_DELAY = 200;
     private const string UI_ASSET_DIRECTORY = "Reverie/Assets/Textures/UI/";
 
@@ -36,7 +36,7 @@ public class DialogueBox : IInGameNotification
 
     private float currentPitchModifier = 1.0f;
 
-    private static Texture2D ArrowTexture => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/ArrowForward", AssetRequestMode.ImmediateLoad).Value;
+    private static Texture2D ArrowTexture => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortaitButtonRight", AssetRequestMode.ImmediateLoad).Value;
     private static Texture2D PortraitFrameTexture => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortraitFrame", AssetRequestMode.ImmediateLoad).Value;
 
     public string DialogueKey { get; private set; }
@@ -88,7 +88,7 @@ public class DialogueBox : IInGameNotification
         DrawPanel(spriteBatch);
         DrawPortrait(spriteBatch);
         DrawText(spriteBatch);
-        DrawArrow(spriteBatch);
+        //DrawArrow(spriteBatch);
     }
 
     public void PushAnchor(ref Vector2 positionAnchorBottom) => positionAnchorBottom.Y -= 50f * Opacity;
@@ -293,7 +293,7 @@ public class DialogueBox : IInGameNotification
         var isHovering = panelRectangle.Contains(Main.MouseScreen.ToPoint());
         var panelColor = currentDialogue.SpeakerColor * (isHovering ? 0.75f : 0.5f) * Opacity;
 
-        DrawUtils.DrawPanel(spriteBatch, panelRectangle, panelColor);
+        DrawUtils.DrawPanel(spriteBatch, panelRectangle, Color.White);
 
         if (isHovering) OnMouseOver();
     }
@@ -305,29 +305,33 @@ public class DialogueBox : IInGameNotification
         var panelRectangle = Utils.CenteredRectangle(panelPosition, panelSize);
 
         Vector2 iconSize = new(92, 92);
-        Vector2 iconPosition = new(panelRectangle.Left - iconSize.X - 28f, panelRectangle.Center.Y - 56.5f);
+
+        Vector2 iconPosition = new((panelRectangle.Left - iconSize.X) + 1, panelRectangle.Bottom - iconSize.Y - 9);
 
         var portraitTexture = GetPortrait(currentDialogue.SpeakerType);
 
         Vector2 frameSize = new(PortraitFrameTexture.Width, PortraitFrameTexture.Height);
         var framePosition = iconPosition - (frameSize - iconSize) / 2;
-        spriteBatch.Draw(PortraitFrameTexture, framePosition, null, Color.White * Opacity, 0f, Vector2.Zero, 1.25f, SpriteEffects.None, 0f);
 
-        if (portraitTexture != null)
+        if (currentDialogue.SpeakerType != "You")
         {
-            var sourceRect = GetFrameRect(currentDialogue.SpeakerType, currentDialogue.Emote, 92, 92);
-            if (currentDialogue.SpeakerType != "player")
-                spriteBatch.Draw(portraitTexture.Value, iconPosition, sourceRect, Color.White * Opacity, 0f, Vector2.Zero, 1.25f, SpriteEffects.None, 0f);
-        }
+            if (portraitTexture != null)
+            {
+                var sourceRect = GetFrameRect(currentDialogue.SpeakerType, currentDialogue.Emote, 92, 92);
+                spriteBatch.Draw(portraitTexture.Value, new(iconPosition.X - 13, iconPosition.Y + 1), sourceRect, Color.White * Opacity, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+            }
 
-        DrawSpeakerName(spriteBatch, iconPosition, iconSize);
+            spriteBatch.Draw(PortraitFrameTexture, framePosition, null, Color.White * Opacity, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+
+            DrawSpeakerName(spriteBatch, iconPosition, iconSize);
+        }
     }
 
     private void DrawSpeakerName(SpriteBatch spriteBatch, Vector2 iconPosition, Vector2 iconSize)
     {
         var speakerName = currentDialogue.Speaker;
         var nameTextSize = FontAssets.ItemStack.Value.MeasureString(speakerName);
-        Vector2 nameTextPosition = new(iconPosition.X + (iconSize.X + 16f) / 2 - nameTextSize.X / 2, iconPosition.Y + iconSize.Y + 24f);
+        Vector2 nameTextPosition = new((iconPosition.X + iconSize.X / 2 - nameTextSize.X / 2) - 6, iconPosition.Y + iconSize.Y + 16f);
 
         Utils.DrawBorderString(spriteBatch, speakerName, nameTextPosition, Color.White * Opacity, 1f, anchorx: 0f, anchory: 0.5f);
     }
@@ -339,14 +343,14 @@ public class DialogueBox : IInGameNotification
         var panelRectangle = Utils.CenteredRectangle(panelPosition, panelSize);
 
         var displayText = currentDialogue.PlainText[..Math.Min(charIndex, currentDialogue.PlainText.Length)];
-        var textPosition = panelRectangle.TopLeft() + new Vector2(10f, 20f);
-        var wrappedText = WrapText(displayText, PANEL_WIDTH - 78f);
+        var textPosition = panelRectangle.TopLeft() + new Vector2(15f, 32f);
+        var wrappedText = WrapText(displayText, PANEL_WIDTH - 90f);
 
         var globalCharIndex = 0;
 
         for (var i = 0; i < wrappedText.Length; i++)
         {
-            var linePos = textPosition + new Vector2(3f, i * FontAssets.ItemStack.Value.LineSpacing);
+            var linePos = textPosition + new Vector2(2f, i * FontAssets.ItemStack.Value.LineSpacing);
             var charOffset = 0;
 
             foreach (var c in wrappedText[i])
@@ -378,7 +382,7 @@ public class DialogueBox : IInGameNotification
                     }
                 }
 
-                Utils.DrawBorderString(spriteBatch, c.ToString(), charPos, currentDialogue.TextColor * Opacity, .99f, anchorx: 0f, anchory: 0.3f);
+                Utils.DrawBorderString(spriteBatch, c.ToString(), charPos, currentDialogue.TextColor * Opacity, .98f, anchorx: 0f, anchory: 0.3f);
                 charOffset += (int)FontAssets.ItemStack.Value.MeasureString(c.ToString()).X + 1;
                 globalCharIndex++;
             }
@@ -414,7 +418,7 @@ public class DialogueBox : IInGameNotification
             "merchant" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Merchant"),
             "nurse" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Nurse"),
             "demolitionist" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Demolitionist"),
-            "goblin tinkerer" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/GoblinTinkerer"),
+            "goblin tinkerer" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Goblin"),
             "mechanic" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Mechanic"),
             "argie" => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/Characters/Argie"),
             _ => null
@@ -446,21 +450,26 @@ public class DialogueBox : IInGameNotification
 
     private Vector2 CalculateSize()
     {
-        if (currentDialogue == null) return new Vector2(PANEL_WIDTH + 18, 100);
+        if (currentDialogue == null) return new Vector2(PANEL_WIDTH + 18, 120);
 
         var displayText = currentDialogue.PlainText[..Math.Min(charIndex, currentDialogue.PlainText.Length)];
-        var wrappedText = WrapText(displayText, PANEL_WIDTH - 78f);
+        var wrappedText = WrapText(displayText, PANEL_WIDTH - 90f);
         var lineCount = wrappedText.Length;
         var textHeight = FontAssets.ItemStack.Value.LineSpacing * lineCount;
 
-        var panelHeight = textHeight + 40f;
-        return new Vector2(PANEL_WIDTH, Math.Max(panelHeight, 100f) * 1.25f);
+        var panelHeight = textHeight + 52f;
+        return new Vector2(PANEL_WIDTH, Math.Max(panelHeight, 120));
     }
 
     private Vector2 CalculatePosition(Vector2 panelSize)
     {
         var t = isRemoved ? animationProgress / ANIMATION_DURATION : 1f - animationProgress / ANIMATION_DURATION;
         var currentPosition = Vector2.Lerp(targetPosition, startPosition, t);
+        if (currentDialogue.SpeakerType == "You")
+        {
+            return currentPosition - new Vector2(0f, panelSize.Y * 0.65f);
+
+        }
         return currentPosition - new Vector2(-32f, panelSize.Y * 0.65f);
     }
 

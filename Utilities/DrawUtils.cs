@@ -164,30 +164,87 @@ internal static class DrawUtils
         }
     }
 
+    // Updated DrawPanel method in DrawUtils.cs
+
+    // OPTION 1: 9-slice approach (use this if your texture has borders that shouldn't stretch)
     public static void DrawPanel(SpriteBatch sb, int x, int y, int w, int h, Color c = default)
     {
         if (c == default)
             c = new Color(63, 65, 151, 255) * 0.785f;
 
         var value = ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortraitBox").Value;
-        if (w < 20)
-            w = 20;
 
-        if (h < 20)
-            h = 20;
+        // ADJUST THESE VALUES to match your sprite's actual border sizes!
+        int borderLeft = 20;   // Measure the left border in your 480x106 sprite
+        int borderRight = 20;  // Measure the right border in your 480x106 sprite  
+        int borderTop = 30;    // Measure the top border in your 480x106 sprite
+        int borderBottom = 30; // Measure the bottom border in your 480x106 sprite
 
-        sb.Draw(value, new Rectangle(x, y, 10, 10), new Rectangle(0, 0, 10, 10), c);
-        sb.Draw(value, new Rectangle(x + 10, y, w - 20, 10), new Rectangle(10, 0, 10, 10), c);
-        sb.Draw(value, new Rectangle(x + w - 10, y, 10, 10), new Rectangle(value.Width - 10, 0, 10, 10), c);
-        sb.Draw(value, new Rectangle(x, y + 10, 10, h - 20), new Rectangle(0, 10, 10, 10), c);
-        sb.Draw(value, new Rectangle(x + 10, y + 10, w - 20, h - 20), new Rectangle(10, 10, 10, 10), c);
-        sb.Draw(value, new Rectangle(x + w - 10, y + 10, 10, h - 20), new Rectangle(value.Width - 10, 10, 10, 10), c);
-        sb.Draw(value, new Rectangle(x, y + h - 10, 10, 10), new Rectangle(0, value.Height - 10, 10, 10), c);
-        sb.Draw(value, new Rectangle(x + 10, y + h - 10, w - 20, 10), new Rectangle(10, value.Height - 10, 10, 10), c);
-        sb.Draw(value, new Rectangle(x + w - 10, y + h - 10, 10, 10), new Rectangle(value.Width - 10, value.Height - 10, 10, 10), c);
+        // Ensure minimum size
+        int minWidth = borderLeft + borderRight;
+        int minHeight = borderTop + borderBottom;
+
+        if (w < minWidth) w = minWidth;
+        if (h < minHeight) h = minHeight;
+
+        // Calculate source texture regions
+        int srcWidth = value.Width;
+        int srcHeight = value.Height;
+        int srcCenterWidth = srcWidth - borderLeft - borderRight;
+        int srcCenterHeight = srcHeight - borderTop - borderBottom;
+
+        // Draw the 9 sections of the panel
+
+        // Top-left corner
+        sb.Draw(value, new Rectangle(x, y, borderLeft, borderTop),
+                new Rectangle(0, 0, borderLeft, borderTop), c);
+
+        // Top edge (stretch horizontally)
+        sb.Draw(value, new Rectangle(x + borderLeft, y, w - borderLeft - borderRight, borderTop),
+                new Rectangle(borderLeft, 0, srcCenterWidth, borderTop), c);
+
+        // Top-right corner
+        sb.Draw(value, new Rectangle(x + w - borderRight, y, borderRight, borderTop),
+                new Rectangle(srcWidth - borderRight, 0, borderRight, borderTop), c);
+
+        // Left edge (stretch vertically)
+        sb.Draw(value, new Rectangle(x, y + borderTop, borderLeft, h - borderTop - borderBottom),
+                new Rectangle(0, borderTop, borderLeft, srcCenterHeight), c);
+
+        // Center (stretch both ways)
+        sb.Draw(value, new Rectangle(x + borderLeft, y + borderTop, w - borderLeft - borderRight, h - borderTop - borderBottom),
+                new Rectangle(borderLeft, borderTop, srcCenterWidth, srcCenterHeight), c);
+
+        // Right edge (stretch vertically)
+        sb.Draw(value, new Rectangle(x + w - borderRight, y + borderTop, borderRight, h - borderTop - borderBottom),
+                new Rectangle(srcWidth - borderRight, borderTop, borderRight, srcCenterHeight), c);
+
+        // Bottom-left corner
+        sb.Draw(value, new Rectangle(x, y + h - borderBottom, borderLeft, borderBottom),
+                new Rectangle(0, srcHeight - borderBottom, borderLeft, borderBottom), c);
+
+        // Bottom edge (stretch horizontally)
+        sb.Draw(value, new Rectangle(x + borderLeft, y + h - borderBottom, w - borderLeft - borderRight, borderBottom),
+                new Rectangle(borderLeft, srcHeight - borderBottom, srcCenterWidth, borderBottom), c);
+
+        // Bottom-right corner
+        sb.Draw(value, new Rectangle(x + w - borderRight, y + h - borderBottom, borderRight, borderBottom),
+                new Rectangle(srcWidth - borderRight, srcHeight - borderBottom, borderRight, borderBottom), c);
     }
 
+    // OPTION 2: Simple stretch approach (use this if your texture should just be stretched)
+    public static void DrawPanelSimple(SpriteBatch sb, int x, int y, int w, int h, Color c = default)
+    {
+        if (c == default)
+            c = new Color(63, 65, 151, 255) * 0.785f;
+
+        var value = ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortraitBox").Value;
+
+        // Simply stretch the entire texture to fit the desired rectangle
+        sb.Draw(value, new Rectangle(x, y, w, h), null, c);
+    }
     public static void DrawPanel(SpriteBatch sb, Rectangle R, Color c = default) => DrawPanel(sb, R.X, R.Y, R.Width, R.Height, c);
+    public static void DrawPanelSimple(SpriteBatch sb, Rectangle R, Color c = default) => DrawPanelSimple(sb, R.X, R.Y, R.Width, R.Height, c);
 
     public static void DrawText(SpriteBatch spriteBatch, Vector2 position, string text, Color? color = null, Color? shadowColor = null, float scale = 1f)
     {

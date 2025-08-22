@@ -247,7 +247,7 @@ public static class DialogueBuilder
                 Volume = 0.7f,
                 MaxInstances = 0
             },
-            "goblin tinkerer" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Gobblin")
+            "goblin tinkerer" => new SoundStyle($"{SFX_DIRECTORY}Dialogue/Goblin")
             {
                 Volume = 0.7f,
                 MaxInstances = 0
