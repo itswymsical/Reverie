@@ -310,7 +310,7 @@ public class DialogueBox : IInGameNotification
 
         Vector2 iconSize = new(92, 92);
 
-        Vector2 iconPosition = new((panelRectangle.Left - iconSize.X) + 1, panelRectangle.Bottom - iconSize.Y - 9);
+        Vector2 iconPosition = new((panelRectangle.Left - iconSize.X) + 5, panelRectangle.Bottom - iconSize.Y - 7);
 
 
         var portraitTexture = GetPortrait(currentDialogue.SpeakerType);
