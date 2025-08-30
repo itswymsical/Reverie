@@ -2,6 +2,7 @@
 using Reverie.Common.Systems;
 using Reverie.Utilities;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -36,7 +37,7 @@ public class DialogueBox : IInGameNotification
 
     private float currentPitchModifier = 1.0f;
 
-    private static Texture2D ArrowTexture => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortaitButtonRight", AssetRequestMode.ImmediateLoad).Value;
+    private static Texture2D ArrowTexture => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Missions/Next", AssetRequestMode.ImmediateLoad).Value;
     private static Texture2D PortraitFrameTexture => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortraitFrame", AssetRequestMode.ImmediateLoad).Value;
     private static Texture2D PortraitFrameInnerTexture => ModContent.Request<Texture2D>($"{UI_ASSET_DIRECTORY}Dialogue/PortraitFrame_Inner", AssetRequestMode.ImmediateLoad).Value;
 
@@ -89,7 +90,7 @@ public class DialogueBox : IInGameNotification
         DrawPanel(spriteBatch);
         DrawPortrait(spriteBatch);
         DrawText(spriteBatch);
-        //DrawArrow(spriteBatch);
+        DrawSkip(spriteBatch);
     }
 
     public void PushAnchor(ref Vector2 positionAnchorBottom) => positionAnchorBottom.Y -= 50f * Opacity;
@@ -396,7 +397,11 @@ public class DialogueBox : IInGameNotification
         }
     }
 
-    private void DrawArrow(SpriteBatch spriteBatch)
+    /// <summary>
+    /// Draws the "skip to next" line
+    /// </summary>
+    /// <param name="spriteBatch"></param>
+    private void DrawSkip(SpriteBatch spriteBatch)
     {
         if (currentDialogue == null || charIndex < currentDialogue.PlainText.Length || lineKeys.Count == 0 && isLastDialogue)
             return;
@@ -405,11 +410,13 @@ public class DialogueBox : IInGameNotification
         var panelPosition = CalculatePosition(panelSize);
         var panelRectangle = Utils.CenteredRectangle(panelPosition, panelSize);
 
-        var arrowScale = 0.75f;
-        var arrowPosition = panelRectangle.BottomRight() - new Vector2(ArrowTexture.Width * arrowScale + 10, ArrowTexture.Height * arrowScale + 10);
+        var arrowScale = 0.65f;
+        var arrowPosition = panelRectangle.BottomRight() - new Vector2(ArrowTexture.Width * arrowScale + 10, ArrowTexture.Height * arrowScale + 20);
 
         var yOffset = (float)Math.Sin(Main.GameUpdateCount * 0.1f) * 3f;
         arrowPosition.Y += yOffset;
+
+        Utils.DrawBorderString(spriteBatch, $"{ReverieSystem.FFDialogueKeybind.GetAssignedKeys().FirstOrDefault() ?? "[None]"}", new(arrowPosition.X - 20, arrowPosition.Y + 12), Color.White * Opacity, 0.75f, anchorx: 0f, anchory: 0.5f);
 
         spriteBatch.Draw(ArrowTexture, arrowPosition, null, Color.White * Opacity, 0f, Vector2.Zero, arrowScale, SpriteEffects.None, 0f);
     }

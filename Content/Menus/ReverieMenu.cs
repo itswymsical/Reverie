@@ -107,15 +107,16 @@ public partial class ReverieMenu : ModMenu
                 return;
         }
 
-        var star = new Star();
+        var star = new Star
+        {
+            position = new Vector2(
+                Main.rand.Next(0, Main.screenWidth),
+                Main.rand.Next(0, Main.screenHeight)
+            ),
 
-        star.position = new Vector2(
-            Main.rand.Next(0, Main.screenWidth),
-            Main.rand.Next(0, Main.screenHeight)
-        );
-
-        star.rotation = Main.rand.NextFloat(0, MathHelper.TwoPi);
-        star.scale = Main.rand.NextFloat(0.2f, 0.72f);
+            rotation = Main.rand.NextFloat(0, MathHelper.TwoPi),
+            scale = Main.rand.NextFloat(0.2f, 0.72f)
+        };
         if (Main.rand.NextBool(20))
             star.scale *= 0.8f;
 
@@ -243,7 +244,7 @@ public partial class ReverieMenu : ModMenu
 
         spriteBatch.Draw(
             ModContent.Request<Texture2D>($"{VFX_DIRECTORY}Space").Value,
-            new Rectangle(0, 0, Main.screenWidth, Main.screenHeight),
+            new Rectangle(0, 0, Main.screenWidth + 1, Main.screenHeight),
             drawColor
         );
 
