@@ -2,7 +2,7 @@
 
 namespace Reverie.Content.Menus;
 
-public partial class ReverieMenu
+public partial class IllustriousMenu
 {
     private class EasterEggObject
     {

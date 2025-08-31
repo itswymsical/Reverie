@@ -38,7 +38,7 @@ public class ModifyMenuButtonsSystem : ModSystem
 
         c.EmitDelegate((ref Color color) =>
         {
-            if (!ReverieMenu.InMenu)
+            if (!IllustriousMenu.InMenu)
                 return;
             color = new Color(77, 216, 203) * 1.1f;
         });
