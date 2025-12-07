@@ -82,7 +82,16 @@ public abstract class Mission
     }
 
     public virtual void OnMissionStart() => RegisterEventHandlers();
+    /// <summary>
+    /// Called when an objective set is completed.
+    /// </summary>
+    /// <param name="setIndex"></param>
+    /// <param name="completedSet"></param>
     protected virtual void OnObjectiveIndexComplete(int setIndex, ObjectiveList completedSet) { }
+    /// <summary>
+    /// Called when an individual objective is completed.
+    /// </summary>
+    /// <param name="objectiveIndexWithinCurrentSet"></param>
     protected virtual void OnObjectiveComplete(int objectiveIndexWithinCurrentSet) { }
 
     public void HandleObjectiveCompletion(int objectiveIndex)

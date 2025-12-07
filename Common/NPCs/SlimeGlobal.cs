@@ -199,10 +199,21 @@ public class SlimeGlobal : GlobalNPC
             spriteRotation = MathHelper.Clamp(npc.velocity.X * 0.04f, -MathHelper.PiOver2, MathHelper.PiOver2);
         }
 
-        if (npc.type == NPCID.SandSlime)
+        if (npc.type != NPCID.BlueSlime || npc.type != NPCID.RedSlime || npc.type != NPCID.YellowSlime || npc.type != NPCID.Pinky
+            || npc.type != NPCID.PurpleSlime || npc.type != NPCID.BlackSlime || npc.type != NPCID.MotherSlime || npc.type != NPCID.GoldenSlime || npc.type != NPCID.GreenSlime)
+        {
+            finalColor = npc.color;
+
+            finalColor.R = (byte)((finalColor.R * drawColor.R) / 255);
+            finalColor.G = (byte)((finalColor.G * drawColor.G) / 255);
+            finalColor.B = (byte)((finalColor.B * drawColor.B) / 255);
+            finalColor.A = npc.color.A;  
+        }
+        else
         {
             finalColor = drawColor;
         }
+
 
         Main.EntitySpriteDraw(
             texture,
@@ -218,4 +229,5 @@ public class SlimeGlobal : GlobalNPC
 
         return false;
     }
+
 }

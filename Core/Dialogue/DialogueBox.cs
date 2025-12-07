@@ -358,7 +358,7 @@ public class DialogueBox : IInGameNotification
 
         for (var i = 0; i < wrappedText.Length; i++)
         {
-            var linePos = textPosition + new Vector2(2f, i * FontAssets.ItemStack.Value.LineSpacing);
+            var linePos = textPosition + new Vector2(-2f, i * FontAssets.MouseText.Value.LineSpacing);
             var charOffset = 0;
 
             foreach (var c in wrappedText[i])
@@ -391,7 +391,7 @@ public class DialogueBox : IInGameNotification
                 }
 
                 Utils.DrawBorderString(spriteBatch, c.ToString(), charPos, currentDialogue.TextColor * Opacity, .98f, anchorx: 0f, anchory: 0.3f);
-                charOffset += (int)FontAssets.ItemStack.Value.MeasureString(c.ToString()).X + 1;
+                charOffset += (int)FontAssets.MouseText.Value.MeasureString(c.ToString()).X;
                 globalCharIndex++;
             }
         }
@@ -483,24 +483,19 @@ public class DialogueBox : IInGameNotification
     {
         var t = isRemoved ? animationProgress / ANIMATION_DURATION : 1f - animationProgress / ANIMATION_DURATION;
         var currentPosition = Vector2.Lerp(targetPosition, startPosition, t);
-        if (currentDialogue.SpeakerType == "You")
-        {
-            return currentPosition - new Vector2(0f, panelSize.Y * 0.65f);
-
-        }
-        return currentPosition - new Vector2(-32f, panelSize.Y * 0.65f);
+        return currentPosition - new Vector2(0f, panelSize.Y * 0.65f);   
     }
 
     private static string[] WrapText(string text, float maxWidth)
     {
         List<string> lines = [];
         StringBuilder currentLine = new();
-        var spaceWidth = FontAssets.ItemStack.Value.MeasureString(" ").X;
+        var spaceWidth = FontAssets.MouseText.Value.MeasureString(" ").X;
 
         foreach (var word in text.Split(' '))
         {
-            var wordWidth = FontAssets.ItemStack.Value.MeasureString(word).X;
-            if (currentLine.Length > 0 && FontAssets.ItemStack.Value.MeasureString(currentLine.ToString()).X + wordWidth + spaceWidth > maxWidth)
+            var wordWidth = FontAssets.MouseText.Value.MeasureString(word).X;
+            if (currentLine.Length > 0 && FontAssets.MouseText.Value.MeasureString(currentLine.ToString()).X + wordWidth + spaceWidth > maxWidth)
             {
                 lines.Add(currentLine.ToString());
                 currentLine.Clear();

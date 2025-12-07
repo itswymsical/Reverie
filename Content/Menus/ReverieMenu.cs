@@ -27,6 +27,7 @@ namespace Reverie.Content.Menus
         private float cloudDriftSpeed = 0.05f;
         private float starDriftSpeed = 0.03f;
         private Dictionary<Star, Vector2> starVelocities = [];
+
         private class CloudObject
         {
             public Vector2 Position;

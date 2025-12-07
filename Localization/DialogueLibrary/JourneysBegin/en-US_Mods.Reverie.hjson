@@ -23,7 +23,7 @@
 			}
 
 			Line4: {
-				Text: This actually isn't even the weirdest thing I've seen...
+				Text: Out of all the things I've seen...<pause:20>someone falling from the sky is the wildest.
 				Speaker: Guide
 				Emote: "4"
 				Speed: "1.1"
@@ -32,110 +32,96 @@
 
 		Tutorial: {
 			Line1: {
-				Text: You're not from around here, are you?
+				Text: I'm [speakerName:Guide], nice to meet you.
+				Speaker: Guide
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line2: {
+				Text: They say there is a person who will tell you how to survive in this land...<pause:12> oh wait. That's me.
+				Speaker: Guide
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line3: {
+				Text: Let's get you familiar with the basics.
+				Speaker: Guide
+				Emote: "0"
+				Speed: "1.5"
+			}
+		}
+
+		Basics: {
+			Line1: {
+				Text: The first step to any adventure is gathering resources.<pause:20> Chop a few of those trees down.
+				Speaker: Guide
+				Emote: "0"
+				Speed: "1.1"
+			}
+
+			Line2: {
+				Text: You'll also need a Work Bench,<pause:12> and probably a sword.
+				Speaker: Guide
+				Emote: "0"
+				Speed: "1.1"
+			}
+		}
+
+		BasicsDone: {
+			Line1: {
+				Text: Not too shabby, my friend!
 				Speaker: Guide
 				Emote: "1"
 				Speed: "1.5"
 			}
 
 			Line2: {
-				Text: Not to worry, I can help you get started.
+				Text: I think my job here is done!
 				Speaker: Guide
-				Emote: "1"
+				Emote: "0"
 				Speed: "1.5"
 			}
 
 			Line3: {
-				Text: First, let's get you familiar with the basics.
+				Text: To be frank, that's really all I know... heh...
 				Speaker: Guide
 				Emote: "0"
 				Speed: "1.5"
 			}
 
 			Line4: {
-				Text: What?<pause:28> You've done this before?
+				Text: However, I DO have this odd ability to learn super fast—<pause:12>so if you find anything new, let me know!
 				Speaker: Guide
-				Emote: "2"
-				Speed: "1.1"
+				Emote: "0"
+				Speed: "1.5"
 			}
 
 			Line5: {
-				Text: Don't be ridiculous!
+				Text: With that,<pause:8> you're all set!
 				Speaker: Guide
-				Emote: "1"
-				Speed: "1.1"
+				Emote: "0"
+				Speed: "1.5"
 			}
 
 			Line6: {
-				Text: ...
+				Text: By the way, what's your name?
 				Speaker: Guide
-				Emote: "4"
-				Speed: "1.1"
+				Emote: "0"
+				Speed: "1.5"
 			}
 
 			Line7: {
-				Text: Alright, whatever. We'll skip the tutorial...
-				Speaker: Guide
-				Emote: "4"
-				Speed: "1.1"
-			}
-		}
-
-		MirrorGiven: {
-			Line1: {
-				Text: Take this Magic Mirror.<pause:10> It'll let you check messages and teleport back to the surface.
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.1"
-			}
-
-			Line2: {
-				Text: Open up your inventory and use it now.
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.1"
-			}
-		}
-
-		Mirror: {
-			Line1: {
-				Text: Nice!<pause:8> Now you can teleport back to the surface whenever you want.
-				Speaker: Eustace
-				Emote: "1"
-				Speed: "1.5"
-			}
-
-			Line2: {
-				Text: You're mirror also allows you to see tasks lists for jobs you pick up.
-				Speaker: Dalia
-				Emote: "0"
-				Speed: "1.5"
-			}
-
-			Line3: {
-				Text: If you look to your map while in inventory,<pause:8> you'll see a list of tasks.
-				Speaker: Fungore
-				Emote: "0"
-				Speed: "1.5"
-			}
-
-			Line4: {
-				Text: With that,<pause:8> it's time to get started on your journey!
-				Speaker: Sophie
-				Emote: "0"
-				Speed: "1.5"
-			}
-
-			Line5: {
-				Text: If you need any help, you can always ask me.
-				Speaker: Guide
-				Emote: "0"
-				Speed: "1.5"
-			}
-
-			Line6: {
-				Text: You gain a feeling,<pause:12> that the Guide may actually be useful for once...
+				Text: You don't know how to speak...<pause:28> [speakerName:Guide] magically gets it right.
 				Speaker: You
+				Emote: "0"
+				Speed: "1.5"
+			}
+
+			Line8: {
+				Text: Let me guess...<pause:12> [speakerName:player]?<pause:20> I'll just call you that.
+				Speaker: Guide
 				Emote: "0"
 				Speed: "1.5"
 			}

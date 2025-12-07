@@ -62,6 +62,11 @@ public static class DialogueBuilder
         };
     }
 
+    /// <summary>
+    /// regexes for dialogue .hjsons
+    /// </summary>
+    /// <param name="rawText"></param>
+    /// <returns></returns>
     private static (string plainText, Dictionary<int, DialogueEffect> effects) ParseTextAndEffects(string rawText)
     {
         var effects = new Dictionary<int, DialogueEffect>();
@@ -276,10 +281,15 @@ public static class DialogueBuilder
             }
         };
     }
-
+    
+    /// <summary>
+    /// regex for adding names in dialogue
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
     private static string ProcessName(string text)
     {
-        var speakerNameRegex = new Regex(@"\{speakerName:([^}]+)\}", RegexOptions.IgnoreCase);
+        var speakerNameRegex = new Regex(@"\[speakerName:([^}]+)\]", RegexOptions.IgnoreCase);
 
         return speakerNameRegex.Replace(text, match =>
         {

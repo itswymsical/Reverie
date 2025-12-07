@@ -1,4 +1,5 @@
-﻿using Reverie.Content.Items.Accessories;
+﻿using ReLogic.Graphics;
+using Reverie.Content.Items.Accessories;
 using Reverie.Content.Tiles.Taiga;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
@@ -7,6 +8,8 @@ using System.Collections.Generic;
 using Terraria.GameContent;
 using Terraria.Localization;
 using Terraria.UI;
+using static System.Net.Mime.MediaTypeNames;
+using Terraria.UI.Chat;
 
 namespace Reverie.Common.Systems;
 
@@ -90,18 +93,37 @@ public class ReverieSystem : ModSystem
         DialogueManager.Instance.Draw(spriteBatch, bottomAnchorPosition);
 
         string dateString = DateTime.Now.ToString("MM.dd.yyyy");
-        string title = $"Reverie Developer Build (dated v{dateString})";
-        string subtitle = "(-- Everything implemented is subject to removal or refactor --)";
+        string text = $"Terraria: Reverie Alpha (v{dateString})";
+        string subtitle = "— Content is subject to change —";
 
         var font = FontAssets.MouseText.Value;
-        Vector2 titleSize = font.MeasureString(title) * 0.3f;
-        Vector2 subtitleSize = font.MeasureString(subtitle) * 0.3f;
+        var scale = 0.85f;
 
-        Vector2 titlePos = new(Main.screenWidth / 2f - titleSize.X / 2f, Main.screenHeight / 24f - 8);
-        Vector2 subtitlePos = new(Main.screenWidth / 1.93f - subtitleSize.X / 2f, Main.screenHeight / 24f + titleSize.Y + 8);
+        // Measure string and calculate centered position
+        var textSize = font.MeasureString(text) * scale;
+        Vector2 textPosition = new Vector2(
+            Main.screenWidth / 2f - textSize.X / 2f,
+            Main.screenHeight * 0.02f
+        );
 
-        DrawUtils.DrawText(spriteBatch, Color.Wheat, title, titlePos, 0.3f);
-        DrawUtils.DrawText(spriteBatch, Color.Wheat, subtitle, subtitlePos, 0.3f);
+        var color = Color.Beige;
+        var shadowColor = Color.Black;
+        shadowColor.A = color.A;
+
+        // Draw main text centered
+        ChatManager.DrawColorCodedStringShadow(spriteBatch, font, text, textPosition, shadowColor, 0f, default, Vector2.One * scale);
+        ChatManager.DrawColorCodedString(spriteBatch, font, text, textPosition, color, 0f, default, Vector2.One * scale);
+
+        // Draw subtitle below main text, also centered
+        var subtitleScale = 0.7f;
+        var subtitleSize = font.MeasureString(subtitle) * subtitleScale;
+        Vector2 subtitlePosition = new Vector2(
+            Main.screenWidth / 2f - subtitleSize.X / 2f,
+            textPosition.Y + textSize.Y + 4
+        );
+
+        ChatManager.DrawColorCodedStringShadow(spriteBatch, font, subtitle, subtitlePosition, shadowColor, 0f, default, Vector2.One * subtitleScale);
+        ChatManager.DrawColorCodedString(spriteBatch, font, subtitle, subtitlePosition, color, 0f, default, Vector2.One * subtitleScale);
     }
 
     public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)

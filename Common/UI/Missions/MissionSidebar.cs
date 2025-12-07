@@ -600,7 +600,7 @@ public class MissionSidebar
                 textColor,
                 Color.Black * alpha,
                 Vector2.Zero,
-                0.75f
+                0.85f
             );
 
             yOffset += PANEL_HEIGHT - OBJECTIVE_Y_SPACING;

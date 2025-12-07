@@ -111,7 +111,7 @@ public class SpawnDialogueIndicator : ModItem
         }
         else
         {
-            DialogueManager.Instance.StartDialogue("JourneysBegin.Mirror", 6, letterbox: true);
+            DialogueManager.Instance.StartDialogue("JourneysBegin.BasicsDone", 8, letterbox: true);
 
             Main.NewText($"[Cleared All Indicators] | Right-click to place an Indicator.");
             ScreenIndicatorManager.Instance.ClearAllIndicators();

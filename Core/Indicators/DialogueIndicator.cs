@@ -56,7 +56,7 @@ public class DialogueIndicator : ScreenIndicator
     {
         if (DialogueManager.Instance.IsAnyActive())
         {
-            IsVisible = false;
+            IsActive = false;
         }
     }
 
@@ -245,7 +245,7 @@ public class DialogueIndicator : ScreenIndicator
             if (success)
             {
                 SoundEngine.PlaySound(SoundID.MenuTick);
-                IsVisible = false;
+                IsActive = false;
             }
             else
             {

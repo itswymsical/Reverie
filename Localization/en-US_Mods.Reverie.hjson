@@ -1,4 +1,4 @@
-﻿UI.ExperienceTracker: Experience Bar
+UI.ExperienceTracker: Experience Bar
 
 Conditions: {
 	CopperStandardComplete: After Mission, (Copper Standard)
@@ -912,10 +912,26 @@ Configs: {
 
 	SandHazePreset: {
 		Tooltip: ""
-		OFF.Label: OFF
-		Low.Label: Low
-		Medium.Label: Medium
-		High.Label: High
+
+		OFF: {
+			Label: OFF
+			Tooltip: ""
+		}
+
+		Low: {
+			Label: Low
+			Tooltip: ""
+		}
+
+		Medium: {
+			Label: Medium
+			Tooltip: ""
+		}
+
+		High: {
+			Label: High
+			Tooltip: ""
+		}
 	}
 }
 

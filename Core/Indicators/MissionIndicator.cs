@@ -1,4 +1,5 @@
-﻿using Reverie.Core.Missions;
+﻿using Reverie.Core.Dialogue;
+using Reverie.Core.Missions;
 using System.Linq;
 using Terraria.GameContent;
 
@@ -40,10 +41,23 @@ public class MissionIndicator : ScreenIndicator
 
     protected override void PostUpdate()
     {
-        // Check if mission should still show indicator
+        // Check if mission should be permanently removed
         if (mission != null && ShouldHideIndicator())
         {
-            IsVisible = false;
+            IsActive = false;
+            return;
+        }
+
+        // Temporarily hide during dialogue
+        if (DialogueManager.Instance.IsAnyActive())
+        {
+            if (!IsHidden)
+                Hide();
+        }
+        else
+        {
+            if (IsHidden)
+                Unhide();
         }
     }
 
@@ -522,7 +536,7 @@ public class MissionIndicator : ScreenIndicator
                 missionPlayer.StartMission(mission.ID);
             }
 
-            IsVisible = false;
+            IsActive = false;
 
             var missionType = mission.IsMainline ? "story" : "side";
             ModContent.GetInstance<Reverie>().Logger.Info($"Player started {missionType} mission: {mission.Name}");
