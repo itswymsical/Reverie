@@ -377,4 +377,64 @@ public abstract class Cutscene
     {
         return Letterbox.GetSafeArea();
     }
+
+    /// <summary>
+    /// Sets player position without visual stutter
+    /// </summary>
+    protected void SetPlayerPosition(Vector2 newPos)
+    {
+        var player = Main.LocalPlayer;
+        player.position = newPos;
+        player.oldPosition = newPos; // Prevents interpolation stutter
+        player.velocity = Vector2.Zero;
+    }
+
+    /// <summary>
+    /// Freezes player in place
+    /// </summary>
+    protected void FreezePlayer()
+    {
+        var player = Main.LocalPlayer;
+        player.velocity = Vector2.Zero;
+        player.position = player.oldPosition; // Prevent drift
+    }
+
+    /// <summary>
+    /// Moves player smoothly toward a target position
+    /// </summary>
+    protected void MovePlayerSmooth(Vector2 targetPos, float speed)
+    {
+        var player = Main.LocalPlayer;
+        Vector2 direction = targetPos - player.Center;
+
+        if (direction.Length() > speed)
+        {
+            direction.Normalize();
+            player.velocity = direction * speed;
+        }
+        else
+        {
+            // Close enough, snap to target
+            SetPlayerPosition(targetPos - player.Size / 2);
+        }
+    }
+
+    /// <summary>
+    /// Gets an NPC by type (useful for cutscenes)
+    /// </summary>
+    protected NPC GetNPC(int npcType)
+    {
+        return Main.npc.FirstOrDefault(n => n.type == npcType && n.active);
+    }
+
+    /// <summary>
+    /// Sets NPC position without stutter
+    /// </summary>
+    protected void SetNPCPosition(NPC npc, Vector2 newPos)
+    {
+        if (npc == null) return;
+        npc.position = newPos;
+        npc.oldPosition = newPos;
+        npc.velocity = Vector2.Zero;
+    }
 }

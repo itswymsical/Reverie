@@ -2,7 +2,6 @@
 using Reverie.Core.Missions;
 using Terraria;
 using Terraria.DataStructures;
-using static AssGen.Assets;
 using static Reverie.Core.Dialogue.DialogueManager;
 using static Reverie.Core.Missions.ObjectiveEventItem;
 using static Reverie.Core.Missions.ObjectiveEventNPC;
@@ -28,6 +27,7 @@ public class MissionJourneysBegin : Mission
 
         objectiveList:
         [
+            // "Talk to Guide"
             [("Talk to Guide", 1)],
             // "Basics" (Tutorial)
             [("Gather Wood", 20), ("Craft a Work Bench", 1), ("Craft a Wooden Sword", 1)],
@@ -46,6 +46,7 @@ public class MissionJourneysBegin : Mission
         isMainline: true, NPCID.Guide, xpReward: 50)
     {
         Reverie.Instance.Logger.Info($"[{Name} - {ID}] constructed");
+        this.PauseWorldEvents = true;
     }
 
     public override void OnMissionStart()
@@ -64,24 +65,32 @@ public class MissionJourneysBegin : Mission
         DialogueManager.Instance.StartDialogue("JourneysBegin.MissionEnd", 2, zoomIn: false, false);
     }
 
+    private bool died = false;
     public override void Update()
     {
         base.Update();
 
         if (Main.LocalPlayer.ZoneForest)
         {
-            Main.musicBox2 = MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}GuidesTheme");
+            if (Main.dayTime && !Main.raining && !Main.slimeRain && !Main.LocalPlayer.ShoppingZone_AnyBiome)
+            {
+                Main.musicBox2 = MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}GuidesTheme");
+            }
+            else
+            {
+                Main.musicBox2 = default;
+            }
         }
-
-        // Prevent certain events during tutorial
-        Main.slimeRain = false;
-        Main.slimeRainTime = 0;
-        Main.bloodMoon = false;
-
+        if (Main.LocalPlayer.dead && !died)
+        {
+            died = true;
+            ObjectiveList[CurrentList].Objective[0].Description = "...make it to the next day."; // lol
+        }
+        // Check day-night cycle for objectives
         UpdateTime();
     }
 
-    bool survived = false;
+    private bool survived = false;
     private void UpdateTime()
     {
         if (Progress != MissionProgress.Ongoing) return;
@@ -106,11 +115,14 @@ public class MissionJourneysBegin : Mission
         if (setIndex == (int)Objectives.Basics)
             DialogueManager.Instance.StartDialogue("JourneysBegin.BasicsDone", 8, zoomIn: false, letterbox: true, music: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}GuidesTheme"));
     }
+
     #region Event Registration
     protected override void RegisterEventHandlers()
     {
         if (eventsRegistered) return;
+
         base.RegisterEventHandlers();
+
         OnItemCreated += OnCraftItem;
         OnItemUse += UseItem;
         OnItemPickup += PickupItem;
@@ -133,10 +145,11 @@ public class MissionJourneysBegin : Mission
         OnItemCreated -= OnCraftItem;
         OnNPCKill -= OnKill;
         ModContent.GetInstance<Reverie>().Logger.Debug($"Mission [Journey's Begin] Unregistered event handlers");
+
         base.UnregisterEventHandlers();
     }
-
     #endregion
+
     private void OnCraftItem(Item item, ItemCreationContext context)
     {
         if (Progress != MissionProgress.Ongoing) return;

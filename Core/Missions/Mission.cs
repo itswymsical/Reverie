@@ -197,12 +197,30 @@ public abstract class Mission
         InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(this));
     }
 
+    /// <summary>
+    /// Pauses world events like slime rain and blood moons while the mission is active.
+    /// </summary>
+    public bool PauseWorldEvents { get; set; } = false;
+
     public virtual void Update()
     {
         if (Progress != MissionProgress.Ongoing && Status != MissionStatus.Unlocked) return;
         if (Progress == MissionProgress.Ongoing && !eventsRegistered)
         {
             RegisterEventHandlers();
+        }
+
+        if (PauseWorldEvents)
+        {
+            Main.slimeRain = false;
+            Main.slimeRainTime = 0;
+
+            Main.bloodMoon = false;
+
+            // 0 means no invasions are active
+            Main.invasionType = 0;
+            Main.raining = false;
+            Main.rainTime = 0;
         }
     }
 

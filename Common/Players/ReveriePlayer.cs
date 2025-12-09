@@ -31,7 +31,7 @@ public class ReveriePlayer : ModPlayer
         base.OnEnterWorld();
 
         if (!DownedSystem.initialCutscene && Main.netMode != NetmodeID.MultiplayerClient)
-            CutsceneSystem.PlayCutscene<IntroCutscene>();
+            CutsceneSystem.PlayCutscene<ArrivalCutscene>();
 
         notificationExists = false;
     }

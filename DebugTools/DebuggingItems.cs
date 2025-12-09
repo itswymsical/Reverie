@@ -43,7 +43,7 @@ public class CutscenePlayer : ModItem
     public override bool? UseItem(Player player)
     {
         if (Main.myPlayer == player.whoAmI)
-            CutsceneSystem.PlayCutscene<OpeningCutscene>();
+            CutsceneSystem.PlayCutscene<ArrivalCutscene>();
 
         return true;
     }
