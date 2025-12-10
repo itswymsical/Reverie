@@ -1,6 +1,9 @@
-﻿using Reverie.Core.Dialogue;
+﻿using Microsoft.Xna.Framework.Input;
+using Reverie.Content.NPCs.Enemies.Assailants;
+using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
 using Terraria;
+using Terraria.Audio;
 using Terraria.DataStructures;
 using static Reverie.Core.Dialogue.DialogueManager;
 using static Reverie.Core.Missions.ObjectiveEventItem;
@@ -11,6 +14,13 @@ namespace Reverie.Content.Missions;
 
 public class MissionJourneysBegin : Mission
 {
+    private bool died = false;
+    private bool survived = false;
+    private bool hasPlayedOpeningCutscene = false;
+    private bool hasSpawnedAssailants = false;
+    private bool hasPlayedChronicleEscape = false;
+    private Vector2 corpsePosition;
+
     private enum Objectives
     {
         TalkToGuide = 0,
@@ -47,6 +57,7 @@ public class MissionJourneysBegin : Mission
     {
         Reverie.Instance.Logger.Info($"[{Name} - {ID}] constructed");
         this.PauseWorldEvents = true;
+
     }
 
     public override void OnMissionStart()
@@ -65,7 +76,6 @@ public class MissionJourneysBegin : Mission
         DialogueManager.Instance.StartDialogue("JourneysBegin.MissionEnd", 2, zoomIn: false, false);
     }
 
-    private bool died = false;
     public override void Update()
     {
         base.Update();
@@ -86,11 +96,13 @@ public class MissionJourneysBegin : Mission
             died = true;
             ObjectiveList[CurrentList].Objective[0].Description = "...make it to the next day."; // lol
         }
-        // Check day-night cycle for objectives
+        
         UpdateTime();
     }
 
-    private bool survived = false;
+    /// <summary>
+    /// Check day-night cycle for objectives
+    /// </summary>
     private void UpdateTime()
     {
         if (Progress != MissionProgress.Ongoing) return;
@@ -150,6 +162,31 @@ public class MissionJourneysBegin : Mission
     }
     #endregion
 
+    private void TriggerAssailantAmbush() // TODO: update their AI, make em fade in slowly and crep toward the player. also trigger a cutscene.
+    {
+        if (hasSpawnedAssailants) return;
+
+        // Play cutscene: Assailants drop from trees
+        // TODO: Cutscene system
+
+        // Spawn 3 grunts around player
+        for (int i = 0; i < 2; i++)
+        {
+            Vector2 spawnPos = Main.LocalPlayer.position + new Vector2(
+                Main.rand.Next(-300, 300),
+                -150);
+
+            NPC.NewNPC(
+                new EntitySource_Misc("Mission_Spawn"),
+                (int)spawnPos.X,
+                (int)spawnPos.Y,
+                ModContent.NPCType<EchoKnight>());
+        }
+
+        SoundEngine.PlaySound(SoundID.DD2_BetsyFlyingCircleAttack);
+        hasSpawnedAssailants = true;
+    }
+
     private void OnCraftItem(Item item, ItemCreationContext context)
     {
         if (Progress != MissionProgress.Ongoing) return;
@@ -169,6 +206,7 @@ public class MissionJourneysBegin : Mission
                 break;
         }
     }
+
     private void OnKill(NPC npc)
     {
         if (Progress != MissionProgress.Ongoing) return;
@@ -184,6 +222,7 @@ public class MissionJourneysBegin : Mission
                 break;
         }
     }
+
     private void OnDialogueFinished(string dialogueKey)
     {
         if (Progress != MissionProgress.Ongoing) return;
@@ -230,6 +269,40 @@ public class MissionJourneysBegin : Mission
         }
     }
 
+    private void BreakPots(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
+    {
+        if (Progress != MissionProgress.Ongoing) return;
+
+        if (fail) return;
+
+        var objective = (Objectives)CurrentList;
+        switch (objective)
+        {
+            case Objectives.FirstNight:
+                if (type == TileID.Pots)
+                {
+                    Tile tile = Main.tile[i, j];
+                    int originX = i - (tile.TileFrameX / 18);
+                    int originY = j - (tile.TileFrameY / 18);
+
+                    var originPos = new Point(originX, originY);
+
+                    if (interactedTiles.Contains(originPos)) return;
+
+                    interactedTiles.Add(originPos);
+
+                    UpdateProgress(objective: 2);
+                }
+                if (TileID.Sets.Ore[type])
+                {
+                    UpdateProgress(objective: 1);
+                }
+                break;
+        }
+    }
+
+    // use this for the corpse tile
+
     //private void TileInteractHandler(int i, int j, int type)
     //{
     //    if (Progress != MissionProgress.Ongoing) return;
@@ -264,36 +337,4 @@ public class MissionJourneysBegin : Mission
     //            break;
     //    }
     //}
-
-    private void BreakPots(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
-    {
-        if (Progress != MissionProgress.Ongoing) return;
-
-        if (fail) return;
-
-        var objective = (Objectives)CurrentList;
-        switch (objective)
-        {
-            case Objectives.FirstNight:
-                if (type == TileID.Pots)
-                {
-                    Tile tile = Main.tile[i, j];
-                    int originX = i - (tile.TileFrameX / 18);
-                    int originY = j - (tile.TileFrameY / 18);
-
-                    var originPos = new Point(originX, originY);
-
-                    if (interactedTiles.Contains(originPos)) return;
-
-                    interactedTiles.Add(originPos);
-
-                    UpdateProgress(objective: 2);
-                }
-                if (TileID.Sets.Ore[type])
-                {
-                    UpdateProgress(objective: 1);
-                }
-                break;
-        }
-    }
 }
