@@ -748,6 +748,16 @@ Items: {
 		DisplayName: Spruce Wood Lantern
 		Tooltip: ""
 	}
+
+	CutsceneTool: {
+		DisplayName: Cutscene Tool
+		Tooltip: ""
+	}
+
+	DialogueTool: {
+		DisplayName: Dialogue Tool
+		Tooltip: ""
+	}
 }
 
 Projectiles: {

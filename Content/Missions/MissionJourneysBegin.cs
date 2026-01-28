@@ -1,13 +1,14 @@
-﻿using Microsoft.Xna.Framework.Input;
+﻿using Reverie.Content.Cutscenes;
 using Reverie.Content.NPCs.Enemies.Assailants;
+using Reverie.Core.Cinematics;
 using Reverie.Core.Dialogue;
 using Reverie.Core.Missions;
-using Terraria;
-using Terraria.Audio;
+using Reverie.Utilities;
 using Terraria.DataStructures;
 using static Reverie.Core.Dialogue.DialogueManager;
 using static Reverie.Core.Missions.ObjectiveEventItem;
 using static Reverie.Core.Missions.ObjectiveEventNPC;
+using static Reverie.Core.Missions.ObjectiveEventPlayer;
 using static Reverie.Core.Missions.ObjectiveEventTile;
 
 namespace Reverie.Content.Missions;
@@ -27,9 +28,12 @@ public class MissionJourneysBegin : Mission
         Basics = 1,
         FirstNight = 2,
         TheSurge = 3,
-        DefendYourself = 4
+        DefendYourself = 4,
+        ReturnToGuide = 5
+
     }
 
+    #region Setup
     public MissionJourneysBegin() : base(MissionID.JourneysBegin,
         name: "Journey's Begin",
 
@@ -37,18 +41,17 @@ public class MissionJourneysBegin : Mission
 
         objectiveList:
         [
-            // "Talk to Guide"
+            // 0 "Talk to Guide"
             [("Talk to Guide", 1)],
-            // "Basics" (Tutorial)
+            // 1 "Basics" (Tutorial)
             [("Gather Wood", 20), ("Craft a Work Bench", 1), ("Craft a Wooden Sword", 1)],
-            // "First Night"
+            // 2 "First Night"
             [("Survive until dawn", 1), ("Defeat Enemies", 5), ("Break Pots", 20)],
-            // "The Surge"
+            // 3 "The Surge"
             [("Explore the Forest", 1)],
-            // Encounter Assailant Scouts (cutscene)
-            [("Encounter Scouts", 1)],
-            // "Defend Yourself"
-            [("Defeat Grunts", 3), ("Return to Guide", 1)]
+            // 4 "Defend Yourself" Encounter Assailant Scouts (cutscene)
+            [("Defeat Grunts", 3)],
+            [("Return to Guide", 1)]
         ],
 
         rewards: [new Item(ItemID.RegenerationPotion), new Item(ItemID.LesserHealingPotion, Main.rand.Next(5, 10)), new Item(ItemID.GoldCoin, Main.rand.Next(1, 2))],
@@ -76,6 +79,50 @@ public class MissionJourneysBegin : Mission
         DialogueManager.Instance.StartDialogue("JourneysBegin.MissionEnd", 2, zoomIn: false, false);
     }
 
+    protected override void RegisterEventHandlers()
+    {
+        if (eventsRegistered) return;
+
+        base.RegisterEventHandlers();
+
+        OnItemCreated += OnCraftItem;
+        OnItemUse += UseItem;
+        OnItemPickup += PickupItem;
+
+        OnTileBreak += BreakPots;
+        OnNPCKill += OnKill;
+
+        OnDialogueEnd += OnDialogueFinished;
+        OnBiomeEnter += WhileInBiome;
+        var eventPlayer = Main.LocalPlayer.GetModPlayer<ObjectiveEventPlayer>();
+        eventPlayer.AddTimeRequirement(300);
+
+        ModContent.GetInstance<Reverie>().Logger.Debug($"Mission [Journey's Begin] Registered event handlers");
+
+        eventsRegistered = true;
+    }
+
+
+    protected override void UnregisterEventHandlers()
+    {
+        if (!eventsRegistered) return;
+
+        OnItemCreated -= OnCraftItem;
+        OnItemUse -= UseItem;
+        OnItemPickup -= PickupItem;
+
+        OnTileBreak -= BreakPots;
+        OnNPCKill -= OnKill;
+
+        OnDialogueEnd -= OnDialogueFinished;
+        OnBiomeEnter -= WhileInBiome;
+
+        ModContent.GetInstance<Reverie>().Logger.Debug($"Mission [Journey's Begin] Unregistered event handlers");
+
+        base.UnregisterEventHandlers();
+    }
+    #endregion
+
     public override void Update()
     {
         base.Update();
@@ -98,6 +145,13 @@ public class MissionJourneysBegin : Mission
         }
         
         UpdateTime();
+        if (Main.LocalPlayer.isNearNPC(NPCID.Guide, 60f))
+        {
+            if ((Objectives)CurrentList == Objectives.ReturnToGuide)
+            {
+                UpdateProgress(objective: 0);
+            }
+        }
     }
 
     /// <summary>
@@ -125,66 +179,25 @@ public class MissionJourneysBegin : Mission
         base.OnObjectiveIndexComplete(setIndex, completedSet);
 
         if (setIndex == (int)Objectives.Basics)
-            DialogueManager.Instance.StartDialogue("JourneysBegin.BasicsDone", 8, zoomIn: false, letterbox: true, music: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}GuidesTheme"));
+            DialogueManager.Instance.StartDialogue("JourneysBegin.BasicsDone", 8, zoomIn: false, letterbox: false, music: MusicLoader.GetMusicSlot($"{MUSIC_DIRECTORY}GuidesTheme"));
     }
 
-    #region Event Registration
-    protected override void RegisterEventHandlers()
+    private void WhileInBiome(Player player, BiomeType biome, int ticksSpent)
     {
-        if (eventsRegistered) return;
+        if (Progress != MissionProgress.Ongoing) return;
 
-        base.RegisterEventHandlers();
-
-        OnItemCreated += OnCraftItem;
-        OnItemUse += UseItem;
-        OnItemPickup += PickupItem;
-        OnDialogueEnd += OnDialogueFinished;
-        OnTileBreak += BreakPots;
-        OnNPCKill += OnKill;
-        ModContent.GetInstance<Reverie>().Logger.Debug($"Mission [Journey's Begin] Registered event handlers");
-
-        eventsRegistered = true;
-    }
-
-    protected override void UnregisterEventHandlers()
-    {
-        if (!eventsRegistered) return;
-
-        OnItemUse -= UseItem;
-        OnItemPickup -= PickupItem;
-        OnDialogueEnd -= OnDialogueFinished;
-        OnTileBreak -= BreakPots;
-        OnItemCreated -= OnCraftItem;
-        OnNPCKill -= OnKill;
-        ModContent.GetInstance<Reverie>().Logger.Debug($"Mission [Journey's Begin] Unregistered event handlers");
-
-        base.UnregisterEventHandlers();
-    }
-    #endregion
-
-    private void TriggerAssailantAmbush() // TODO: update their AI, make em fade in slowly and crep toward the player. also trigger a cutscene.
-    {
-        if (hasSpawnedAssailants) return;
-
-        // Play cutscene: Assailants drop from trees
-        // TODO: Cutscene system
-
-        // Spawn 3 grunts around player
-        for (int i = 0; i < 2; i++)
+        var objective = (Objectives)CurrentList;
+        switch (objective)
         {
-            Vector2 spawnPos = Main.LocalPlayer.position + new Vector2(
-                Main.rand.Next(-300, 300),
-                -150);
-
-            NPC.NewNPC(
-                new EntitySource_Misc("Mission_Spawn"),
-                (int)spawnPos.X,
-                (int)spawnPos.Y,
-                ModContent.NPCType<EchoKnight>());
+            case Objectives.TheSurge:
+                if (biome == BiomeType.Forest)
+                {
+                    UpdateProgress(objective: 0);
+                    
+                    CutsceneSystem.PlayCutscene<AmbushCutscene>();
+                }
+                break;
         }
-
-        SoundEngine.PlaySound(SoundID.DD2_BetsyFlyingCircleAttack);
-        hasSpawnedAssailants = true;
     }
 
     private void OnCraftItem(Item item, ItemCreationContext context)
@@ -218,6 +231,12 @@ public class MissionJourneysBegin : Mission
                 if (!npc.friendly || !npc.CountsAsACritter || !npc.townNPC)
                 {
                     UpdateProgress(objective: 1);
+                }
+                break;
+            case Objectives.DefendYourself:
+                if (npc.type == ModContent.NPCType<NullHerald>())
+                {
+                    UpdateProgress(objective: 0);
                 }
                 break;
         }

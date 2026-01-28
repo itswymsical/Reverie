@@ -59,7 +59,12 @@ public class CutsceneSystem : ModSystem
             }
         }
     }
-
+    /// <summary>
+    /// Updates the current cutscene each frame.
+    /// </summary>
+    /// <param name="orig"></param>
+    /// <param name="self"></param>
+    /// <param name="gameTime"></param>
     private void UpdateCutscene(On_Main.orig_DoDraw orig, Main self, GameTime gameTime)
     {
         orig(self, gameTime);

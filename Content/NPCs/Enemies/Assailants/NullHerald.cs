@@ -61,10 +61,10 @@ public class NullHerald : FighterNPCActor
 
     public override void SetDefaults()
     {
-        NPC.aiStyle = 7;
-        NPC.damage = 25;
-        NPC.defense = 10;
-        NPC.lifeMax = 148;
+        NPC.aiStyle = -1;
+        NPC.damage = 9;
+        NPC.defense = 4;
+        NPC.lifeMax = 70;
         NPC.width = 30;
         NPC.height = 48;
         NPC.HitSound = SoundID.NPCHit1;
@@ -79,42 +79,42 @@ public class NullHerald : FighterNPCActor
         var target = Main.player[NPC.target];
         NPCUtils.CheckPlatform(NPC, target);
         NPCUtils.HoleBelow(NPC);
-        //if (target.active && !target.dead)
-        //{
-        //    NPC.direction = target.Center.X > NPC.Center.X ? 1 : -1;
-        //    NPC.spriteDirection = NPC.direction;
-        //}
+        if (target.active && !target.dead)
+        {
+            NPC.direction = target.Center.X > NPC.Center.X ? 1 : -1;
+            NPC.spriteDirection = NPC.direction;
+        }
 
-        //// Decrement cooldown timers
-        //if (hammerCooldownTimer > 0)
-        //    hammerCooldownTimer--;
+        // Decrement cooldown timers
+        if (hammerCooldownTimer > 0)
+            hammerCooldownTimer--;
 
-        //if (spearCooldownTimer > 0)
-        //    spearCooldownTimer--;
+        if (spearCooldownTimer > 0)
+            spearCooldownTimer--;
 
-        //// State machine
-        //switch ((int)NPC.ai[0])
-        //{
-        //    case STATE_CHASE:
-        //        HandleChaseState();
-        //        break;
+        // State machine
+        switch ((int)NPC.ai[0])
+        {
+            case STATE_CHASE:
+                HandleChaseState();
+                break;
 
-        //    case STATE_HAMMER_WINDUP:
-        //        HandleHammerWindup();
-        //        break;
+            case STATE_HAMMER_WINDUP:
+                HandleHammerWindup();
+                break;
 
-        //    case STATE_HAMMER_SLAM:
-        //        HandleHammerSlam();
-        //        break;
+            case STATE_HAMMER_SLAM:
+                HandleHammerSlam();
+                break;
 
-        //    case STATE_SPEAR_WINDUP:
-        //        HandleSpearWindup();
-        //        break;
+            case STATE_SPEAR_WINDUP:
+                HandleSpearWindup();
+                break;
 
-        //    case STATE_SPEAR_THROW:
-        //        HandleSpearThrow();
-        //        break;
-        //}
+            case STATE_SPEAR_THROW:
+                HandleSpearThrow();
+                break;
+        }
     }
 
     #region AI Functions
@@ -367,79 +367,78 @@ public class NullHerald : FighterNPCActor
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        // Only draw trail during certain states
-        //if ((int)NPC.ai[0] == STATE_HAMMER_SLAM)
-        //{
-        //    // Draw a trail effect for hammer slam
-        //    var drawOrigin = new Vector2(NPC.width * 0.5f, NPC.height * 0.5f);
-        //    for (var i = 0; i < NPC.oldPos.Length; i++)
-        //    {
-        //        var drawPos = NPC.oldPos[i] - screenPos + drawOrigin + new Vector2(0f, NPC.gfxOffY);
-        //        var trailColor = NPC.GetAlpha(drawColor) * ((NPC.oldPos.Length - i) / (float)NPC.oldPos.Length);
-        //        trailColor.A = 100;
-        //        spriteBatch.Draw(
-        //            TextureAssets.Npc[NPC.type].Value,
-        //            drawPos,
-        //            null,
-        //            trailColor,
-        //            NPC.rotation,
-        //            drawOrigin,
-        //            NPC.scale,
-        //            NPC.spriteDirection == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally,
-        //            0f
-        //        );
-        //    }
-        //}
+        if ((int)NPC.ai[0] == STATE_HAMMER_SLAM)
+        {
+            // Draw a trail effect for hammer slam
+            var drawOrigin = new Vector2(NPC.width * 0.5f, NPC.height * 0.5f);
+            for (var i = 0; i < NPC.oldPos.Length; i++)
+            {
+                var drawPos = NPC.oldPos[i] - screenPos + drawOrigin + new Vector2(0f, NPC.gfxOffY);
+                var trailColor = NPC.GetAlpha(drawColor) * ((NPC.oldPos.Length - i) / (float)NPC.oldPos.Length);
+                trailColor.A = 100;
+                spriteBatch.Draw(
+                    TextureAssets.Npc[NPC.type].Value,
+                    drawPos,
+                    null,
+                    trailColor,
+                    NPC.rotation,
+                    drawOrigin,
+                    NPC.scale,
+                    NPC.spriteDirection == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally,
+                    0f
+                );
+            }
+        }
 
-        //// Draw the aura effect during hammer windup
-        //if ((int)NPC.ai[0] == STATE_HAMMER_WINDUP && NPC.ai[1] >= HammerWindupDuration / 2)
-        //{
-        //    // End current batch
-        //    spriteBatch.End();
+        // Draw the aura effect during hammer windup
+        if ((int)NPC.ai[0] == STATE_HAMMER_WINDUP && NPC.ai[1] >= HammerWindupDuration / 2)
+        {
+            // End current batch
+            spriteBatch.End();
 
-        //    // Begin new batch with additive blending
-        //    spriteBatch.Begin(
-        //        SpriteSortMode.Deferred,
-        //        BlendState.Additive,
-        //        SamplerState.AnisotropicClamp,
-        //        DepthStencilState.None,
-        //        RasterizerState.CullNone,
-        //        null,
-        //        Main.GameViewMatrix.TransformationMatrix
-        //    );
+            // Begin new batch with additive blending
+            spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.Additive,
+                SamplerState.AnisotropicClamp,
+                DepthStencilState.None,
+                RasterizerState.CullNone,
+                null,
+                Main.GameViewMatrix.TransformationMatrix
+            );
 
-        //    // Draw the aura glow
-        //    var auraTexture = TextureAssets.Extra[58].Value;
-        //    var progress = (NPC.ai[1] - HammerWindupDuration / 2) / (HammerWindupDuration / 2);
-        //    var pulseScale = 0.8f + (float)Math.Sin(NPC.ai[1] * 0.4f) * 0.1f;
-        //    var auraColor = new Color(255, 50, 20) * Math.Min(progress, 0.7f);
+            // Draw the aura glow
+            var auraTexture = TextureAssets.Extra[58].Value;
+            var progress = (NPC.ai[1] - HammerWindupDuration / 2) / (HammerWindupDuration / 2);
+            var pulseScale = 0.8f + (float)Math.Sin(NPC.ai[1] * 0.4f) * 0.1f;
+            var auraColor = new Color(255, 50, 20) * Math.Min(progress, 0.7f);
 
-        //    spriteBatch.Draw(
-        //        auraTexture,
-        //        NPC.Center - screenPos,
-        //        null,
-        //        auraColor,
-        //        0f,
-        //        new Vector2(auraTexture.Width / 2, auraTexture.Height / 2),
-        //        pulseScale,
-        //        SpriteEffects.None,
-        //        0f
-        //    );
+            spriteBatch.Draw(
+                auraTexture,
+                NPC.Center - screenPos,
+                null,
+                auraColor,
+                0f,
+                new Vector2(auraTexture.Width / 2, auraTexture.Height / 2),
+                pulseScale,
+                SpriteEffects.None,
+                0f
+            );
 
-        //    // End additive batch
-        //    spriteBatch.End();
+            // End additive batch
+            spriteBatch.End();
 
-        //    // Restart batch with original settings
-        //    spriteBatch.Begin(
-        //        SpriteSortMode.Deferred,
-        //        BlendState.AlphaBlend,
-        //        Main.DefaultSamplerState,
-        //        DepthStencilState.None,
-        //        RasterizerState.CullCounterClockwise,
-        //        null,
-        //        Main.GameViewMatrix.TransformationMatrix
-        //    );
-        //}
+            // Restart batch with original settings
+            spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                Main.DefaultSamplerState,
+                DepthStencilState.None,
+                RasterizerState.CullCounterClockwise,
+                null,
+                Main.GameViewMatrix.TransformationMatrix
+            );
+        }
 
         return true;
     }

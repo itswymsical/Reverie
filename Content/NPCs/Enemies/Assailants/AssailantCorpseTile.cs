@@ -28,7 +28,7 @@ public class AssailantCorpseTile : ModTile
 
         AddMapEntry(new Color(88, 88, 88));
         DustType = DustID.Blood;
-        HitSound = SoundID.NPCDeath12;
+        HitSound = SoundID.NPCDeath19;
 
     }
 

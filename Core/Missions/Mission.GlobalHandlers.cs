@@ -198,7 +198,7 @@ public class ObjectiveEventPlayer : ModPlayer
     /// <summary>
     /// Delegate for when a player enters a biome and meets time requirements.
     /// </summary>
-    /// <param name="player">The player</param>
+    /// <param name="player"></param>
     /// <param name="biome">The current biome</param>
     /// <param name="timeSpent">Time in seconds</param>
     public delegate void BiomeEnterHandler(Player player, BiomeType biome, int timeSpent);

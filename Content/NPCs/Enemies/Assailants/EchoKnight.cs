@@ -66,9 +66,9 @@ public class EchoKnight : FighterNPCActor, IDrawPrimitive
     public override void SetDefaults()
     {
         NPC.aiStyle = -1;
-        NPC.damage = 19;
+        NPC.damage = 8;
         NPC.defense = 8;
-        NPC.lifeMax = 138;
+        NPC.lifeMax = 88;
         NPC.width = 30;
         NPC.height = 48;
         NPC.HitSound = SoundID.NPCHit1;
@@ -605,7 +605,7 @@ public class EchoKnight : FighterNPCActor, IDrawPrimitive
         }
 
         var distanceToPlayer = Vector2.Distance(NPC.Center, target.Center);
-        var longRangeMode = distanceToPlayer > 200f;
+        var longRangeMode = distanceToPlayer > 250f;
 
         Vector2 teleportDirection;
 
