@@ -95,6 +95,7 @@ public partial class MissionPlayer : ModPlayer
     {
         var mission = sidelineMissions.FirstOrDefault(m => m.ID == missionId);
         mission?.Complete();
+        InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(mission));
     }
 
     public IEnumerable<Mission> ActiveMissions() =>

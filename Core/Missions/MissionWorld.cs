@@ -113,6 +113,7 @@ public class MissionWorld : ModSystem
         if (mission != null)
         {
             mission.Complete();
+            InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(mission));
         }
     }
     #endregion

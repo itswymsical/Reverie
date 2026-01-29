@@ -28,6 +28,15 @@ public class MissionSystem : ModSystem
         UnsubscribeFromEvents();
         MissionTypes.Clear();
     }
+    public static IEnumerable<Mission> GetAllAvailableMissions(MissionPlayer player)
+    {
+        var sideline = player.AvailableMissions();
+
+        var mainline = MissionWorld.Instance.GetAllMissions()
+            .Where(m => m.Status == MissionStatus.Unlocked && m.Progress != MissionProgress.Ongoing);
+
+        return sideline.Concat(mainline);
+    }
 
     #region Auto-Registration
     private void RegisterMissionsViaReflection()

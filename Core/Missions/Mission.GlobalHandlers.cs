@@ -105,33 +105,13 @@ public class ObjectiveEventNPC : GlobalNPC
         {
             var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
 
-            // Get sideline missions
-            var sidelineActive = missionPlayer.ActiveMissions();
-            var sidelineAvailable = missionPlayer.AvailableMissions();
+            var mission = MissionSystem.GetAllAvailableMissions(missionPlayer)
+                .FirstOrDefault(m => m.ProviderNPC == npc.type);
 
-            // Get mainline missions
-            var mainlineActive = MissionWorld.Instance.GetAllMissions()
-                .Where(m => m.Progress == MissionProgress.Ongoing);
-            var mainlineAvailable = MissionWorld.Instance.GetAllMissions()
-                .Where(m => m.Status == MissionStatus.Unlocked && m.Progress != MissionProgress.Ongoing);
-
-            // Combine both
-            //activeMissions = [.. sidelineActive.Concat(mainlineActive)];
-            //availableMissions = [.. sidelineAvailable.Concat(mainlineAvailable)];
-
-            if (missionPlayer.NPCHasAvailableMission(npc.type) && npc.active)
-            {
-                var mission = missionPlayer.AvailableMissions().FirstOrDefault(m => npc.type == m.ProviderNPC);
-
-                if (mission == null)
-                    return;
-
+            if (mission != null && npc.active)
                 ScreenIndicatorManager.Instance.CreateMissionIndicatorForNPC(npc, mission);
-            }
             else
-            {
                 ScreenIndicatorManager.Instance.RemoveIndicatorForNPC(npc.whoAmI);
-            }
         }
     }
 

@@ -31,7 +31,7 @@ public class ExampleMission : Mission
             new(ItemID.IronPickaxe),
             new(ItemID.LesserHealingPotion, 5)
         },
-        isMainline: false,
+        isMainline: true,
         providerNPC: NPCID.Guide,
         xpReward: 100
     )
@@ -90,17 +90,5 @@ public class ExampleMission : Mission
 
         // Default behavior for everything else
         return base.OnMatchedEvent(evt, objectiveIndex);
-    }
-
-    // Optional: Override lifecycle hooks
-    public override void OnMissionStart()
-    {
-        Main.NewText("Your journey begins!", Color.Gold);
-    }
-
-    public override void OnMissionComplete(bool giveRewards = true)
-    {
-        Main.NewText("Journey complete! You're ready for adventure!", Color.LightGreen);
-        base.OnMissionComplete(giveRewards);
     }
 }
