@@ -1,9 +1,7 @@
 ﻿using ReLogic.Content;
-using Reverie.Content.Biomes.Canopy;
 using Reverie.Core.Loaders;
 using System.Collections.Generic;
 using Terraria.Audio;
-using Terraria.Graphics.Effects;
 
 namespace Reverie.Content.Menus;
 

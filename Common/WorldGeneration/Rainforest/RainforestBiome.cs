@@ -1,13 +1,4 @@
-﻿using Reverie.Common.WorldGeneration.FilterBiomeSystem;
-using Reverie.Content.Tiles.Canopy;
-using Reverie.Content.Tiles.Canopy.Trees;
-using Reverie.Content.Tiles.Taiga;
-using Reverie.Utilities;
-using System.Collections.Generic;
-using Terraria.IO;
-using Terraria.WorldBuilding;
-
-namespace Reverie.Common.WorldGeneration.Rainforest;
+﻿namespace Reverie.Common.WorldGeneration.Rainforest;
 
 //public class RainforestBiome : TransitionBiome
 //{

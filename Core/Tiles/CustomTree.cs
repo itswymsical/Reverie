@@ -1,6 +1,5 @@
 ﻿using Reverie.Common.Systems;
 using Reverie.Common.Tiles;
-using Reverie.Content.Tiles.Canopy;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria.DataStructures;
@@ -48,9 +47,6 @@ public abstract partial class CustomTree : ModTile
     /// Valid anchor tiles for tree placement
     /// </summary>
     public virtual int[] ValidAnchorTiles => [
-        ModContent.TileType<RainforestGrassTile>(),
-        ModContent.TileType<WoodgrassTile>(),
-        ModContent.TileType<ClayLoamTile>(),
     ];
 
     #endregion

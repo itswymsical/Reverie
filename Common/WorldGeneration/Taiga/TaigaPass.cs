@@ -1,8 +1,5 @@
 ﻿using Reverie.Common.WorldGeneration.FilterBiomeSystem;
-using Reverie.Content.Tiles.Canopy.Trees;
-using Reverie.Content.Tiles.Canopy;
 using Reverie.Content.Tiles.Taiga;
-using Reverie.lib;
 using Terraria.WorldBuilding;
 
 namespace Reverie.Common.WorldGeneration.Taiga;

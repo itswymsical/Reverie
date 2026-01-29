@@ -1,8 +1,5 @@
-﻿using Reverie.Common.UI.Missions;
-using Reverie.Content.Cutscenes;
-using Reverie.Core.Cinematics;
-using Reverie.Core.Dialogue;
-using Reverie.Core.Indicators;
+﻿using Reverie.Common.Commands;
+using Reverie.Common.UI.Missions;
 using Reverie.Core.Missions;
 using Terraria.UI;
 
@@ -22,9 +19,16 @@ public class MissionCompleteIndicator : ModItem
     {
         if (Main.myPlayer == player.whoAmI)
         {
-            var mplayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-            var mission = mplayer.GetMission(MissionID.JourneysBegin);
-            InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(mission));
+            var mission = MissionCommandHelper.GetOrCreateMission(MissionID.JourneysBegin, player);
+
+            if (mission != null)
+            {
+                InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(mission));
+            }
+            else
+            {
+                Main.NewText("Mission not found!", Color.Red);
+            }
         }
         return true;
     }

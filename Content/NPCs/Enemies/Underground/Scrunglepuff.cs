@@ -84,7 +84,7 @@ public class Scrunglepuff : ModNPC
             return 0f;
 
         var missionPlayer = spawnInfo.Player.GetModPlayer<MissionPlayer>();
-        var mission = missionPlayer.GetMission(MissionID.PuffballHunt);
+        var mission = missionPlayer.GetOrCreateMission(MissionID.PuffballHunt);
 
         if (mission?.Status == MissionStatus.Locked || mission?.Progress == MissionProgress.Inactive)
             return 0f;

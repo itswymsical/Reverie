@@ -1,22 +1,23 @@
-﻿using System.Collections.Generic;
+﻿using Reverie.Common.Commands;
+using Reverie.Common.UI.Missions;
+using System.Collections.Generic;
 using System.Linq;
-using Terraria.Audio;
+using Terraria;
 using Terraria.ModLoader.IO;
+using Terraria.UI;
 
 namespace Reverie.Core.Missions;
 
 /// <summary>
-/// Manages mainline missions at the world level for single player.
+/// Stores mainline missions (shared across characters in single player).
+/// Handles events for mainline missions.
 /// </summary>
 public class MissionWorld : ModSystem
 {
-    #region Fields & Properties
-    private readonly Dictionary<int, Mission> mainlineMissions = [];
+    private readonly Dictionary<int, Mission> mainlineMissions = new();
     private static MissionWorld instance;
     public static MissionWorld Instance => instance ??= ModContent.GetInstance<MissionWorld>();
-    #endregion
 
-    #region Initialization
     public override void Load()
     {
         instance = this;
@@ -31,305 +32,176 @@ public class MissionWorld : ModSystem
     public override void OnWorldLoad()
     {
         mainlineMissions.Clear();
-        MissionFactory.Instance.ClearCache();
-        MissionManager.Instance.Reset();
+    }
 
-        ModContent.GetInstance<Reverie>().Logger.Info("MissionWorld: Cleared for new world");
-
-        // Always unlock the first mission for new worlds
-        var journeysBegin = MissionFactory.Instance.GetMissionData(MissionID.JourneysBegin);
-        if (journeysBegin?.IsMainline == true)
+    #region Event Handling
+    public void OnMissionEvent(MissionEvent evt)
+    {
+        foreach (var mission in mainlineMissions.Values)
         {
-            journeysBegin.Status = MissionStatus.Unlocked;
-            journeysBegin.Unlocked = true;
-            mainlineMissions[MissionID.JourneysBegin] = journeysBegin;
-            ModContent.GetInstance<Reverie>().Logger.Info("MissionWorld: Journey's Begin unlocked for new world");
+            if (mission.Progress != MissionProgress.Ongoing)
+                continue;
+
+            ProcessEventForMission(mission, evt);
         }
     }
 
-    public override void OnWorldUnload()
+    private void ProcessEventForMission(Mission mission, MissionEvent evt)
     {
-        mainlineMissions.Clear();
-        ModContent.GetInstance<Reverie>().Logger.Info("MissionWorld: Cleaned up on world unload");
-    }
+        var currentSet = mission.CurrentList;
+        if (currentSet < 0 || currentSet >= mission.ObjectiveList.Count)
+            return;
 
-    public override void PostUpdateWorld()
-    {
-        foreach (var mission in mainlineMissions.Values.Where(m => m.Progress == MissionProgress.Ongoing))
+        var objectives = mission.ObjectiveList[currentSet].Objective;
+
+        for (int i = 0; i < objectives.Count; i++)
         {
-            mission.Update();
+            if (objectives[i].IsCompleted)
+                continue;
+
+            if (mission.MatchesEvent(evt, currentSet, i))
+            {
+                mission.OnMatchedEvent(evt, i);
+            }
         }
     }
     #endregion
 
     #region Mission Access
-    public Mission GetMainlineMission(int missionId)
+    public Mission GetOrCreateMission(int missionId)
     {
         if (mainlineMissions.TryGetValue(missionId, out var mission))
-        {
             return mission;
-        }
 
-        var newMission = MissionFactory.Instance.GetMissionData(missionId);
-        if (newMission?.IsMainline == true)
+        // Create new mission instance
+        mission = MissionSystem.CreateMission(missionId);
+        if (mission?.IsMainline == true)
         {
-            mainlineMissions[missionId] = newMission;
-            return newMission;
+            mainlineMissions[missionId] = mission;
+            return mission;
         }
 
         return null;
     }
 
-    public IEnumerable<Mission> GetAllMainlineMissions() => mainlineMissions.Values;
-    public bool HasMainlineMission(int missionId) => mainlineMissions.ContainsKey(missionId);
-    #endregion
-
-    #region Mission Operations
-    public bool UpdateProgress(int missionId, int objectiveIndex, int amount = 1)
-    {
-        var mission = GetMainlineMission(missionId);
-        if (mission?.Progress == MissionProgress.Ongoing)
-        {
-            var progressUpdated = UpdateProgressInternal(mission, objectiveIndex, amount);
-            if (progressUpdated)
-            {
-                // Notify the local player's mission system
-                Main.LocalPlayer.GetModPlayer<MissionPlayer>().OnMainlineMissionUpdated(mission);
-            }
-            return progressUpdated;
-        }
-        return false;
-    }
-
-    private bool UpdateProgressInternal(Mission mission, int objectiveIndex, int amount)
-    {
-        if (mission.Progress != MissionProgress.Ongoing)
-            return false;
-
-        var currentSet = mission.ObjectiveList[mission.CurrentList];
-        if (objectiveIndex >= 0 && objectiveIndex < currentSet.Objective.Count)
-        {
-            var obj = currentSet.Objective[objectiveIndex];
-            if (!obj.IsCompleted || amount < 0)
-            {
-                var wasCompleted = obj.UpdateProgress(amount);
-
-                if (wasCompleted && amount > 0)
-                {
-                    mission.HandleObjectiveCompletion(objectiveIndex);
-                    SoundEngine.PlaySound(new SoundStyle($"{SFX_DIRECTORY}ObjectiveComplete") with { Volume = 0.75f }, Main.LocalPlayer.position);
-                }
-
-                if (currentSet.IsCompleted)
-                {
-                    if (mission.CurrentList < mission.ObjectiveList.Count - 1)
-                    {
-                        mission.CurrentList++;
-                        return true;
-                    }
-                    if (mission.ObjectiveList.All(set => set.IsCompleted))
-                    {
-                        CompleteMission(mission.ID);
-                        return true;
-                    }
-                }
-                return true;
-            }
-        }
-        return false;
-    }
+    public IEnumerable<Mission> GetAllMissions() => mainlineMissions.Values;
 
     public void StartMission(int missionId)
     {
-        var mission = GetMainlineMission(missionId);
+        var mission = GetOrCreateMission(missionId);
         if (mission?.Status == MissionStatus.Unlocked)
         {
             mission.Progress = MissionProgress.Ongoing;
-            MissionManager.Instance.RegisterMission(mission);
             mission.OnMissionStart();
 
-            // Notify local player
-            Main.LocalPlayer.GetModPlayer<MissionPlayer>().OnStartedMainline(mission);
+            InGameNotificationsTracker.AddNotification(new MissionAcceptNotification(mission));
         }
     }
 
-    public void UnlockMission(int missionId, bool broadcast = false)
+    public void UnlockMission(int missionId)
     {
-        var mission = GetMainlineMission(missionId);
+        var mission = GetOrCreateMission(missionId);
         if (mission?.Status == MissionStatus.Locked)
         {
             mission.Status = MissionStatus.Unlocked;
-            mission.Unlocked = true;
-
-            if (broadcast && mission.ProviderNPC > 0)
-            {
-                var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
-                Main.NewText($"{npcName} has new information!", Color.CornflowerBlue);
-            }
-
-            // Notify local player
-            Main.LocalPlayer.GetModPlayer<MissionPlayer>().OnUnlockedMainline(mission);
         }
     }
 
     public void CompleteMission(int missionId)
     {
-        var mission = GetMainlineMission(missionId);
-        if (mission?.Progress == MissionProgress.Ongoing && mission.ObjectiveList.All(set => set.IsCompleted))
+        var mission = GetOrCreateMission(missionId);
+        if (mission != null)
         {
-            mission.Progress = MissionProgress.Completed;
-            mission.Status = MissionStatus.Completed;
-            mission.OnMissionComplete();
-
-            // Notify local player
-            Main.LocalPlayer.GetModPlayer<MissionPlayer>().OnCompletedMainline(mission);
+            mission.Complete();
         }
     }
     #endregion
 
-    #region Serialization
+    #region Persistence
     public override void SaveWorldData(TagCompound tag)
     {
-        try
-        {
-            var mainlineMissionData = new List<TagCompound>();
+        var missionData = new List<TagCompound>();
 
-            foreach (var mission in mainlineMissions.Values)
+        foreach (var mission in mainlineMissions.Values)
+        {
+            missionData.Add(new TagCompound
             {
-                var missionData = new TagCompound
-                {
-                    ["ID"] = mission.ID,
-                    ["Progress"] = (int)mission.Progress,
-                    ["Status"] = (int)mission.Status,
-                    ["Unlocked"] = mission.Unlocked,
-                    ["CurrentList"] = mission.CurrentList,
-                    ["Objective"] = SerializeObjectiveSets(mission.ObjectiveList)
-                };
-                mainlineMissionData.Add(missionData);
-            }
+                ["ID"] = mission.ID,
+                ["Progress"] = (int)mission.Progress,
+                ["Status"] = (int)mission.Status,
+                ["CurrentList"] = mission.CurrentList,
+                ["Objectives"] = SerializeObjectives(mission.ObjectiveList)
+            });
+        }
 
-            tag["MainlineMissions"] = mainlineMissionData;
-            ModContent.GetInstance<Reverie>().Logger.Info($"Saved {mainlineMissionData.Count} mainline missions to world data");
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Failed to save world mission data: {ex}");
-        }
+        tag["Missions"] = missionData;
     }
 
     public override void LoadWorldData(TagCompound tag)
     {
-        try
+        mainlineMissions.Clear();
+
+        var missionData = tag.GetList<TagCompound>("Missions");
+
+        foreach (var missionTag in missionData)
         {
-            mainlineMissions.Clear();
+            var missionId = missionTag.GetInt("ID");
+            var mission = MissionSystem.CreateMission(missionId);
 
-            var mainlineMissionData = tag.GetList<TagCompound>("MainlineMissions");
-            var missionsLoaded = 0;
-
-            foreach (var missionTag in mainlineMissionData)
+            if (mission?.IsMainline == true)
             {
-                try
-                {
-                    var missionId = missionTag.GetInt("ID");
-                    var mission = MissionFactory.Instance.GetMissionData(missionId);
+                mission.Progress = (MissionProgress)missionTag.GetInt("Progress");
+                mission.Status = (MissionStatus)missionTag.GetInt("Status");
+                mission.CurrentList = missionTag.GetInt("CurrentList");
 
-                    if (mission?.IsMainline == true)
-                    {
-                        mission.Progress = (MissionProgress)missionTag.GetInt("Progress");
-                        mission.Status = (MissionStatus)missionTag.GetInt("Status");
-                        mission.Unlocked = missionTag.GetBool("Unlocked");
-                        mission.CurrentList = missionTag.GetInt("CurrentList");
+                DeserializeObjectives(mission.ObjectiveList, missionTag.GetList<TagCompound>("Objectives"));
 
-                        LoadObjectiveSets(mission, missionTag.GetList<TagCompound>("Objective"));
-
-                        mainlineMissions[missionId] = mission;
-                        missionsLoaded++;
-
-                        if (mission.Progress == MissionProgress.Ongoing)
-                        {
-                            MissionManager.Instance.RegisterMission(mission);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ModContent.GetInstance<Reverie>().Logger.Error($"Failed to load mainline mission: {ex}");
-                }
+                mainlineMissions[missionId] = mission;
             }
-
-            ModContent.GetInstance<Reverie>().Logger.Info($"Loaded {missionsLoaded} mainline missions from world data");
-
-            // Ensure Journey's Begin is always available
-            if (!mainlineMissions.ContainsKey(MissionID.JourneysBegin))
-            {
-                var journeysBegin = MissionFactory.Instance.GetMissionData(MissionID.JourneysBegin);
-                if (journeysBegin?.IsMainline == true)
-                {
-                    journeysBegin.Status = MissionStatus.Unlocked;
-                    journeysBegin.Unlocked = true;
-                    mainlineMissions[MissionID.JourneysBegin] = journeysBegin;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Failed to load world mission data: {ex}");
         }
     }
 
-    private static List<TagCompound> SerializeObjectiveSets(List<ObjectiveList> objectiveSets)
+    private List<TagCompound> SerializeObjectives(List<ObjectiveList> objectiveSets)
     {
-        var serializedSets = new List<TagCompound>();
+        var result = new List<TagCompound>();
 
         foreach (var set in objectiveSets)
         {
-            var objectiveData = new List<TagCompound>();
+            var objectives = new List<TagCompound>();
 
-            foreach (var objective in set.Objective)
+            foreach (var obj in set.Objective)
             {
-                objectiveData.Add(new TagCompound
+                objectives.Add(new TagCompound
                 {
-                    ["Description"] = objective.Description,
-                    ["IsCompleted"] = objective.IsCompleted,
-                    ["RequiredCount"] = objective.RequiredCount,
-                    ["Count"] = objective.Count
+                    ["Desc"] = obj.Description,
+                    ["Done"] = obj.IsCompleted,
+                    ["Count"] = obj.Count,
+                    ["Required"] = obj.RequiredCount
                 });
             }
 
-            serializedSets.Add(new TagCompound
-            {
-                ["Objective"] = objectiveData,
-                ["HasCheckedInventory"] = set.HasCheckedInitialInventory
-            });
+            result.Add(new TagCompound { ["Objs"] = objectives });
         }
 
-        return serializedSets;
+        return result;
     }
 
-    private static void LoadObjectiveSets(Mission mission, IList<TagCompound> serializedSets)
+    private void DeserializeObjectives(List<ObjectiveList> objectiveSets, IList<TagCompound> savedSets)
     {
-        for (var i = 0; i < Math.Min(mission.ObjectiveList.Count, serializedSets.Count); i++)
+        for (int i = 0; i < Math.Min(objectiveSets.Count, savedSets.Count); i++)
         {
-            var setTag = serializedSets[i];
-            var currentSet = mission.ObjectiveList[i];
-            var objectiveTags = setTag.GetList<TagCompound>("Objective");
+            var savedObjs = savedSets[i].GetList<TagCompound>("Objs");
+            var currentObjs = objectiveSets[i].Objective;
 
-            currentSet.HasCheckedInitialInventory = setTag.GetBool("HasCheckedInventory");
-
-            foreach (var currentObj in currentSet.Objective)
+            foreach (var currentObj in currentObjs)
             {
-                var matchingObjTag = objectiveTags.FirstOrDefault(tag =>
-                    tag.GetString("Description").Equals(currentObj.Description, StringComparison.OrdinalIgnoreCase));
+                var match = savedObjs.FirstOrDefault(s =>
+                    s.GetString("Desc") == currentObj.Description);
 
-                if (matchingObjTag != null)
+                if (match != null)
                 {
-                    currentObj.IsCompleted = matchingObjTag.GetBool("IsCompleted");
-                    currentObj.Count = Math.Min(matchingObjTag.GetInt("Count"), currentObj.RequiredCount);
-
-                    if (currentObj.IsCompleted && currentObj.Count < currentObj.RequiredCount)
-                    {
-                        currentObj.Count = currentObj.RequiredCount;
-                    }
+                    currentObj.IsCompleted = match.GetBool("Done");
+                    currentObj.Count = match.GetInt("Count");
                 }
             }
         }

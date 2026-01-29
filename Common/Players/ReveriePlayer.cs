@@ -1,10 +1,8 @@
-﻿using Reverie.Common.Subworlds.Archaea;
-using Reverie.Common.Systems;
+﻿using Reverie.Common.Systems;
 using Reverie.Common.UI.Missions;
 using Reverie.Content.Cutscenes;
 using Reverie.Content.Dusts;
 using Reverie.Content.Projectiles.Desert;
-using Reverie.Content.Tiles.Archaea;
 
 using Reverie.Core.Cinematics;
 using Reverie.Core.Dialogue;
@@ -16,7 +14,6 @@ namespace Reverie.Common.Players;
 
 public class ReveriePlayer : ModPlayer
 {
-    private bool notificationExists = false;
     public bool magnetizedFall;
     public bool lodestoneKB;
     public bool microlithEquipped;
@@ -26,19 +23,11 @@ public class ReveriePlayer : ModPlayer
         lodestoneKB = false;
         microlithEquipped = false;
     }
-    public override void OnEnterWorld()
-    {
-        base.OnEnterWorld();
 
-        if (!DownedSystem.initialCutscene && Main.netMode != NetmodeID.MultiplayerClient)
-            CutsceneSystem.PlayCutscene<ArrivalCutscene>();
-
-        notificationExists = false;
-    }
 
     public override void PostUpdate()
     {
-        if (Main.LocalPlayer.ZoneDesert || SubworldSystem.IsActive<ArchaeaSub>())
+        if (Main.LocalPlayer.ZoneDesert)
         {
             DrawSandHaze();
             SpawnTumbleweed();
@@ -50,25 +39,6 @@ public class ReveriePlayer : ModPlayer
         if (Cutscene.NoFallDamage)
             Player.noFallDmg = true;
 
-        var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        bool hasMissions = missionPlayer.ActiveMissions().Any() || missionPlayer.AvailableMissions().Any();
-
-        if (hasMissions && !notificationExists)
-        {
-            var currentMission = missionPlayer.ActiveMissions().FirstOrDefault() ??
-                               missionPlayer.AvailableMissions().FirstOrDefault();
-
-            if (currentMission != null)
-            {
-                MissionSidebarManager.Instance.SetNotification(new MissionSidebar(currentMission));
-                notificationExists = true;
-            }
-        }
-        else if (!hasMissions)
-        {
-            MissionSidebarManager.Instance.ClearNotification();
-            notificationExists = false;
-        }
 
         if (Player == Main.LocalPlayer)
         {
@@ -96,7 +66,7 @@ public class ReveriePlayer : ModPlayer
 
     #region Desert Visuals
     private bool IsSandTile(Tile tile) =>
-    tile.HasTile && (tile.TileType == TileID.Sand || tile.TileType == ModContent.TileType<PrimordialSandTile>());
+    tile.HasTile && (tile.TileType == TileID.Sand);
 
     private bool HasAirAbove(int x, int y) => !Main.tile[x, y - 1].HasTile && !Main.tile[x, y - 2].HasTile;
 

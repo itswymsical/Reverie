@@ -30,7 +30,7 @@ public class ObjectiveEventItem : GlobalItem
 
     public override bool OnPickup(Item item, Player player)
     {
-        if (MissionUtils.TryUpdateProgressForItem(item, player))
+        if (MissionUtils.Check_If_ItemUpdatedProgress(item, player))
         {
             OnItemPickup?.Invoke(item, player);
         }
@@ -47,7 +47,7 @@ public class ObjectiveEventItem : GlobalItem
     public override void UpdateEquip(Item item, Player player)
     {
         base.UpdateEquip(item, player);
-        if (MissionUtils.TryUpdateProgressForItem(item, player))
+        if (MissionUtils.Check_If_ItemUpdatedProgress(item, player))
         {
             OnItemUpdate?.Invoke(item, player);
         }
@@ -57,7 +57,7 @@ public class ObjectiveEventItem : GlobalItem
     {
         base.UpdateInventory(item, player);
 
-        if (MissionUtils.TryUpdateProgressForItem(item, player))
+        if (MissionUtils.Check_If_ItemUpdatedProgress(item, player))
         {
             OnItemUpdate?.Invoke(item, player);
         }
@@ -104,6 +104,20 @@ public class ObjectiveEventNPC : GlobalNPC
         if (npc.isLikeATownNPC)
         {
             var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
+
+            // Get sideline missions
+            var sidelineActive = missionPlayer.ActiveMissions();
+            var sidelineAvailable = missionPlayer.AvailableMissions();
+
+            // Get mainline missions
+            var mainlineActive = MissionWorld.Instance.GetAllMissions()
+                .Where(m => m.Progress == MissionProgress.Ongoing);
+            var mainlineAvailable = MissionWorld.Instance.GetAllMissions()
+                .Where(m => m.Status == MissionStatus.Unlocked && m.Progress != MissionProgress.Ongoing);
+
+            // Combine both
+            //activeMissions = [.. sidelineActive.Concat(mainlineActive)];
+            //availableMissions = [.. sidelineAvailable.Concat(mainlineAvailable)];
 
             if (missionPlayer.NPCHasAvailableMission(npc.type) && npc.active)
             {

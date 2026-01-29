@@ -1,6 +1,7 @@
 ﻿using Reverie.Core.Missions;
 using Reverie.Utilities;
 using System.Collections.Generic;
+using System.Linq;
 using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.GameInput;
@@ -106,8 +107,20 @@ public class MissionSidebar
     private void LoadMissions()
     {
         var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-        activeMissions = [.. missionPlayer.ActiveMissions()];
-        availableMissions = [.. missionPlayer.AvailableMissions()];
+
+        // Get sideline missions
+        var sidelineActive = missionPlayer.ActiveMissions();
+        var sidelineAvailable = missionPlayer.AvailableMissions();
+
+        // Get mainline missions
+        var mainlineActive = MissionWorld.Instance.GetAllMissions()
+            .Where(m => m.Progress == MissionProgress.Ongoing);
+        var mainlineAvailable = MissionWorld.Instance.GetAllMissions()
+            .Where(m => m.Status == MissionStatus.Unlocked && m.Progress != MissionProgress.Ongoing);
+
+        // Combine both
+        activeMissions = [.. sidelineActive.Concat(mainlineActive)];
+        availableMissions = [.. sidelineAvailable.Concat(mainlineAvailable)];
 
         HandleMissionListToggling();
 

@@ -64,7 +64,6 @@ public class Argie : WorldNPCActor
     private void TriggerIntroCutscene()
     {
         hasTriggeredCutscene = true;
-        CutsceneSystem.PlayCutscene<ArgieIntroCutscene>();
     }
 
     public override string GetChat()

@@ -1,6 +1,4 @@
-﻿using Reverie.Content.Tiles.Canopy;
-using Reverie.Content.Tiles.Canopy;
-using Reverie.Content.Tiles.Taiga;
+﻿using Reverie.Content.Tiles.Taiga;
 
 namespace Reverie.Common.Tiles;
 
@@ -14,9 +12,6 @@ internal class TileCounts : ModSystem
 
     public override void TileCountsAvailable(ReadOnlySpan<int> tileCounts)
     {
-        surfaceCanopyBlockCount = tileCounts[ModContent.TileType<ClayLoamTile>()];
-
-        undergroundCanopyBlockCount = tileCounts[ModContent.TileType<WoodgrassTile>()];
 
         taigaCount = tileCounts[ModContent.TileType<TaigaGrassTile>()];
     }

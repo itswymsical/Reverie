@@ -1,16 +1,11 @@
-﻿using Reverie.Content.Tiles.Canopy;
-using System;
+﻿using Reverie.Content.Tiles.Taiga.Furniture;
+using Reverie.Core.Tiles;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria.DataStructures;
-using Terraria.Utilities;
-using Terraria.GameContent.Drawing;
 using Terraria.GameContent;
-using Reverie.Core.Tiles;
-using Reverie.Content.Tiles.Taiga.Furniture;
-using Terraria.Enums;
-using Terraria.ObjectData;
 using Terraria.Localization;
+using Terraria.Utilities;
 
 namespace Reverie.Content.Tiles.Taiga.Trees;
 

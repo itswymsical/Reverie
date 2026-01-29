@@ -758,6 +758,11 @@ Items: {
 		DisplayName: Dialogue Tool
 		Tooltip: ""
 	}
+
+	SprucePlacer: {
+		DisplayName: Spruce Placer
+		Tooltip: ""
+	}
 }
 
 Projectiles: {

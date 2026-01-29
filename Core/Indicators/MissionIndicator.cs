@@ -69,13 +69,13 @@ public class MissionIndicator : ScreenIndicator
     {
         if (mission.IsMainline)
         {
-            var worldMission = MissionWorld.Instance.GetMainlineMission(mission.ID);
+            var worldMission = MissionWorld.Instance.GetOrCreateMission(mission.ID);
             return worldMission?.Progress != MissionProgress.Inactive || worldMission?.Status != MissionStatus.Unlocked;
         }
         else
         {
             var missionPlayer = Main.LocalPlayer.GetModPlayer<MissionPlayer>();
-            var localMission = missionPlayer.GetMission(mission.ID);
+            var localMission = missionPlayer.GetOrCreateMission(mission.ID);
             return localMission?.Progress != MissionProgress.Inactive || localMission?.Status != MissionStatus.Unlocked;
         }
     }

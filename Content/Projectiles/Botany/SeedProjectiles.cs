@@ -1,11 +1,10 @@
-﻿using System.Collections.Generic;
-using Terraria.Audio;
-using Terraria.GameContent;
-using Reverie.Content.Buffs;
-using Reverie.Core.Graphics;
+﻿using Reverie.Core.Graphics;
+using Reverie.Core.Graphics.Interfaces;
 using Reverie.Core.Loaders;
 using Reverie.Utilities;
-using Reverie.Core.Graphics.Interfaces;
+using System.Collections.Generic;
+using Terraria.Audio;
+using Terraria.GameContent;
 
 namespace Reverie.Content.Projectiles.Botany;
 
@@ -871,7 +870,7 @@ public class WaterleafSeedProj : ModProjectile, IDrawPrimitive
 
         if (hit.Crit)
         {
-            target.AddBuff(ModContent.BuffType<WaterleafSlowness>(), 5 * 60);
+            target.AddBuff(BuffID.Wet, 5 * 60);
         }
     }
     private void ManageCaches()

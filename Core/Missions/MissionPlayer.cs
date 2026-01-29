@@ -1,313 +1,67 @@
-﻿using Reverie.Common.UI.Missions;
+﻿using Reverie.Common.Commands;
+using Reverie.Common.UI.Missions;
 using System.Collections.Generic;
 using System.Linq;
-using Terraria.Audio;
+using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 using Terraria.UI;
 
 namespace Reverie.Core.Missions;
 
 /// <summary>
-/// Handles sideline (non-mainline) missions for individual players.
-/// Mainline missions are handled by WorldMissionSystem.
-/// Single player only.
+/// Stores sideline missions (player-specific).
+/// Handles events for sideline missions.
 /// </summary>
 public partial class MissionPlayer : ModPlayer
 {
-    #region Properties & Fields
-    /// <summary>
-    /// Dictionary containing only sideline (non-mainline) missions for this player.
-    /// Mainline missions are stored in WorldMissionSystem.
-    /// </summary>
-    public readonly Dictionary<int, Mission> sidelineMissions = [];
+    private List<Mission> sidelineMissions = new();
 
-    private readonly HashSet<int> notifiedMissions = [];
-    private TagCompound savedMissionData = null;
-    private bool hasDeferredLoadRun = false;
-    #endregion
-
-    #region Mission Logic
-    public void NotifyMissionUpdate(Mission mission)
+    #region Event Handling
+    public void OnMissionEvent(MissionEvent evt)
     {
-        if (mission == null) return;
+        foreach (var mission in sidelineMissions)
+        {
+            if (mission.Progress != MissionProgress.Ongoing)
+                continue;
 
-        try
-        {
-            if (mission.IsMainline)
-            {
-                ModContent.GetInstance<Reverie>().Logger.Debug($"Mainline mission {mission.Name} progress updated");
-            }
-            else
-            {
-                sidelineMissions[mission.ID] = mission;
-                ModContent.GetInstance<Reverie>().Logger.Debug($"Sideline mission {mission.Name} progress updated");
-            }
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Failed to notify mission update: {ex}");
+            ProcessEventForMission(mission, evt);
         }
     }
 
-    public bool UpdateMissionProgress(int missionId, int objectiveIndex, int amount = 1)
+    private void ProcessEventForMission(Mission mission, MissionEvent evt)
     {
-        var mission = GetMission(missionId);
-        if (mission != null)
-        {
-            if (mission.IsMainline)
-            {
-                return MissionWorld.Instance.UpdateProgress(missionId, objectiveIndex, amount);
-            }
-            else
-            {
-                var updated = mission.UpdateProgress(objectiveIndex, amount);
-                if (updated)
-                {
-                    sidelineMissions[missionId] = mission;
-                }
-                return updated;
-            }
-        }
-        return false;
-    }
-
-    private void ResetToCleanState()
-    {
-        sidelineMissions.Clear();
-        notifiedMissions.Clear();
-        MissionManager.Instance.Reset();
-    }
-    #endregion
-
-    #region Serialization
-    public override void SaveData(TagCompound tag)
-    {
-        try
-        {
-            var sidelineMissionData = new List<TagCompound>();
-
-            foreach (var mission in sidelineMissions.Values.Where(m => !m.IsMainline))
-            {
-                var missionData = new TagCompound
-                {
-                    ["ID"] = mission.ID,
-                    ["Progress"] = (int)mission.Progress,
-                    ["Status"] = (int)mission.Status,
-                    ["Unlocked"] = mission.Unlocked,
-                    ["CurrentList"] = mission.CurrentList,
-                    ["Objective"] = SerializeObjectives(mission.ObjectiveList)
-                };
-                sidelineMissionData.Add(missionData);
-            }
-
-            tag["SidelineMissions"] = sidelineMissionData;
-            tag["CompletedSidelineMissionIDs"] = CompletedSidelineMissions().Select(m => m.ID).ToList();
-            tag["NotifiedMissions"] = notifiedMissions.ToList();
-
-            ModContent.GetInstance<Reverie>().Logger.Info($"Saved {sidelineMissionData.Count} sideline missions for player");
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Failed to save player mission data: {ex}");
-        }
-    }
-
-    public override void LoadData(TagCompound tag)
-    {
-        savedMissionData = tag;
-        ResetToCleanState();
-        ModContent.GetInstance<Reverie>().Logger.Info("Player mission data stored for deferred loading");
-    }
-
-    private void ProcessDeferredLoad()
-    {
-        if (hasDeferredLoadRun || savedMissionData == null)
+        var currentSet = mission.CurrentList;
+        if (currentSet < 0 || currentSet >= mission.ObjectiveList.Count)
             return;
 
-        hasDeferredLoadRun = true;
+        var objectives = mission.ObjectiveList[currentSet].Objective;
 
-        try
+        for (var i = 0; i < objectives.Count; i++)
         {
-            ModContent.GetInstance<Reverie>().Logger.Info("Loading player sideline mission data");
+            if (objectives[i].IsCompleted)
+                continue;
 
-            var completedMissionIds = savedMissionData.GetList<int>("CompletedSidelineMissionIDs");
-            foreach (var missionId in completedMissionIds)
+            if (mission.MatchesEvent(evt, currentSet, i))
             {
-                try
-                {
-                    LoadCompletedSidelineMission(missionId);
-                }
-                catch (Exception ex)
-                {
-                    ModContent.GetInstance<Reverie>().Logger.Error($"Failed to load completed sideline mission {missionId}: {ex}");
-                }
-            }
-
-            var sidelineMissionData = savedMissionData.GetList<TagCompound>("SidelineMissions");
-            foreach (var missionTag in sidelineMissionData)
-            {
-                try
-                {
-                    LoadActiveSidelineMission(missionTag);
-                }
-                catch (Exception ex)
-                {
-                    ModContent.GetInstance<Reverie>().Logger.Error($"Failed to load active sideline mission: {ex}");
-                }
-            }
-
-            try
-            {
-                notifiedMissions.UnionWith([.. savedMissionData.GetList<int>("NotifiedMissions")]);
-            }
-            catch (Exception ex)
-            {
-                ModContent.GetInstance<Reverie>().Logger.Error($"Failed to load notification history: {ex}");
-            }
-
-            foreach (var mission in ActiveSidelineMissions())
-            {
-                try
-                {
-                    MissionManager.Instance.RegisterMission(mission);
-                }
-                catch (Exception ex)
-                {
-                    ModContent.GetInstance<Reverie>().Logger.Error($"Failed to register sideline mission {mission.ID}: {ex}");
-                }
-            }
-
-            savedMissionData = null;
-            ModContent.GetInstance<Reverie>().Logger.Info("Completed player mission loading");
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Critical failure in player mission loading: {ex}");
-            ResetToCleanState();
-        }
-    }
-
-    private void LoadActiveSidelineMission(TagCompound missionTag)
-    {
-        try
-        {
-            var missionId = missionTag.GetInt("ID");
-            var mission = MissionFactory.Instance.GetMissionData(missionId);
-
-            if (mission?.IsMainline == false)
-            {
-                mission.Progress = (MissionProgress)missionTag.GetInt("Progress");
-                mission.Status = (MissionStatus)missionTag.GetInt("Status");
-                mission.Unlocked = missionTag.GetBool("Unlocked");
-                mission.CurrentList = missionTag.GetInt("CurrentList");
-
-                LoadObjectiveSets(mission, missionTag.GetList<TagCompound>("Objective"));
-                sidelineMissions[missionId] = mission;
-
-                ModContent.GetInstance<Reverie>().Logger.Info($"Loaded sideline mission {mission.Name}");
-            }
-        }
-        catch (Exception ex)
-        {
-            ModContent.GetInstance<Reverie>().Logger.Error($"Failed to load sideline mission: {ex}");
-        }
-    }
-
-    private void LoadCompletedSidelineMission(int missionId)
-    {
-        var mission = MissionFactory.Instance.GetMissionData(missionId);
-        if (mission?.IsMainline == false)
-        {
-            mission.Progress = MissionProgress.Completed;
-            mission.Status = MissionStatus.Completed;
-            sidelineMissions[missionId] = mission;
-        }
-    }
-
-    private static List<TagCompound> SerializeObjectives(List<ObjectiveList> objectiveSets)
-    {
-        var serializedSets = new List<TagCompound>();
-
-        foreach (var set in objectiveSets)
-        {
-            var objectiveData = new List<TagCompound>();
-
-            foreach (var objective in set.Objective)
-            {
-                objectiveData.Add(new TagCompound
-                {
-                    ["Description"] = objective.Description,
-                    ["IsCompleted"] = objective.IsCompleted,
-                    ["RequiredCount"] = objective.RequiredCount,
-                    ["Count"] = objective.Count
-                });
-            }
-
-            serializedSets.Add(new TagCompound
-            {
-                ["Objective"] = objectiveData,
-                ["HasCheckedInventory"] = set.HasCheckedInitialInventory
-            });
-        }
-
-        return serializedSets;
-    }
-
-    private static void LoadObjectiveSets(Mission mission, IList<TagCompound> serializedSets)
-    {
-        for (var i = 0; i < Math.Min(mission.ObjectiveList.Count, serializedSets.Count); i++)
-        {
-            var setTag = serializedSets[i];
-            var currentSet = mission.ObjectiveList[i];
-            var objectiveTags = setTag.GetList<TagCompound>("Objective");
-
-            currentSet.HasCheckedInitialInventory = setTag.GetBool("HasCheckedInventory");
-
-            foreach (var currentObj in currentSet.Objective)
-            {
-                var matchingObjTag = objectiveTags.FirstOrDefault(tag =>
-                    tag.GetString("Description").Equals(currentObj.Description, StringComparison.OrdinalIgnoreCase));
-
-                if (matchingObjTag != null)
-                {
-                    currentObj.IsCompleted = matchingObjTag.GetBool("IsCompleted");
-                    currentObj.Count = Math.Min(matchingObjTag.GetInt("Count"), currentObj.RequiredCount);
-
-                    if (currentObj.IsCompleted && currentObj.Count < currentObj.RequiredCount)
-                    {
-                        currentObj.Count = currentObj.RequiredCount;
-                    }
-                }
+                mission.OnMatchedEvent(evt, i);
             }
         }
     }
     #endregion
 
     #region Mission Access
-    /// <summary>
-    /// Gets a mission from either world data (mainline) or player data (sideline).
-    /// </summary>
-    public Mission GetMission(int missionId)
+    public Mission GetOrCreateMission(int missionId)
     {
-        var mainlineMission = MissionWorld.Instance.GetMainlineMission(missionId);
-        if (mainlineMission != null)
-            return mainlineMission;
+        var existing = sidelineMissions.FirstOrDefault(m => m.ID == missionId);
+        if (existing != null)
+            return existing;
 
-        if (sidelineMissions.TryGetValue(missionId, out var sidelineMission))
-            return sidelineMission;
-
-        var mission = MissionFactory.Instance.GetMissionData(missionId);
-        if (mission != null)
+        // Create new mission instance
+        var mission = MissionSystem.CreateMission(missionId);
+        if (mission != null && !mission.IsMainline)
         {
-            if (mission.IsMainline)
-            {
-                return mission;
-            }
-            else
-            {
-                sidelineMissions[missionId] = mission;
-                return mission;
-            }
+            sidelineMissions.Add(mission);
+            return mission;
         }
 
         return null;
@@ -315,222 +69,183 @@ public partial class MissionPlayer : ModPlayer
 
     public void StartMission(int missionId)
     {
-        var mission = GetMission(missionId);
-        if (mission != null)
+        var mission = GetOrCreateMission(missionId);
+        if (mission?.Status == MissionStatus.Unlocked)
         {
-            if (mission.IsMainline)
+            mission.Progress = MissionProgress.Ongoing;
+            mission.OnMissionStart();
+
+            if (Player.whoAmI == Main.myPlayer)
             {
-                MissionWorld.Instance.StartMission(missionId);
-            }
-            else
-            {
-                StartSidelineMission(missionId);
+                InGameNotificationsTracker.AddNotification(new MissionAcceptNotification(mission));
             }
         }
     }
 
-    public void UnlockMission(int missionId, bool broadcast = false)
+    public void UnlockMission(int missionId)
     {
-        var mission = GetMission(missionId);
-        if (mission != null)
+        var mission = GetOrCreateMission(missionId);
+        if (mission?.Status == MissionStatus.Locked)
         {
-            if (mission.IsMainline)
-            {
-                MissionWorld.Instance.UnlockMission(missionId, broadcast);
-            }
-            else
-            {
-                UnlockSidelineMission(missionId, broadcast);
-            }
+            mission.Status = MissionStatus.Unlocked;
         }
     }
 
     public void CompleteMission(int missionId)
     {
-        var mission = GetMission(missionId);
-        if (mission != null)
-        {
-            if (mission.IsMainline)
-            {
-                MissionWorld.Instance.CompleteMission(missionId);
-            }
-            else
-            {
-                CompleteSidelineMission(missionId);
-            }
-        }
+        var mission = sidelineMissions.FirstOrDefault(m => m.ID == missionId);
+        mission?.Complete();
     }
 
-    private void StartSidelineMission(int missionId)
-    {
-        var mission = GetMission(missionId);
-        if (mission?.IsMainline == false)
-        {
-            mission.Progress = MissionProgress.Ongoing;
-            MissionManager.Instance.RegisterMission(mission);
-            sidelineMissions[missionId] = mission;
-            mission.OnMissionStart();
+    public IEnumerable<Mission> ActiveMissions() =>
+        sidelineMissions.Where(m => m.Progress == MissionProgress.Ongoing);
 
-            InGameNotificationsTracker.AddNotification(new MissionAcceptNotification(mission));
+    public IEnumerable<Mission> AvailableMissions() =>
+        sidelineMissions.Where(m => m.Status == MissionStatus.Unlocked);
+
+    public IEnumerable<Mission> GetAllMissions() => sidelineMissions;
+
+    public bool HasAvailableMissions() => AvailableMissions().Any();
+    #endregion
+
+    #region Persistence
+    public override void SaveData(TagCompound tag)
+    {
+        var missionData = new List<TagCompound>();
+
+        foreach (var mission in sidelineMissions)
+        {
+            missionData.Add(new TagCompound
+            {
+                ["ID"] = mission.ID,
+                ["Progress"] = (int)mission.Progress,
+                ["Status"] = (int)mission.Status,
+                ["CurrentList"] = mission.CurrentList,
+                ["Objectives"] = SerializeObjectives(mission.ObjectiveList)
+            });
         }
+
+        tag["Missions"] = missionData;
     }
 
-    private void UnlockSidelineMission(int missionId, bool broadcast = false)
+    public override void LoadData(TagCompound tag)
     {
-        var mission = GetMission(missionId);
-        if (mission?.IsMainline == false)
+        sidelineMissions.Clear();
+
+        var missionData = tag.GetList<TagCompound>("Missions");
+
+        foreach (var missionTag in missionData)
         {
-            mission.Status = MissionStatus.Unlocked;
-            mission.Progress = MissionProgress.Inactive;
-            mission.Unlocked = true;
-            sidelineMissions[missionId] = mission;
+            var missionId = missionTag.GetInt("ID");
+            var mission = MissionSystem.CreateMission(missionId);
 
-            if (broadcast && mission.ProviderNPC > 0)
+            if (mission != null && !mission.IsMainline)
             {
-                var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
-                Main.NewText($"{npcName} has a job opportunity!", Color.CornflowerBlue);
-                notifiedMissions.Add(mission.ID);
-            }
-        }
-    }
+                mission.Progress = (MissionProgress)missionTag.GetInt("Progress");
+                mission.Status = (MissionStatus)missionTag.GetInt("Status");
+                mission.CurrentList = missionTag.GetInt("CurrentList");
 
-    private void CompleteSidelineMission(int missionId)
-    {
-        var mission = GetMission(missionId);
-        if (mission?.IsMainline == false && mission.Progress == MissionProgress.Ongoing)
-        {
-            mission.Complete();
-            sidelineMissions[missionId] = mission;
-        }
-    }
+                DeserializeObjectives(mission.ObjectiveList, missionTag.GetList<TagCompound>("Objectives"));
 
-    public void ResetMission(int missionId)
-    {
-        var mission = GetMission(missionId);
-        if (mission != null)
-        {
-            mission.Reset();
-            mission.Status = MissionStatus.Unlocked;
-
-            if (mission.IsMainline)
-            {
-                // Mainline mission reset is handled by world system
-            }
-            else
-            {
-                sidelineMissions[missionId] = mission;
+                sidelineMissions.Add(mission);
             }
         }
     }
 
-    public IEnumerable<Mission> AvailableMissions()
+    private List<TagCompound> SerializeObjectives(List<ObjectiveList> objectiveSets)
     {
-        var mainlineAvailable = MissionWorld.Instance.GetAllMainlineMissions()
-            .Where(m => m.Status == MissionStatus.Unlocked && m.Progress == MissionProgress.Inactive);
+        var result = new List<TagCompound>();
 
-        var sidelineAvailable = sidelineMissions.Values
-            .Where(m => m.Status == MissionStatus.Unlocked && m.Progress == MissionProgress.Inactive);
-
-        return mainlineAvailable.Concat(sidelineAvailable);
-    }
-
-    public IEnumerable<Mission> ActiveMissions()
-    {
-        var mainlineActive = MissionWorld.Instance.GetAllMainlineMissions()
-            .Where(m => m.Progress == MissionProgress.Ongoing);
-
-        var sidelineActive = sidelineMissions.Values
-            .Where(m => m.Progress == MissionProgress.Ongoing);
-
-        return mainlineActive.Concat(sidelineActive);
-    }
-
-    public IEnumerable<Mission> CompletedMissions()
-    {
-        var mainlineCompleted = MissionWorld.Instance.GetAllMainlineMissions()
-            .Where(m => m.Progress == MissionProgress.Completed);
-
-        var sidelineCompleted = sidelineMissions.Values
-            .Where(m => m.Progress == MissionProgress.Completed);
-
-        return mainlineCompleted.Concat(sidelineCompleted);
-    }
-
-    private IEnumerable<Mission> CompletedSidelineMissions()
-    {
-        return sidelineMissions.Values.Where(m => m.Progress == MissionProgress.Completed);
-    }
-
-    private IEnumerable<Mission> ActiveSidelineMissions()
-    {
-        return sidelineMissions.Values.Where(m => m.Progress == MissionProgress.Ongoing);
-    }
-
-    public bool NPCHasAvailableMission(int npcType, bool broadcast = false)
-    {
-        var hasAvailableMission = false;
-
-        foreach (var mission in AvailableMissions().Where(m => m.ProviderNPC == npcType))
+        foreach (var set in objectiveSets)
         {
-            hasAvailableMission = true;
+            var objectives = new List<TagCompound>();
 
-            if (!mission.IsMainline && !notifiedMissions.Contains(mission.ID) && broadcast)
+            foreach (var obj in set.Objective)
             {
-                var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
-                Main.NewText($"{npcName} has a job opportunity!", Color.CornflowerBlue);
-                notifiedMissions.Add(mission.ID);
+                objectives.Add(new TagCompound
+                {
+                    ["Desc"] = obj.Description,
+                    ["Done"] = obj.IsCompleted,
+                    ["Count"] = obj.Count,
+                    ["Required"] = obj.RequiredCount
+                });
             }
+
+            result.Add(new TagCompound { ["Objs"] = objectives });
         }
 
-        return hasAvailableMission;
+        return result;
+    }
+
+    private void DeserializeObjectives(List<ObjectiveList> objectiveSets, IList<TagCompound> savedSets)
+    {
+        for (var i = 0; i < Math.Min(objectiveSets.Count, savedSets.Count); i++)
+        {
+            var savedObjs = savedSets[i].GetList<TagCompound>("Objs");
+            var currentObjs = objectiveSets[i].Objective;
+
+            foreach (var currentObj in currentObjs)
+            {
+                var match = savedObjs.FirstOrDefault(s =>
+                    s.GetString("Desc") == currentObj.Description);
+
+                if (match != null)
+                {
+                    currentObj.IsCompleted = match.GetBool("Done");
+                    currentObj.Count = match.GetInt("Count");
+                }
+            }
+        }
     }
     #endregion
 
-    #region Mainline Mission UI Callbacks
-    // These are much simpler now - just UI updates for single player
+    #region UI Notifications
+    public void NotifyMissionUpdate(Mission mission) { }
+    public void OnStartedMainline(Mission mission) { }
+    public void OnUnlockedMainline(Mission mission) { }
+    public void OnCompletedMainline(Mission mission) { }
+    public void OnMainlineMissionUpdated(Mission mission) { }
+    public bool NPCHasAvailableMission(int npcType) =>
+        AvailableMissions().Any(m => m.ProviderNPC == npcType);
 
-    public void OnMainlineMissionUpdated(Mission mission)
-    {
-        //SoundEngine.PlaySound(SoundID.MenuTick, Main.LocalPlayer.position);
-    }
+    private bool notificationExists = false;
 
-    public void OnStartedMainline(Mission mission)
-    {
-        InGameNotificationsTracker.AddNotification(new MissionAcceptNotification(mission));
-    }
-
-    public void OnUnlockedMainline(Mission mission)
-    {
-        if (mission.ProviderNPC > 0)
-        {
-            var npcName = Lang.GetNPCNameValue(mission.ProviderNPC);
-            Main.NewText($"{npcName} has new information!", Color.CornflowerBlue);
-            notifiedMissions.Add(mission.ID);
-        }
-    }
-
-    public void OnCompletedMainline(Mission mission)
-    {
-        InGameNotificationsTracker.AddNotification(new MissionCompleteNotification(mission));
-    }
-    #endregion
-
-    #region Init & Update
     public override void OnEnterWorld()
     {
-        ProcessDeferredLoad();
-        notifiedMissions.Clear();
+        base.OnEnterWorld();
+        //if (!DownedSystem.initialCutscene && Main.netMode != NetmodeID.MultiplayerClient)
+        //    CutsceneSystem.PlayCutscene<ArrivalCutscene>();
 
-        ModContent.GetInstance<Reverie>().Logger.Info($"Player {Player.name} entered world with {sidelineMissions.Count} sideline missions");
+        MissionCommandHelper.GetOrCreateMission(MissionID.JourneysBegin, Player);
+        notificationExists = false;
     }
 
     public override void PostUpdate()
     {
-        base.PostUpdate();
+        var sidelineMissions = this.ActiveMissions()
+            .Concat(this.AvailableMissions());
 
-        if (!hasDeferredLoadRun)
+        var mainlineMissions = MissionWorld.Instance.GetAllMissions()
+            .Where(m => m.Progress == MissionProgress.Ongoing || m.Status == MissionStatus.Unlocked);
+
+        var allMissions = sidelineMissions.Concat(mainlineMissions).ToList();
+
+        bool hasMissions = allMissions.Any();
+
+        if (hasMissions && !notificationExists)
         {
-            ProcessDeferredLoad();
+            var currentMission = allMissions.FirstOrDefault();
+
+            if (currentMission != null)
+            {
+                MissionSidebarManager.Instance.SetNotification(new MissionSidebar(currentMission));
+                notificationExists = true;
+            }
+        }
+        else if (!hasMissions)
+        {
+            MissionSidebarManager.Instance.ClearNotification();
+            notificationExists = false;
         }
     }
     #endregion
